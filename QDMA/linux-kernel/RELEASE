@@ -1,0 +1,72 @@
+Release: 2018.3
+===========================
+
+NOTE:
+	This release is based on the 2018.3 QDMA design
+
+	Performance benchmark numbers are captured in perforamcne report
+	for this version of driver and released along with the driver package
+
+	QDMA Linux driver is supported in auto mode by default
+	(refer to 2018.3 Features below for more details on auto mode)
+	
+	QDMA 2018.3 Linux driver is not backaward compatible with 2018.2 IP
+
+
+DRIVER LIMITATIONS:
+===================
+- Driver compilation on Fedora 28 with gcc8.1 results compilation warnings
+
+SUPPORTED FEATURES:
+===================
+- Support for both the AXI4 Memory Mapped(MM) and AXI4 Streaming(ST) Interfaces
+- 2048 Queue Sets
+	- 2048 H2C Descriptor Rings
+	- 2048 C2H Descriptor Rings
+	- 2048 C2H Completion Rings
+- Supports Polling Mode
+- Interrupts
+	- 2048 MSI-X Vectors
+	- Up to 8 MSI-X per Function
+	- Interrupt Aggregation
+	- User Interrupts
+	- Error Interrupts
+- C2H Stream Completion queue entry coalescing
+- Supports SR-IOV with upto 4 Physical Functions(PF) and 252 Virtual Functions(VF)
+- Allows only Privileged/Physical functions to program the contexts & registers
+- Function Level Reset(FLR) Support
+- Mailbox Support
+- Descriptor bypass(8,16,32 descriptor sizes)
+- Descriptor Prefetching
+- Asynchronous and Synchronous IO support
+- ST H2C to C2H and C2H to H2C loopback support
+- Driver configuration through sysfs
+- Zero byte transfer support
+- Dynamic queue configuration
+- Dynamic driver configuration
+
+2018.3 Features:
+- Auto mode support for PF & VF driver
+	- MM and ST H2C requests are services in poll mode
+	- ST C2H is services in Interrupt Aggregation mode
+- Support 64B descriptor format in byapss mode
+- Support for Completion queue descriptors of 64 bytes size
+- Support flexible BAR mapping for QDMA configuration register space
+- Indirect programming of FMAP registers
+- Support disabling overflow check in completion ring
+- Version for SW and HW
+- ECC Support
+- Flexible interrupt allocation between PF/VF 
+- Greater than 32 vectors per function
+- Legacy Interrupt Support
+- VF driver support in direct and indirect interrupt mode
+
+
+KNOWN ISSUES:
+=============
+- Occasionally, C2H completions are not observed when 
+	payload and immediate data transfers are combined
+- In the Host only mode, When VFs are loaded in mixed interrupt mode(i.e
+	some VFs are in direct interrupt mode and some VFs are in indirect
+	interrupt mode),C2H completions are not observed for the VF with direct
+	mode interrupt which follows a VF with indirect interrupt mode
