@@ -703,10 +703,10 @@ enum ind_stm_cmd_op {
 #include "xdev.h"
 
 #define __read_reg(xdev, reg_addr) (readl(xdev->regs + reg_addr))
-#ifdef DEBUG__
+#ifdef DEBUG
 #define __write_reg(xdev, reg_addr, val) \
 	do { \
-		pr_debug("%s, reg 0x%x, val 0x%x.\n", \
+		pr_debug("%s, write reg 0x%x, val 0x%x.\n", \
 				xdev->conf.name, reg_addr, (u32)val); \
 		writel(val, xdev->regs + reg_addr); \
 	} while (0)
