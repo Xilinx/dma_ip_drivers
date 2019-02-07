@@ -651,26 +651,28 @@ void hw_set_global_csr(struct xlnx_dma_dev *xdev)
 
 int qdma_trq_c2h_config(struct xlnx_dma_dev *xdev)
 {
-	unsigned int reg;
-	unsigned int dsc_cache_depth;
-	unsigned int cpml_coal_depth;
+	if (xdev->st_mode_en) {
+		unsigned int reg;
+		unsigned int dsc_cache_depth;
+		unsigned int cpml_coal_depth;
 
-	dsc_cache_depth = __read_reg(xdev, QDMA_C2H_PFCH_CACHE_DEPTH);
-	dsc_cache_depth >>= 2;
-	reg = (0x100 << QDMA_C2H_PFCH_CFG_PFCH_FL_TH_SHIFT) |
-			(8 << QDMA_C2H_PFCH_CFG_NUM_PFCH_SHIFT) |
-			(dsc_cache_depth << QDMA_C2H_PFCH_CFG_PFCH_QCNT_SHIFT) |
-			((dsc_cache_depth - 2) <<
+		dsc_cache_depth = __read_reg(xdev, QDMA_C2H_PFCH_CACHE_DEPTH);
+		dsc_cache_depth >>= 2;
+		reg = (0x100 << QDMA_C2H_PFCH_CFG_PFCH_FL_TH_SHIFT) |
+				(8 << QDMA_C2H_PFCH_CFG_NUM_PFCH_SHIFT) |
+				(dsc_cache_depth << QDMA_C2H_PFCH_CFG_PFCH_QCNT_SHIFT) |
+				((dsc_cache_depth - 2) <<
 					QDMA_C2H_PFCH_CFG_EVT_QCNT_TH_SHIFT);
-	__write_reg(xdev, QDMA_C2H_PFCH_CFG, reg);
+		__write_reg(xdev, QDMA_C2H_PFCH_CFG, reg);
 
-	cpml_coal_depth = __read_reg(xdev, QDMA_C2H_CMPT_COAL_BUF_DEPTH);
-	reg = (cpml_coal_depth << QDMA_C2H_CMPT_COAL_CFG_MAX_BUF_SZ_SHIFT) |
-			(25 << QDMA_C2H_CMPT_COAL_CFG_TICK_VAL_SHIFT) |
-			(5 << QDMA_C2H_CMPT_COAL_CFG_TICK_CNT_SHIFT);
-	__write_reg(xdev, QDMA_C2H_CMPT_COAL_CFG, reg);
-	__write_reg(xdev, QDMA_C2H_INT_TIMER_TICK, 25);
-	__write_reg(xdev, QDMA_H2C_DATA_THRESHOLD, 0x14000);
+		cpml_coal_depth = __read_reg(xdev, QDMA_C2H_CMPT_COAL_BUF_DEPTH);
+		reg = (cpml_coal_depth << QDMA_C2H_CMPT_COAL_CFG_MAX_BUF_SZ_SHIFT) |
+				(25 << QDMA_C2H_CMPT_COAL_CFG_TICK_VAL_SHIFT) |
+				(5 << QDMA_C2H_CMPT_COAL_CFG_TICK_CNT_SHIFT);
+		__write_reg(xdev, QDMA_C2H_CMPT_COAL_CFG, reg);
+		__write_reg(xdev, QDMA_C2H_INT_TIMER_TICK, 25);
+		__write_reg(xdev, QDMA_H2C_DATA_THRESHOLD, 0x14000);
+	}
 
 	return 0;
 }

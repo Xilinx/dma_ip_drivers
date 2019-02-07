@@ -211,10 +211,14 @@ void err_stat_handler(struct xlnx_dma_dev *xdev)
 	u32 err_stat;
 	u32 glb_err_stat = 0;
 
-	for (i = 0; i < HW_ERRS; i++) {
+	glb_err_stat = __read_reg(xdev, err_stat_info[0].stat_reg_addr);
+	if (!glb_err_stat)
+		return;
+
+	for (i = 1; i < HW_ERRS; i++) {
+		if (!err_stat_info[i].err_info.intr_mask)
+			continue;
 		err_stat = __read_reg(xdev, err_stat_info[i].stat_reg_addr);
-		if ((i == 0) && err_stat_info[i].err_info.intr_mask)
-			glb_err_stat = err_stat;
 		if (err_stat & err_stat_info[i].err_info.intr_mask) {
 			uint8_t bit = 0;
 			uint32_t intr_mask =
@@ -239,11 +243,9 @@ void err_stat_handler(struct xlnx_dma_dev *xdev)
 				err_stat);
 		}
 	}
-	if (glb_err_stat) {
-		__write_reg(xdev, err_stat_info[0].stat_reg_addr,
-			    glb_err_stat);
-		qdma_err_intr_setup(xdev, 1);
-	}
+
+	__write_reg(xdev, err_stat_info[0].stat_reg_addr, glb_err_stat);
+	qdma_err_intr_setup(xdev, 1);
 }
 
 static irqreturn_t user_intr_handler(int irq_index, int irq, void *dev_id)
@@ -935,24 +937,26 @@ static u8 get_intr_vec_index(struct xlnx_dma_dev *xdev, u8 intr_type)
 
 void qdma_err_intr_setup(struct xlnx_dma_dev *xdev, u8 rearm)
 {
-	u32 val = 0;
-	u8  err_intr_index = 0;
 	u8 i;
 
-	val = xdev->func_id;
-	err_intr_index = get_intr_vec_index(xdev, INTR_TYPE_ERROR);
-	val |= V_QDMA_C2H_ERR_INT_VEC(err_intr_index);
+	if (xdev->st_mode_en) {
+		u32 val = xdev->func_id;
+		u8  err_intr_index = get_intr_vec_index(xdev, INTR_TYPE_ERROR);
 
-	val |= (1 << S_QDMA_C2H_ERR_INT_F_ERR_INT_ARM);
+		val |= V_QDMA_C2H_ERR_INT_VEC(err_intr_index);
 
-	__write_reg(xdev, QDMA_C2H_ERR_INT, val);
+		val |= (1 << S_QDMA_C2H_ERR_INT_F_ERR_INT_ARM);
+
+		__write_reg(xdev, QDMA_C2H_ERR_INT, val);
+
+		pr_debug("Error interrupt setup: val = 0x%08x,  readback =  0x%08x err_intr_index = %d func_id = %d\n",
+			val, __read_reg(xdev, QDMA_C2H_ERR_INT),
+			err_intr_index, xdev->func_id);
+	}
 
 	if (rearm)
 		return;
 
-	pr_debug("Error interrupt setup: val = 0x%08x,  readback =  0x%08x err_intr_index = %d func_id = %d\n",
-			val, __read_reg(xdev, QDMA_C2H_ERR_INT),
-			err_intr_index, xdev->func_id);
 
 	for (i = 0; i < HW_ERRS; i++)
 		qdma_enable_hw_err(xdev, i);
@@ -966,12 +970,16 @@ void qdma_enable_hw_err(struct xlnx_dma_dev *xdev, u8 hw_err_type)
 	case GLBL_ERR:
 	case GLBL_DSC_ERR:
 	case GLBL_TRQ_ERR:
-	case C2H_ERR:
-	case C2H_FATAL_ERR:
-	case H2C_ERR:
 	case ECC_SB_ERR:
 	case ECC_DB_ERR:
 		break;
+	case C2H_ERR:
+	case C2H_FATAL_ERR:
+	case H2C_ERR:
+		if (!xdev->st_mode_en) {
+			err_stat_info[hw_err_type].err_info.intr_mask = 0;
+			return;
+		}
 	default:
 		hw_err_type = 0;
 		break;
