@@ -1,0 +1,153 @@
+###############################################################################
+
+                 Xilinx XVSEC Software README
+
+###############################################################################
+_____________________________________________________________________________
+Contents
+
+1.   Installation
+     1.1   Compiling the XVSEC Software
+     1.2   Installing the compiled binaries
+     1.3   Loading the Kernel module
+3.   Xilinx "xvsecctl" Command-line Utility
+     3.1   Using xvsecctl for MCAP functionality
+_____________________________________________________________________________
+1. Installation:
+
+  1.1 Compiling the QDMA Software:
+  --------------------------------
+
+  In order to compile the Xilinx VSEC software, a configured and compiled
+  Linux kernel source tree is required. The source tree may be only compiled
+  header files, or a complete tree. The source tree needs to be configured
+  and the header files need to be compiled. And, the Linux kernel must be
+  configured to use  modules.
+
+  Additionally, the /lib/modules must have been set up for this particular
+  kernel
+  (i.e. "make modules_install" has been run with the Linux kernel source tree).
+
+  a.    Unzip the Xilinx XVSEC Linux driver package.
+
+        [xilinx@]# unzip <xvsec driver source zip>
+
+  b.    Compile the Xilinx XVSEC Linux driver:
+
+        [xilinx@]# make clean all
+
+        a sub-directory build/ will be created as a result of running "make".
+
+        By default, xvsec kernel module, xvsec user space library and
+        xvsec application tool gets compiled
+
+        To compile Kernel driver:
+        [xilinx@]# make drv
+
+        To compile user space library:
+        [xilinx@]# make libxvsec
+
+        To compile application tool:
+        [xilinx@]# make tools
+
+  1.2 Installing the compiled binaries:
+  -------------------------------------
+
+  To install the XVSEC software, the installer must be the root user, then
+  run "make install".
+
+  [xilinx@]# make install
+
+  The XVSEC module will be installed in the
+  /lib/modules/<linux_kernel_version>/updates/kernel/drivers/xvsec directory.
+
+  The xvsecctl tool will be installed in /user/local/sbin.
+
+  1.3 Loading the Kernel module:
+  --------------------------------
+
+  To load the module run modprobe as follows:
+
+  [root@]# modprobe xvsec
+
+  Now the XVSEC software is ready for use.
+
+3. Xilinx "xvsecctl" application tool:
+
+  The Xilinx XVSEC control tool, xvsecctl, is a Command Line utility
+  which is installed in /usr/local/sbin/ and allows controlling of
+  Xilinx VSEC functionality. It can perform the following functions:
+
+  - Lists the supported VSECs by the device
+  - Verbose information about the device.
+  - MCAP supported functionality
+     - Configuration Logic Reset
+     - MCAP Module Reset
+     - Full Reset
+     - Dump the MCAP Read Data registers
+     - Dump the MCAP register set
+     - Dump FPGA configuration register set
+     - Access MCAP register of given offset (Read and Write)
+     - Access FPGA configuration register of given reg number(Read and Write)
+     - Program the clear bitstream
+     - Program the bitstream
+
+  For help run:
+    xvsecctl -h
+
+
+  3.1 Using xvsecctl for for MCAP functionality
+  ---------------------------------------------
+
+  Please refer User Guide to find all options and parameters available.
+
+    1. Get the list of capabilities of the requested device
+
+        [root@]# xvsecctl -b 0x65 -F 0x0 -l
+
+        No of Supported Extended capabilities : 3
+        Capability ID : 0x0001, Capability Name : MCAP
+        Capability ID : 0x0000, Capability Name : UNKNOWN
+        Capability ID : 0x0008, Capability Name : XVC
+
+
+      The above example output shows 3 VSEC capabilites present.
+
+    2. Get the list of MCAP registers of the requested device
+
+        [root@]# xvsecctl -b 0x65 -F 0x0 -c 0x1 -d
+
+        BYTE OFFSET     Register Name           Data Value
+        -----------     ----------------        ----------
+        0x0000          Ext Capability          0x4801000B
+        0x0004          VSEC Header             0x02C10001
+        0x0008          FPGA JTAG ID            0x14B31093
+        0x000C          FPGA BitStream Ver      0x00000000
+        0x0010          Status                  0x00000004
+           bit  0       MCAP Error                       0
+           bit  1       MCAP EOS                         0
+           bit  4       MCAP Read Complete               0
+           bit 5:7      MCAP Read Count                  0
+           bit  8       MCAP FIFO Overflow               0
+           bit 12:15    MCAP FIFO Occupancy              0
+           bit 24       Req for MCAP Release             0
+        0x0014          Control                 0x00001000
+           bit  0       MCAP Enable                      0
+           bit  1       MCAP Read Enable                 0
+           bit  4       MCAP Reset                       0
+           bit  5       MCAP Module Reset                0
+           bit  8       Req for MCAP by PCIe             0
+           bit 12       MCAP Design Switch               1
+           bit 16       Write Data Reg Enable            0
+        0x0018          FPGA Write Data         0x00000000
+        0x001C          FPGA Read Data[0]       0xDEADBEEF
+        0x0020          FPGA Read Data[1]       0x00000000
+        0x0024          FPGA Read Data[2]       0x00000000
+        0x0028          FPGA Read Data[3]       0x00000000
+
+    3. Program the bitstream on to the requested device
+
+        [root@]# xvsecctl -b 0x65 -F 0x0 -c 0x1 -p tandem2.bit
+        [XVSEC] : xvsec_mcap_configure_fpga : Bitstream Program successful
+        FPGA configuration successful
+

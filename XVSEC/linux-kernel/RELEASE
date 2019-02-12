@@ -1,0 +1,36 @@
+Release: 2018.3
+===========================
+
+NOTE:
+	This release is based on the 2018.3 XVSEC-MCAP Design
+
+	XVSEC driver is implemented as a single character device per PCIe Device
+
+
+DRIVER LIMITATIONS:
+===================
+- Unique character device per VSEC functionality is not implemented
+
+SUPPORTED FEATURES:
+===================
+- MCAP VSEC functionality is implemented as part of the XVSEC driver
+- Multiple Devices on the Same Host supported
+	- Unique character device gets created per device
+- The following Generic VSEC operations supported
+	- Listing the supported VSECs by HW
+	- Verbose Information of the given device
+- The following MCAP operations supported
+	- Configuration Logic Reset
+	- MCAP Module Reset
+	- Full Reset (Both Configuration Logic and MCAP Module Reset)
+	- Dump MCAP Read Data Registers
+	- Dump MCAP Register set
+	- Dump FPGA Configuration Register set
+	- Access(Read/Write) any MCAP register by providing offset
+	- Access(Read/Write) any FPGA configuration register by providing register number
+	- Program partial clear bitstream
+	- Program Stage-2/partial reconfigurable bitstream
+
+KNOWN BUGS:
+===========
+None
