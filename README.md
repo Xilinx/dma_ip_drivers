@@ -10,7 +10,7 @@ Both the linux kernel driver and the DPDK driver can be run on a PCI Express roo
 
 * [QDMA DPDK Reference Driver User Guide](QDMA/DPDK/docs/DPDK_qdma_driver_user_guide.pdf)
 
-* [QDMA Linux Kernel Reference Driver User Guide](QDMA/linux-kernel/docs/linux_qdma_driver_user_guide.pdf)
+* [QDMA Linux Kernel Reference Driver User Guide](QDMA/linux-kernel/docs/git_doc/html/index.html)
 
 ## Xilinx-VSEC (XVSEC)
 
