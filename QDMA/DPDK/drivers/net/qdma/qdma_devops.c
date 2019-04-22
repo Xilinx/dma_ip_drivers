@@ -563,6 +563,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	if (!rxq->sw_ring) {
 		PMD_DRV_LOG(ERR, "Unable to allocate rxq->sw_ring of size %d\n",
 									sz);
+		rte_memzone_free(rxq->rx_cmpt_mz);
 		rte_memzone_free(rxq->rx_mz);
 		rte_free(rxq);
 		return -ENOMEM;
@@ -585,6 +586,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	if (rxq->ringszidx < 0) {
 		PMD_DRV_LOG(ERR, "Expected Ring size %d not found\n",
 				rxq->nb_rx_desc);
+		rte_memzone_free(rxq->rx_cmpt_mz);
 		rte_memzone_free(rxq->rx_mz);
 		rte_free(rxq->sw_ring);
 		rte_free(rxq);
@@ -598,6 +600,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	if (rxq->cmpt_ringszidx < 0) {
 		PMD_DRV_LOG(ERR, "Expected completion ring size %d not found\n",
 				rxq->nb_rx_cmpt_desc);
+		rte_memzone_free(rxq->rx_cmpt_mz);
 		rte_memzone_free(rxq->rx_mz);
 		rte_free(rxq->sw_ring);
 		rte_free(rxq);
@@ -634,6 +637,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	if (rxq->buffszidx < 0) {
 		PMD_DRV_LOG(ERR, "Expected buffer size %d not found\n",
 				rxq->rx_buff_size);
+		rte_memzone_free(rxq->rx_cmpt_mz);
 		rte_memzone_free(rxq->rx_mz);
 		rte_free(rxq->sw_ring);
 		rte_free(rxq);
