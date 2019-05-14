@@ -977,7 +977,7 @@ static int xnl_q_start(struct sk_buff *skb2, struct genl_info *info)
 {
 	struct xlnx_pci_dev *xpdev;
 	struct qdma_queue_conf qconf;
-	char buf[XNL_RESP_BUFLEN_MIN];
+	char buf[XNL_RESP_BUFLEN_MIN] = {'\0'};
 	struct xlnx_qdata *qdata;
 	int rv = 0;
 	unsigned char is_qp;

@@ -1654,7 +1654,7 @@ static void nl_work_handler_q_start(struct work_struct *work)
 						work);
 	struct xlnx_pci_dev *xpdev = nl_work->xpdev;
 	struct xlnx_nl_work_q_ctrl *qctrl = &nl_work->qctrl;
-	char ebuf[XNL_EBUFLEN];
+	char ebuf[XNL_EBUFLEN] = {'\0'};
 	unsigned int qidx = qctrl->qidx;
 	u8 is_qp = qctrl->is_qp;
 	u8 c2h = qctrl->is_c2h;
