@@ -646,7 +646,7 @@ int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl)
 
 	rv = qdma_device_init(xdev);
 	if (rv < 0) {
-		pr_warn("qdma_init failed %d.\n", rv);
+		pr_warn("qdma_device_init failed %d.\n", rv);
 		goto cleanup_qdma;
 	}
 	xdev_flag_clear(xdev, XDEV_FLAG_OFFLINE);
