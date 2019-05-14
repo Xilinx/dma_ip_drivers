@@ -1059,7 +1059,9 @@ static void *io_thread(void *argp)
 		}
 		ret = io_queue_init(max_io, &node->ctxt);
 		if (ret != 0) {
-			printf("Error: io_setup error %d on %u\n", ret, _info->thread_id);
+			char * err_s = strerror(-ret);
+			printf("Error: io_setup error %s (%d) on thread %u\n",
+				err_s, ret, _info->thread_id);
 			dma_free(&ctxhandle, node);
 			sched_yield();
 			continue;
