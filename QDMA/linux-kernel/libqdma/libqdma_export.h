@@ -806,16 +806,19 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 
 /*****************************************************************************/
 /**
- * qdma_queue_reconfig() - reconfigure the queue
+ * qdma_queue_reconfig() - reconfigure the existing queue with
+ *							modified configuration
  *
- * @param[in]	dev_hndl:	qdma device handle
- * @param[in]	id:		queue index
- * @param[in]	qconf:		queue configuration
+ * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
+ * @param[in]	id:		existing queue id
+ * @param[in]	qconf:		queue configuration parameters
  * @param[in]	buflen:		length of the input buffer
- * @param[out]	buf:		message buffer
+ * @param[out]	buf:		message buffer, where the error message should
+ *                              be appended. This buffer needs to be null
+ *                              terminated.
  *
  * @return	0: success
- * @return	<0: failure
+ * @return	<0: error
  *****************************************************************************/
 int qdma_queue_reconfig(unsigned long dev_hndl, unsigned long id,
 			struct qdma_queue_conf *qconf, char *buf, int buflen);
@@ -825,9 +828,11 @@ int qdma_queue_reconfig(unsigned long dev_hndl, unsigned long id,
  * qdma_queue_start() - start a queue (i.e, online, ready for dma)
  *
  * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
- * @param[in]	id:		the opaque qhndl
+ * @param[in]	id:		queue index
  * @param[in]	buflen:		length of the input buffer
- * @param[out]	buf:		message buffer
+ * @param[out]	buf:		message buffer, where the error message should
+ *                              be appended. This buffer needs to be null
+ *                              terminated.
  *
  * @return	0: success
  * @return	<0: error
@@ -852,15 +857,17 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 
 /*****************************************************************************/
 /**
- *  * qdma_queue_prog_stm() - Program STM for queue (context, map, etc)
- *   *
- * @param[in]   dev_hndl:       dev_hndl returned from qdma_device_open()
- * @param[in]   id:             queue index
- * @param[in]   buflen:         length of the input buffer
- * @param[out]  buf:            message buffer
+ * qdma_queue_prog_stm() - Program STM for queue (context, map, etc)
  *
- * @return      0: success
- * @return      <0: error
+ * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
+ * @param[in]	id:		queue index
+ * @param[in]	buflen:		length of the input buffer
+ * @param[out]	buf:		message buffer, where the error message should
+ *                              be appended. This buffer needs to be null
+ *                              terminated.
+ *
+ * @return	0: success
+ * @return	<0: error
  *****************************************************************************/
 int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id, char *buf,
 			int buflen);

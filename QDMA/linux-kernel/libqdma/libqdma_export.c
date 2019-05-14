@@ -774,7 +774,9 @@ handle_truncation:
  * @param[in]	id:		existing queue id
  * @param[in]	qconf:		queue configuration parameters
  * @param[in]	buflen:		length of the input buffer
- * @param[out]	buf:		message buffer
+ * @param[out]	buf:		message buffer, where the error message should
+ *                              be appended. This buffer needs to be null
+ *                              terminated.
  *
  * @return	0: success
  * @return	<0: error
@@ -801,7 +803,7 @@ int qdma_queue_reconfig(unsigned long dev_hndl, unsigned long id,
 		if (buf && buflen) {
 			int l = strlen(buf);
 
-			l += sprintf(buf + l,
+			l += snprintf(buf + l, buflen - l,
 				"%s invalid state, q_state %d.\n",
 				descq->conf.name, descq->q_state);
 			buf[l] = '\0';
@@ -1129,7 +1131,9 @@ handle_truncation:
  * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
  * @param[in]	id:		queue index
  * @param[in]	buflen:		length of the input buffer
- * @param[out]	buf:		message buffer
+ * @param[out]	buf:		message buffer, where the error message should
+ *                              be appended. This buffer needs to be null
+ *                              terminated.
  *
  * @return	0: success
  * @return	<0: error
@@ -1153,10 +1157,8 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 			descq->conf.name, descq->qidx_hw);
 		if (buf && buflen) {
 			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				"%s config failed.\n", descq->conf.name);
-			buf[l] = '\0';
 		}
 		goto free_resource;
 	}
@@ -1170,8 +1172,7 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 			descq->conf.name, descq->q_state);
 		if (buf && buflen) {
 			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				"%s invalid state, q_state %d.\n",
 				descq->conf.name, descq->q_state);
 		}
@@ -1184,8 +1185,7 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 	if (rv < 0) {
 		if (buf && buflen) {
 			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				"%s alloc resource failed.\n",
 				descq->conf.name);
 				buf[l] = '\0';
@@ -1210,7 +1210,7 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 	}
 
 	/** Interrupt mode */
-	if (descq->xdev->num_vecs) {	
+	if (descq->xdev->num_vecs) {
 		unsigned long flags;
 
 		spin_lock_irqsave(&descq->xdev->lock, flags);
@@ -1250,7 +1250,9 @@ free_resource:
  * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
  * @param[in]	id:		queue index
  * @param[in]	buflen:		length of the input buffer
- * @param[out]	buf:		message buffer
+ * @param[out]	buf:		message buffer, where the error message should
+ *                              be appended. This buffer needs to be null
+ *                              terminated.
  *
  * @return	0: success
  * @return	<0: error
@@ -1274,7 +1276,7 @@ int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id,
 		if (buf && buflen) {
 			int l = strlen(buf);
 
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				      "%s Skipping STM prog for MM queue.\n",
 				      descq->conf.name);
 		}
@@ -1287,7 +1289,7 @@ int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id,
 		if (buf && buflen) {
 			int l = strlen(buf);
 
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				      "%s No STM present; stm_rev %d.\n",
 				      descq->conf.name, xdev->stm_rev);
 		}
@@ -1304,7 +1306,7 @@ int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id,
 		if (buf && buflen) {
 			int l = strlen(buf);
 
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				      "%s invalid state, q_state %d.\n",
 				      descq->conf.name, descq->q_state);
 		}
@@ -1322,10 +1324,9 @@ int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id,
 		if (buf && buflen) {
 			int l = strlen(buf);
 
-			l += snprintf(buf + l, buflen,
+			l += snprintf(buf + l, buflen - l,
 				      "%s prog. STM failed.\n",
 				      descq->conf.name);
-			buf[l] = '\0';
 		}
 		return rv;
 	}
