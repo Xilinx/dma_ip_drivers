@@ -542,7 +542,7 @@ int qdma_queue_get_buf_sz(unsigned long dev_hndl, unsigned long id,
 
 	/* reg = QDMA_REG_C2H_BUF_SZ_BASE + (descq->conf.c2h_buf_sz_idx)*4; */
 	/* buf_sz = __read_reg(xdev, reg); */
-	buflen = snprintf(buf, buflen, "%d", descq->conf.c2h_bufsz);
+	snprintf(buf, buflen, "%d", descq->conf.c2h_bufsz);
 	return descq->conf.c2h_bufsz;
 }
 #endif
