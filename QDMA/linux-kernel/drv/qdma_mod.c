@@ -1355,6 +1355,11 @@ int xpdev_list_dump(char *buf, int buflen)
 
 handle_truncation:
 	mutex_unlock(&xpdev_mutex);
+	// Here we return a negative number (invalid), whereby we signal
+	// that wthere wasn't enough space in the buffer to print all
+	// the desired information
+	// We trucate the returned string to signify that the returned content
+	// shouldn't be looked at
 	pr_warn("ERR! str truncated. req=%lu, avail=%u", cur - buf, buflen);
 	*buf = '\0';
 	return cur - buf;
