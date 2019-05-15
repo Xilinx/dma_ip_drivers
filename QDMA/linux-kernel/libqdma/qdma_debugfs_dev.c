@@ -560,13 +560,13 @@ int create_dev_dbg_files(struct xlnx_dma_dev *xdev, struct dentry *dev_root)
 		fops->owner = THIS_MODULE;
 		switch (i) {
 		case DBGFS_DEV_DBGF_INFO:
-			snprintf(dbgf[i].name, 64, "%s", "info");
+			snprintf(dbgf[i].name, DBGFS_DBG_FNAME_SZ, "%s", "info");
 			fops->open = dev_info_open;
 			fops->read = dev_info_read;
 			fops->release = dev_dbg_file_release;
 			break;
 		case DBGFS_DEV_DBGF_REGS:
-			snprintf(dbgf[i].name, 64, "%s", "regs");
+			snprintf(dbgf[i].name, DBGFS_DBG_FNAME_SZ, "%s", "regs");
 			fops->open = dev_regs_open;
 			fops->read = dev_regs_read;
 			fops->release = dev_dbg_file_release;
