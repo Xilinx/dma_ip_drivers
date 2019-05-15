@@ -836,8 +836,6 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	struct qdma_descq *descq;
 	struct qdma_descq *pairq;
 	unsigned int qcnt;
-	char *cur = buf;
-	char * const end = buf + buflen;
 	int rv = QDMA_OPERATION_SUCCESSFUL;
 
 	/** If qconf is NULL, return error*/
@@ -848,30 +846,24 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	/** allow only Q0 for if the VF Qmax is not set */
 	if ((xdev->conf.cur_cfg_state == QMAX_CFG_INITIAL) &&
 			(qconf->qidx > 0)) {
-		rv = QDMA_ERR_INVALID_QIDX;
 		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
-					"qdma%05x invalid idx %u >= 1.\n",
-					xdev->conf.bdf, qconf->qidx);
-			if (cur >= end)
-				goto handle_truncation;
+			snprintf(buf, buflen,
+				"qdma%05x invalid idx %u >= 1.\n",
+				xdev->conf.bdf, qconf->qidx);
 		}
-		return rv;
+		return QDMA_ERR_INVALID_QIDX;
 	}
 #endif
 
 	/** If qhndl is NULL, return error*/
 	if (!qhndl) {
 		pr_warn("qhndl NULL.\n");
-		rv = QDMA_ERR_INVALID_QIDX;
 		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
-					"%s, add, qhndl NULL.\n",
-					xdev->conf.name);
-			if (cur >= end)
-				goto handle_truncation;
+			snprintf(buf, buflen,
+				"%s, add, qhndl NULL.\n",
+				xdev->conf.name);
 		}
-		return rv;
+		return QDMA_ERR_INVALID_QIDX;
 	}
 
 	/** reset qhandle to an invalid value
@@ -888,15 +880,12 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	    (!qconf->st && !xdev->mm_mode_en)) {
 		pr_warn("%s, %s mode not enabled.\n",
 			xdev->conf.name, qconf->st ? "ST" : "MM");
-		rv = QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE;
 		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
+			snprintf(buf, buflen,
 				"qdma%05x %s mode not enabled.\n",
 				xdev->conf.bdf, qconf->st ? "ST" : "MM");
-			if (cur >= end)
-				goto handle_truncation;
 		}
-		return rv;
+		return QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE;
 	}
 
 	spin_lock(&qdev->lock);
@@ -907,15 +896,12 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	if ((qconf->qidx != QDMA_QUEUE_IDX_INVALID) &&
 	    (qconf->qidx >= qdev->qmax)) {
 		spin_unlock(&qdev->lock);
-		rv = QDMA_ERR_INVALID_QIDX;
 		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
+			snprintf(buf, buflen,
 				"qdma%05x invalid idx %u >= %u.\n",
 				xdev->conf.bdf, qconf->qidx, qdev->qmax);
-			if (cur >= end)
-				goto handle_truncation;
 		}
-		return rv;
+		return QDMA_ERR_INVALID_QIDX;
 	}
 
 	/** check if any free qidx available
@@ -926,15 +912,12 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	if (qcnt >= qdev->qmax) {
 		spin_unlock(&qdev->lock);
 		pr_warn("No free queues %u/%u.\n", qcnt, qdev->qmax);
-		rv = QDMA_ERR_DESCQ_FULL;
 		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
-					"qdma%05x No free queues %u/%u.\n",
-					xdev->conf.bdf, qcnt, qdev->qmax);
-			if (cur >= end)
-				goto handle_truncation;
+			snprintf(buf, buflen,
+				"qdma%05x No free queues %u/%u.\n",
+				xdev->conf.bdf, qcnt, qdev->qmax);
 		}
-		return rv;
+		return QDMA_ERR_DESCQ_FULL;
 	}
 
 	/** add to the count first, need to rewind if failed later*/
@@ -990,12 +973,10 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 				qconf->st ? "ST" : "MM", qdev->qmax);
 			rv = QDMA_ERR_DESCQ_FULL;
 			if (buf && buflen) {
-				cur += snprintf(cur, end - cur,
+				snprintf(buf, buflen,
 					"qdma%05x no %s QP, %u.\n",
 					xdev->conf.bdf,
 					qconf->st ? "ST" : "MM", qdev->qmax);
-				if (cur >= end)
-					goto handle_truncation;
 			}
 			goto rewind_qcnt;
 		}
@@ -1011,10 +992,8 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 			unlock_descq(pairq);
 			rv = -EINVAL;
 			if (buf && buflen) {
-				cur += snprintf(cur, end - cur,
+				snprintf(buf, buflen,
 					"Need to have same mode for Q pair.\n");
-				if (cur >= end)
-					goto handle_truncation;
 			}
 			goto rewind_qcnt;
 		}
@@ -1029,9 +1008,9 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 			pr_info("descq idx %u already added.\n", qconf->qidx);
 			rv = QDMA_ERR_DESCQ_IDX_ALREADY_ADDED;
 			if (buf && buflen) {
-				cur += snprintf(cur, end - cur,
-						"q idx %u already added.\n",
-						qconf->qidx);
+				snprintf(buf, buflen,
+					"q idx %u already added.\n",
+					qconf->qidx);
 			}
 			goto rewind_qcnt;
 		}
@@ -1052,26 +1031,30 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 #ifndef __QDMA_VF__
 	if (xdev->conf.qdma_drv_mode == LEGACY_INTR_MODE) {
 		rv = intr_legacy_setup(descq);
-		if ((rv > 0) && buf && buflen) {
+		if (rv > 0) {
 			/** support only 1 queue in legacy interrupt mode */
 			intr_legacy_clear(descq);
 			descq->q_state = Q_STATE_DISABLED;
 			pr_debug("qdma%05x - Q%u - No free queues %u/%u.\n",
-					xdev->conf.bdf, descq->conf.qidx,
-					rv, 1);
+				xdev->conf.bdf, descq->conf.qidx,
+				rv, 1);
 			rv = -EINVAL;
-			cur += snprintf(cur, end - cur,
+			if (buf && buflen) {
+				snprintf(buf, buflen,
 					"qdma%05x No free queues %u/%u.\n",
 					xdev->conf.bdf, qcnt, 1);
+			}
 			goto rewind_qcnt;
-		} else if ((rv < 0) && buf && buflen) {
+		} else if (rv < 0) {
 			rv = -EINVAL;
 			descq->q_state = Q_STATE_DISABLED;
 			pr_debug("qdma%05x Legacy interrupt setup failed.\n",
 					xdev->conf.bdf);
-			cur += snprintf(cur, end - cur,
+			if (buf && buflen) {
+				snprintf(buf, buflen,
 					"qdma%05x Legacy interrupt setup failed.\n",
 					xdev->conf.bdf);
+			}
 			goto rewind_qcnt;
 		}
 	}
@@ -1097,10 +1080,8 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	pr_debug("added %s, %s, qidx %u.\n",
 		descq->conf.name, qconf->c2h ? "C2H" : "H2C", qconf->qidx);
 	if (buf && buflen) {
-		cur += snprintf(cur, end - cur, "%s %s added.\n",
+		snprintf(buf, buflen, "%s %s added.\n",
 			descq->conf.name, qconf->c2h ? "C2H" : "H2C");
-		if (cur >= end)
-			goto handle_truncation;
 	}
 
 	return QDMA_OPERATION_SUCCESSFUL;
@@ -1113,11 +1094,6 @@ rewind_qcnt:
 		qdev->h2c_qcnt--;
 	spin_unlock(&qdev->lock);
 
-	return rv;
-
-handle_truncation:
-	pr_warn("ERR! str truncated. req=%lu, avail=%u", cur - buf, buflen);
-	*buf = '\0';
 	return rv;
 }
 
