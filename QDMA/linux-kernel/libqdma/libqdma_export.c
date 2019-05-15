@@ -796,12 +796,9 @@ int qdma_queue_reconfig(unsigned long dev_hndl, unsigned long id,
 		pr_info("%s invalid state, q_state %d.\n",
 			descq->conf.name, descq->q_state);
 		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += sprintf(buf + l,
+			sprintf(buf,
 				"%s invalid state, q_state %d.\n",
 				descq->conf.name, descq->q_state);
-			buf[l] = '\0';
 		}
 		unlock_descq(descq);
 		return QDMA_ERR_INVALID_DESCQ_STATE;
