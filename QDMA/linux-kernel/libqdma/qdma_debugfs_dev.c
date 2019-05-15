@@ -109,8 +109,6 @@ static int dump_banner(char *dev_name, char *buf, int buf_sz)
 static int dump_reg(char *buf, int buf_sz, unsigned int raddr, char *rname,
 					unsigned int rval)
 {
-	int len = 0;
-
 	/* length of the line should not exceed 80 chars, so, checking
 	 * for min 80 chars. If below print pattern is changed, check for
 	 * new the buffer size requirement
@@ -118,10 +116,9 @@ static int dump_reg(char *buf, int buf_sz, unsigned int raddr, char *rname,
 	if (buf_sz < DEBGFS_LINE_SZ)
 		return -1;
 
-	len += sprintf(buf + len, "[%#7x] %-47s %#-10x %u\n",
+	return sprintf(buf, "[%#7x] %-47s %#-10x %u\n",
 			raddr, rname, rval, rval);
 
-	return len;
 }
 
 /*****************************************************************************/
@@ -192,7 +189,7 @@ static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
 						name, val);
 				if (rv < 0) {
 					pr_warn("insufficient space to dump reg vals\n");
-					return len;
+					return buf_len;
 				}
 				len += rv;
 			}
@@ -204,7 +201,7 @@ static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
 					(char *)reg_info[i].name, val);
 			if (rv < 0) {
 				pr_warn("inusfficient space to dump register values\n");
-				return len;
+				return buf_len;
 			}
 			len += rv;
 		}
