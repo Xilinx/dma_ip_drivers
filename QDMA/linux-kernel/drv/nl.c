@@ -401,7 +401,6 @@ static char *xnl_mem_alloc(int l, struct genl_info *info)
 {
 	char ebuf[XNL_ERR_BUFLEN];
 	char *buf = kmalloc(l, GFP_KERNEL);
-	int rv;
 
 	if (buf) {
 		memset(buf, 0, l);
@@ -410,7 +409,7 @@ static char *xnl_mem_alloc(int l, struct genl_info *info)
 
 	pr_info("xnl OOM %d.\n", l);
 
-	rv = snprintf(ebuf, XNL_ERR_BUFLEN, "ERR! xnl OOM %d.\n", l);
+	snprintf(ebuf, XNL_ERR_BUFLEN, "ERR! xnl OOM %d.\n", l);
 
 	xnl_respond_buffer(info, ebuf, XNL_ERR_BUFLEN);
 
@@ -1232,10 +1231,9 @@ dump_q:
 			goto dump_q;
 		}
 	}
-	rv = snprintf(buf + buf_idx, buf_len - buf_idx,
-		      "Dumped Queues %d -> %d.\n", qidx, i - 1);
+	snprintf(buf + buf_idx, buf_len - buf_idx,
+		"Dumped Queues %d -> %d.\n", qidx, i - 1);
 send_resp:
-	buf[buf_idx + rv] = '\0';
 	rv = xnl_respond_buffer(info, buf, buf_len);
 
 	kfree(buf);
@@ -1320,9 +1318,9 @@ dump_q:
 			goto dump_q;
 		}
 	}
-	rv = snprintf(buf + buf_idx, buf_len - buf_idx,
-		      "Dumped descs of queues %d -> %d.\n",
-		      qidx, i - 1);
+	snprintf(buf + buf_idx, buf_len - buf_idx,
+		"Dumped descs of queues %d -> %d.\n",
+		qidx, i - 1);
 send_resp:
 	rv = xnl_respond_buffer(info, buf, buf_len);
 
@@ -1409,9 +1407,9 @@ dump_q:
 			goto dump_q;
 		}
 	}
-	rv = snprintf(buf + buf_idx, buf_len - buf_idx,
-		      "Dumped descs of queues %d -> %d.\n",
-		      qidx, i - 1);
+	snprintf(buf + buf_idx, buf_len - buf_idx,
+		"Dumped descs of queues %d -> %d.\n",
+		qidx, i - 1);
 send_resp:
 	rv = xnl_respond_buffer(info, buf, buf_len);
 
