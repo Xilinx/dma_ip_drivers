@@ -109,8 +109,6 @@ static int dump_banner(char *dev_name, char *buf, int buf_sz)
 static int dump_reg(char *buf, int buf_sz, unsigned int raddr, char *rname,
 					unsigned int rval)
 {
-	int len = 0;
-
 	/* length of the line should not exceed 80 chars, so, checking
 	 * for min 80 chars. If below print pattern is changed, check for
 	 * new the buffer size requirement
@@ -118,10 +116,9 @@ static int dump_reg(char *buf, int buf_sz, unsigned int raddr, char *rname,
 	if (buf_sz < DEBGFS_LINE_SZ)
 		return -1;
 
-	len += sprintf(buf + len, "[%#7x] %-47s %#-10x %u\n",
+	return sprintf(buf, "[%#7x] %-47s %#-10x %u\n",
 			raddr, rname, rval, rval);
 
-	return len;
 }
 
 /*****************************************************************************/
@@ -165,7 +162,11 @@ static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
 
 	/* print the bar name */
 	len += snprintf(buf + len, buf_len - len, "\n%s\n", bar_name);
-
+	if (len >= buf_len){
+		pr_warn("insufficient space to dump reg vals\n");
+		pr_warn("ERR! str truncated. req=%d, avail=%d", len, buf_len);
+		return buf_len;
+	}
 	/* now print all the registers of the corresponding bar */
 	for (i = 0; i < num_regs; i++) {
 		/* if there are more than one register of same type
@@ -188,7 +189,7 @@ static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
 						name, val);
 				if (rv < 0) {
 					pr_warn("insufficient space to dump reg vals\n");
-					return len;
+					return buf_len;
 				}
 				len += rv;
 			}
@@ -200,7 +201,7 @@ static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
 					(char *)reg_info[i].name, val);
 			if (rv < 0) {
 				pr_warn("inusfficient space to dump register values\n");
-				return len;
+				return buf_len;
 			}
 			len += rv;
 		}
@@ -559,13 +560,13 @@ int create_dev_dbg_files(struct xlnx_dma_dev *xdev, struct dentry *dev_root)
 		fops->owner = THIS_MODULE;
 		switch (i) {
 		case DBGFS_DEV_DBGF_INFO:
-			snprintf(dbgf[i].name, 64, "%s", "info");
+			snprintf(dbgf[i].name, DBGFS_DBG_FNAME_SZ, "%s", "info");
 			fops->open = dev_info_open;
 			fops->read = dev_info_read;
 			fops->release = dev_dbg_file_release;
 			break;
 		case DBGFS_DEV_DBGF_REGS:
-			snprintf(dbgf[i].name, 64, "%s", "regs");
+			snprintf(dbgf[i].name, DBGFS_DBG_FNAME_SZ, "%s", "regs");
 			fops->open = dev_regs_open;
 			fops->read = dev_regs_read;
 			fops->release = dev_dbg_file_release;

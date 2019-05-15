@@ -168,7 +168,7 @@ struct intr_vec_map_type {
 /**< Interrupt info for MSI-X interrupt vectors per device */
 struct intr_info_t {
 	/**< msix_entry list for all vectors */
-	char msix_name[QDMA_DEV_NAME_MAXLEN + 16];
+	char msix_name[QDMA_DEV_MSIX_NAME_MAXLEN];
 	/**< queue list for each interrupt */
 	struct list_head intr_list;
 	/**< number of queues assigned for each interrupt */

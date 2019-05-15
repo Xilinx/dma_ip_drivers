@@ -168,6 +168,7 @@ enum qdma_dev_qmax_state {
  *	Maxinum length of the QDMA device name
  */
 #define QDMA_DEV_NAME_MAXLEN	32
+#define QDMA_DEV_MSIX_NAME_MAXLEN (QDMA_DEV_NAME_MAXLEN + 16)
 
 /**
  * qdma_dev_conf defines the per-device qdma property.

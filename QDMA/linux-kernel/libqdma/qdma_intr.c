@@ -538,17 +538,17 @@ static int intr_vector_setup(struct xlnx_dma_dev *xdev, int idx,
 
 	if (type == INTR_TYPE_ERROR)
 		snprintf(xdev->dev_intr_info_list[idx].msix_name,
-			 QDMA_DEV_NAME_MAXLEN + 16, "%s-error",
+			 QDMA_DEV_MSIX_NAME_MAXLEN, "%s-error",
 			 xdev->conf.name);
 	else if (type == INTR_TYPE_USER)
 		snprintf(xdev->dev_intr_info_list[idx].msix_name,
-			 QDMA_DEV_NAME_MAXLEN + 16, "%s-user", xdev->conf.name);
+			 QDMA_DEV_MSIX_NAME_MAXLEN, "%s-user", xdev->conf.name);
 	else if (type == INTR_TYPE_DATA)
 		snprintf(xdev->dev_intr_info_list[idx].msix_name,
-			 QDMA_DEV_NAME_MAXLEN + 16, "%s-data", xdev->conf.name);
+			 QDMA_DEV_MSIX_NAME_MAXLEN, "%s-data", xdev->conf.name);
 	else
 		snprintf(xdev->dev_intr_info_list[idx].msix_name,
-			 QDMA_DEV_NAME_MAXLEN + 16, "%s", xdev->conf.name);
+			 QDMA_DEV_MSIX_NAME_MAXLEN, "%s", xdev->conf.name);
 
 	xdev->dev_intr_info_list[idx].intr_vec_map.intr_type = type;
 	xdev->dev_intr_info_list[idx].intr_vec_map.intr_vec_index = idx;

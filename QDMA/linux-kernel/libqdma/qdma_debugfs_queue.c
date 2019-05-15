@@ -629,9 +629,16 @@ int qdbg_parse_ctxt_to_buf(u32 *ctxt,
 		len += snprintf(buf + len, buflen - len,
 				"\t%-47s %#-10x %u\n",
 				entries[i].name, v, v);
+		if (len >= buflen){
+			// Not enough memory
+			return buflen - len;
+		}
 	}
 	len += snprintf(buf + len, buflen - len, "\n");
-
+	if (len >= buflen){
+		// Not enough memory
+		return buflen - len;
+	}
 	return len;
 }
 
