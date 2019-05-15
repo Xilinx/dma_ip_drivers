@@ -1319,13 +1319,9 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 		pr_info("%s invalid state, q_state %d.\n",
 		descq->conf.name, descq->q_state);
 		if (buf && buflen) {
-			int l = snprintf(buf, buflen,
-					 "queue %s, idx %u stop failed.\n",
-					 descq->conf.name, descq->conf.qidx);
-			if (l <= 0 || l >= buflen) {
-				unlock_descq(descq);
-				return QDMA_ERR_INVALID_INPUT_PARAM;
-			}
+			snprintf(buf, buflen,
+				 "queue %s, idx %u stop failed.\n",
+				 descq->conf.name, descq->conf.qidx);
 		}
 		unlock_descq(descq);
 		return QDMA_ERR_INVALID_DESCQ_STATE;
@@ -1400,10 +1396,8 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 
 	/** fill the return buffer indicating that queue is stopped */
 	if (buf && buflen) {
-		int len = snprintf(buf, buflen, "queue %s, idx %u stopped.\n",
+		snprintf(buf, buflen, "queue %s, idx %u stopped.\n",
 				descq->conf.name, descq->conf.qidx);
-		if (len <= 0 || len >= buflen)
-			return QDMA_ERR_INVALID_INPUT_PARAM;
 	}
 	return QDMA_OPERATION_SUCCESSFUL;
 }
