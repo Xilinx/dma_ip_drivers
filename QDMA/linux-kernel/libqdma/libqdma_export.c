@@ -1174,7 +1174,7 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 	}
 
 	/** Interrupt mode */
-	if (descq->xdev->num_vecs) {	
+	if (descq->xdev->num_vecs) {
 		unsigned long flags;
 
 		spin_lock_irqsave(&descq->xdev->lock, flags);
