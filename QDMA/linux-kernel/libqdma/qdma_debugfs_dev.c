@@ -165,7 +165,11 @@ static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
 
 	/* print the bar name */
 	len += snprintf(buf + len, buf_len - len, "\n%s\n", bar_name);
-
+	if (len >= buf_len){
+		pr_warn("insufficient space to dump reg vals\n");
+		pr_warn("ERR! str truncated. req=%d, avail=%d", len, buf_len);
+		return buf_len;
+	}
 	/* now print all the registers of the corresponding bar */
 	for (i = 0; i < num_regs; i++) {
 		/* if there are more than one register of same type
