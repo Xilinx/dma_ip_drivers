@@ -1186,9 +1186,7 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 	qdma_thread_add_work(descq);
 
 	if (buf && buflen) {
-		rv = snprintf(buf, buflen, "%s started\n", descq->conf.name);
-		if (rv <= 0 || rv >= buflen)
-			goto clear_context;
+		snprintf(buf, buflen, "%s started\n", descq->conf.name);
 	}
 	/** set the descq to online state*/
 	lock_descq(descq);
