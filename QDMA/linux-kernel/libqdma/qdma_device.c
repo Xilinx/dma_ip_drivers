@@ -459,11 +459,9 @@ struct qdma_descq *qdma_device_get_descq_by_id(struct xlnx_dma_dev *xdev,
 			pr_info("%s, q idx too big 0x%lx > 0x%x.\n",
 				xdev->conf.name, idx, qdev->qmax);
 			if (buf && buflen)  {
-				int len = snprintf(buf, buflen,
+				snprintf(buf, buflen,
 					"%s, q idx too big 0x%lx > 0x%x.\n",
 					xdev->conf.name, idx, qdev->qmax);
-				buf[len] = '\0';
-				buflen -= (len + 1);
 			}
 			return NULL;
 		}
@@ -478,11 +476,9 @@ struct qdma_descq *qdma_device_get_descq_by_id(struct xlnx_dma_dev *xdev,
 			pr_info("%s, idx 0x%lx, q 0x%p state invalid.\n",
 				xdev->conf.name, idx, descq);
 			if (buf && buflen) {
-				int len = snprintf(buf, buflen,
+				snprintf(buf, buflen,
 				"%s, idx 0x%lx, q 0x%p state invalid.\n",
 					xdev->conf.name, idx, descq);
-				buf[len] = '\0';
-				buflen -= (len + 1);
 			}
 			unlock_descq(descq);
 			return NULL;
@@ -519,11 +515,9 @@ struct qdma_descq *qdma_device_get_pair_descq_by_id(struct xlnx_dma_dev *xdev,
 			pr_debug("%s, q idx too big 0x%lx > 0x%x.\n",
 				xdev->conf.name, idx, qdev->qmax);
 			if (buf && buflen)  {
-				int len = snprintf(buf, buflen,
+				snprintf(buf, buflen,
 					"%s, q idx too big 0x%lx > 0x%x.\n",
 					xdev->conf.name, idx, qdev->qmax);
-				buf[len] = '\0';
-				buflen -= len + 1;
 			}
 			return NULL;
 		}
@@ -538,11 +532,9 @@ struct qdma_descq *qdma_device_get_pair_descq_by_id(struct xlnx_dma_dev *xdev,
 			pr_debug("%s, idx 0x%lx, q 0x%p state invalid.\n",
 				xdev->conf.name, idx, pair_descq);
 			if (buf && buflen) {
-				int len = snprintf(buf, buflen,
+				snprintf(buf, buflen,
 				"%s, idx 0x%lx, q 0x%p state invalid.\n",
 					xdev->conf.name, idx, pair_descq);
-				buf[len] = '\0';
-				buflen -= len + 1;
 			}
 			unlock_descq(pair_descq);
 			return NULL;
