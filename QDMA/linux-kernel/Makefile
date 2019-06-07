@@ -164,7 +164,7 @@ else # bundled install
 endif
 
 $(shell rm -f $(srcdir)/drv/libqdma; ln -fs $(srcdir)/libqdma $(srcdir)/drv;)
-$(shell rm -f $(srcdir)/include/qdma_reg_dump.h; ln -fs $(srcdir)/../qdma_access/qdma_reg_dump.h $(srcdir)/include/qdma_reg_dump.h;)
+$(shell rm -f $(srcdir)/include/qdma_reg_dump.h; ln -fs $(srcdir)/libqdma/qdma_access/qdma_reg_dump.h $(srcdir)/include/qdma_reg_dump.h;)
 
 .PHONY: eval.mak
 

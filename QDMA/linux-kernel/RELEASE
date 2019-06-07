@@ -12,6 +12,8 @@ NOTE:
 
 SUPPORTED FEATURES:
 ===================
+2018.2 Features
+---------------
 - Support for both the AXI4 Memory Mapped(MM) and AXI4 Streaming(ST) Interfaces
 - 2048 Queue Sets
 	- 2048 H2C Descriptor Rings
@@ -50,7 +52,7 @@ SUPPORTED FEATURES:
 - Support disabling overflow check in completion ring
 - Version for SW and HW
 - ECC Support
-- Flexible interrupt allocation between PF/VF 
+- Flexible interrupt allocation between PF/VF
 - Greater than 32 vectors per function
 - Legacy Interrupt Support
 - VF driver support in direct and indirect interrupt mode
@@ -65,7 +67,6 @@ SUPPORTED FEATURES:
 KNOWN ISSUES:
 =============
 - Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-
 
 DRIVER LIMITATIONS:
 ===================

@@ -34,7 +34,7 @@ application and to interact with the QDMA PCIe device.
 	# mkdir /mnt/huge
 	# mount -t hugetlbfs nodev /mnt/huge
 	# modprobe uio
-	# insmod ../../build/kmod/igb_uio.ko
+	# insmod ../../x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
 
 4. Bind PF ports to the igb_uio module as shown below
 
