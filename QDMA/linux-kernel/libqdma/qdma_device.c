@@ -27,14 +27,13 @@
 #include "qdma_intr.h"
 #include "qdma_regs.h"
 #include "qdma_mbox.h"
+#include "qdma_access.h"
 
 #ifdef __QDMA_VF__
 static int device_set_qrange(struct xlnx_dma_dev *xdev)
 {
 	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	struct mbox_msg *m;
-	struct mbox_msg_hdr *hdr;
-	struct mbox_msg_fmap *fmap;
 	int rv = 0;
 
 	if  (!qdev) {
@@ -43,23 +42,14 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 		return QDMA_ERR_INVALID_QDMA_DEVICE;
 	}
 
-	if (xdev->conf.cur_cfg_state == QMAX_CFG_INITIAL) {
-		qdev->qmax = 1;
-		qdev->qbase = 0;
-	}
-
-	m = qdma_mbox_msg_alloc(xdev, MBOX_OP_FMAP);
+	m = qdma_mbox_msg_alloc();
 	if (!m)
 		return -ENOMEM;
 
-	hdr = &m->hdr;
-	fmap = &m->fmap;
-
-	fmap->qbase = qdev->qbase;
-	fmap->qmax = qdev->qmax;
-
-	rv = qdma_mbox_msg_send(xdev, m, 1, MBOX_OP_FMAP_RESP,
-				QDMA_MBOX_MSG_TIMEOUT_MS);
+	qdma_mbox_compose_vf_fmap_prog(xdev->func_id, qdev->qmax,
+				       (int)qdev->qbase,
+					m->raw);
+	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
 	if (rv < 0) {
 		if (rv != -ENODEV)
 			pr_info("%s set q range (fmap) failed %d.\n",
@@ -67,74 +57,39 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 		goto err_out;
 	}
 
-	if (hdr->status) {
-		rv = hdr->status;
-		if (xdev->conf.cur_cfg_state == QMAX_CFG_INITIAL) {
-			qdev->qbase = xdev->conf.qsets_base = fmap->qbase;
-			qdev->qmax = xdev->conf.qsets_max = 0;
-		}
-		pr_err("Failed to set qconf %d max/base = %u/%u\n", rv,
-				qdev->qmax, qdev->qbase);
-		goto err_out;
-	}
-
-	qdev->qbase = xdev->conf.qsets_base = fmap->qbase;
-
-	if (xdev->conf.cur_cfg_state == QMAX_CFG_INITIAL) {
-		qdev->h2c_descq->qidx_hw = fmap->qbase;
-		qdev->c2h_descq->qidx_hw = fmap->qbase;
-		xdev->conf.cur_cfg_state = QMAX_CFG_USER;
-	}
+	rv = qdma_mbox_vf_response_status(m->raw);
 
 	pr_debug("%s, func id %u/%u, Q 0x%x + 0x%x.\n",
 		xdev->conf.name, xdev->func_id, xdev->func_id_parent,
 		qdev->qbase, qdev->qmax);
 
-	qdev->init_qrange = 1;
+	if (!rv)
+		qdev->init_qrange = 1;
 
 err_out:
 	qdma_mbox_msg_free(m);
 	return rv;
 }
 
-int device_set_qconf(struct xlnx_dma_dev *xdev, int qmax, u32 *qbase)
+int device_set_qconf(struct xlnx_dma_dev *xdev, int *qmax, int *qbase)
 {
 	struct mbox_msg *m;
-	struct mbox_msg_hdr *hdr;
-	struct mbox_msg_fmap *fmap;
 	int rv = 0;
 
-	m = qdma_mbox_msg_alloc(xdev, MBOX_OP_QCONF);
+	m = qdma_mbox_msg_alloc();
 	if (!m)
 		return -ENOMEM;
 
-	hdr = &m->hdr;
-	fmap = &m->fmap;
-
-	fmap->qbase = 0;
-	fmap->qmax = qmax;
-
-	rv = qdma_mbox_msg_send(xdev, m, 1, MBOX_OP_QCONF_RESP,
-				QDMA_MBOX_MSG_TIMEOUT_MS);
+	qdma_mbox_compose_vf_qreq(xdev->func_id,
+				  (uint16_t)*qmax & 0xFFFF, *qbase, m->raw);
+	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
 	if (rv < 0) {
 		pr_info("%s set q range (qconf) failed %d.\n",
 			xdev->conf.name, rv);
 		goto err_out;
 	}
 
-	if (hdr->status) {
-		rv = hdr->status;
-		pr_err("Failed to set qconf\n");
-		goto err_out;
-	}
-
-	*qbase = fmap->qbase;
-
-	qdma_device_set_cfg_state((unsigned long)xdev, QMAX_CFG_USER);
-	pr_debug("%s, func id %u/%u, Q 0x%x + 0x%x.\n",
-			xdev->conf.name, xdev->func_id, xdev->func_id_parent,
-		*qbase, qmax);
-
+	rv = qdma_mbox_vf_qinfo_get(m->raw, qbase, (uint16_t *)qmax);
 err_out:
 	qdma_mbox_msg_free(m);
 	return rv;
@@ -143,7 +98,10 @@ err_out:
 static int device_set_qrange(struct xlnx_dma_dev *xdev)
 {
 	struct qdma_dev *qdev = xdev_2_qdev(xdev);
+	struct qdma_fmap_cfg fmap;
 	int rv = 0;
+
+	memset(&fmap, 0, sizeof(struct qdma_fmap_cfg));
 
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n",
@@ -151,7 +109,12 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 		return QDMA_ERR_INVALID_QDMA_DEVICE;
 	}
 
-	hw_set_fmap(xdev, xdev->func_id, qdev->qbase, qdev->qmax);
+	fmap.qmax = qdev->qmax;
+	fmap.qbase = qdev->qbase;
+
+	rv = qdma_fmap_write(xdev, xdev->func_id, &fmap);
+	if (rv < 0)
+		return rv;
 
 	qdev->init_qrange = 1;
 
@@ -186,30 +149,19 @@ static void qdma_err_mon(struct work_struct *work)
 #endif
 #endif
 
-int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
+int qdma_device_interrupt_setup(struct xlnx_dma_dev *xdev)
 {
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	int rv = 0;
-
-	spin_lock(&qdev->lock);
-
-	if (qdev->init_qrange)
-		goto done;
-
-	rv = device_set_qrange(xdev);
-	if (rv < 0)
-		goto done;
-
-	rv = intr_ring_setup(xdev);
-	if (rv)
-		goto done;
 
 	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
 			(xdev->conf.qdma_drv_mode == AUTO_MODE)) {
+		rv = intr_ring_setup(xdev);
+		if (rv)
+			return -EINVAL;
 		if (xdev->intr_coal_list != NULL) {
 			rv = qdma_intr_context_setup(xdev);
 			if (rv)
-				goto done;
+				return rv;
 		} else {
 			pr_info("dev %s intr vec[%d] >= queues[%d], No aggregation\n",
 				dev_name(&xdev->conf.pdev->dev),
@@ -224,8 +176,19 @@ int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
 #ifndef __QDMA_VF__
 	if (((xdev->conf.qdma_drv_mode != POLL_MODE) &&
 			(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) &&
-			xdev->conf.master_pf)
-		qdma_err_intr_setup(xdev, 0);
+			xdev->conf.master_pf) {
+		rv = qdma_err_intr_setup(xdev);
+		if (rv < 0)
+			return -EINVAL;
+
+		rv = qdma_error_enable(xdev, QDMA_ERRS_ALL);
+		if (rv < 0)
+			return -EINVAL;
+
+		rv = qdma_error_interrupt_rearm(xdev);
+		if (rv < 0)
+			return -EINVAL;
+	}
 
 #ifdef ERR_DEBUG
 	else {
@@ -240,7 +203,32 @@ int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
 	}
 #endif
 #endif
+	return rv;
+}
 
+void qdma_device_interrupt_cleanup(struct xlnx_dma_dev *xdev)
+{
+	if (xdev->intr_coal_list)
+		intr_ring_teardown(xdev);
+}
+
+int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
+{
+	struct qdma_dev *qdev = xdev_2_qdev(xdev);
+	int rv = 0;
+
+	spin_lock(&qdev->lock);
+
+	if (qdev->init_qrange)
+		goto done;
+
+	rv = qdma_csr_read(xdev, &xdev->csr_info);
+	if (rv < 0)
+		goto done;
+
+	rv = device_set_qrange(xdev);
+	if (rv < 0)
+		goto done;
 done:
 	spin_unlock(&qdev->lock);
 
@@ -250,28 +238,16 @@ done:
 int qdma_device_init(struct xlnx_dma_dev *xdev)
 {
 	int i;
+	struct qdma_fmap_cfg fmap;
+#ifndef __QDMA_VF__
 	int rv = 0;
+#endif
 	int qmax = xdev->conf.qsets_max;
 	struct qdma_descq *descq;
 	struct qdma_dev *qdev;
 
-#ifdef __QDMA_VF__
-	xdev->func_id = xdev->func_id_parent = 0; /* filled later */
-#else
-	if (xdev->conf.master_pf) {
-		pr_info("%s master PF clearing memory.\n", xdev->conf.name);
-		rv = hw_init_global_context_memory(xdev);
-		if (rv)
-			return rv;
-	}
-#endif
+	memset(&fmap, 0, sizeof(struct qdma_fmap_cfg));
 
-	if (xdev->conf.qdma_drv_mode != POLL_MODE &&
-			xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE) {
-		rv = intr_setup(xdev);
-		if (rv)
-			return -EINVAL;
-	}
 	qdev = kzalloc(sizeof(struct qdma_dev) +
 			sizeof(struct qdma_descq) * qmax * 2, GFP_KERNEL);
 	if (!qdev) {
@@ -282,49 +258,35 @@ int qdma_device_init(struct xlnx_dma_dev *xdev)
 	}
 
 	spin_lock_init(&qdev->lock);
+	xdev->dev_priv = (void *)qdev;
+#ifdef __QDMA_VF__
+	xdev->func_id = xdev->func_id_parent = 0; /* filled later */
+#else
+	fmap.qmax = 0;
+	fmap.qbase = 0;
+	rv = qdma_fmap_write(xdev, xdev->func_id, &fmap);
+	if (rv < 0)
+		return rv;
+#endif
 
 	descq = (struct qdma_descq *)(qdev + 1);
 	qdev->h2c_descq = descq;
 	qdev->c2h_descq = descq + qmax;
 
-	xdev->dev_priv = (void *)qdev;
 	qdev->qmax = qmax;
 	qdev->init_qrange = 0;
 
-#ifdef __QDMA_VF__
-	if (xdev->conf.cur_cfg_state == QMAX_CFG_UNCONFIGURED) {
-		qdev->qbase = TOTAL_QDMA_QS - TOTAL_VF_QS
-			+ (xdev->conf.idx - 1) * QDMA_Q_PER_VF_MAX;
-	} else
-		qdev->qbase = xdev->conf.qsets_base;
-#else
-	/*
-	 * for the first device make qbase as 0 indicated by <0 value
-	 * for others initial configuration, go for QDMA_Q_PER_PF_MAX
-	 * for qbase
-	 * if modified using sysfs/qmax, take it from calculated qbase
-	 */
-	if (xdev->conf.cur_cfg_state == QMAX_CFG_UNCONFIGURED) {
-		qdev->qbase = (xdev->conf.idx - 1) * MAX_QS_PER_PF;
-		xdev->conf.cur_cfg_state = QMAX_CFG_INITIAL;
-	} else
-		qdev->qbase = xdev->conf.qsets_base;
-#endif
-	xdev->conf.qsets_base = qdev->qbase;
+	qdev->qbase = xdev->conf.qsets_base;
 
 	for (i = 0, descq = qdev->h2c_descq; i < qdev->qmax; i++, descq++)
 		qdma_descq_init(descq, xdev, i, i);
 	for (i = 0, descq = qdev->c2h_descq; i < qdev->qmax; i++, descq++)
 		qdma_descq_init(descq, xdev, i, i);
 #ifndef __QDMA_VF__
-	if (xdev->conf.master_pf) {
-		pr_info("%s master PF.\n", xdev->conf.name);
-		hw_set_global_csr(xdev);
-		qdma_trq_c2h_config(xdev);
-		for (i = 0; i < xdev->mm_channel_max; i++) {
-			hw_mm_channel_enable(xdev, i, 1);
-			hw_mm_channel_enable(xdev, i, 0);
-		}
+	qdma_set_default_global_csr(xdev);
+	for (i = 0; i < xdev->dev_cap.mm_channel_max; i++) {
+		qdma_mm_channel_enable(xdev, i, 1);
+		qdma_mm_channel_enable(xdev, i, 0);
 	}
 #endif
 	/** STM specific init */
@@ -369,20 +331,11 @@ void qdma_device_cleanup(struct xlnx_dma_dev *xdev)
 					i + qdev->qmax, NULL, 0);
 	}
 
-	intr_teardown(xdev);
-
-	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
-			(xdev->conf.qdma_drv_mode == AUTO_MODE)) {
-		pr_info("dev %s teardown interrupt coalescing ring\n",
-					dev_name(&xdev->conf.pdev->dev));
-		intr_ring_teardown(xdev);
-	}
-
 #ifndef __QDMA_VF__
 	if (xdev->func_id == 0) {
-		for (i = 0; i < xdev->mm_channel_max; i++) {
-			hw_mm_channel_disable(xdev, i, DMA_TO_DEVICE);
-			hw_mm_channel_disable(xdev, i, DMA_FROM_DEVICE);
+		for (i = 0; i < xdev->dev_cap.mm_channel_max; i++) {
+			qdma_mm_channel_disable(xdev, i, DMA_TO_DEVICE);
+			qdma_mm_channel_disable(xdev, i, DMA_FROM_DEVICE);
 		}
 	}
 #endif
@@ -397,7 +350,6 @@ void qdma_device_cleanup(struct xlnx_dma_dev *xdev)
 			qdma_queue_remove((unsigned long int)xdev,
 					  i + qdev->qmax, NULL, 0);
 	}
-
 	xdev->dev_priv = NULL;
 	kfree(qdev);
 }

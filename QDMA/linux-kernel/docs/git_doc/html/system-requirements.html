@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System Requirements &mdash; QDMA Linux Driver 2018.3 documentation</title>
+  <title>System Requirements &mdash; QDMA Linux Driver 2019.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2018.3 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
         <link rel="next" title="Building and Installing Software Stack" href="build.html"/>
         <link rel="prev" title="QDMA Features" href="features.html"/> 
 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                2018.3
+                2019.1
               </div>
             
           
@@ -97,9 +97,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
 </ul>
 
@@ -156,13 +156,13 @@
 </div>
 <div class="section" id="host-platform">
 <h2>Host Platform<a class="headerlink" href="#host-platform" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic simple">
-<li>x86_64</li>
-</ol>
+<p>x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 32GB RAM
+on same CPU node for 2K queues.
+For VM testing, host system must support virtualization and it must be enabled in the BIOS.</p>
 </div>
 <div class="section" id="host-system-configuration">
 <h2>Host System Configuration<a class="headerlink" href="#host-system-configuration" title="Permalink to this headline">¶</a></h2>
-<p>Linux QDMA Driver latest release is verified on following Host system configuration for PF anf VF functionality</p>
+<p>Linux QDMA Driver latest release is verified on following Host system configuration for PF and VF functionality</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="30%" />
@@ -175,19 +175,23 @@
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Operating System</td>
-<td>Ubuntu 16.04.3 LTS</td>
+<td>Ubuntu 18.04 LTS</td>
 </tr>
 <tr class="row-odd"><td>Linux Kernel</td>
-<td>4.4.0-93-generic</td>
+<td>4.15.0-23-generic</td>
 </tr>
 <tr class="row-even"><td>RAM</td>
-<td>32GB</td>
+<td>64GB on local NUMA node</td>
 </tr>
-<tr class="row-odd"><td>Qemu Version</td>
+<tr class="row-odd"><td>Hypervisor</td>
+<td>KVM</td>
+</tr>
+<tr class="row-even"><td>Qemu Version</td>
 <td>QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.15)</td>
 </tr>
 </tbody>
 </table>
+<p>Note: QEMU is a hosted virtual machine monitor which emulates the machine’s processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.</p>
 </div>
 <div class="section" id="guest-system-configuration">
 <h2>Guest System Configuration<a class="headerlink" href="#guest-system-configuration" title="Permalink to this headline">¶</a></h2>
@@ -234,34 +238,40 @@
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>CentOS</td>
-<td>7.2.1511</td>
-<td>&#160;</td>
+<tr class="row-even"><td rowspan="3">CentOS</td>
+<td>7.4-1708</td>
+<td>3.10.0-693</td>
 </tr>
-<tr class="row-odd"><td rowspan="4">Fedora</td>
-<td>24</td>
-<td>4.5.5-300</td>
+<tr class="row-odd"><td>7.5-1804</td>
+<td>3.10.0-862</td>
 </tr>
-<tr class="row-even"><td>26</td>
-<td>4.11.8-300</td>
+<tr class="row-even"><td>7.6-1810</td>
+<td>3.10.0-957</td>
 </tr>
-<tr class="row-odd"><td>27</td>
-<td>4.13.9-300</td>
+<tr class="row-odd"><td rowspan="3">Fedora</td>
+<td>28</td>
+<td>4.16</td>
 </tr>
-<tr class="row-even"><td>28</td>
-<td>4.16.3-301</td>
+<tr class="row-even"><td>29</td>
+<td>4.18</td>
 </tr>
-<tr class="row-odd"><td rowspan="4">Ubuntu</td>
-<td>16.04</td>
+<tr class="row-odd"><td>30</td>
+<td>5.0</td>
+</tr>
+<tr class="row-even"><td rowspan="5">Ubuntu</td>
+<td>14.04.06</td>
 <td>4.4.0-93</td>
 </tr>
-<tr class="row-even"><td>17.10.1</td>
-<td>4.13.0-21</td>
+<tr class="row-odd"><td>16.04</td>
+<td>4.10</td>
 </tr>
-<tr class="row-odd"><td>18.04</td>
+<tr class="row-even"><td>18.04</td>
 <td>4.15.0-23</td>
 </tr>
-<tr class="row-even"><td>14.04.5</td>
+<tr class="row-odd"><td>18.04.2</td>
+<td>3.10.0</td>
+</tr>
+<tr class="row-even"><td>18.04.2</td>
 <td>3.10.0</td>
 </tr>
 </tbody>
@@ -281,16 +291,18 @@
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td rowspan="5">&#160;</td>
-<td>3.2.101</td>
+<tr class="row-even"><td rowspan="6">&#160;</td>
+<td>3.16.66</td>
 </tr>
-<tr class="row-odd"><td>3.18.108</td>
+<tr class="row-odd"><td>4.4.179</td>
 </tr>
-<tr class="row-even"><td>4.4.131</td>
+<tr class="row-even"><td>4.19.41</td>
 </tr>
-<tr class="row-odd"><td>4.14.40</td>
+<tr class="row-odd"><td>4.14.117</td>
 </tr>
-<tr class="row-even"><td>4.15.18</td>
+<tr class="row-even"><td>4.9.174</td>
+</tr>
+<tr class="row-odd"><td>5.0.14</td>
 </tr>
 </tbody>
 </table>
@@ -346,7 +358,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2018.3',
+            VERSION:'2019.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

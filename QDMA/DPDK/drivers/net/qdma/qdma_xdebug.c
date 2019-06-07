@@ -1,33 +1,33 @@
-/*
- *   BSD LICENSE
+/*-
+ * BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of the copyright holder nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of the copyright holder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdint.h>
@@ -47,134 +47,9 @@
 #include <rte_hexdump.h>
 
 #include "qdma.h"
-#include "qdma_export.h"
-#include "qdma_regs.h"
-
-union __attribute__ ((packed)) h2c_c2h_ctxt
-{
-	struct  __attribute__ ((packed))  ctxt_data
-	{
-		uint32_t data[5];
-	} c_data;
-	struct  __attribute__ ((packed)) ctxt_fields
-	{
-		uint16_t pidx;
-
-		uint16_t irq_arm:1;
-		uint16_t fnc_id:8;
-		uint16_t rsv0:7;
-
-		uint16_t qen:1;
-		uint16_t fcrd_en:1;
-		uint16_t wbi_chk:1;
-		uint16_t wbi_intvl_en:1;
-		uint16_t at:1;
-		uint16_t fetch_max:3;
-		uint16_t rsv1:4;
-		uint16_t rng_sz:4;
-
-		uint16_t dsc_sz:2;
-		uint16_t byp:1;
-		uint16_t mm_chn:1;
-		uint16_t wbk_en:1;
-		uint16_t irq_en:1;
-		uint16_t port_id:3;
-		uint16_t irq_no_last:1;
-		uint16_t err:2;
-		uint16_t err_wb_sent:1;
-		uint16_t irq_req:1;
-		uint16_t mrkr_dis:1;
-		uint16_t is_mm:1;
-
-		uint64_t dsc_base;
-
-		uint16_t vec:10;
-		uint16_t int_aggr:1;
-	} c_fields;
-};
-
-union __attribute__ ((packed)) c2h_cmpt_ctxt
-{
-	struct  __attribute__ ((packed))  c2h_cmpt_data
-	{
-		uint32_t data[5];
-	} c_data;
-	struct  __attribute__ ((packed)) c2h_cmpt_fields
-	{
-		uint32_t en_stat_desc:1;
-		uint32_t en_int:1;
-		uint32_t trig_mode:3;
-		uint32_t fnc_id:8;
-		uint32_t rsv0:4;
-		uint32_t count_idx:4;
-		uint32_t timer_idx:4;
-		uint32_t int_st:2;
-		uint32_t color:1;
-		uint32_t qsize_idx:4;
-
-		uint64_t rsv1:6;
-		uint64_t baddr:52;
-		uint64_t desc_sz:2;
-		uint64_t pidx_l:4;
-
-		uint32_t pidx_h:12;
-		uint32_t cidx:16;
-		uint32_t valid:1;
-		uint32_t err:2;
-		uint32_t user_trig_pend:1;
-
-		uint32_t timer_running:1;
-		uint32_t full_upd:1;
-		uint32_t ovf_chk_dis:1;
-		uint32_t at:1;
-		uint32_t vec:11;
-		uint32_t int_aggr:1;
-		uint32_t rsv2:17;
-	} c_fields;
-};
-
-union __attribute__ ((packed)) h2c_c2h_hw_ctxt
-{
-	struct  __attribute__ ((packed))  hw_ctxt_data
-	{
-		uint32_t data[2];
-	} c_data;
-	struct  __attribute__ ((packed)) hw_ctxt_fields
-	{
-		uint16_t cidx;
-		uint16_t crd_use;
-
-		uint16_t rsv0:8;
-		uint16_t dsc_pnd:1;
-		uint16_t idl_stp_b:1;
-		uint16_t evt_pnd:1;
-		uint16_t fetch_pnd:4;
-		uint16_t rsv1:1;
-
-	} c_fields;
-};
-
-union __attribute__ ((packed)) prefetch_ctxt
-{
-	struct __attribute__ ((packed)) pref_ctxt_data
-	{
-		uint32_t data[2];
-	} c_data;
-
-	struct __attribute__ ((packed)) pref_ctxt_fields
-	{
-		uint64_t bypass:1;
-		uint64_t buf_sz_idx:4;
-		uint64_t port_id:3;
-		uint64_t rsvd:18;
-		uint64_t err:1;
-		uint64_t pfch_en:1;
-		uint64_t pfch:1;
-		uint64_t sw_crdt:16;
-		uint64_t valid:1;
-	} c_fields;
-};
-
+#include "rte_pmd_qdma.h"
+#include "qdma_access.h"
+#include "qdma_reg_dump.h"
 #define xdebug_info(x, args...) rte_log(RTE_LOG_INFO, RTE_LOGTYPE_USER1,\
 					## args)
 
@@ -193,22 +68,18 @@ static int qdma_struct_dump(uint8_t port_id, uint16_t queue)
 		struct qdma_rx_queue *rx_q =
 			(struct qdma_rx_queue *)dev->data->rx_queues[queue];
 
-		if(rx_q) {
+		if (rx_q) {
 			print_header(" ***********RX Queue struct********** ");
 			xdebug_info(dev, "\t\t wb_pidx             :%x\n",
 					rx_q->wb_status->pidx);
 			xdebug_info(dev, "\t\t wb_cidx             :%x\n",
 					rx_q->wb_status->cidx);
-			xdebug_info(dev, "\t\t rx_pidx             :%x\n",
-					*rx_q->rx_pidx);
-			xdebug_info(dev, "\t\t rx_cidx             :%x\n",
-					*rx_q->rx_cidx);
-			xdebug_info(dev, "\t\t rx_tail             :%x\n",
+			xdebug_info(dev, "\t\t rx_tail (ST)        :%x\n",
 					rx_q->rx_tail);
 			xdebug_info(dev, "\t\t c2h_pidx            :%x\n",
-					rx_q->c2h_pidx);
-			xdebug_info(dev, "\t\t rx_cmpt_tail        :%x\n",
-					rx_q->rx_cmpt_tail);
+					rx_q->q_pidx_info.pidx);
+			xdebug_info(dev, "\t\t rx_cmpt_cidx        :%x\n",
+					rx_q->cmpt_cidx_info.wrb_cidx);
 			xdebug_info(dev, "\t\t cmpt_desc_len       :%x\n",
 					rx_q->cmpt_desc_len);
 			xdebug_info(dev, "\t\t rx_buff_size        :%x\n",
@@ -256,16 +127,14 @@ static int qdma_struct_dump(uint8_t port_id, uint16_t queue)
 		struct qdma_tx_queue *tx_q =
 			(struct qdma_tx_queue *)dev->data->tx_queues[queue];
 
-		if(tx_q) {
+		if (tx_q) {
 			print_header("***********TX Queue struct************");
 			xdebug_info(dev, "\t\t wb_pidx             :%x\n",
 					tx_q->wb_status->pidx);
 			xdebug_info(dev, "\t\t wb_cidx             :%x\n",
 					tx_q->wb_status->cidx);
-			xdebug_info(dev, "\t\t tx_pidx             :%x\n",
-					*tx_q->tx_pidx);
-			xdebug_info(dev, "\t\t tx_tail             :%x\n",
-					tx_q->tx_tail);
+			xdebug_info(dev, "\t\t h2c_pidx            :%x\n",
+					tx_q->q_pidx_info.pidx);
 			xdebug_info(dev, "\t\t tx_fl_tail          :%x\n",
 					tx_q->tx_fl_tail);
 			xdebug_info(dev, "\t\t tx_desc_pend        :%x\n",
@@ -297,142 +166,33 @@ static int qdma_csr_dump(void)
 {
 	struct rte_eth_dev *dev;
 	struct qdma_pci_dev *qdma_dev;
-	uint64_t bar_addr;
-	uint32_t reg_val;
+	char *buf = NULL;
+	uint32_t buflen;
+	int ret;
 
-	if (rte_eth_dev_count() < 1)
+	if (rte_eth_dev_count_avail() < 1)
 		return -1;
-
 	dev = &rte_eth_devices[0];
 	qdma_dev = dev->data->dev_private;
-	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
-
-	xdebug_info(dev, "FPGA Registers\n--------------\n");
-	xdebug_info(dev, "NAME                               offset       "
-			"description               register-Value\n");
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x0));
-	xdebug_info(dev, "FPGA_VER                           0x00000000   "
-			"FPGA Version              %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x204));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[0]              0x00000204   "
-			"Ring size index 0         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x208));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[1]              0x00000208   "
-			"Ring size index 1         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x20c));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[2]              0x0000020c   "
-			"Ring size index 2         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x210));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[3]              0x00000210   "
-			"Ring size index 3         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x214));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[4]              0x00000214   "
-			"Ring size index 4         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x218));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[5]              0x00000218   "
-			"Ring size index 5         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x21c));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[6]              0x0000021c   "
-			"Ring size index 6         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x220));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[7]              0x00000220   "
-			"Ring size index 7         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x224));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[8]              0x00000224   "
-			"Ring size index 8         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x228));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[9]              0x00000228   "
-			"Ring size index 9         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x22c));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[10]             0x0000022c   "
-			"Ring size index 10        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x230));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[11]             0x00000230   "
-			"Ring size index 11        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x234));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[12]             0x00000234   "
-			"Ring size index 12        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x238));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[13]             0x00000238   "
-			"Ring size index 13        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x23c));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[14]             0x0000023c   "
-			"Ring size index 14        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x240));
-	xdebug_info(dev, "QDMA_GLBL_RNG_SZ_A[15]             0x00000240   "
-			"Ring size index 15        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x248));
-	xdebug_info(dev, "QDMA_GLBL_ERR_STAT                 0x00000248   "
-			"Global error status       %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x24c));
-	xdebug_info(dev, "QDMA_GLBL_ERR_MASK                 0x0000024c   "
-			"Global error mask         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x250));
-	xdebug_info(dev, "QDMA_GLBL_DSC_CFG                  0x00000250   "
-			"Global Desc configuration %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x254));
-	xdebug_info(dev, "QDMA_GLBL_DSC_ERR_STS              0x00000254   "
-			"Global Desc error status  %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x258));
-	xdebug_info(dev, "QDMA_GLBL_DSC_ERR_MSK              0x00000258   "
-			"Global Desc error Mask    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x25c));
-	xdebug_info(dev, "QDMA_GLBL_DSC_ERR_LOG0             0x0000025c   "
-			"Global Desc error log0    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x260));
-	xdebug_info(dev, "QDMA_GLBL_DSC_ERR_LOG1             0x00000260   "
-			"Global Desc error log1    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x264));
-	xdebug_info(dev, "QDMA_GLBL_TRQ_ERR_STS              0x00000264   "
-			"Glbl target error status  %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x268));
-	xdebug_info(dev, "QDMA_GLBL_TRQ_ERR_MSK              0x00000268   "
-			"Glbl target error Mask    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x26c));
-	xdebug_info(dev, "QDMA_GLBL_TRQ_ERR_LOG              0x0000026c   "
-			"Register access space     %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x400));
-	xdebug_info(dev, "QDMA_TRQ_SEL_FMAP[0]               0x00000400   "
-			"FMAP target index-0       %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0x404));
-	xdebug_info(dev, "QDMA_TRQ_SEL_FMAP[1]               0x00000404   "
-			"FMAP target index-1       %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xa88));
-	xdebug_info(dev, "QDMA_C2H_STAT_AXIS_C2H_ACPTD       0x00000a88   "
-			"C2H pkts accepted         %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xa8c));
-	xdebug_info(dev, "QDMA_C2H_STAT_AXIS_CMPT_ACPTD      0x00000a8c   "
-			"C2H CMPT pkts accepted    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xa90));
-	xdebug_info(dev, "QDMA_C2H_STAT_DESC_RSP_PKT_ACPTD   0x00000a90   "
-			"desc rsp pkts accepted    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xa94));
-	xdebug_info(dev, "QDMA_C2H_STAT_AXIS_PKG_CMP         0x00000a94   "
-			"C2H pkts completed        %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xa98));
-	xdebug_info(dev, "QDMA_C2H_STAT_DESC_RSP_ACPTD       0x00000a98   "
-			"dsc rsp pkts accepted     %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xa9c));
-	xdebug_info(dev, "QDMA_C2H_STAT_DESC_RSP_CMP D       0x00000a9c   "
-			"dsc rsp pkts completed    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xaa0));
-	xdebug_info(dev, "QDMA_C2H_STAT_WRQ_OUT              0x00000aa0   "
-			"Number of WRQ             %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xaa4));
-	xdebug_info(dev, "QDMA_C2H_STAT_WPL_REN_ACPTD        0x00000aa4   "
-			"WPL REN accepted          %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xaf0));
-	xdebug_info(dev, "QDMA_GLBL_ERR_STAT                 0x00000af0   "
-			"C2H error status          %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xaf4));
-	xdebug_info(dev, "QDMA_GLBL_ERR_MASK                 0x00000af4   "
-			"C2H error Mask            %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xaf8));
-	xdebug_info(dev, "QDMA_C2H_FATAL_ERR_STAT            0x00000af8   "
-			"C2H fatal error status    %x\n", reg_val);
-	reg_val = qdma_read_reg((uint64_t)(bar_addr + 0xafc));
-	xdebug_info(dev, "QDMA_C2H_FATAL_ERR_MSK             0x00000afc   "
-			"C2H fatal error Mask      %x\n", reg_val);
+	buflen = qdma_reg_dump_buf_len();
+	/*allocate memory for csr dump*/
+	buf = (char *)rte_zmalloc("QDMA_CSR_DUMP", buflen, RTE_CACHE_LINE_SIZE);
+	if (!buf) {
+		PMD_DRV_LOG(ERR, "Unable to allocate memory for csr dump "
+				"size %d\n", buflen);
+		return -ENOMEM;
+	}
+	xdebug_info(dev, "FPGA Config Registers\n--------------\n");
+	xdebug_info(dev, " Offset       Name    "
+			"                                    Value(Hex) Value(Dec)\n");
+	ret = qdma_dump_config_regs(dev, qdma_dev->is_vf, buf, buflen);
+	if (ret < 0) {
+		PMD_DRV_LOG(ERR, "Insufficient space to dump Config Bar register values\n");
+		rte_free(buf);
+		return -EINVAL;
+	}
+	xdebug_info(dev, "%s\n", buf);
+	rte_free(buf);
 
 	return 0;
 }
@@ -441,455 +201,265 @@ static int qdma_context_dump(uint8_t port_id, uint16_t queue)
 {
 	struct rte_eth_dev *dev = &rte_eth_devices[port_id];
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct queue_ind_prg *q_regs;
-	uint32_t reg_val, ctxt_sel;
-	uint64_t bar_addr;
-	uint16_t flag, i;
 	uint16_t qid = qdma_dev->queue_base + queue;
-
-	union h2c_c2h_ctxt q_ctxt;
-	union c2h_cmpt_ctxt c2h_cmpt;
-	union h2c_c2h_hw_ctxt hw_ctxt;
-	union prefetch_ctxt pref_ctxt;
-
-	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
-	q_regs = (struct queue_ind_prg *)(bar_addr + QDMA_TRQ_SEL_IND +
-			QDMA_IND_Q_PRG_OFF);
-
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[0], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[1], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[2], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[3], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[4], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[5], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[6], 0xffffffff);
-	qdma_write_reg((uint64_t)&q_regs->ctxt_mask[7], 0xffffffff);
+	struct qdma_descq_sw_ctxt q_sw_ctxt;
+	struct qdma_descq_cmpt_ctxt q_cmpt_ctxt;
+	struct qdma_descq_prefetch_ctxt q_prefetch_ctxt;
+	struct qdma_descq_hw_ctxt q_hw_ctxt;
 
 	if (queue >= dev->data->nb_rx_queues) {
 		PMD_DRV_LOG(INFO, " RX queue_id=%d not configured\n", queue);
 	} else {
 		print_header(" *************C2H Queue Contexts************** ");
-		/* SW context */
-		ctxt_sel = (QDMA_CTXT_SEL_DESC_SW_C2H << CTXT_SEL_SHIFT_B) |
-				(qid << QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
-		qdma_write_reg((uint64_t)&q_regs->ctxt_cmd, ctxt_sel);
 
-		flag = 1;
-		i = CONTEXT_PROG_POLL_COUNT;
-		while (flag && i) {
-			reg_val = qdma_read_reg((uint64_t)&q_regs->ctxt_cmd);
-			PMD_DRV_LOG(DEBUG, " Read cmd for queue-id:%d: "
-					"reg_val:%x\n", qid, reg_val);
-			flag = reg_val & BUSY_BIT_MSK;
-			rte_delay_ms(CONTEXT_PROG_DELAY);
-			i--;
-		}
-		if (flag) {
-			PMD_DRV_LOG(ERR, "Error: Busy on queue-id:%d: "
-					"initailization with cmd reg_val:%x\n",
-					qid, reg_val);
-			return -1;
-		}
+		memset(&q_sw_ctxt, 0, sizeof(struct qdma_descq_sw_ctxt));
+		memset(&q_cmpt_ctxt, 0, sizeof(struct qdma_descq_cmpt_ctxt));
+		memset(&q_prefetch_ctxt, 0,
+				sizeof(struct qdma_descq_prefetch_ctxt));
+		memset(&q_hw_ctxt, 0, sizeof(struct qdma_descq_hw_ctxt));
 
-		for (i = 0; i < 5; i++) {
-			reg_val = qdma_read_reg((uint64_t)&
-					q_regs->ctxt_data[i]);
-			q_ctxt.c_data.data[i] = reg_val;
-		}
+		qdma_sw_context_read(dev, 1, qid, &q_sw_ctxt);
+		qdma_pfetch_context_read(dev, qid, &q_prefetch_ctxt);
+		qdma_cmpt_context_read(dev, qid, &q_cmpt_ctxt);
+		qdma_hw_context_read(dev, 1, qid, &q_hw_ctxt);
 
-		xdebug_info(qdma_dev, "Q-id: %d, \t SW                  "
-				":0x%x  0x%x  0x%x  0x%x 0x%x\n",
-				qid, q_ctxt.c_data.data[4],
-				q_ctxt.c_data.data[3], q_ctxt.c_data.data[2],
-				q_ctxt.c_data.data[1], q_ctxt.c_data.data[0]);
-		xdebug_info(qdma_dev, "\t\t int_aggr            :%x\n",
-				q_ctxt.c_fields.int_aggr);
+		/* C2H SW context */
+		xdebug_info(qdma_dev, "\t\t intr_aggr           :%x\n",
+				q_sw_ctxt.intr_aggr);
 		xdebug_info(qdma_dev, "\t\t vec                 :%x\n",
-				q_ctxt.c_fields.vec);
-		xdebug_info(qdma_dev, "\t\t Base-addr           :%lx\n",
-				q_ctxt.c_fields.dsc_base);
+				q_sw_ctxt.vec);
+		xdebug_info(qdma_dev, "\t\t Ring Base-addr      :%lx\n",
+				q_sw_ctxt.ring_bs_addr);
 		xdebug_info(qdma_dev, "\t\t is_mm               :%x\n",
-				q_ctxt.c_fields.is_mm);
-		xdebug_info(qdma_dev, "\t\t mark_dis            :%x\n",
-				q_ctxt.c_fields.mrkr_dis);
+				q_sw_ctxt.is_mm);
+		xdebug_info(qdma_dev, "\t\t mrkr_dis            :%x\n",
+				q_sw_ctxt.mrkr_dis);
 		xdebug_info(qdma_dev, "\t\t irq_req             :%x\n",
-				q_ctxt.c_fields.irq_req);
-		xdebug_info(qdma_dev, "\t\t err-cmpt-sent       :%x\n",
-				q_ctxt.c_fields.err_wb_sent);
+				q_sw_ctxt.irq_req);
+		xdebug_info(qdma_dev, "\t\t err_wb_sent         :%x\n",
+				q_sw_ctxt.err_wb_sent);
 		xdebug_info(qdma_dev, "\t\t Error status        :%x\n",
-				q_ctxt.c_fields.err);
+				q_sw_ctxt.err);
 		xdebug_info(qdma_dev, "\t\t irq_no_last         :%x\n",
-				q_ctxt.c_fields.irq_no_last);
+				q_sw_ctxt.irq_no_last);
 		xdebug_info(qdma_dev, "\t\t port-id             :%x\n",
-				q_ctxt.c_fields.port_id);
+				q_sw_ctxt.port_id);
 		xdebug_info(qdma_dev, "\t\t irq-enable          :%x\n",
-				q_ctxt.c_fields.irq_en);
+				q_sw_ctxt.irq_en);
 		xdebug_info(qdma_dev, "\t\t write-back enable   :%x\n",
-				q_ctxt.c_fields.wbk_en);
+				q_sw_ctxt.wbk_en);
 		xdebug_info(qdma_dev, "\t\t mm-channel-id       :%x\n",
-				q_ctxt.c_fields.mm_chn);
+				q_sw_ctxt.mm_chn);
 		xdebug_info(qdma_dev, "\t\t bypass              :%x\n",
-				q_ctxt.c_fields.byp);
+				q_sw_ctxt.bypass);
 		xdebug_info(qdma_dev, "\t\t desc-size index     :%x\n",
-				q_ctxt.c_fields.dsc_sz);
+				q_sw_ctxt.desc_sz);
 		xdebug_info(qdma_dev, "\t\t ring-size index     :%x\n",
-				q_ctxt.c_fields.rng_sz);
+				q_sw_ctxt.rngsz_idx);
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				q_ctxt.c_fields.rsv1);
+				q_sw_ctxt.rsvd1);
 		xdebug_info(qdma_dev, "\t\t fetch_max           :%x\n",
-				q_ctxt.c_fields.fetch_max);
+				q_sw_ctxt.fetch_max);
 		xdebug_info(qdma_dev, "\t\t at                  :%x\n",
-				q_ctxt.c_fields.at);
+				q_sw_ctxt.at);
 		xdebug_info(qdma_dev, "\t\t wbi_intvl_en        :%x\n",
-				q_ctxt.c_fields.wbi_intvl_en);
+				q_sw_ctxt.wbi_intvl_en);
 		xdebug_info(qdma_dev, "\t\t wbi_chk             :%x\n",
-				q_ctxt.c_fields.wbi_chk);
+				q_sw_ctxt.wbi_chk);
 		xdebug_info(qdma_dev, "\t\t fetch credits       :%x\n",
-				q_ctxt.c_fields.fcrd_en);
+				q_sw_ctxt.frcd_en);
 		xdebug_info(qdma_dev, "\t\t queue-enable        :%x\n",
-				q_ctxt.c_fields.qen);
+				q_sw_ctxt.qen);
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				q_ctxt.c_fields.rsv0);
+				q_sw_ctxt.rsvd0);
 		xdebug_info(qdma_dev, "\t\t function-id         :%x\n",
-				q_ctxt.c_fields.fnc_id);
+				q_sw_ctxt.fnc_id);
 		xdebug_info(qdma_dev, "\t\t irq_arm             :%x\n",
-				q_ctxt.c_fields.irq_arm);
+				q_sw_ctxt.irq_arm);
 		xdebug_info(qdma_dev, "\t\t producer-index      :%x\n\n",
-				q_ctxt.c_fields.pidx);
+				q_sw_ctxt.pidx);
 
-		/* c2h cmpt context */
-		ctxt_sel = (QDMA_CTXT_SEL_DESC_CMPT << CTXT_SEL_SHIFT_B) |
-				(qid << QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
-		qdma_write_reg((uint64_t)&q_regs->ctxt_cmd, ctxt_sel);
-
-		flag = 1;
-		i = CONTEXT_PROG_POLL_COUNT;
-		while (flag && i) {
-			reg_val = qdma_read_reg((uint64_t)&q_regs->ctxt_cmd);
-			PMD_DRV_LOG(DEBUG, " Read cmd for queue-id:%d: "
-					"reg_val:%x\n", qid, reg_val);
-			flag = reg_val & BUSY_BIT_MSK;
-			rte_delay_ms(CONTEXT_PROG_DELAY);
-			i--;
-		}
-		if (flag) {
-			PMD_DRV_LOG(ERR, "Error: Busy on queue-id:%d: "
-					"initailization with cmd reg_val:%x\n",
-					qid, reg_val);
-			return -1;
-		}
-
-		for (i = 0; i < 5; i++) {
-			reg_val = qdma_read_reg((uint64_t)&
-					q_regs->ctxt_data[i]);
-			c2h_cmpt.c_data.data[i] = reg_val;
-		}
-
-		xdebug_info(qdma_dev, "Q-id: %d, \t C2H-CMPT             "
-				":0x%x  0x%x  0x%x  0x%x 0x%x\n",
-				qid, c2h_cmpt.c_data.data[4],
-				c2h_cmpt.c_data.data[3],
-				c2h_cmpt.c_data.data[2],
-				c2h_cmpt.c_data.data[1],
-				c2h_cmpt.c_data.data[0]);
-
+		/* C2H Completion context */
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				c2h_cmpt.c_fields.rsv2);
+				q_cmpt_ctxt.rsvd2);
 		xdebug_info(qdma_dev, "\t\t intr aggr           :%x\n",
-				c2h_cmpt.c_fields.int_aggr);
+				q_cmpt_ctxt.int_aggr);
+		xdebug_info(qdma_dev, "\t\t Interrupt vector    :%x\n",
+				q_cmpt_ctxt.vec);
 		xdebug_info(qdma_dev, "\t\t atc                 :%x\n",
-				c2h_cmpt.c_fields.at);
+				q_cmpt_ctxt.at);
 		xdebug_info(qdma_dev, "\t\t Overflow Chk Disable:%x\n",
-				c2h_cmpt.c_fields.ovf_chk_dis);
+				q_cmpt_ctxt.ovf_chk_dis);
 		xdebug_info(qdma_dev, "\t\t Full Update         :%x\n",
-				c2h_cmpt.c_fields.full_upd);
+				q_cmpt_ctxt.full_upd);
 		xdebug_info(qdma_dev, "\t\t timer_running       :%x\n",
-				c2h_cmpt.c_fields.timer_running);
+				q_cmpt_ctxt.timer_running);
 		xdebug_info(qdma_dev, "\t\t user_trig_pend      :%x\n",
-				c2h_cmpt.c_fields.user_trig_pend);
-		xdebug_info(qdma_dev, "\t\t error status d      :%x\n",
-				c2h_cmpt.c_fields.err);
+				q_cmpt_ctxt.user_trig_pend);
+		xdebug_info(qdma_dev, "\t\t error status        :%x\n",
+				q_cmpt_ctxt.err);
 		xdebug_info(qdma_dev, "\t\t valid               :%x\n",
-				c2h_cmpt.c_fields.valid);
+				q_cmpt_ctxt.valid);
 		xdebug_info(qdma_dev, "\t\t consumer-index      :%x\n",
-				c2h_cmpt.c_fields.cidx);
+				q_cmpt_ctxt.cidx);
 		xdebug_info(qdma_dev, "\t\t producer-index      :%x\n",
-				(c2h_cmpt.c_fields.pidx_h << 4 |
-				 c2h_cmpt.c_fields.pidx_l));
+				q_cmpt_ctxt.pidx);
 		xdebug_info(qdma_dev, "\t\t desc-size           :%x\n",
-				c2h_cmpt.c_fields.desc_sz);
-		xdebug_info(qdma_dev, "\t\t baddr(4K/22 bits)   :%lx\n",
-				(unsigned long int)c2h_cmpt.c_fields.baddr);
-		xdebug_info(qdma_dev, "\t\t size-index          :%x\n",
-				c2h_cmpt.c_fields.qsize_idx);
+				q_cmpt_ctxt.desc_sz);
+		xdebug_info(qdma_dev, "\t\t bs_addr(4K/22 bits) :%lx\n",
+				(unsigned long int)q_cmpt_ctxt.bs_addr);
+		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
+				q_cmpt_ctxt.rsvd1);
+		xdebug_info(qdma_dev, "\t\t ring-size-index     :%x\n",
+				q_cmpt_ctxt.ringsz_idx);
 		xdebug_info(qdma_dev, "\t\t color               :%x\n",
-				c2h_cmpt.c_fields.color);
+				q_cmpt_ctxt.color);
 		xdebug_info(qdma_dev, "\t\t interrupt-state     :%x\n",
-				c2h_cmpt.c_fields.int_st);
+				q_cmpt_ctxt.in_st);
 		xdebug_info(qdma_dev, "\t\t timer-index         :%x\n",
-				c2h_cmpt.c_fields.timer_idx);
+				q_cmpt_ctxt.timer_idx);
 		xdebug_info(qdma_dev, "\t\t counter-index       :%x\n",
-				c2h_cmpt.c_fields.count_idx);
+				q_cmpt_ctxt.counter_idx);
+		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
+				q_cmpt_ctxt.rsvd);
 		xdebug_info(qdma_dev, "\t\t function-id         :%x\n",
-				c2h_cmpt.c_fields.fnc_id);
+				q_cmpt_ctxt.fnc_id);
 		xdebug_info(qdma_dev, "\t\t trigger-mode        :%x\n",
-				c2h_cmpt.c_fields.trig_mode);
+				q_cmpt_ctxt.trig_mode);
 		xdebug_info(qdma_dev, "\t\t cause interrupt     :%x\n",
-				c2h_cmpt.c_fields.en_int);
+				q_cmpt_ctxt.en_int);
 		xdebug_info(qdma_dev, "\t\t cause status descwr :%x\n\n",
-				c2h_cmpt.c_fields.en_stat_desc);
+				q_cmpt_ctxt.en_stat_desc);
 
-		/* pfch context */
-		ctxt_sel = (QDMA_CTXT_SEL_PFTCH << CTXT_SEL_SHIFT_B) |
-				(qid << QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
-		qdma_write_reg((uint64_t)&q_regs->ctxt_cmd, ctxt_sel);
-
-		flag = 1;
-		i = CONTEXT_PROG_POLL_COUNT;
-		while (flag && i) {
-			reg_val = qdma_read_reg((uint64_t)&q_regs->ctxt_cmd);
-			PMD_DRV_LOG(DEBUG, " Read cmd for queue-id:%d: "
-					"reg_val:%x\n", qid, reg_val);
-			flag = reg_val & BUSY_BIT_MSK;
-			rte_delay_ms(CONTEXT_PROG_DELAY);
-			i--;
-		}
-		if (flag) {
-			PMD_DRV_LOG(ERR, "Error: Busy on queue-id:%d: "
-					"initailization with cmd reg_val:%x\n",
-					qid, reg_val);
-			return -1;
-		}
-
-		for (i = 0; i < 2; i++) {
-			reg_val = qdma_read_reg((uint64_t)&
-					q_regs->ctxt_data[i]);
-			pref_ctxt.c_data.data[i] = reg_val;
-		}
-
-		xdebug_info(qdma_dev, "Q-id: %d, \t PFCH                "
-				":0x%x  0x%x\n",
-				qid, c2h_cmpt.c_data.data[1],
-				c2h_cmpt.c_data.data[0]);
+		/* Prefetch context */
 		xdebug_info(qdma_dev, "\t\t valid               :%x\n",
-				pref_ctxt.c_fields.valid);
+				q_prefetch_ctxt.valid);
 		xdebug_info(qdma_dev, "\t\t software credit     :%x\n",
-				pref_ctxt.c_fields.sw_crdt);
+				q_prefetch_ctxt.sw_crdt);
 		xdebug_info(qdma_dev, "\t\t queue is in prefetch:%x\n",
-				pref_ctxt.c_fields.pfch);
+				q_prefetch_ctxt.pfch);
 		xdebug_info(qdma_dev, "\t\t enable prefetch     :%x\n",
-				pref_ctxt.c_fields.pfch_en);
+				q_prefetch_ctxt.pfch_en);
 		xdebug_info(qdma_dev, "\t\t error               :%x\n",
-				pref_ctxt.c_fields.err);
+				q_prefetch_ctxt.err);
+		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
+				q_prefetch_ctxt.rsvd0);
 		xdebug_info(qdma_dev, "\t\t port ID             :%x\n",
-				pref_ctxt.c_fields.port_id);
+				q_prefetch_ctxt.port_id);
 		xdebug_info(qdma_dev, "\t\t buffer size index   :%x\n",
-				pref_ctxt.c_fields.buf_sz_idx);
+				q_prefetch_ctxt.bufsz_idx);
 		xdebug_info(qdma_dev, "\t\t C2H in bypass mode  :%x\n\n",
-				pref_ctxt.c_fields.bypass);
+				q_prefetch_ctxt.bypass);
 
-		/* hwc c2h context */
-		ctxt_sel = (QDMA_CTXT_SEL_DESC_HW_C2H << CTXT_SEL_SHIFT_B) |
-				(qid << QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
-		qdma_write_reg((uint64_t)&q_regs->ctxt_cmd, ctxt_sel);
-
-		flag = 1;
-		i = CONTEXT_PROG_POLL_COUNT;
-		while (flag && i) {
-			reg_val = qdma_read_reg((uint64_t)&q_regs->ctxt_cmd);
-			PMD_DRV_LOG(DEBUG, " Read cmd for queue-id:%d: "
-					"reg_val:%x\n", qid, reg_val);
-			flag = reg_val & BUSY_BIT_MSK;
-			rte_delay_ms(CONTEXT_PROG_DELAY);
-			i--;
-		}
-		if (flag) {
-			PMD_DRV_LOG(ERR, "Error: Busy on queue-id:%d: "
-					"initailization with cmd reg_val:%x\n",
-					qid, reg_val);
-			return -1;
-		}
-
-		for (i = 0; i < 2; i++) {
-			reg_val = qdma_read_reg((uint64_t)&
-					q_regs->ctxt_data[i]);
-			hw_ctxt.c_data.data[i] = reg_val;
-		}
-
-		xdebug_info(qdma_dev, "Q-id: %d, \t HW                  "
-				":0x%x  0x%x\n",
-				qid, hw_ctxt.c_data.data[1],
-				hw_ctxt.c_data.data[0]);
+		/* C2H HW context */
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				hw_ctxt.c_fields.rsv1);
+				q_hw_ctxt.rsvd1);
 		xdebug_info(qdma_dev, "\t\t fetch pending       :%x\n",
-				hw_ctxt.c_fields.fetch_pnd);
+				q_hw_ctxt.fetch_pnd);
 		xdebug_info(qdma_dev, "\t\t event pending       :%x\n",
-				hw_ctxt.c_fields.evt_pnd);
+				q_hw_ctxt.evt_pnd);
 		xdebug_info(qdma_dev, "\t\t Q-inval/no desc pend:%x\n",
-				hw_ctxt.c_fields.idl_stp_b);
+				q_hw_ctxt.idl_stp_b);
 		xdebug_info(qdma_dev, "\t\t descriptor pending  :%x\n",
-				hw_ctxt.c_fields.dsc_pnd);
+				q_hw_ctxt.dsc_pend);
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				hw_ctxt.c_fields.rsv0);
+				q_hw_ctxt.rsvd);
 		xdebug_info(qdma_dev, "\t\t credit-use          :%x\n",
-				hw_ctxt.c_fields.crd_use);
+				q_hw_ctxt.crd_use);
 		xdebug_info(qdma_dev, "\t\t consumer-index      :%x\n\n",
-				hw_ctxt.c_fields.cidx);
+				q_hw_ctxt.cidx);
 	}
 
 	if (queue >= dev->data->nb_tx_queues) {
 		PMD_DRV_LOG(INFO, " TX queue_id=%d not configured\n", queue);
 	} else {
 		print_header(" *************H2C Queue Contexts************** ");
-		/* SW context */
-		ctxt_sel = (QDMA_CTXT_SEL_DESC_SW_H2C << CTXT_SEL_SHIFT_B) |
-				(qid << QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
-		qdma_write_reg((uint64_t)&q_regs->ctxt_cmd, ctxt_sel);
 
-		flag = 1;
-		i = CONTEXT_PROG_POLL_COUNT;
-		while (flag && i) {
-			reg_val = qdma_read_reg((uint64_t)&q_regs->ctxt_cmd);
-			PMD_DRV_LOG(DEBUG, " Read cmd for queue-id:%d: "
-					"reg_val:%x\n", qid, reg_val);
-			flag = reg_val & BUSY_BIT_MSK;
-			rte_delay_ms(CONTEXT_PROG_DELAY);
-			i--;
-		}
-		if (flag) {
-			PMD_DRV_LOG(ERR, "Error: Busy on queue-id:%d: "
-					"initailization with cmd reg_val:%x\n",
-					qid, reg_val);
-			return -1;
-		}
+		memset(&q_sw_ctxt, 0, sizeof(struct qdma_descq_sw_ctxt));
+		memset(&q_hw_ctxt, 0, sizeof(struct qdma_descq_hw_ctxt));
 
-		for (i = 0; i < 5; i++) {
-			reg_val = qdma_read_reg((uint64_t)&
-					q_regs->ctxt_data[i]);
-			q_ctxt.c_data.data[i] = reg_val;
-		}
+		qdma_sw_context_read(dev, 0, qid, &q_sw_ctxt);
+		qdma_hw_context_read(dev, 0, qid, &q_hw_ctxt);
 
-		xdebug_info(qdma_dev, "Q-id: %d, \t SW                  "
-				":0x%x  0x%x  0x%x  0x%x 0x%x\n",
-				qid, q_ctxt.c_data.data[4],
-				q_ctxt.c_data.data[3], q_ctxt.c_data.data[2],
-				q_ctxt.c_data.data[1], q_ctxt.c_data.data[0]);
-		xdebug_info(qdma_dev, "\t\t int_aggr            :%x\n",
-				q_ctxt.c_fields.int_aggr);
+		/* H2C SW context */
+		xdebug_info(qdma_dev, "\t\t intr_aggr           :%x\n",
+				q_sw_ctxt.intr_aggr);
 		xdebug_info(qdma_dev, "\t\t vec                 :%x\n",
-				q_ctxt.c_fields.vec);
-		xdebug_info(qdma_dev, "\t\t Base-addr           :%lx\n",
-				q_ctxt.c_fields.dsc_base);
+				q_sw_ctxt.vec);
+		xdebug_info(qdma_dev, "\t\t Ring Base-addr      :%lx\n",
+				q_sw_ctxt.ring_bs_addr);
 		xdebug_info(qdma_dev, "\t\t is_mm               :%x\n",
-				q_ctxt.c_fields.is_mm);
-		xdebug_info(qdma_dev, "\t\t mark_dis            :%x\n",
-				q_ctxt.c_fields.mrkr_dis);
+				q_sw_ctxt.is_mm);
+		xdebug_info(qdma_dev, "\t\t mrkr_dis            :%x\n",
+				q_sw_ctxt.mrkr_dis);
 		xdebug_info(qdma_dev, "\t\t irq_req             :%x\n",
-				q_ctxt.c_fields.irq_req);
-		xdebug_info(qdma_dev, "\t\t err-cmpt-sent       :%x\n",
-				q_ctxt.c_fields.err_wb_sent);
+				q_sw_ctxt.irq_req);
+		xdebug_info(qdma_dev, "\t\t err_wb_sent         :%x\n",
+				q_sw_ctxt.err_wb_sent);
 		xdebug_info(qdma_dev, "\t\t Error status        :%x\n",
-				q_ctxt.c_fields.err);
+				q_sw_ctxt.err);
 		xdebug_info(qdma_dev, "\t\t irq_no_last         :%x\n",
-				q_ctxt.c_fields.irq_no_last);
+				q_sw_ctxt.irq_no_last);
 		xdebug_info(qdma_dev, "\t\t port-id             :%x\n",
-				q_ctxt.c_fields.port_id);
+				q_sw_ctxt.port_id);
 		xdebug_info(qdma_dev, "\t\t irq-enable          :%x\n",
-				q_ctxt.c_fields.irq_en);
+				q_sw_ctxt.irq_en);
 		xdebug_info(qdma_dev, "\t\t write-back enable   :%x\n",
-				q_ctxt.c_fields.wbk_en);
+				q_sw_ctxt.wbk_en);
 		xdebug_info(qdma_dev, "\t\t mm-channel-id       :%x\n",
-				q_ctxt.c_fields.mm_chn);
+				q_sw_ctxt.mm_chn);
 		xdebug_info(qdma_dev, "\t\t bypass              :%x\n",
-				q_ctxt.c_fields.byp);
+				q_sw_ctxt.bypass);
 		xdebug_info(qdma_dev, "\t\t desc-size index     :%x\n",
-				q_ctxt.c_fields.dsc_sz);
+				q_sw_ctxt.desc_sz);
 		xdebug_info(qdma_dev, "\t\t ring-size index     :%x\n",
-				q_ctxt.c_fields.rng_sz);
+				q_sw_ctxt.rngsz_idx);
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				q_ctxt.c_fields.rsv1);
+				q_sw_ctxt.rsvd1);
 		xdebug_info(qdma_dev, "\t\t fetch_max           :%x\n",
-				q_ctxt.c_fields.fetch_max);
+				q_sw_ctxt.fetch_max);
 		xdebug_info(qdma_dev, "\t\t at                  :%x\n",
-				q_ctxt.c_fields.at);
+				q_sw_ctxt.at);
 		xdebug_info(qdma_dev, "\t\t wbi_intvl_en        :%x\n",
-				q_ctxt.c_fields.wbi_intvl_en);
+				q_sw_ctxt.wbi_intvl_en);
 		xdebug_info(qdma_dev, "\t\t wbi_chk             :%x\n",
-				q_ctxt.c_fields.wbi_chk);
+				q_sw_ctxt.wbi_chk);
 		xdebug_info(qdma_dev, "\t\t fetch credits       :%x\n",
-				q_ctxt.c_fields.fcrd_en);
+				q_sw_ctxt.frcd_en);
 		xdebug_info(qdma_dev, "\t\t queue-enable        :%x\n",
-				q_ctxt.c_fields.qen);
+				q_sw_ctxt.qen);
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				q_ctxt.c_fields.rsv0);
+				q_sw_ctxt.rsvd0);
 		xdebug_info(qdma_dev, "\t\t function-id         :%x\n",
-				q_ctxt.c_fields.fnc_id);
+				q_sw_ctxt.fnc_id);
 		xdebug_info(qdma_dev, "\t\t irq_arm             :%x\n",
-				q_ctxt.c_fields.irq_arm);
+				q_sw_ctxt.irq_arm);
 		xdebug_info(qdma_dev, "\t\t producer-index      :%x\n\n",
-				q_ctxt.c_fields.pidx);
+				q_sw_ctxt.pidx);
 
-		/* hwc h2c context */
-		ctxt_sel = (QDMA_CTXT_SEL_DESC_HW_H2C << CTXT_SEL_SHIFT_B) |
-				(qid << QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
-		qdma_write_reg((uint64_t)&q_regs->ctxt_cmd, ctxt_sel);
-
-		flag = 1;
-		i = CONTEXT_PROG_POLL_COUNT;
-		while (flag && i) {
-			reg_val = qdma_read_reg((uint64_t)&q_regs->ctxt_cmd);
-			PMD_DRV_LOG(DEBUG, " Read cmd for queue-id:%d: "
-					"reg_val:%x\n", qid, reg_val);
-			flag = reg_val & BUSY_BIT_MSK;
-			rte_delay_ms(CONTEXT_PROG_DELAY);
-			i--;
-		}
-		if (flag) {
-			PMD_DRV_LOG(ERR, "Error: Busy on queue-id:%d: "
-					"initailization with cmd reg_val:%x\n",
-					qid, reg_val);
-			return -1;
-		}
-
-		for (i = 0; i < 2; i++) {
-			reg_val = qdma_read_reg((uint64_t)&
-					q_regs->ctxt_data[i]);
-			hw_ctxt.c_data.data[i] = reg_val;
-		}
-
-		xdebug_info(qdma_dev, "Q-id: %d, \t HW                  "
-				":0x%x  0x%x\n",
-				qid, hw_ctxt.c_data.data[1],
-				hw_ctxt.c_data.data[0]);
+		/* H2C HW context */
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				hw_ctxt.c_fields.rsv1);
+				q_hw_ctxt.rsvd1);
 		xdebug_info(qdma_dev, "\t\t fetch pending       :%x\n",
-				hw_ctxt.c_fields.fetch_pnd);
+				q_hw_ctxt.fetch_pnd);
 		xdebug_info(qdma_dev, "\t\t event pending       :%x\n",
-				hw_ctxt.c_fields.evt_pnd);
+				q_hw_ctxt.evt_pnd);
 		xdebug_info(qdma_dev, "\t\t Q-inval/no desc pend:%x\n",
-				hw_ctxt.c_fields.idl_stp_b);
+				q_hw_ctxt.idl_stp_b);
 		xdebug_info(qdma_dev, "\t\t descriptor pending  :%x\n",
-				hw_ctxt.c_fields.dsc_pnd);
+				q_hw_ctxt.dsc_pend);
 		xdebug_info(qdma_dev, "\t\t reserved            :%x\n",
-				hw_ctxt.c_fields.rsv0);
+				q_hw_ctxt.rsvd);
 		xdebug_info(qdma_dev, "\t\t credit-use          :%x\n",
-				hw_ctxt.c_fields.crd_use);
+				q_hw_ctxt.crd_use);
 		xdebug_info(qdma_dev, "\t\t consumer-index      :%x\n\n",
-				hw_ctxt.c_fields.cidx);
+				q_hw_ctxt.cidx);
 	}
 
 	return 0;
 }
 static int qdma_queue_desc_dump(uint8_t port_id,
-				struct rte_xdebug_desc_param *param)
+				struct rte_pmd_qdma_xdebug_desc_param *param)
 {
 	struct rte_eth_dev *dev = &rte_eth_devices[port_id];
 	int x;
@@ -898,7 +468,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 	char str[50];
 
 	switch (param->type) {
-	case ETH_XDEBUG_DESC_C2H:
+	case RTE_PMD_QDMA_XDEBUG_DESC_C2H:
 
 		if (param->queue >= dev->data->nb_rx_queues) {
 			PMD_DRV_LOG(INFO, "queue_id=%d not configured",
@@ -909,7 +479,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 		rxq = (struct qdma_rx_queue *)
 			dev->data->rx_queues[param->queue];
 
-		if(rxq) {
+		if (rxq) {
 			if (rxq->status != RTE_ETH_QUEUE_STATE_STARTED) {
 				printf("Queue_id %d is not yet started\n",
 						param->queue);
@@ -948,7 +518,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 			}
 		}
 		break;
-	case ETH_XDEBUG_DESC_CMPT:
+	case RTE_PMD_QDMA_XDEBUG_DESC_CMPT:
 
 		if (param->queue >= dev->data->nb_rx_queues) {
 			PMD_DRV_LOG(INFO, "queue_id=%d not configured",
@@ -959,7 +529,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 		rxq = (struct qdma_rx_queue *)
 			dev->data->rx_queues[param->queue];
 
-		if(rxq) {
+		if (rxq) {
 			if (rxq->status != RTE_ETH_QUEUE_STATE_STARTED) {
 				printf("Queue_id %d is not yet started\n",
 						param->queue);
@@ -991,7 +561,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 			}
 		}
 		break;
-	case ETH_XDEBUG_DESC_H2C:
+	case RTE_PMD_QDMA_XDEBUG_DESC_H2C:
 
 		if (param->queue >= dev->data->nb_tx_queues) {
 			PMD_DRV_LOG(INFO, "queue_id=%d not configured",
@@ -1002,7 +572,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 		txq = (struct qdma_tx_queue *)
 			dev->data->tx_queues[param->queue];
 
-		if(txq) {
+		if (txq) {
 			if (txq->status != RTE_ETH_QUEUE_STATE_STARTED) {
 				printf("Queue_id %d is not yet started\n",
 						param->queue);
@@ -1045,20 +615,20 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 	return 0;
 }
 
-int qdma_xdebug(uint8_t port_id, enum rte_xdebug_type type,
+int rte_pmd_qdma_xdebug(uint8_t port_id, enum rte_pmd_qdma_xdebug_type type,
 		void *params)
 {
 	int err = -ENOTSUP;
 
 	switch (type) {
-	case ETH_XDEBUG_QDMA_GLOBAL_CSR:
+	case RTE_PMD_QDMA_XDEBUG_QDMA_GLOBAL_CSR:
 		err = qdma_csr_dump();
 		if (err) {
 			xdebug_info(adap, "Error dumping Global registers\n");
 			return err;
 		}
 		break;
-	case ETH_XDEBUG_QUEUE_CONTEXT:
+	case RTE_PMD_QDMA_XDEBUG_QUEUE_CONTEXT:
 
 		if (!params) {
 			printf("QID required for Queue context dump\n");
@@ -1073,7 +643,7 @@ int qdma_xdebug(uint8_t port_id, enum rte_xdebug_type type,
 		}
 		break;
 
-	case ETH_XDEBUG_QUEUE_STRUCT:
+	case RTE_PMD_QDMA_XDEBUG_QUEUE_STRUCT:
 
 		if (!params) {
 			printf("QID required for Queue Structure dump\n");
@@ -1088,7 +658,7 @@ int qdma_xdebug(uint8_t port_id, enum rte_xdebug_type type,
 		}
 		break;
 
-	case ETH_XDEBUG_QUEUE_DESC_DUMP:
+	case RTE_PMD_QDMA_XDEBUG_QUEUE_DESC_DUMP:
 
 		if (!params) {
 			printf("Params required for Queue descriptor dump\n");
@@ -1096,9 +666,9 @@ int qdma_xdebug(uint8_t port_id, enum rte_xdebug_type type,
 		}
 
 		err = qdma_queue_desc_dump(port_id,
-				(struct rte_xdebug_desc_param *)params);
-		if (err) {
-			xdebug_info(adap, "Error dumping %d: %d\n",
+			(struct rte_pmd_qdma_xdebug_desc_param *)params);
+			if (err) {
+				xdebug_info(adap, "Error dumping %d: %d\n",
 					*(int *)params, err);
 			return err;
 		}

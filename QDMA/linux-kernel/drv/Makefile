@@ -16,6 +16,9 @@ include $(srcdir)/make/common_flags.mk
 $(info srcdir = $(srcdir).)
 $(info KSRC = $(KSRC).)
 $(info VF = $(VF).)
+$(info CROSS_COMPILE_FLAG = $(CROSS_COMPILE_FLAG).)
+$(info ARCH = $(ARCH).)
+
 
 MOD_NAME := qdma$(PFVF_TYPE)
 
@@ -29,25 +32,25 @@ EXTRA_CFLAGS += -I.
 # genl_register_family_with_ops() is still retained until kernel 4.10,
 # its prototype changed from a extern function to a define.
 #
-ifneq ($(shell $(grep) -c 'int genl_register_family_with_ops' $(KINC)/net/genetlink.h),0) 
+ifneq ($(shell $(grep) -c 'int genl_register_family_with_ops' $(KINC)/net/genetlink.h),0)
   ccflags-y += -D__GENL_REG_FAMILY_OPS_FUNC__
 endif
 
 # linux <= 3.13 pci_msix_vec_count is not defined.
 #
-ifeq ($(shell $(grep) -c 'int pci_msix_vec_count' $(KINC)/linux/pci.h),0) 
+ifeq ($(shell $(grep) -c 'int pci_msix_vec_count' $(KINC)/linux/pci.h),0)
   ccflags-y += -D__PCI_MSI_VEC_COUNT__
 endif
 
 # linux < 3.13 list_next_entry is not defined.
 #
-ifeq ($(shell $(grep) -c 'list_next_entry' $(KINC)/linux/list.h),0) 
+ifeq ($(shell $(grep) -c 'list_next_entry' $(KINC)/linux/list.h),0)
   ccflags-y += -D__LIST_NEXT_ENTRY__
 endif
 
 # linux < 3.18.13 READ_ONCE is not defined.
 #
-ifneq ($(shell $(grep) -c 'READ_ONCE' $(KINC)/linux/compiler.h),0) 
+ifneq ($(shell $(grep) -c 'READ_ONCE' $(KINC)/linux/compiler.h),0)
   ccflags-y += -D__READ_ONCE_DEFINED__
 endif
 
@@ -63,16 +66,24 @@ else
 endif
 
 ifneq ($(SUBDIRS),)
-  BASE_OBJS := $(patsubst $(SUBDIRS)/%.c,%.o,$(wildcard $(SUBDIRS)/*.c $(SUBDIRS)/*/*.c))
+  BASE_OBJS := $(patsubst $(SUBDIRS)/%.c,%.o,$(wildcard $(SUBDIRS)/*.c $(SUBDIRS)/*/*.c $(SUBDIRS)/*/*/*.c))
 endif
 obj-m := $(MOD_NAME).o
 $(MOD_NAME)-objs := $(BASE_OBJS)
+
+ifeq ($(ARCH),aarch64)
+    ARCH=arm64
+endif
 
 .PHONY: build
 build:
 	@mkdir -p -m 755 $(build_dir)
 	@rm -f $(MOD_NAME).ko $(build_dir)/$(MOD_NAME).ko
+ifeq ($(CROSS_COMPILE_FLAG),)
 	@$(MAKE) symverfile=$(symverfile) KBUILD_EXTRA_SYMBOLS=$(extra_symb) -C $(KOBJ) SUBDIRS=$(shell pwd) modules
+else
+	@$(MAKE) symverfile=$(symverfile) KBUILD_EXTRA_SYMBOLS=$(extra_symb) -C $(KOBJ)  CROSS_COMPILE=$(CROSS_COMPILE_FLAG) SUBDIRS=$(shell pwd) modules
+endif
 	@cp $(MOD_NAME).ko $(build_dir)
 
 .PHONY: clean

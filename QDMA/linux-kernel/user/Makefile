@@ -8,6 +8,10 @@ CFLAGS += $(EXTRA_FLAGS)
 DMACTL = dmactl
 DMACTL_OBJS := $(patsubst %.c,%.o,$(wildcard cli/*.c))
 
+ifneq ($(CROSS_COMPILE_FLAG),)
+	CC=$(CROSS_COMPILE_FLAG)gcc
+endif
+ 
 all: clean dmactl
 
 dmactl: $(DMACTL_OBJS)

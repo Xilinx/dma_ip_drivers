@@ -1,0 +1,272 @@
+From a3d5d265c96834efca0b4b419385128127e6b821 Mon Sep 17 00:00:00 2001
+From: Pankaj Darak <pankajd@xilinx.com>
+Date: Mon, 22 Apr 2019 19:18:37 +0530
+Subject: [PATCH] PKTGEN-3.6.1: Patch to add Jumbo packet support
+
+This patch include:
+1. Jumbo frame support for Pktgen.
+2. Increase default number of RX_DESC to 2K.
+3. Disable RX classification.
+4. Set user provided packet size as DMA packet size i.e. not to remove
+CRC bytes
+
+Signed-off-by: Kumar Sanghvi <kumars@xilinx.com>
+Signed-off-by: Nikhil Agarwal <nagarwal@xilinx.com>
+Signed-off-by: Pankaj Darak <pankajd@xilinx.com>
+Signed-off-by: Thanneeru Srinivasulu <sthannee@xilinx.com>
+---
+ app/pktgen-cmds.c      | 15 ++++++++++-----
+ app/pktgen-constants.h |  4 ++--
+ app/pktgen-main.c      |  9 +++++++--
+ app/pktgen-port-cfg.c  | 12 ++++++++----
+ app/pktgen-range.c     |  3 ++-
+ app/pktgen.c           | 14 ++++++++++++--
+ app/pktgen.h           |  5 +++--
+ 7 files changed, 44 insertions(+), 18 deletions(-)
+
+diff --git a/app/pktgen-cmds.c b/app/pktgen-cmds.c
+index 95f6ef1..888e329 100644
+--- a/app/pktgen-cmds.c
++++ b/app/pktgen-cmds.c
+@@ -2508,6 +2508,8 @@ single_set_pkt_size(port_info_t *info, uint16_t size)
+ {
+ 	pkt_seq_t * pkt = &info->seq_pkt[SINGLE_PKT];
+ 
++	uint16_t pktsize = (pktgen.flags & MTU9K_SUPPORT_FLAG) ?
++				MAX_PKT_SIZE: (ETHER_MAX_LEN - ETHER_CRC_LEN);
+ 	if (size < ETHER_CRC_LEN)
+ 		size = ETHER_CRC_LEN;
+ 
+@@ -2515,13 +2517,13 @@ single_set_pkt_size(port_info_t *info, uint16_t size)
+ 		if ( (size - ETHER_CRC_LEN) < MIN_PKT_SIZE)
+ 			size = (MIN_PKT_SIZE + ETHER_CRC_LEN);
+ 	}
+-	if ( (size - ETHER_CRC_LEN) > MAX_PKT_SIZE)
+-		size = MAX_PKT_SIZE + ETHER_CRC_LEN;
++	if ( (size - ETHER_CRC_LEN) > pktsize)
++		size = pktsize + ETHER_CRC_LEN;
+ 
+ 	if ((pkt->ethType == ETHER_TYPE_IPv6) && (size < (MIN_v6_PKT_SIZE + ETHER_CRC_LEN)))
+ 		size = MIN_v6_PKT_SIZE + ETHER_CRC_LEN;
+ 
+-	pkt->pktSize = (size - ETHER_CRC_LEN);
++	pkt->pktSize = size;
+ 
+ 	pktgen_packet_ctor(info, SINGLE_PKT, -1);
+ 	pktgen_packet_rate(info);
+@@ -3066,6 +3068,9 @@ range_set_cos_id(port_info_t *info, char *what, uint8_t id)
+ void
+ range_set_pkt_size(port_info_t *info, char *what, uint16_t size)
+ {
++	uint32_t pktsize = (pktgen.flags & MTU9K_SUPPORT_FLAG) ?
++				MAX_9K_SIZE : ETHER_MAX_LEN;
++
+ 	if (!strcmp(what, "inc") || !strcmp(what, "increment")) {
+ 		if (size > ETHER_MAX_LEN)
+ 			size = ETHER_MAX_LEN;
+@@ -3073,8 +3078,8 @@ range_set_pkt_size(port_info_t *info, char *what, uint16_t size)
+ 	} else {
+ 		if (size < ETHER_MIN_LEN)
+ 			size = MIN_PKT_SIZE;
+-		else if (size > ETHER_MAX_LEN)
+-			size = MAX_PKT_SIZE;
++		else if (size > pktsize)
++			size = pktsize;
+ 		else
+ 			size -= ETHER_CRC_LEN;
+ 
+diff --git a/app/pktgen-constants.h b/app/pktgen-constants.h
+index 417bf64..62a787d 100644
+--- a/app/pktgen-constants.h
++++ b/app/pktgen-constants.h
+@@ -17,7 +17,7 @@ extern "C" {
+ enum {
+ 	DEFAULT_PKT_BURST       = 64,	/* Increasing this number consumes memory very fast */
+ #ifdef RTE_LIBRTE_VMXNET3_PMD
+-	DEFAULT_RX_DESC         = (DEFAULT_PKT_BURST * 8 * 2),
++	DEFAULT_RX_DESC         = (DEFAULT_PKT_BURST * 8 * 2 * 2),
+ 	DEFAULT_TX_DESC         = DEFAULT_RX_DESC * 2,
+ #else
+ 	DEFAULT_RX_DESC         = (DEFAULT_PKT_BURST * 8),
+@@ -30,7 +30,7 @@ enum {
+ 
+ 	DEFAULT_PRIV_SIZE       = 0,
+ 	DEFAULT_MBUF_SIZE	= RTE_MBUF_DEFAULT_BUF_SIZE + DEFAULT_PRIV_SIZE, /* See: http://dpdk.org/dev/patchwork/patch/4479/ */
+-
++	MBUF_9K_SIZE            = 9018 + RTE_PKTMBUF_HEADROOM + DEFAULT_PRIV_SIZE,
+ 	NUM_Q                   = 8,	/**< Number of cores per port. */
+ };
+ 
+diff --git a/app/pktgen-main.c b/app/pktgen-main.c
+index b90da0c..768a2e3 100644
+--- a/app/pktgen-main.c
++++ b/app/pktgen-main.c
+@@ -161,7 +161,7 @@ pktgen_parse_args(int argc, char **argv)
+ 		pktgen.argv[opt] = strdup(argv[opt]);
+ 
+ 	pktgen.verbose = 0;
+-	while ((opt = getopt_long(argc, argvopt, "p:m:f:l:s:g:hPNGTv",
++	while ((opt = getopt_long(argc, argvopt, "p:m:f:l:s:g:hPNGTv9",
+ 				  lgopts, &option_index)) != EOF)
+ 		switch (opt) {
+ 		case 'p':
+@@ -240,7 +240,12 @@ pktgen_parse_args(int argc, char **argv)
+ 
+ 		case 'h':	/* print out the help message */
+ 			pktgen_usage(prgname);
+-			return -1;
++		return -1;
++
++		case '9': /* MTU 9K support */
++		pktgen_log_info("%s: case 9... \n", __func__);
++		pktgen.flags    |= MTU9K_SUPPORT_FLAG;
++		break;
+ 
+ 		case 0:	/* crc-strip for all ports */
+ 			pktgen_set_hw_strip_crc(1);
+diff --git a/app/pktgen-port-cfg.c b/app/pktgen-port-cfg.c
+index a1da13c..e18ac42 100644
+--- a/app/pktgen-port-cfg.c
++++ b/app/pktgen-port-cfg.c
+@@ -99,16 +99,19 @@ pktgen_mbuf_pool_create(const char *type, uint8_t pid, uint8_t queue_id,
+ 	struct rte_mempool *mp;
+ 	char name[RTE_MEMZONE_NAMESIZE];
+ 	uint64_t sz;
++	uint16_t mbuf_sz = (pktgen.flags & MTU9K_SUPPORT_FLAG) ?
++					MBUF_9K_SIZE :DEFAULT_MBUF_SIZE;
++
+ 
+ 	snprintf(name, sizeof(name), "%-12s%u:%u", type, pid, queue_id);
+ 
+-	sz = nb_mbufs * (DEFAULT_MBUF_SIZE + sizeof(struct rte_mbuf));
++	sz = nb_mbufs * (mbuf_sz + sizeof(struct rte_mbuf));
+ 	sz = RTE_ALIGN_CEIL(sz + sizeof(struct rte_mempool), 1024);
+ 
+ 	if (pktgen.verbose)
+ 		pktgen_log_info(
+ 			"    Create: %-*s - Memory used (MBUFs %5u x (size %u + Hdr %lu)) + %lu = %6lu KB, headroom %d",
+-			16, name, nb_mbufs, DEFAULT_MBUF_SIZE,
++			16, name, nb_mbufs, mbuf_sz,
+ 			sizeof(struct rte_mbuf), sizeof(struct rte_mempool),
+ 			sz / 1024, RTE_PKTMBUF_HEADROOM);
+ 
+@@ -117,7 +120,7 @@ pktgen_mbuf_pool_create(const char *type, uint8_t pid, uint8_t queue_id,
+ 
+ 	/* create the mbuf pool */
+ 	mp = rte_pktmbuf_pool_create(name, nb_mbufs, cache_size,
+-		DEFAULT_PRIV_SIZE, DEFAULT_MBUF_SIZE, socket_id);
++		DEFAULT_PRIV_SIZE, mbuf_sz, socket_id);
+ 	if (mp == NULL)
+ 		pktgen_log_panic(
+ 			"Cannot create mbuf pool (%s) port %d, queue %d, nb_mbufs %d, socket_id %d: %s",
+@@ -174,7 +177,8 @@ pktgen_config_ports(void)
+ 		pktgen_log_info(
+ 			"Configuring %d ports, MBUF Size %d, MBUF Cache Size %d",
+ 			pktgen.nb_ports,
+-			DEFAULT_MBUF_SIZE,
++			(pktgen.flags & MTU9K_SUPPORT_FLAG) ? MBUF_9K_SIZE :
++							DEFAULT_MBUF_SIZE,
+ 			MBUF_CACHE_SIZE);
+ 	}
+ 
+diff --git a/app/pktgen-range.c b/app/pktgen-range.c
+index a8f62cd..b03fe84 100644
+--- a/app/pktgen-range.c
++++ b/app/pktgen-range.c
+@@ -561,7 +561,8 @@ pktgen_range_setup(port_info_t *info)
+ 	range->pkt_size     = MIN_PKT_SIZE;
+ 	range->pkt_size_inc = 0;
+ 	range->pkt_size_min = MIN_PKT_SIZE;
+-	range->pkt_size_max = MAX_PKT_SIZE;
++	range->pkt_size_max = (pktgen.flags & MTU9K_SUPPORT_FLAG) ?
++				MAX_PKT_SIZE : (ETHER_MAX_LEN - ETHER_CRC_LEN);
+ 
+ 	range->vxlan_gid = info->seq_pkt[SINGLE_PKT].group_id;
+ 	range->vxlan_gid_inc = 0;
+diff --git a/app/pktgen.c b/app/pktgen.c
+index f7eee07..f0a8b58 100644
+--- a/app/pktgen.c
++++ b/app/pktgen.c
+@@ -62,6 +62,7 @@ pktgen_wire_size(port_info_t *info)
+ 			size = info->seq_pkt[SINGLE_PKT].pktSize +
+ 			       PKT_PREAMBLE_SIZE + INTER_FRAME_GAP + ETHER_CRC_LEN;
+ 	}
++	size -= (PKT_PREAMBLE_SIZE + INTER_FRAME_GAP + ETHER_CRC_LEN);
+ 	return size;
+ }
+ 
+@@ -955,6 +956,10 @@ pktgen_setup_cb(struct rte_mempool *mp,
+ 	pkt_seq_t *pkt;
+ 	uint16_t qid, idx;
+ 
++	uint32_t pktsize = (pktgen.flags & MTU9K_SUPPORT_FLAG) ?
++				MAX_PKT_SIZE:
++				(ETHER_MAX_LEN - ETHER_CRC_LEN);
++
+ 	info = data->info;
+ 	qid = data->qid;
+ 
+@@ -982,7 +987,7 @@ pktgen_setup_cb(struct rte_mempool *mp,
+ 	pktgen_packet_ctor(info, idx, -1);
+ 
+ 	rte_memcpy((uint8_t *)m->buf_addr + m->data_off,
+-	           (uint8_t *)&pkt->hdr, MAX_PKT_SIZE);
++	           (uint8_t *)&pkt->hdr, pktsize);
+ 
+ 	m->pkt_len  = pkt->pktSize;
+ 	m->data_len = pkt->pktSize;
+@@ -1171,7 +1176,7 @@ pktgen_main_receive(port_info_t *info,
+ {
+ 	uint8_t pid;
+ 	uint16_t qid, nb_rx;
+-	capture_t *capture;
++	__rte_unused	capture_t *capture;
+ 
+ 	pid = info->pid;
+ 	qid = get_rxque(pktgen.l2p, lid, pid);
+@@ -1182,6 +1187,10 @@ pktgen_main_receive(port_info_t *info,
+ 	if ( (nb_rx = rte_eth_rx_burst(pid, qid, pkts_burst, info->tx_burst)) == 0)
+ 		return;
+ 
++	info->sizes._64 += nb_rx;
++	rte_pktmbuf_free_bulk(pkts_burst, nb_rx);
++#if 0
++
+ 	pktgen_recv_latency(info, pkts_burst, nb_rx);
+ 
+ 	/* packets are not freed in the next call. */
+@@ -1198,6 +1207,7 @@ pktgen_main_receive(port_info_t *info,
+ 	}
+ 
+ 	rte_pktmbuf_free_bulk(pkts_burst, nb_rx);
++#endif
+ }
+ 
+ static void
+diff --git a/app/pktgen.h b/app/pktgen.h
+index d9da2eb..2e46247 100644
+--- a/app/pktgen.h
++++ b/app/pktgen.h
+@@ -233,9 +233,9 @@ enum {
+ 
+ 	INTER_FRAME_GAP         = 12,	/**< in bytes */
+ 	PKT_PREAMBLE_SIZE       = 8,	/**< in bytes */
+-
++	MAX_9K_SIZE             = 9018,
+ 	MIN_PKT_SIZE            = (ETHER_MIN_LEN - ETHER_CRC_LEN),
+-	MAX_PKT_SIZE            = (ETHER_MAX_LEN - ETHER_CRC_LEN),
++	MAX_PKT_SIZE            = (MAX_9K_SIZE - ETHER_CRC_LEN),
+ 	MIN_v6_PKT_SIZE         = (78 - ETHER_CRC_LEN),
+ 
+ 	MAX_RX_QUEUES           = 16,	/**< RX Queues per port */
+@@ -331,6 +331,7 @@ enum {						/* Pktgen flags bits */
+ 	BLINK_PORTS_FLAG        = (1 << 10),	/**< Blink the port leds */
+ 	ENABLE_THEME_FLAG       = (1 << 11),	/**< Enable theme or color support */
+ 
++	MTU9K_SUPPORT_FLAG      = (1 << 15),    /**< MTU 9K support */
+ 	CONFIG_PAGE_FLAG        = (1 << 16),	/**< Display the configure page */
+ 	SEQUENCE_PAGE_FLAG      = (1 << 17),	/**< Display the Packet sequence page */
+ 	RANGE_PAGE_FLAG         = (1 << 18),	/**< Display the range page */
+-- 
+2.7.4
+

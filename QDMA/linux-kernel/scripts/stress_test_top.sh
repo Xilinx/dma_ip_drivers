@@ -7,6 +7,8 @@ if [ $# -lt 1 ]; then
 fi;
 
 bdf=01000
+num_qs=2048
+override_pf_nvf=0
 if [ ! -z $1 ]; then
 	bdf=$1
 fi
@@ -18,11 +20,18 @@ run_time="04:00:00"
 if [ ! -z $3 ]; then
 	run_time=$3
 fi
+if [ ! -z $4 ]; then
+	num_qs=$4
+fi
+if [ ! -z $5 ]; then
+	override_pf_nvf=$5
+fi
 
 cd ..
-make clean
-make
+./make_libqdma.sh clean
+./make_libqdma.sh
 make install-user
+make install-dev
 
 insmod build/qdma.ko
 echo ${bdf}
@@ -41,20 +50,21 @@ function run_stress_test()
 {
 	drv_mode=0
 	if [ $1 == poll ]; then
-		drv_mode=1
+		drv_mode=1111
 	elif [ $1 == intr ]; then
-		drv_mode=2
+		drv_mode=2222
 	elif [ $1 == aggr ]; then
-		drv_mode=3
+		drv_mode=3333
 	else
-		drv_mode=0
+		drv_mode=0000
 	fi
+	pci_bus=${bdf:0:2}
 	cd ..
-	insmod build/qdma.ko mode=${drv_mode}
-	insmod build/qdma_vf.ko mode=${drv_mode}
+	insmod build/qdma.ko mode=0x${pci_bus}${drv_mode}
+	insmod build/qdma_vf.ko mode=0x${pci_bus}${drv_mode}
 	cd -
 	chmod +x qdma_run_stress_test.sh
-	./qdma_run_stress_test.sh $bdf 2048 $run_time 1 $1
+	./qdma_run_stress_test.sh $bdf $num_qs $run_time $override_pf_nvf $1
 	dmactl qdma$bdf reg write bar 2 0xA0 0x01
 	cleanup_env
 }
@@ -73,3 +83,4 @@ fi
 if (( test_mask & 0x01 )); then
 	run_stress_test auto
 fi
+

@@ -1,33 +1,33 @@
 /*-
- *   BSD LICENSE
+ * BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of the copyright holder nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of the copyright holder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdint.h>
@@ -49,8 +49,10 @@
 #include <linux/pci.h>
 
 #include "qdma.h"
-#include "qdma_regs.h"
 #include "version.h"
+#include "qdma_access.h"
+#include "qdma_mbox_protocol.h"
+#include "qdma_mbox.h"
 
 /*
  * The set of PCI devices this driver supports
@@ -147,68 +149,289 @@ static struct rte_pci_id qdma_vf_pci_id_tbl[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-static int qdma_vf_write_mbx(struct rte_eth_dev *dev,
-				struct qdma_mbox_data *send_msg)
+static int qdma_ethdev_online(struct rte_eth_dev *dev)
 {
+	int rv = 0;
+	int qbase = -1;
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct mbox_omsg *out_msg;
-	struct mbox_fsr *mbx_stat;
-	uint64_t bar_addr, reg_addr;
-	uint16_t i;
+	struct qdma_mbox_msg *m = qdma_mbox_msg_alloc();
+	struct qdma_dev_attributes dev_info;
 
-	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
-	reg_addr = bar_addr + QDMA_TRQ_EXT_VF + QDMA_MBOX_FSR;
+	if (!m)
+		return -ENOMEM;
 
-	mbx_stat = (struct mbox_fsr *)(reg_addr);
+	qmda_mbox_compose_vf_online(qdma_dev->pf, 0, &qbase, m->raw_data);
 
-	i = MAILBOX_PROG_POLL_COUNT;
-	while (mbx_stat->omsg_stat && i) {
-		rte_delay_ms(MAILBOX_VF_MSG_DELAY);
-		i--;
+	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
+	if (rv < 0)
+		PMD_DRV_LOG(ERR, "%x, send hello failed %d.\n",
+			    qdma_dev->pf, rv);
+
+	rv = qdma_mbox_vf_dev_info_get(m->raw_data, &dev_info);
+
+	if (rv < 0)
+		PMD_DRV_LOG(ERR, "%x, failed to get dev info %d.\n",
+				qdma_dev->pf, rv);
+	else {
+		qdma_dev->dev_cap.num_pfs = dev_info.num_pfs;
+		qdma_dev->dev_cap.num_qs = dev_info.num_qs;
+		qdma_dev->dev_cap.flr_present = dev_info.flr_present;
+		qdma_dev->dev_cap.st_en = dev_info.st_en;
+		qdma_dev->dev_cap.mm_en = dev_info.mm_en;
+		qdma_dev->dev_cap.mm_cmpt_en = dev_info.mm_cmpt_en;
+		qdma_dev->dev_cap.mailbox_en = dev_info.mailbox_en;
+		qdma_dev->dev_cap.mm_channel_max = dev_info.mm_channel_max;
+		qdma_mbox_msg_free(m);
 	}
-	if (!i)
-		return -1;
-	out_msg = (struct mbox_omsg *)(bar_addr + QDMA_TRQ_EXT_VF +
-							QDMA_MBOX_OMSG);
 
-	qdma_write_reg((uint64_t)&out_msg->omsg[0],
-			rte_cpu_to_le_32(send_msg->err << 24 |
-					  send_msg->filler << 20 |
-					  send_msg->debug_funid << 8 |
-					  send_msg->opcode));
-	for (i = 1; i < 32; i++)
-		qdma_write_reg((uint64_t)&out_msg->omsg[i],
-				rte_cpu_to_le_32(send_msg->data[i - 1]));
-
-	qdma_write_reg((uint64_t)(bar_addr + QDMA_TRQ_EXT_VF + QDMA_MBOX_FCMD),
-						QDMA_MBOX_CMD_SEND);
-
-	return 0;
+	return rv;
 }
 
-static int check_outmsg_status(struct rte_eth_dev *dev)
+static int qdma_ethdev_offline(struct rte_eth_dev *dev)
+{
+	int rv;
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	struct qdma_mbox_msg *m = qdma_mbox_msg_alloc();
+
+	if (!m)
+		return -ENOMEM;
+
+	qdma_mbox_compose_vf_offline(qdma_dev->pf, m->raw_data);
+
+	rv = qdma_mbox_msg_send(dev, m, 0);
+	if (rv < 0)
+		PMD_DRV_LOG(ERR, "%x, send bye failed %d.\n",
+			    qdma_dev->pf, rv);
+
+	return rv;
+}
+
+static int qdma_vf_set_qrange(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct mbox_fsr *mbx_stat;
-	uint64_t bar_addr, reg_addr;
-	uint16_t i;
+	struct qdma_mbox_msg *m;
+	int rv = 0;
 
-	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
-	reg_addr = bar_addr + QDMA_TRQ_EXT_VF + QDMA_MBOX_FSR;
 
-	mbx_stat = (struct mbox_fsr *)(reg_addr);
+	m = qdma_mbox_msg_alloc();
+	if (!m)
+		return -ENOMEM;
 
-	i = MAILBOX_PROG_POLL_COUNT;
-	while (mbx_stat->omsg_stat && i) {
-		rte_delay_ms(MAILBOX_VF_MSG_DELAY);
-		i--;
+	qdma_mbox_compose_vf_fmap_prog(qdma_dev->pf, qdma_dev->dev_cap.num_qs,
+				       (int)qdma_dev->queue_base,
+					m->raw_data);
+	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
+	if (rv < 0) {
+		if (rv != -ENODEV)
+			PMD_DRV_LOG(ERR, "%x set q range (fmap) failed %d.\n",
+				    qdma_dev->pf, rv);
+		goto err_out;
 	}
-	if (!i) {
-		PMD_DRV_LOG(INFO, "VF-%d(DEVFN) did not receive ack from PF",
-				qdma_dev->pf);
-		return -1;
+
+	rv = qdma_mbox_vf_response_status(m->raw_data);
+
+err_out:
+	qdma_mbox_msg_free(m);
+	return rv;
+}
+
+static int qdma_set_qmax(struct rte_eth_dev *dev, int *qmax, int *qbase)
+{
+	struct qdma_mbox_msg *m;
+	int rv = 0;
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+
+	m = qdma_mbox_msg_alloc();
+	if (!m)
+		return -ENOMEM;
+
+	qdma_mbox_compose_vf_qreq(qdma_dev->pf, (uint16_t)*qmax & 0xFFFF,
+				  *qbase, m->raw_data);
+	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
+	if (rv < 0) {
+		PMD_DRV_LOG(ERR, "%x set q max failed %d.\n",
+			qdma_dev->pf, rv);
+		goto err_out;
 	}
-	return 0;
+
+	rv = qdma_mbox_vf_qinfo_get(m->raw_data, qbase, (uint16_t *)qmax);
+err_out:
+	qdma_mbox_msg_free(m);
+	return rv;
+}
+
+static int qdma_rxq_context_setup(struct rte_eth_dev *dev, uint16_t qid)
+{
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	uint32_t qid_hw;
+	struct qdma_mbox_msg *m = qdma_mbox_msg_alloc();
+	struct mbox_descq_conf descq_conf;
+	int rv, bypass_desc_sz_idx;
+	struct qdma_rx_queue *rxq;
+	uint8_t cmpt_desc_fmt;
+	enum mbox_cmpt_ctxt_type cmpt_ctxt_type = QDMA_MBOX_CMPT_CTXT_NONE;
+
+	if (!m)
+		return -ENOMEM;
+	memset(&descq_conf, 0, sizeof(struct mbox_descq_conf));
+	rxq = (struct qdma_rx_queue *)dev->data->rx_queues[qid];
+	qid_hw =  qdma_dev->queue_base + rxq->queue_id;
+
+	switch (rxq->cmpt_desc_len) {
+	case RTE_PMD_QDMA_CMPT_DESC_LEN_8B:
+		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_8B;
+		break;
+	case RTE_PMD_QDMA_CMPT_DESC_LEN_16B:
+		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_16B;
+		break;
+	case RTE_PMD_QDMA_CMPT_DESC_LEN_32B:
+		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_32B;
+		break;
+	case RTE_PMD_QDMA_CMPT_DESC_LEN_64B:
+		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_64B;
+		break;
+	default:
+		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_8B;
+		break;
+	}
+	descq_conf.ring_bs_addr = rxq->rx_mz->phys_addr;
+	descq_conf.en_bypass = rxq->en_bypass;
+	descq_conf.irq_arm = 0;
+	descq_conf.at = 0;
+	descq_conf.wbk_en = 1;
+	descq_conf.irq_en = 0;
+	bypass_desc_sz_idx = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
+	if (!rxq->st_mode) {/* mm c2h */
+		descq_conf.desc_sz = SW_DESC_CNTXT_MEMORY_MAP_DMA;
+		descq_conf.wbi_intvl_en = 1;
+		descq_conf.wbi_chk = 1;
+	} else {/* st c2h*/
+		descq_conf.desc_sz = SW_DESC_CNTXT_C2H_STREAM_DMA;
+		descq_conf.forced_en = 1;
+		descq_conf.cmpt_ring_bs_addr = rxq->rx_cmpt_mz->phys_addr;
+		descq_conf.cmpt_desc_sz = cmpt_desc_fmt;
+		descq_conf.triggermode = rxq->triggermode;
+		descq_conf.cmpt_at = 0;
+		descq_conf.cmpt_color = CMPT_DEFAULT_COLOR_BIT;
+		descq_conf.cmpt_full_upd = 0;
+		descq_conf.cnt_thres =
+				qdma_dev->g_c2h_cnt_th[rxq->threshidx];
+		descq_conf.timer_thres =
+				qdma_dev->g_c2h_timer_cnt[rxq->timeridx];
+		descq_conf.cmpt_ringsz =
+				qdma_dev->g_ring_sz[rxq->cmpt_ringszidx] - 1;
+		descq_conf.bufsz = qdma_dev->g_c2h_buf_sz[rxq->buffszidx];
+		descq_conf.cmpt_int_en = 0;
+		descq_conf.cmpl_stat_en = rxq->st_mode;
+		descq_conf.pfch_en = rxq->en_prefetch;
+		descq_conf.en_bypass_prefetch = rxq->en_bypass_prefetch;
+		descq_conf.dis_overflow_check = rxq->dis_overflow_check;
+		cmpt_ctxt_type = QDMA_MBOX_CMPT_WITH_ST;
+	}
+	if (rxq->en_bypass &&
+			(bypass_desc_sz_idx == SW_DESC_CNTXT_64B_BYPASS_DMA))
+		descq_conf.desc_sz = bypass_desc_sz_idx;
+	descq_conf.func_id = rxq->func_id;
+	descq_conf.ringsz = qdma_dev->g_ring_sz[rxq->ringszidx] - 1;
+
+	qdma_mbox_compose_vf_qctxt_write(rxq->func_id, qid_hw, rxq->st_mode, 1,
+					 cmpt_ctxt_type,
+					 &descq_conf, m->raw_data);
+
+	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
+	if (rv < 0) {
+		PMD_DRV_LOG(ERR, "%x, qid_hw 0x%x, mbox failed %d.\n",
+			qdma_dev->pf, qid_hw, rv);
+		goto err_out;
+	}
+
+	rv = qdma_mbox_vf_response_status(m->raw_data);
+
+err_out:
+	qdma_mbox_msg_free(m);
+	return rv;
+}
+
+static int qdma_txq_context_setup(struct rte_eth_dev *dev, uint16_t qid)
+{
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	struct qdma_mbox_msg *m = qdma_mbox_msg_alloc();
+	struct mbox_descq_conf descq_conf;
+	int rv, bypass_desc_sz_idx;
+	struct qdma_tx_queue *txq;
+	uint32_t qid_hw;
+
+	if (!m)
+		return -ENOMEM;
+	memset(&descq_conf, 0, sizeof(struct mbox_descq_conf));
+	txq = (struct qdma_tx_queue *)dev->data->tx_queues[qid];
+	qid_hw =  qdma_dev->queue_base + txq->queue_id;
+	descq_conf.ring_bs_addr = txq->tx_mz->phys_addr;
+	descq_conf.en_bypass = txq->en_bypass;
+	descq_conf.wbi_intvl_en = 1;
+	descq_conf.wbi_chk = 1;
+	descq_conf.wbk_en = 1;
+	bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
+	if (!txq->st_mode) /* mm h2c */
+		descq_conf.desc_sz = SW_DESC_CNTXT_MEMORY_MAP_DMA;
+	else /* st h2c */
+		descq_conf.desc_sz = SW_DESC_CNTXT_H2C_STREAM_DMA;
+	descq_conf.func_id = txq->func_id;
+	descq_conf.ringsz = qdma_dev->g_ring_sz[txq->ringszidx] - 1;
+
+	if (txq->en_bypass &&
+		(bypass_desc_sz_idx == SW_DESC_CNTXT_64B_BYPASS_DMA))
+		descq_conf.desc_sz = bypass_desc_sz_idx;
+
+	qdma_mbox_compose_vf_qctxt_write(txq->func_id, qid_hw, txq->st_mode, 0,
+					 QDMA_MBOX_CMPT_CTXT_NONE,
+					 &descq_conf, m->raw_data);
+
+	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
+	if (rv < 0) {
+		PMD_DRV_LOG(ERR, "%x, qid_hw 0x%x, mbox failed %d.\n",
+			qdma_dev->pf, qid_hw, rv);
+		goto err_out;
+	}
+
+	rv = qdma_mbox_vf_response_status(m->raw_data);
+
+err_out:
+	qdma_mbox_msg_free(m);
+	return rv;
+}
+
+static int qdma_queue_context_invalidate(struct rte_eth_dev *dev, uint32_t qid,
+				  bool st, bool c2h)
+{
+	struct qdma_mbox_msg *m = qdma_mbox_msg_alloc();
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	uint32_t qid_hw;
+	int rv;
+	enum mbox_cmpt_ctxt_type cmpt_ctxt_type = QDMA_MBOX_CMPT_CTXT_NONE;
+
+	if (!m)
+		return -ENOMEM;
+
+	if (st && c2h)
+		cmpt_ctxt_type = QDMA_MBOX_CMPT_WITH_ST;
+	qid_hw = qdma_dev->queue_base + qid;
+	qdma_mbox_compose_vf_qctxt_invalidate(qdma_dev->pf, qid_hw,
+					      st, c2h, cmpt_ctxt_type,
+					      m->raw_data);
+	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
+	if (rv < 0) {
+		if (rv != -ENODEV)
+			PMD_DRV_LOG(INFO, "%x, qid_hw 0x%x mbox failed %d.\n",
+				    qdma_dev->pf, qid_hw, rv);
+		goto err_out;
+	}
+
+	rv = qdma_mbox_vf_response_status(m->raw_data);
+
+err_out:
+	qdma_mbox_msg_free(m);
+	return rv;
 }
 
 static int qdma_vf_dev_start(struct rte_eth_dev *dev)
@@ -219,7 +442,6 @@ static int qdma_vf_dev_start(struct rte_eth_dev *dev)
 	int err;
 
 	PMD_DRV_LOG(INFO, "qdma_dev_start: Starting\n");
-
 	/* prepare descriptor rings for operation */
 	for (qid = 0; qid < dev->data->nb_tx_queues; qid++) {
 		txq = (struct qdma_tx_queue *)dev->data->tx_queues[qid];
@@ -243,76 +465,6 @@ static int qdma_vf_dev_start(struct rte_eth_dev *dev)
 		}
 	}
 	return 0;
-}
-
-static int qdma_pf_bye(struct rte_eth_dev *dev)
-{
-#ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-
-	PMD_DRV_LOG(INFO, "VF-%d(DEVFN) received BYE message from PF",
-							qdma_dev->pf);
-#endif
-	_rte_eth_dev_callback_process(dev, RTE_ETH_EVENT_VF_MBOX, NULL, NULL);
-	return 0;
-}
-
-static void qdma_read_pf_msg(struct rte_eth_dev *dev)
-{
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	uint64_t bar_addr, reg_addr;
-	struct qdma_mbox_data recv_msg;
-	struct mbox_imsg *in_msg;
-	int32_t retval = -1;
-	uint32_t reg_val;
-	int i;
-
-	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
-	reg_addr = bar_addr + QDMA_TRQ_EXT_VF + QDMA_MBOX_IMSG;
-
-	in_msg = (struct mbox_imsg *)(reg_addr);
-
-	reg_val = qdma_read_reg((uint64_t)&in_msg->imsg[0]);
-
-	recv_msg.opcode = reg_val & 0xff;
-	recv_msg.debug_funid  = (reg_val >> 8) & 0xfff;
-	recv_msg.filler = (reg_val >> 20) & 0xf;
-	recv_msg.err    = (reg_val >> 24) & 0xff;
-
-	PMD_DRV_LOG(INFO, "VF-%d(DEVFN) received mbox message from PF %d",
-					qdma_dev->pf, recv_msg.debug_funid);
-	for (i = 1; i < 32; i++)
-		recv_msg.data[i - 1] = qdma_read_reg((uint64_t)&
-							in_msg->imsg[i]);
-
-	switch (recv_msg.opcode) {
-	case QDMA_MBOX_OPCD_BYE:
-		retval = qdma_pf_bye(dev);
-		break;
-	}
-	/* once the msg is handled ACK it */
-	if (!retval)
-		qdma_write_reg((bar_addr + QDMA_TRQ_EXT_VF + QDMA_MBOX_FCMD),
-							QDMA_MBOX_CMD_RECV);
-}
-
-static void qdma_check_pf_msg(void *arg)
-{
-	struct rte_eth_dev *dev = (struct rte_eth_dev *)arg;
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	uint64_t bar_addr, reg_addr;
-	struct mbox_fsr *mbx_stat;
-
-	if (!qdma_dev)
-		return;
-
-	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
-	reg_addr = bar_addr + QDMA_TRQ_EXT_VF + QDMA_MBOX_FSR;
-	mbx_stat = (struct mbox_fsr *)(reg_addr);
-
-	if (mbx_stat->imsg_stat == 1)
-		qdma_read_pf_msg(dev);
-	rte_eal_alarm_set(MBOX_POLL_FRQ, qdma_check_pf_msg, arg);
 }
 
 static int qdma_vf_dev_link_update(struct rte_eth_dev *dev,
@@ -357,26 +509,10 @@ static void qdma_vf_dev_close(struct rte_eth_dev *dev)
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_tx_queue *txq;
 	struct qdma_rx_queue *rxq;
-	struct qdma_mbox_data send_msg;
-	int ret = 0;
+	struct qdma_cmpt_queue *cmptq;
 	uint32_t qid;
 
 	PMD_DRV_LOG(INFO, "Closing all queues\n");
-
-	/* send MBOX Bye MSG for both TX and RX*/
-
-	memset(&send_msg, 0, sizeof(send_msg));
-	send_msg.opcode = QDMA_MBOX_OPCD_BYE;
-	send_msg.debug_funid = qdma_dev->pf;
-
-	ret = qdma_vf_write_mbx(dev, &send_msg);
-	if (ret != 0)
-		RTE_LOG(ERR, PMD, "VF-%d(DEVFN) Failed sending QBYE MSG",
-								qdma_dev->pf);
-	ret = check_outmsg_status(dev);
-	if (ret != 0)
-		RTE_LOG(ERR, PMD, "VF-%d(DEVFN) did not receive ack from PF",
-								qdma_dev->pf);
 
 	/* iterate over rx queues */
 	for (qid = 0; qid < dev->data->nb_rx_queues; ++qid) {
@@ -385,14 +521,16 @@ static void qdma_vf_dev_close(struct rte_eth_dev *dev)
 			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove C2H queue: %d",
 							qdma_dev->pf, qid);
 
+			qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+					     qdma_dev->queue_base);
 			if (rxq->sw_ring)
 				rte_free(rxq->sw_ring);
-//#ifdef QDMA_STREAM
+
 			if (rxq->st_mode) { /** if ST-mode **/
 				if (rxq->rx_cmpt_mz)
 					rte_memzone_free(rxq->rx_cmpt_mz);
 			}
-//#endif
+
 			if (rxq->rx_mz)
 				rte_memzone_free(rxq->rx_mz);
 			rte_free(rxq);
@@ -407,6 +545,8 @@ static void qdma_vf_dev_close(struct rte_eth_dev *dev)
 			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove H2C queue: %d",
 							qdma_dev->pf, qid);
 
+			qdma_dev_notify_qdel(txq->dev, txq->queue_id +
+					     qdma_dev->queue_base);
 			if (txq->sw_ring)
 				rte_free(txq->sw_ring);
 			if (txq->tx_mz)
@@ -416,26 +556,64 @@ static void qdma_vf_dev_close(struct rte_eth_dev *dev)
 							qdma_dev->pf, qid);
 		}
 	}
+
+	/* iterate over cmpt queues */
+	for (qid = 0; qid < qdma_dev->qsets_en; ++qid) {
+		cmptq = qdma_dev->cmpt_queues[qid];
+		if (cmptq != NULL) {
+			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove CMPT queue: %d",
+					qdma_dev->pf, qid);
+			qdma_dev_notify_qdel(cmptq->dev, cmptq->queue_id +
+					     qdma_dev->queue_base);
+			if (cmptq->cmpt_mz)
+				rte_memzone_free(cmptq->cmpt_mz);
+			rte_free(cmptq);
+			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) CMPT queue %d removed",
+					qdma_dev->pf, qid);
+		}
+	}
+
+	if (qdma_dev->cmpt_queues != NULL) {
+		rte_free(qdma_dev->cmpt_queues);
+		qdma_dev->cmpt_queues = NULL;
+	}
+
+
+	qdma_dev->qsets_en = 0;
+	qdma_set_qmax(dev, (int *)&qdma_dev->qsets_en,
+		      (int *)&qdma_dev->queue_base);
+	qdma_dev->init_q_range = 0;
+	rte_free(qdma_dev->q_info);
+	qdma_dev->q_info = NULL;
 }
 
 static int qdma_vf_dev_configure(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct qdma_mbox_data send_msg;
-	int32_t ret = 0;
+	int32_t ret = 0, queue_base = -1;
 	uint32_t qid = 0;
 
 	/** FMAP configuration **/
 	qdma_dev->qsets_en = RTE_MAX(dev->data->nb_rx_queues,
 					dev->data->nb_tx_queues);
 
-	if (qdma_dev->queue_base + qdma_dev->qsets_en > qdma_dev->qsets_max) {
+	if (qdma_dev->qsets_en > qdma_dev->dev_cap.num_qs) {
 		PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Error: Number of Queues to be "
 				"configured are greater than the queues "
 				"supported by the hardware\n", qdma_dev->pf);
 		qdma_dev->qsets_en = 0;
 		return -1;
 	}
+
+	/* Request queue base from the resource manager */
+	ret = qdma_set_qmax(dev, (int *)&qdma_dev->qsets_en,
+			    (int *)&queue_base);
+	if (ret != QDMA_RESOURCE_MGMT_SUCCESS) {
+		PMD_DRV_LOG(ERR, "VF-%d(DEVFN) queue allocation failed: %d\n",
+			qdma_dev->pf, ret);
+		return -1;
+	}
+	qdma_dev->queue_base = queue_base;
 
 	qdma_dev->q_info = rte_zmalloc("qinfo", sizeof(struct queue_info) *
 						qdma_dev->qsets_en, 0);
@@ -445,9 +623,24 @@ static int qdma_vf_dev_configure(struct rte_eth_dev *dev)
 		return (-ENOMEM);
 	}
 
+	/* Reserve memory for cmptq ring pointers
+	 * Max completion queues can be maximum of rx and tx queues.
+	 */
+	qdma_dev->cmpt_queues = rte_zmalloc("cmpt_queues",
+					    sizeof(qdma_dev->cmpt_queues[0]) *
+						qdma_dev->qsets_en,
+						RTE_CACHE_LINE_SIZE);
+	if (qdma_dev->cmpt_queues == NULL) {
+		PMD_DRV_LOG(ERR, "VF-%d(DEVFN) cmpt ring pointers memory "
+				"allocation failed:\n", qdma_dev->pf);
+		rte_free(qdma_dev->q_info);
+		qdma_dev->q_info = NULL;
+		return -(ENOMEM);
+	}
+
 	/* Initialize queue_modes to all 1's ( i.e. Streaming) */
 	for (qid = 0 ; qid < qdma_dev->qsets_en; qid++)
-		qdma_dev->q_info[qid].queue_mode = STREAMING_MODE;
+		qdma_dev->q_info[qid].queue_mode = RTE_PMD_QDMA_STREAMING_MODE;
 
 	for (qid = 0 ; qid < dev->data->nb_rx_queues; qid++) {
 		qdma_dev->q_info[qid].cmpt_desc_sz = qdma_dev->cmpt_desc_len;
@@ -459,23 +652,15 @@ static int qdma_vf_dev_configure(struct rte_eth_dev *dev)
 		qdma_dev->q_info[qid].tx_bypass_mode =
 						qdma_dev->h2c_bypass_mode;
 
-	memset(&send_msg, 0, sizeof(send_msg));
-
-	/* send hi msg to PF with queue-base and queue-max*/
-	send_msg.opcode = QDMA_MBOX_OPCD_HI;
-	send_msg.debug_funid = qdma_dev->pf;
-
-	send_msg.data[0] = qdma_dev->queue_base;
-	send_msg.data[1] = qdma_dev->qsets_en;
-
-	ret = qdma_vf_write_mbx(dev, &send_msg);
+	ret = qdma_vf_set_qrange(dev);
 	if (ret < 0) {
-		PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Failed sending HI MSG",
-								qdma_dev->pf);
+		PMD_DRV_LOG(ERR, "FMAP programming failed\n");
+		rte_free(qdma_dev->q_info);
+		qdma_dev->q_info = NULL;
+		rte_free(qdma_dev->cmpt_queues);
+		qdma_dev->cmpt_queues = NULL;
 		return ret;
 	}
-	ret = check_outmsg_status(dev);
-
 	return ret;
 }
 
@@ -483,49 +668,15 @@ int qdma_vf_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_tx_queue *txq;
-	struct qdma_mbox_data send_msg;
-	uint32_t queue_base =  qdma_dev->queue_base;
-	uint64_t phys_addr;
-	int err;
 
-	memset(&send_msg, 0, sizeof(send_msg));
-	send_msg.opcode = QDMA_MBOX_OPCD_QADD;
-	send_msg.debug_funid = qdma_dev->pf;
 	txq = (struct qdma_tx_queue *)dev->data->tx_queues[qid];
 	qdma_reset_tx_queue(txq);
 
-	phys_addr = (uint64_t)txq->tx_mz->phys_addr;
-	PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Phys-addr for H2C queue-id:%d: "
-			"is Lo:0x%lx, Hi:0x%lx\n",
-			qdma_dev->pf, qid,
-			rte_cpu_to_le_32(phys_addr & MASK_32BIT),
-			rte_cpu_to_le_32(phys_addr >> 32));
+	if (qdma_txq_context_setup(dev, qid) < 0)
+		return -1;
 
-	/* send MBOX msg QADD for H2C*/
-	send_msg.data[0] = (qid + queue_base);
-	send_msg.data[1] = txq->st_mode;
-	send_msg.data[2] = 0;
-	send_msg.data[3] = txq->ringszidx;
-	send_msg.data[4] = 0;
-	send_msg.data[5] = 0;
-	send_msg.data[6] = 0;
-	send_msg.data[7] = 0;
-	send_msg.data[8] = rte_cpu_to_le_32(phys_addr & MASK_32BIT);
-	send_msg.data[9] = rte_cpu_to_le_32(phys_addr >> 32);
-	send_msg.data[15] = txq->en_bypass;
-	send_msg.data[16] = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
-
-	err = qdma_vf_write_mbx(dev, &send_msg);
-	if (err != 0) {
-		PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Failed sending H2C QADD MSG "
-				"for QID:%d", qdma_dev->pf, qid);
-		return err;
-	}
-	err = check_outmsg_status(dev);
-	if (err != 0)
-		return err;
-
-	qdma_start_tx_queue(txq);
+	txq->q_pidx_info.pidx = 0;
+	qdma_queue_pidx_update(dev, qdma_dev->is_vf, qid, 0, &txq->q_pidx_info);
 
 	dev->data->tx_queue_state[qid] = RTE_ETH_QUEUE_STATE_STARTED;
 	txq->status = RTE_ETH_QUEUE_STATE_STARTED;
@@ -535,95 +686,30 @@ int qdma_vf_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 
 int qdma_vf_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_rx_queue *rxq;
-	struct qdma_mbox_data send_msg;
-	uint32_t queue_base =  qdma_dev->queue_base;
-	uint64_t phys_addr, cmpt_phys_addr;
-	uint8_t en_pfetch, cmpt_desc_fmt;
 	int err;
-
-	memset(&send_msg, 0, sizeof(send_msg));
-	send_msg.opcode = QDMA_MBOX_OPCD_QADD;
-	send_msg.debug_funid = qdma_dev->pf;
 
 	rxq = (struct qdma_rx_queue *)dev->data->rx_queues[qid];
 	qdma_reset_rx_queue(rxq);
 
-	en_pfetch = (rxq->en_prefetch) ? 1 : 0;
-	switch (rxq->cmpt_desc_len) {
-	case CMPT_DESC_LEN_8B:
-		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_8B;
-		break;
-	case CMPT_DESC_LEN_16B:
-		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_16B;
-		break;
-	case CMPT_DESC_LEN_32B:
-		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_32B;
-		break;
-	case CMPT_DESC_LEN_64B:
-		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_64B;
-		break;
-	default:
-		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_8B;
-		break;
-	}
-
-	phys_addr = (uint64_t)rxq->rx_mz->phys_addr;
-	PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Phys-addr for C2H queue-id:%d: "
-			"is Lo:0x%lx, Hi:0x%lx\n",
-			qdma_dev->pf, qid,
-			rte_cpu_to_le_32(phys_addr & MASK_32BIT),
-			rte_cpu_to_le_32(phys_addr >> 32));
-
-	if (rxq->st_mode)
-		cmpt_phys_addr = (uint64_t)rxq->rx_cmpt_mz->phys_addr;
-	else
-		cmpt_phys_addr = 0;
-
-	PMD_DRV_LOG(INFO, "VF-%d(DEVFN) C2H Completion queue Phys-addr "
-			"for queue-id:%d: is Lo:0x%lx, Hi:0x%lx\n",
-			qdma_dev->pf, qid,
-			rte_cpu_to_le_32(cmpt_phys_addr & MASK_32BIT),
-			rte_cpu_to_le_32(cmpt_phys_addr >> 32));
-	err = qdma_start_rx_queue(rxq);
+	err = qdma_init_rx_queue(rxq);
 	if (err != 0)
 		return err;
+	if (qdma_rxq_context_setup(dev, qid) < 0) {
+		PMD_DRV_LOG(ERR, "context_setup for qid - %u failed", qid);
 
-	/* Send Mbox Msg QADD for C2H */
-	send_msg.data[0] = (qid + queue_base);
-	send_msg.data[1] = rxq->st_mode;
-	send_msg.data[2] = 1;
-	send_msg.data[3] = rxq->ringszidx;
-	send_msg.data[4] = rxq->buffszidx;
-	send_msg.data[5] = rxq->threshidx;
-	send_msg.data[6] = rxq->timeridx;
-	send_msg.data[7] = rxq->triggermode;
-	send_msg.data[8] = rte_cpu_to_le_32(phys_addr & MASK_32BIT);
-	send_msg.data[9] = rte_cpu_to_le_32(phys_addr >> 32);
-	send_msg.data[10] = rte_cpu_to_le_32(cmpt_phys_addr & MASK_32BIT);
-	send_msg.data[11] = rte_cpu_to_le_32(cmpt_phys_addr >> 32);
-	send_msg.data[12] = rxq->cmpt_ringszidx;
-	send_msg.data[13] = en_pfetch;
-	send_msg.data[14] = cmpt_desc_fmt;
-	send_msg.data[15] = rxq->en_bypass;
-	send_msg.data[16] = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
-	send_msg.data[17] = rxq->en_bypass_prefetch;
-	send_msg.data[19] = rxq->dis_overflow_check;
-
-	err = qdma_vf_write_mbx(dev, &send_msg);
-	if (err != 0) {
-		PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Failed sending C2H QADD MSG "
-				"for QID:%d", qdma_dev->pf, qid);
-		return err;
+		return -1;
 	}
-	err = check_outmsg_status(dev);
-	if (err != 0)
-		return err;
 
 	if (rxq->st_mode) {
-		*rxq->rx_cidx = (0x09000000) | 0x0;
-		*rxq->rx_pidx = (rxq->nb_rx_desc - 2);
+		rxq->cmpt_cidx_info.counter_idx = rxq->threshidx;
+		rxq->cmpt_cidx_info.timer_idx = rxq->timeridx;
+		rxq->cmpt_cidx_info.trig_mode = rxq->triggermode;
+		rxq->cmpt_cidx_info.wrb_en = 1;
+		qdma_queue_cmpt_cidx_update(dev, 1, qid, &rxq->cmpt_cidx_info);
+
+		rxq->q_pidx_info.pidx = (rxq->nb_rx_desc - 2);
+		qdma_queue_pidx_update(dev, 1, qid, 1, &rxq->q_pidx_info);
 	}
 
 	dev->data->rx_queue_state[qid] = RTE_ETH_QUEUE_STATE_STARTED;
@@ -633,11 +719,8 @@ int qdma_vf_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 
 int qdma_vf_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_rx_queue *rxq;
-	struct qdma_mbox_data send_msg;
-	uint32_t queue_base =  qdma_dev->queue_base;
-	int i = 0, err = 0, cnt = 0;
+	int i = 0, cnt = 0;
 
 	rxq = (struct qdma_rx_queue *)dev->data->rx_queues[qid];
 
@@ -645,39 +728,20 @@ int qdma_vf_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 
 	/* Wait for queue to recv all packets. */
 	if (rxq->st_mode) {  /** ST-mode **/
-		while (rxq->wb_status->pidx != rxq->rx_cmpt_tail) {
+		while (rxq->wb_status->pidx != rxq->cmpt_cidx_info.wrb_cidx) {
 			usleep(10);
 			if (cnt++ > 10000)
 				break;
 		}
 	} else { /* MM mode */
-		while (rxq->wb_status->cidx != rxq->rx_tail) {
+		while (rxq->wb_status->cidx != rxq->q_pidx_info.pidx) {
 			usleep(10);
 			if (cnt++ > 10000)
 				break;
 		}
 	}
 
-
-	memset(&send_msg, 0, sizeof(send_msg));
-	send_msg.opcode = QDMA_MBOX_OPCD_QDEL;
-	send_msg.debug_funid = qdma_dev->pf;
-	send_msg.data[0] = (qid + queue_base);
-	send_msg.data[1] = DMA_FROM_DEVICE;
-
-	err = qdma_vf_write_mbx(dev, &send_msg);
-	if (err != 0) {
-		RTE_LOG(ERR, PMD, "VF-%d(DEVFN) Failed sending RX QDEL MSG "
-				"for QID:%d", qdma_dev->pf, qid);
-		return err;
-	}
-
-	err = check_outmsg_status(dev);
-	if (err != 0) {
-		RTE_LOG(ERR, PMD, "VF-%d(DEVFN) did not receive ack from PF "
-			"for RX QDEL MSG for QID:%d", qdma_dev->pf, qid);
-		return err;
-	}
+	qdma_queue_context_invalidate(dev, qid, rxq->st_mode, 1);
 
 	if (rxq->st_mode) {  /** ST-mode **/
 #ifdef DUMP_MEMPOOL_USAGE_STATS
@@ -709,43 +773,20 @@ int qdma_vf_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 
 int qdma_vf_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_tx_queue *txq;
-	struct qdma_mbox_data send_msg;
-	uint32_t queue_base =  qdma_dev->queue_base;
-	int err = 0;
 	int i = 0, cnt = 0;
 
 	txq = (struct qdma_tx_queue *)dev->data->tx_queues[qid];
 
 	txq->status = RTE_ETH_QUEUE_STATE_STOPPED;
 	/* Wait for TXQ to send out all packets. */
-	while (txq->wb_status->cidx != txq->tx_tail) {
+	while (txq->wb_status->cidx != txq->q_pidx_info.pidx) {
 		usleep(10);
 		if (cnt++ > 10000)
 			break;
 	}
 
-	memset(&send_msg, 0, sizeof(send_msg));
-	send_msg.opcode = QDMA_MBOX_OPCD_QDEL;
-	send_msg.debug_funid = qdma_dev->pf;
-	send_msg.data[0] = (qid + queue_base);
-	send_msg.data[1] = DMA_TO_DEVICE;
-
-	err = qdma_vf_write_mbx(dev, &send_msg);
-	if (err != 0) {
-		RTE_LOG(ERR, PMD, "VF-%d(DEVFN) Failed sending TX QDEL MSG "
-				"for QID:%d", qdma_dev->pf, qid);
-		return err;
-	}
-
-	err = check_outmsg_status(dev);
-	if (err != 0) {
-		RTE_LOG(ERR, PMD, "VF-%d(DEVFN) did not receive ack from PF "
-			"for TX QDEL MSG for QID:%d", qdma_dev->pf, qid);
-		return err;
-	}
-
+	qdma_queue_context_invalidate(dev, qid, txq->st_mode, 0);
 	qdma_reset_tx_queue(txq);
 
 	/* Free mbufs if any pending in the ring */
@@ -791,7 +832,6 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *dma_priv;
 	uint8_t *baseaddr;
-	uint64_t bar_len;
 	int i, idx;
 	static bool once = true;
 	struct rte_pci_device *pci_dev;
@@ -837,13 +877,12 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	dma_priv->pf = PCI_DEVFN(pci_dev->addr.devid, pci_dev->addr.function);
 	dma_priv->is_vf = 1;
 
-	dma_priv->qsets_max = QDMA_QUEUES_NUM_MAX;
-	dma_priv->queue_base = DEFAULT_QUEUE_BASE;
+	dma_priv->dev_cap.num_qs = QDMA_QUEUES_NUM_MAX;
 	dma_priv->timer_count = DEFAULT_TIMER_CNT_TRIG_MODE_TIMER;
 
-	/* Setting default Mode to TRIG_MODE_USER_TIMER_COUNT */
-	dma_priv->trigger_mode = TRIG_MODE_USER_TIMER_COUNT;
-	if (dma_priv->trigger_mode == TRIG_MODE_USER_TIMER_COUNT)
+	/* Setting default Mode to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT */
+	dma_priv->trigger_mode = RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT;
+	if (dma_priv->trigger_mode == RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT)
 		dma_priv->timer_count = DEFAULT_TIMER_CNT_TRIG_MODE_COUNT_TIMER;
 
 	/* !! FIXME default to enabled for everything.
@@ -851,12 +890,12 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	 * Currently the registers are not available for VFs, so
 	 * setting them as enabled.
 	 */
-	dma_priv->st_mode_en = 1;
-	dma_priv->mm_mode_en = 1;
+	dma_priv->dev_cap.st_en = 1;
+	dma_priv->dev_cap.mm_en = 1;
 
 	dma_priv->en_desc_prefetch = 0; //Keep prefetch default to 0
 	dma_priv->cmpt_desc_len = DEFAULT_QDMA_CMPT_DESC_LEN;
-	dma_priv->c2h_bypass_mode = C2H_BYPASS_MODE_NONE;
+	dma_priv->c2h_bypass_mode = RTE_PMD_QDMA_RX_BYPASS_NONE;
 	dma_priv->h2c_bypass_mode = 0;
 
 	dev->dev_ops = &qdma_vf_eth_dev_ops;
@@ -873,10 +912,22 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 		return -EINVAL;
 	}
 
+	/* Store BAR address and length of Config BAR */
+	baseaddr = (uint8_t *)
+			pci_dev->mem_resource[dma_priv->config_bar_idx].addr;
+	dma_priv->bar_addr[dma_priv->config_bar_idx] = baseaddr;
+
 	idx = qdma_identify_bars(dev);
 	if (idx < 0) {
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
+	}
+
+	/* Store BAR address and length of User BAR */
+	if (dma_priv->user_bar_idx >= 0) {
+		baseaddr = (uint8_t *)
+			     pci_dev->mem_resource[dma_priv->user_bar_idx].addr;
+		dma_priv->bar_addr[dma_priv->user_bar_idx] = baseaddr;
 	}
 
 	PMD_DRV_LOG(INFO, "VF-%d(DEVFN) QDMA device driver probe:",
@@ -887,23 +938,9 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
+	qdma_mbox_init(dev);
 
-	baseaddr = (uint8_t *)
-			pci_dev->mem_resource[dma_priv->config_bar_idx].addr;
-	bar_len = pci_dev->mem_resource[dma_priv->config_bar_idx].len;
-
-	dma_priv->bar_addr[dma_priv->config_bar_idx] = baseaddr;
-	dma_priv->bar_len[dma_priv->config_bar_idx] = bar_len;
-
-	if (dma_priv->user_bar_idx >= 0) {
-		baseaddr = (uint8_t *)
-			     pci_dev->mem_resource[dma_priv->user_bar_idx].addr;
-		bar_len = pci_dev->mem_resource[dma_priv->user_bar_idx].len;
-		dma_priv->bar_addr[dma_priv->user_bar_idx] = baseaddr;
-		dma_priv->bar_len[dma_priv->user_bar_idx] = bar_len;
-	}
-	rte_eal_alarm_set(MBOX_POLL_FRQ, qdma_check_pf_msg, (void *)dev);
-	return 0;
+	return qdma_ethdev_online(dev);
 }
 
 /**
@@ -922,8 +959,8 @@ static int eth_qdma_vf_dev_uninit(struct rte_eth_dev *dev)
 	/* only uninitialize in the primary process */
 	if (rte_eal_process_type() != RTE_PROC_PRIMARY)
 		return -EPERM;
-	/*Cancel pending polls*/
-	rte_eal_alarm_cancel(qdma_check_pf_msg, (void *)dev);
+	qdma_ethdev_offline(dev);
+	qdma_mbox_uninit(dev);
 	dev->dev_ops = NULL;
 	dev->rx_pkt_burst = NULL;
 	dev->tx_pkt_burst = NULL;
@@ -963,6 +1000,15 @@ static struct rte_pci_driver rte_qdma_vf_pmd = {
 	.probe = eth_qdma_vf_pci_probe,
 	.remove = eth_qdma_vf_pci_remove,
 };
+
+bool
+is_vf_device_supported(struct rte_eth_dev *dev)
+{
+	if (strcmp(dev->device->driver->name, rte_qdma_vf_pmd.driver.name))
+		return false;
+
+	return true;
+}
 
 RTE_PMD_REGISTER_PCI(net_qdma_vf, rte_qdma_vf_pmd);
 RTE_PMD_REGISTER_PCI_TABLE(net_qdma_vf, qdma_vf_pci_id_tbl);

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DMA Control Application &mdash; QDMA Linux Driver 2018.3 documentation</title>
+  <title>DMA Control Application &mdash; QDMA Linux Driver 2019.1 documentation</title>
   
 
   
@@ -33,7 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2018.3 documentation" href="index.html"/> 
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+        <link rel="up" title="User Applications" href="user-app.html"/>
+        <link rel="next" title="dma_to_device" href="dma_to_device.html"/>
+        <link rel="prev" title="User Applications" href="user-app.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2018.3
+                2019.1
               </div>
             
           
@@ -83,13 +86,51 @@
             
             
                 <p class="caption"><span class="caption-text">Table of Contents</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
-<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Control Application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#device-management-commands">Device Management Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#list-devices">List devices</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#queue-management-commands">Queue Management Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#list-version">List Version</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#list-device-statistics">List Device Statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#add-a-queue">Add a Queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#add-a-list-of-queues">Add a List of Queues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-a-queue">Start a Queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#start-a-list-of-queues">Start a List of Queues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stop-a-queue">Stop a Queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stop-a-list-of-queues">Stop a List of Queues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#delete-a-queue">Delete a Queue</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#delete-a-list-of-queues">Delete a List of Queues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-queue-information">Dump Queue Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-multiple-queue-information">Dump Multiple Queue Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-queue-descriptor-information">Dump Queue Descriptor Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-multiple-queue-descriptor-information">Dump Multiple Queue Descriptor Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-queue-completion-information">Dump Queue Completion Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-multiple-queue-completion-information">Dump Multiple Queue Completion Information</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-the-interrupt-ring-information">Dump the Interrupt Ring Information</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#register-commands">Register Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#read-a-register">Read a Register</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#write-a-register">Write a Register</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-the-queue-registers">Dump the Queue registers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">dma_to_device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">dma_from_device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
 </ul>
 
@@ -121,6 +162,8 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
+          <li><a href="user-app.html">User Applications</a> &raquo;</li>
+      
     <li>DMA Control Application</li>
       <li class="wy-breadcrumbs-aside">
         
@@ -141,15 +184,15 @@
 <p>The Xilinx QDMA control tool, <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> is a command Line utility which is installed in <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin/</span></code> and allows administration of the Xilinx QDMA queues. Make sure that the installation path <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin/</span></code> is added to the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable.</p>
 <p>It can perform the following functions:</p>
 <ul>
-<li><p class="first">Query the list of QDMA functions the driver has bind into</p>
+<li><p class="first">Query the list of QDMA driver binded functions</p>
 </li>
 <li><p class="first">Query control and configuration</p>
 <blockquote>
 <div><ul class="simple">
 <li>List all the queues on a device</li>
 <li>Add/configure a new queue on a device</li>
-<li>Start an already added/configured queue, i.e., bring the queue to online mode</li>
-<li>Stop a started queue, i.e., bring the queue to offline mode</li>
+<li>Start an already added/configured queue, i.e., bring the queue to on line mode</li>
+<li>Stop a started queue, i.e., bring the queue to off line mode</li>
 <li>Delete an already configured queue</li>
 </ul>
 </div></blockquote>
@@ -159,7 +202,7 @@
 <div><ul class="simple">
 <li>Read a register</li>
 <li>Write a register</li>
-<li>Dump the qdma config bar and user bar registers</li>
+<li>Dump the qdma configuration bar and user bar registers</li>
 </ul>
 </div></blockquote>
 </li>
@@ -184,12 +227,32 @@
 <p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">dev</span> <span class="pre">list</span></code></p>
 <p>This command lists all the physical and virtual functions available in the system along with the number of queues assigned to each function, queue base and queue max.
 Each qdma device name is listed as <code class="docutils literal notranslate"><span class="pre">qdma&lt;bbddf&gt;</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;bbddf&gt;</span></code> is bus number, device number and function number.</p>
+<p>Initially when the system is started, the queues are not assigned to any of the available functions.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl dev list
 
-qdma01000       0000:01:00.0    max QP: 512, 0~511
-qdma01001       0000:01:00.1    max QP: 512, 512~1023
-qdma01002       0000:01:00.2    max QP: 512, 1024~1535
-qdma01003       0000:01:00.3    max QP: 512, 1536~2047
+qdma01000       0000:01:00.0    max QP: 0, -~-
+qdma01001       0000:01:00.1    max QP: 0, -~-
+qdma01002       0000:01:00.2    max QP: 0, -~-
+qdma01003       0000:01:00.3    max QP: 0, -~-
+
+
+qdmavf01004     0000:01:00.4    max QP: 0, -~-
+
+
+[xilinx@]# echo 100 &gt; /sys/bus/pci/devices/0000\:01\:00.0/qdma/qmax
+[xilinx@]# echo 100 &gt; /sys/bus/pci/devices/0000\:01\:00.1/qdma/qmax
+[xilinx@]# echo 100 &gt; /sys/bus/pci/devices/0000\:01\:00.2/qdma/qmax
+[xilinx@]# echo 100 &gt; /sys/bus/pci/devices/0000\:01\:00.3/qdma/qmax
+[xilinx@]# echo 100 &gt; /sys/bus/pci/devices/0000\:01\:00.4/qdma/qmax
+[xilinx@]# dmactl dev list
+
+qdma01000       0000:01:00.0    max QP: 100, 0~99
+qdma01001       0000:01:00.1    max QP: 100, 100~199
+qdma01002       0000:01:00.2    max QP: 100, 200~299
+qdma01003       0000:01:00.3    max QP: 100, 300~399
+
+
+qdmavf01004     0000:01:00.4    max QP: 100, 400~499
 </pre></div>
 </div>
 </div>
@@ -199,18 +262,28 @@ qdma01003       0000:01:00.3    max QP: 512, 1536~2047
 <div class="section" id="list-version">
 <h3>List Version<a class="headerlink" href="#list-version" title="Permalink to this headline">¶</a></h3>
 <p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">version</span></code></p>
-<p>This command lists hardware and software version details</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 version
-
+<p>This command lists hardware and software version details and device capabilities.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 devinfo
 =============Hardware Version============
 
-RTL Version       : RTL2
-Vivado ReleaseID  : 2018.3
-Everest IP        : SOFT_IP
+RTL Version         : RTL Base
+Vivado ReleaseID    : vivado 2019.1
+Everest IP          : Soft IP
 
 ============Software Version============
 
-qdma driver version       : 2018.3.97.162.
+qdma driver version : 2019.1.121.205.
+
+=============Hardware Capabilities============
+
+Number of PFs supported                : 4
+Total number of queues supported       : 2048
+MM channels                            : 1
+FLR Present                            : yes
+ST enabled                             : yes
+MM enabled                             : yes
+Mailbox enabled                        : yes
+MM completion enabled                  : no
 </pre></div>
 </div>
 </div>
@@ -237,7 +310,7 @@ Total ST C2H packets processed = 100954
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
-<li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
+<li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Direction defaults to h2c.</li>
 </ul>
 <div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q add idx 4 mode mm dir h2c
 
@@ -271,25 +344,32 @@ Added 4 Queues.
 <h3>Start a Queue<a class="headerlink" href="#start-a-queue" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>command:</dt>
-<dd>dmactl qdma01000 q start idx &lt;N&gt; [dir &lt;h2c|c2h|bi&gt;] [idx_ringsz &lt;0:15&gt;] [idx_bufsz &lt;0:15&gt;] [idx_tmr &lt;0:15&gt;] [idx_cntr &lt;0:15&gt;] [trigmode &lt;every|usr_cnt|usr|usr_tmr|dis&gt;] [cmptsz &lt;0|1|2|3&gt;] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] [cmpl_ovf_dis]</dd>
+<dd><dl class="first last docutils">
+<dt>dmactl qdma01000 q start idx &lt;N&gt; [dir &lt;h2c|c2h|bi&gt;] [en_mm_cmpl] [idx_ringsz &lt;0:15&gt;] [idx_bufsz &lt;0:15&gt;] [idx_tmr &lt;0:15&gt;] </dt>
+<dd>[idx_cntr &lt;0:15&gt;] [trigmode &lt;every|usr_cnt|usr|usr_tmr|dis&gt;] [cmptsz &lt;0|1|2|3&gt;] [sw_desc_sz &lt;3&gt;] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [cmpl_ovf_dis] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en]</dd>
+</dl>
+</dd>
 </dl>
 <p>This command allows the user to start a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
+<li>en_mm_cmpl : Enable MM completions. This is valid only for MM Completion example design.</li>
 <li>idx_ringsz: CSR register ring size index</li>
 <li>idx_bufsz : CSR register buffer size index</li>
 <li>idx_tmr : CSR register timer index</li>
 <li>idx_cntr: CSR register counter index</li>
 <li>trigmode: Timer trigger mode (every, user counter, user, user timer, disabled)</li>
 <li>cmptsz : Completion size ( 0: 8 bytes, 1: 16 bytes, 2:32 bytes, 3:64 bytes)</li>
+<li>sw_desc_sz : Descriptor size</li>
 <li>desc_bypass_en : Enable descriptor bypass</li>
 <li>pfetch_en : Enable prefetch</li>
 <li>pfetch_bypass_en : Enable prefetch bypass</li>
 <li>dis_cmpl_status : Disable completion status update</li>
+<li>dis_cmpl_status_acc : Disable completion status accumulation</li>
 <li>dis_cmpl_status_pend_chk : Disable completion status pending check</li>
-<li>c2h_udd_en : Enable immdeiate data(User Defined Data)</li>
+<li>c2h_udd_en : Enable immediate data(User Defined Data)</li>
 <li>dis_fetch_credit: Disable fetch credit</li>
 <li>dis_cmpt_stat : Disable completion status</li>
 <li>c2h_cmpl_intr_en : Enable c2h completion interval</li>
@@ -306,7 +386,7 @@ dmactl: Info: Default ring size set to 2048
 <h3>Start a List of Queues<a class="headerlink" href="#start-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
 <dt>command:</dt>
-<dd>dmactl qdma01000 q start list &lt;start_idx&gt; &lt;N&gt; [dir &lt;h2c|c2h|bi&gt;] [idx_ringsz &lt;0:15&gt;] [idx_bufsz &lt;0:15&gt;] [idx_tmr &lt;0:15&gt;] [idx_cntr &lt;0:15&gt;] [trigmode &lt;every|usr_cnt|usr|usr_tmr|dis&gt;] [cmptsz &lt;0|1|2|3&gt;] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] [cmpl_ovf_dis]</dd>
+<dd>dmactl qdma01000 q start list &lt;start_idx&gt; &lt;N&gt; [dir &lt;h2c|c2h|bi&gt;]  [en_mm_cmpl] [idx_ringsz &lt;0:15&gt;] [idx_bufsz &lt;0:15&gt;] [idx_tmr &lt;0:15&gt;] [idx_cntr &lt;0:15&gt;] [trigmode &lt;every|usr_cnt|usr|usr_tmr|dis&gt;] [cmptsz &lt;0|1|2|3&gt;] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en][dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] [cmpl_ovf_dis]</dd>
 </dl>
 <p>This command allows the user to start a list of queues.</p>
 <p><strong>Parameters</strong></p>
@@ -314,6 +394,7 @@ dmactl: Info: Default ring size set to 2048
 <li>&lt;start_idx&gt; : Starting queue number</li>
 <li>&lt;N&gt; :Number of queues to delete</li>
 <li>dir : direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
+<li>en_mm_cmpl : Enable MM completions. This is valid only for MM Completion example design.</li>
 <li>idx_ringsz: CSR register ring size index</li>
 <li>idx_bufsz : CSR register buffer size index</li>
 <li>idx_tmr : CSR register timer index</li>
@@ -409,18 +490,157 @@ Deleted Queues 1 -&gt; 4.
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q dump idx 4
-dmactl: Warn: Default dir set to &#39;h2c&#39;
+<p>Sample output is given below:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q dump idx 1 dir bi
 
-qdma01000-MM-4 H2C online
-     hw_ID 4, thp ?, desc 0x00000000c6b67be7/0x34580000, 2048
+qdma01000-ST-1 C2H online
+        hw_ID 1, thp ?, desc 0xffff880084140000/0x84140000, 1536
+        cmpt desc 0xffff8800842a0000/0x842a0000, 2048
 
-     cmpl status: 0x0000000007d59836, 00000000 00000000
-     SW CTXT:    [4]:0x00000004 [3]:0x00000000 [2]:0x34580000 [1]:0x8032500d [0]:0x00010000
-     HW CTXT:    [1]:0x00000200 [0]:0x00000000
-     CR CTXT:    0x00000000
-     total descriptor processed:    0
-Dumped Queues 4 -&gt; 4.
+        cmpl status: 0xffff880084143000, 00000000 00000000
+        CMPT CMPL STATUS: 0xffff8800842a4000, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x84140000 2215903232
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x0        0
+                Writeback Enable                                0x0        0
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x0        0
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x0        0
+                Fetch Credit Enable                             0x1        1
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x0        0
+                PIDX                                            0x5ff      1535
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        CMPT CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Address Translation                             0x0        0
+                Over Flow Check Disable                         0x0        0
+                Full Update                                     0x0        0
+                Timer Running                                   0x0        0
+                Trigger Pending                                 0x0        0
+                Error                                           0x0        0
+                Valid                                           0x1        1
+                CIDX                                            0x0        0
+                PIDX                                            0x0        0
+                Descriptor Size                                 0x0        0
+                Base Address (High)                             0x0        0
+                Base Address (Low)                              0x842a0000 2217345024
+                Ring Size                                       0x0        0
+                Color                                           0x1        1
+                Interrupt State                                 0x1        1
+                Timer Index                                     0x0        0
+                Counter Index                                   0x0        0
+                Function Id                                     0x0        0
+                Trigger Mode                                    0x1        1
+                Enable Interrupt                                0x1        1
+                Enable Status Desc Update                       0x1        1
+
+        PREFETCH CTXT:
+                Valid                                           0x1        1
+                Software Credit                                 0x5ff      1535
+                In Prefetch                                     0x0        0
+                Prefetch Enable                                 0x0        0
+                Error                                           0x0        0
+                Port Id                                         0x0        0
+                Buffer Size Index                               0x0        0
+                Bypass                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x8414c000 2215952384
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+qdma01000-ST-1 H2C online
+        hw_ID 1, thp ?, desc 0xffff880084288000/0x84288000, 1536
+
+        cmpl status: 0xffff88008428e000, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x84288000 2217246720
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x1        1
+                Writeback Enable                                0x1        1
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x1        1
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x1        1
+                Fetch Credit Enable                             0x0        0
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x1        1
+                PIDX                                            0x0        0
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x8414c000 2215952384
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+Dumped Queues 1 -&gt; 1.
 </pre></div>
 </div>
 </div>
@@ -434,46 +654,308 @@ Dumped Queues 4 -&gt; 4.
 <li>&lt;N&gt; :Number of queues to add</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q dump list 1 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q dump list 1 2 dir bi
 
-qdma01000-MM-1 H2C online
-     hw_ID 1, thp ?, desc 0x00000000019767a1/0x33800000, 2048
+qdma01000-ST-1 C2H online
+        hw_ID 1, thp ?, desc 0xffff880084140000/0x84140000, 1536
+        cmpt desc 0xffff8800842a0000/0x842a0000, 2048
 
-     cmpl status: 0x000000005a1efda1, 00000000 00000000
-     SW CTXT:    [4]:0x00000007 [3]:0x00000000 [2]:0x33800000 [1]:0x8032500d [0]:0x00010000
-     HW CTXT:    [1]:0x00000200 [0]:0x00000000
-     CR CTXT:    0x00000000
-     total descriptor processed:    0
-qdma01000-MM-2 H2C online
-     hw_ID 2, thp ?, desc 0x00000000bafedba5/0x31b60000, 2048
+        cmpl status: 0xffff880084143000, 00000000 00000000
+        CMPT CMPL STATUS: 0xffff8800842a4000, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x84140000 2215903232
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x0        0
+                Writeback Enable                                0x0        0
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x0        0
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x0        0
+                Fetch Credit Enable                             0x1        1
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x0        0
+                PIDX                                            0x5ff      1535
 
-     cmpl status: 0x00000000026d0732, 00000000 00000000
-     SW CTXT:    [4]:0x00000002 [3]:0x00000000 [2]:0x31b60000 [1]:0x8032500d [0]:0x00010000
-     HW CTXT:    [1]:0x00000200 [0]:0x00000000
-     CR CTXT:    0x00000000
-     total descriptor processed:    0
-qdma01000-MM-3 H2C online
-     hw_ID 3, thp ?, desc 0x00000000dc0dd592/0x34340000, 2048
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
 
-     cmpl status: 0x00000000b015638d, 00000000 00000000
-     SW CTXT:    [4]:0x00000003 [3]:0x00000000 [2]:0x34340000 [1]:0x8032500d [0]:0x00010000
-     HW CTXT:    [1]:0x00000200 [0]:0x00000000
-     CR CTXT:    0x00000000
-     total descriptor processed:    0
-qdma01000-MM-4 H2C online
-     hw_ID 4, thp ?, desc 0x00000000c6b67be7/0x34580000, 2048
+        CREDIT CTXT:
+                Credit                                          0x0        0
 
-     cmpl status: 0x0000000007d59836, 00000000 00000000
-     SW CTXT:    [4]:0x00000004 [3]:0x00000000 [2]:0x34580000 [1]:0x8032500d [0]:0x00010000
-     HW CTXT:    [1]:0x00000200 [0]:0x00000000
-     CR CTXT:    0x00000000
-     total descriptor processed:    0
-Dumped Queues 1 -&gt; 4.
+        CMPT CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Address Translation                             0x0        0
+                Over Flow Check Disable                         0x0        0
+                Full Update                                     0x0        0
+                Timer Running                                   0x0        0
+                Trigger Pending                                 0x0        0
+                Error                                           0x0        0
+                Valid                                           0x1        1
+                CIDX                                            0x0        0
+                PIDX                                            0x0        0
+                Descriptor Size                                 0x0        0
+                Base Address (High)                             0x0        0
+                Base Address (Low)                              0x842a0000 2217345024
+                Ring Size                                       0x0        0
+                Color                                           0x1        1
+                Interrupt State                                 0x1        1
+                Timer Index                                     0x0        0
+                Counter Index                                   0x0        0
+                Function Id                                     0x0        0
+                Trigger Mode                                    0x1        1
+                Enable Interrupt                                0x1        1
+                Enable Status Desc Update                       0x1        1
+
+        PREFETCH CTXT:
+                Valid                                           0x1        1
+                Software Credit                                 0x5ff      1535
+                In Prefetch                                     0x0        0
+                Prefetch Enable                                 0x0        0
+                Error                                           0x0        0
+                Port Id                                         0x0        0
+                Buffer Size Index                               0x0        0
+                Bypass                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x8414c000 2215952384
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+qdma01000-ST-1 H2C online
+        hw_ID 1, thp ?, desc 0xffff880084288000/0x84288000, 1536
+
+        cmpl status: 0xffff88008428e000, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x84288000 2217246720
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x1        1
+                Writeback Enable                                0x1        1
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x1        1
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x1        1
+                Fetch Credit Enable                             0x0        0
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x1        1
+                PIDX                                            0x0        0
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x8414c000 2215952384
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+qdma01000-ST-2 C2H online
+        hw_ID 2, thp ?, desc 0xffff880084274000/0x84274000, 1536
+        cmpt desc 0xffff880084398000/0x84398000, 2048
+
+        cmpl status: 0xffff880084277000, 00000000 00000000
+        CMPT CMPL STATUS: 0xffff88008439c000, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x84274000 2217164800
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x0        0
+                Writeback Enable                                0x0        0
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x0        0
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x0        0
+                Fetch Credit Enable                             0x1        1
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x0        0
+                PIDX                                            0x5ff      1535
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        CMPT CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Address Translation                             0x0        0
+                Over Flow Check Disable                         0x0        0
+                Full Update                                     0x0        0
+                Timer Running                                   0x0        0
+                Trigger Pending                                 0x0        0
+                Error                                           0x0        0
+                Valid                                           0x1        1
+                CIDX                                            0x0        0
+                PIDX                                            0x0        0
+                Descriptor Size                                 0x0        0
+                Base Address (High)                             0x0        0
+                Base Address (Low)                              0x84398000 2218360832
+                Ring Size                                       0x0        0
+                Color                                           0x1        1
+                Interrupt State                                 0x1        1
+                Timer Index                                     0x0        0
+                Counter Index                                   0x0        0
+                Function Id                                     0x0        0
+                Trigger Mode                                    0x1        1
+                Enable Interrupt                                0x1        1
+                Enable Status Desc Update                       0x1        1
+
+        PREFETCH CTXT:
+                Valid                                           0x1        1
+                Software Credit                                 0x5ff      1535
+                In Prefetch                                     0x0        0
+                Prefetch Enable                                 0x0        0
+                Error                                           0x0        0
+                Port Id                                         0x0        0
+                Buffer Size Index                               0x0        0
+                Bypass                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x8414c000 2215952384
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+qdma01000-ST-2 H2C online
+        hw_ID 2, thp ?, desc 0xffff8800843a0000/0x843a0000, 1536
+
+        cmpl status: 0xffff8800843a6000, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x843a0000 2218393600
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x1        1
+                Writeback Enable                                0x1        1
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x1        1
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x1        1
+                Fetch Credit Enable                             0x0        0
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x1        1
+                PIDX                                            0x0        0
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x8414c000 2215952384
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+Dumped Queues 1 -&gt; 2.
 </pre></div>
 </div>
 </div>
-<div class="section" id="dump-queue-decriptor-information">
-<h3>Dump Queue Decriptor Information<a class="headerlink" href="#dump-queue-decriptor-information" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="dump-queue-descriptor-information">
+<h3>Dump Queue Descriptor Information<a class="headerlink" href="#dump-queue-descriptor-information" title="Permalink to this headline">¶</a></h3>
 <p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dump the queue descriptor information</p>
 <p><strong>Parameters</strong></p>
@@ -621,7 +1103,19 @@ Dumped descs of queues 5 -&gt; 6.
 <li>&lt;start_idx&gt; : Range start</li>
 <li>&lt;end_idx&gt; : Range end</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 intring dump vector 2 0 10
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 intring dump vector 3 0 10
+
+intr_ring_entry = 0: 0x00000000 0x00000000
+intr_ring_entry = 1: 0x00000000 0x00000000
+intr_ring_entry = 2: 0x00000000 0x00000000
+intr_ring_entry = 3: 0x00000000 0x00000000
+intr_ring_entry = 4: 0x00000000 0x00000000
+intr_ring_entry = 5: 0x00000000 0x00000000
+intr_ring_entry = 6: 0x00000000 0x00000000
+intr_ring_entry = 7: 0x00000000 0x00000000
+intr_ring_entry = 8: 0x00000000 0x00000000
+intr_ring_entry = 9: 0x00000000 0x00000000
+intr_ring_entry = 10: 0x00000000 0x00000000
 </pre></div>
 </div>
 </div>
@@ -677,6 +1171,15 @@ qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
           </div>
           <footer>
   
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dma_to_device.html" class="btn btn-neutral float-right" title="dma_to_device" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="user-app.html" class="btn btn-neutral" title="User Applications" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
   <hr/>
 
@@ -704,7 +1207,7 @@ qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2018.3',
+            VERSION:'2019.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

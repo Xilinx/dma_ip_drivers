@@ -25,11 +25,11 @@ ifneq ($(shell $(grep) -c 'RHEL' $(VERSION_H)),0)
       $(error ERROR! RHEL distro version NOT specified, check version.h.)
     endif
   endif
-  ifeq ($(shell [ $(dmajor) -lt 7 ] && echo 1),1)
+  ifeq ($(shell [ $(dmajor) -lt 5 ] && echo 1),1)
     $(error ERROR! Unsupported RHEL version $(dmajor).$(dminor).)
   endif
-  ifeq ($(dmajor),7)
-    ifeq ($(shell [ $(dminor) -lt 1 ] && echo 1),1)
+  ifeq ($(dmajor),5)
+    ifeq ($(shell [ $(dmajor) -lt 4 ] && echo 1),1)
       $(error ERROR! Unsupported RHEL version $(dmajor).$(dminor).)
     endif
   endif
@@ -69,6 +69,10 @@ ifeq ($(distro),)
   ifeq ($(kversion),4)
       distro := GIT
   endif
+
+  ifeq ($(kversion),5)
+      distro := GIT
+  endif
 endif # assume kernel.org kernels
 
 ifeq ($(distro),)
@@ -78,6 +82,25 @@ endif
 
 FLAGS += -D$(distro)$(dmajor)SP$(dminor)
 FLAGS += -D$(distro)$(dmajor)
+# special case for SLES 11
+ifeq ($(distro),SLES)
+  ifeq ($(dmajor),11)
+    ifeq ($(shell test $(dminor) -ge 1; echo $$?),0)
+      FLAGS += -DSLES_RELEASE_11_1
+    endif
+    ifeq ($(shell test $(dminor) -ge 2; echo $$?),0)
+      FLAGS += -DSLES_RELEASE_11_2
+    endif
+    ifeq ($(shell test $(dminor) -ge 3; echo $$?),0)
+      FLAGS += -DSLES_RELEASE_11_3
+    endif
+    ifeq ($(shell test $(dminor) -ge 4; echo $$?),0)
+      FLAGS += -DSLES_RELEASE_11_4
+    endif
+  else
+    FLAGS += -D$(distro)_RELEASE_$(dmajor)_$(dminor)
+  endif
+endif
 
 $(info $(kbaseversion)$(kextraversion): $(distro),$(dmajor),$(dminor), $(FLAGS))
 

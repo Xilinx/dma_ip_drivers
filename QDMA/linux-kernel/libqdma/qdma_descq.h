@@ -34,11 +34,14 @@
 #endif
 
 enum q_state_t {
-	Q_STATE_DISABLED = 0,	/** Queue is not taken */
-	Q_STATE_ENABLED,		/** Assigned/taken. Partial config is done */
-	Q_STATE_ONLINE,			/** Resource/context is initialized for the
-							* queue and is available for data consumption
-							*/
+	/** Queue is not taken */
+	Q_STATE_DISABLED = 0,
+	/** Assigned/taken. Partial config is done */
+	Q_STATE_ENABLED,
+	/** Resource/context is initialized for the queue and is available for
+	 *  data consumption
+	 */
+	Q_STATE_ONLINE,
 };
 
 enum qdma_req_state {
@@ -65,18 +68,20 @@ struct qdma_descq {
 	u8 channel;
 	/** flag to indicate error on the Q, in halted state */
 	u8 err:1;
-    /** color bit for the queue */
+	/** color bit for the queue */
 	u8 color:1;
-    /** cpu attached */
+	/** cpu attached */
 	u8 cpu_assigned:1;
 	/** state of the proc req */
 	u8 proc_req_running;
-    /** Indicate q state */
+	/** Indicate q state */
 	enum q_state_t q_state;
 	/** hw qidx associated for this queue */
 	unsigned int qidx_hw;
 	/** cpu attached to intr_work */
 	unsigned int intr_work_cpu;
+	/** @q_hndl: Q handle */
+	unsigned long q_hndl;
 	/** queue handler */
 	struct work_struct work;
 	/** interrupt list */
@@ -101,8 +106,6 @@ struct qdma_descq {
 	unsigned int q_stop_wait;
 	/** availed count */
 	unsigned int avail;
-	/** IO batching cunt */
-	unsigned int io_batch_cnt;
 	/** current req count */
 	unsigned int pend_req_desc;
 	/** current producer index */
@@ -141,6 +144,8 @@ struct qdma_descq {
 	unsigned int cidx_cmpt_pend;
 	/** number of packets processed in q */
 	unsigned long long total_cmpl_descs;
+	/** @mm_cmpt_ring_crtd: CMPT ring created for MM */
+	u8 mm_cmpt_ring_crtd;
 	/** descriptor writeback, data type depends on the cmpt_entry_len */
 	void *desc_cmpt_cur;
 	/** pointer to completion entry */
@@ -149,6 +154,10 @@ struct qdma_descq {
 	dma_addr_t desc_cmpt_bus;
 	/** descriptor writeback dma bus address*/
 	u8 *desc_cmpt_cmpl_status;
+	/** pidx info to be written to PIDX regiser*/
+	struct qdma_q_pidx_reg_info pidx_info;
+	/** cmpt cidx info to be written to CMPT CIDX regiser*/
+	struct qdma_q_cmpt_cidx_reg_info cmpt_cidx_info;
 
 #ifdef ERR_DEBUG
 	/** flag to indicate error inducing */
@@ -239,16 +248,6 @@ void qdma_descq_config(struct qdma_descq *descq, struct qdma_queue_conf *qconf,
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_config_complete(struct qdma_descq *descq);
-
-/*****************************************************************************/
-/**
- * qdma_descq_cleanup() - clean up the resources assigned to a request
- *
- * @param[in]	descq:		pointer to qdma_descq
- *
- * @return	none
- *****************************************************************************/
-void qdma_descq_cleanup(struct qdma_descq *descq);
 
 /*****************************************************************************/
 /**
@@ -481,74 +480,62 @@ void sgl_unmap(struct pci_dev *pdev, struct qdma_sw_sg *sg, unsigned int sgcnt,
  *****************************************************************************/
 void descq_flq_free_resource(struct qdma_descq *descq);
 
-/*****************************************************************************/
-/**
- * descq_h2c_pidx_update() - inline function to update the h2c pidx
- *
- * @param[in]	descq:	pointer to qdma_descq
- * @param[in]	pidx:	c2h producer index
- *
- * @return	none
- *****************************************************************************/
-static inline void descq_h2c_pidx_update(struct qdma_descq *descq,
-					unsigned int pidx)
-{
-#ifdef ERR_DEBUG
-	const char *dummy; /* to avoid compiler warnings */
+struct cmpl_info {
+	/* cmpl entry stat bits */
+	union {
+		u8 fbits;
+		struct cmpl_flag {
+			u8 format:1;
+			u8 color:1;
+			u8 err:1;
+			u8 desc_used:1;
+			u8 eot:1;
+			u8 filler:3;
+		} f;
+	};
+	u8 rsvd;
+	u16 len;
+	/* for tracking */
+	unsigned int pidx;
+	__be64 *entry;
+};
 
-	dummy = xnl_attr_str[0];
-	dummy = xnl_op_str[0];
-	if (descq->induce_err & (1 << qid_range)) {
-		__write_reg(descq->xdev,
-			QDMA_REG_H2C_PIDX_BASE +
-			descq->xdev->conf.qsets_max * QDMA_REG_PIDX_STEP,
-			pidx | (descq->conf.irq_en <<
-			    S_CMPL_STATUS_PIDX_UPD_EN_INT));
-		pr_info("Inducing err %d", qid_range);
-	} else
+int rcv_udd_only(struct qdma_descq *descq, struct cmpl_info *cmpl);
+int parse_cmpl_entry(struct qdma_descq *descq, struct cmpl_info *cmpl);
+void cmpt_next(struct qdma_descq *descq);
+
+/* CIDX/PIDX update macros */
+#ifndef __QDMA_VF__
+#define queue_pidx_update(xdev, qid, is_c2h, pidx_info) \
+	qdma_queue_pidx_update(xdev, QDMA_DEV_PF, qid, is_c2h, pidx_info)
+#else
+#define queue_pidx_update(xdev, qid, is_c2h, pidx_info) \
+	qdma_queue_pidx_update(xdev, QDMA_DEV_VF, qid, is_c2h, pidx_info)
 #endif
-	{
-	pr_debug("%s: pidx %u -> 0x%x, reg 0x%x.\n", descq->conf.name, pidx,
-		pidx | (descq->conf.irq_en << S_CMPL_STATUS_PIDX_UPD_EN_INT),
-		QDMA_REG_H2C_PIDX_BASE + descq->conf.qidx * QDMA_REG_PIDX_STEP);
 
-	__write_reg(descq->xdev,
-		QDMA_REG_H2C_PIDX_BASE + descq->conf.qidx * QDMA_REG_PIDX_STEP,
-		pidx | (descq->conf.irq_en << S_CMPL_STATUS_PIDX_UPD_EN_INT));
-	}
-}
-
-/*****************************************************************************/
-/**
- * descq_c2h_pidx_update() - inline function to update the c2h pidx
- *
- * @param[in]	descq:	pointer to qdma_descq
- * @param[in]	pidx:	c2h producer index
- *
- * @return	none
- *****************************************************************************/
-static inline void descq_c2h_pidx_update(struct qdma_descq *descq,
-					unsigned int pidx)
-{
-#ifdef ERR_DEBUG
-	if (descq->induce_err & (1 << qid_range)) {
-		__write_reg(descq->xdev,
-			QDMA_REG_C2H_PIDX_BASE +
-			descq->xdev->conf.qsets_max * QDMA_REG_PIDX_STEP,
-			pidx | (descq->conf.irq_en <<
-			    S_CMPL_STATUS_PIDX_UPD_EN_INT));
-		pr_info("Inducing err %d", qid_range);
-	} else
+#ifndef __QDMA_VF__
+#define queue_cmpt_cidx_update(xdev, qid, cmpt_cidx_info) \
+	qdma_queue_cmpt_cidx_update(xdev, QDMA_DEV_PF, qid, cmpt_cidx_info)
+#else
+#define queue_cmpt_cidx_update(xdev, qid, cmpt_cidx_info) \
+	qdma_queue_cmpt_cidx_update(xdev, QDMA_DEV_VF, qid, cmpt_cidx_info)
 #endif
-	{
-	pr_debug("%s: pidx 0x%x -> 0x%x, reg 0x%x.\n", descq->conf.name, pidx,
-		pidx | (descq->conf.irq_en << S_CMPL_STATUS_PIDX_UPD_EN_INT),
-		QDMA_REG_C2H_PIDX_BASE + descq->conf.qidx * QDMA_REG_PIDX_STEP);
 
-	__write_reg(descq->xdev,
-		QDMA_REG_C2H_PIDX_BASE + descq->conf.qidx * QDMA_REG_PIDX_STEP,
-		pidx | (descq->conf.irq_en << S_CMPL_STATUS_PIDX_UPD_EN_INT));
-	}
-}
+#ifndef __QDMA_VF__
+#define queue_cmpt_cidx_read(xdev, qid, cmpt_cidx_info) \
+	qdma_queue_cmpt_cidx_read(xdev, QDMA_DEV_PF, qid, cmpt_cidx_info)
+#else
+#define queue_cmpt_cidx_read(xdev, qid, cmpt_cidx_info) \
+	qdma_queue_cmpt_cidx_read(xdev, QDMA_DEV_VF, qid, cmpt_cidx_info)
+#endif
+
+#ifndef __QDMA_VF__
+#define queue_intr_cidx_update(xdev, qid, intr_cidx_info) \
+	qdma_queue_intr_cidx_update(xdev, QDMA_DEV_PF, qid, intr_cidx_info)
+#else
+#define queue_intr_cidx_update(xdev, qid, intr_cidx_info) \
+	qdma_queue_intr_cidx_update(xdev, QDMA_DEV_VF, qid, intr_cidx_info)
+#endif
+
 
 #endif /* ifndef __QDMA_DESCQ_H__ */

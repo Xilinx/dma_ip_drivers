@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA Linux Driver UseCases &mdash; QDMA Linux Driver 2018.3 documentation</title>
+  <title>QDMA Linux Driver UseCases &mdash; QDMA Linux Driver 2019.1 documentation</title>
   
 
   
@@ -33,10 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2018.3 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
         <link rel="up" title="Developers Guide" href="devguide.html"/>
-        <link rel="next" title="User Guide" href="userguide.html"/>
-        <link rel="prev" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/> 
+        <link rel="next" title="QDMA Performance" href="performance.html"/>
+        <link rel="prev" title="QDMA Debug File System Support" href="debugfs.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                2018.3
+                2019.1
               </div>
             
           
@@ -90,8 +90,10 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="libqdma_apis.html">Libqdma APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export.html">QDMA Linux Driver Exported APIs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_design.html">QDMA Linux Driver Design Flow</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">QDMA Linux Driver UseCases</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#axi4-memory-mapped-and-axi-stream-with-completion">AXI4 Memory Mapped And AXI-Stream with Completion</a></li>
@@ -99,12 +101,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#mm-c2h-card-to-host">MM C2H(Card-to-Host)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#st-h2c-host-to-card">ST H2C(Host-to-Card)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#st-c2h-card-to-host">ST C2H(Card-to-Host)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#axi4-memory-mapped-with-completion">AXI4 Memory Mapped with Completion</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
 </ul>
 
@@ -160,46 +161,60 @@
 <li>AXI Memory Mapped</li>
 <li>AXI Memory Mapped with Completion</li>
 <li>AXI Stream with Completion</li>
+<li>AXI Stream Loopback</li>
 <li>Descriptor Bypass In/Out Loopback</li>
 </ol>
-<p>Refer to QDMA Program Guide for more details on these example designs.</p>
-<p>All the use cases described below are with respect to synchronous application requests and described in QDMA internal mode.</p>
-<p>The driver functionality remains same for <code class="docutils literal notranslate"><span class="pre">AXI4</span> <span class="pre">Memory</span> <span class="pre">Mapped</span> <span class="pre">And</span> <span class="pre">AXI-Stream</span> <span class="pre">with</span> <span class="pre">Completion</span></code>, <code class="docutils literal notranslate"><span class="pre">AXI</span> <span class="pre">Memory</span> <span class="pre">Mapped</span></code> and <code class="docutils literal notranslate"><span class="pre">AXI</span> <span class="pre">Stream</span> <span class="pre">with</span> <span class="pre">Completion</span></code> example designs.
-For <code class="docutils literal notranslate"><span class="pre">Descriptor</span> <span class="pre">Bypass</span> <span class="pre">In/Out</span> <span class="pre">Loopback</span></code> example design, application has to enable the bypass mode in driver.
-Currently driver does not support <code class="docutils literal notranslate"><span class="pre">AXI</span> <span class="pre">Memory</span> <span class="pre">Mapped</span> <span class="pre">with</span> <span class="pre">Completion</span></code> example design.</p>
+<p>Refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a> for more details on these example designs.</p>
+<p>The driver functionality remains same for all the example designs.
+For <code class="docutils literal notranslate"><span class="pre">Descriptor</span> <span class="pre">Bypass</span> <span class="pre">In/Out</span> <span class="pre">Loopback</span></code> example design, application has to enable the bypass mode in driver.</p>
+<p>All the flows described below are with respect to QDMA internal mode of operation.
+Also, the changes required in driver for bypass mode of operation are specified.</p>
 <div class="section" id="axi4-memory-mapped-and-axi-stream-with-completion">
 <h2>AXI4 Memory Mapped And AXI-Stream with Completion<a class="headerlink" href="#axi4-memory-mapped-and-axi-stream-with-completion" title="Permalink to this headline">¶</a></h2>
-<p>This is the default example design used to test the MM and ST functionality using QDMA driver.
-This example design provides blocks to interface with the AXI4 Memory Mapped and AXI4-Stream interfaces.</p>
-<ul class="simple">
-<li>The AXI-MM interface is connected to 512 KBytes of block RAM(BRAM).</li>
-<li>The AXI4-Stream interface is connected to custom data generator and data checker module.</li>
-<li>The CMPT interface is connected to the Completion block generator.</li>
-<li>The data generator and checker works only with predefined pattern, which is a 16-bit incremental pattern starting with 0. This data file is included in driver package.</li>
-</ul>
-<img alt="_images/Example_Design_1.PNG" class="align-center" src="_images/Example_Design_1.PNG" />
-<p>The pattern generator and checker can be controlled using the registers found in the Example Design Registers. Refer to QDMA Program Guide for more details on these registers.</p>
+<p>This is the default example design used to test the MM and ST functionality using QDMA driver. This example design provides blocks to interface with the AXI4 Memory Mapped and AXI4-Stream interfaces. This example design covers most of the functionality provided by QDMA.</p>
+<p>Refer to QDMA Product Guide for more details on the example design and its registers.</p>
+<p>Below sections describes C2H and H2C data flow for ST and MM mode required in all the example designs.</p>
 </div>
 <div class="section" id="mm-h2c-host-to-card">
 <h2>MM H2C(Host-to-Card)<a class="headerlink" href="#mm-h2c-host-to-card" title="Permalink to this headline">¶</a></h2>
 <p>This Example Design provides BRAM with AXI-MM interface to achieve the MM H2C functionality.
-The current driver with dmactl tool and <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> application helps achieve the MM H2C functionality and QDMA driver takes care of HW updations.</p>
+The driver comes with <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> and <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> applications which helps to realize the MM H2C functionality. QDMA driver takes care of HW updates.</p>
 <p>The complete flow between the Host components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
-<li>User needs to start the queue in MM mode and H2C direction</li>
-<li>Pass the  buffer to be transferred as an input to <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> application which inturn passes it to the QDMA Driver</li>
-<li>QDMA driver devides buffer as 4KB chunks for each descriptor and programs the descriptors with buffer base address and updates the H2C ring PIDX</li>
+<li>Application needs to configure the queue to start in MM mode and H2C direction</li>
+<li>dma_to_device command takes a file containing the contents to be transmitted to FPGA memory as input</li>
+<li>Pass the  buffer to be transferred as an input to <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> application which in turn passes it to the QDMA Driver</li>
+<li>QDMA driver divides buffer as 4KB chunks for each descriptor and programs the descriptors with buffer base address and updates the H2C ring PIDX</li>
 <li>Upon H2C ring PIDX update, DMA engine fetches the descriptors and passes them to H2C MM Engine for processing</li>
 <li>H2C MM Engine reads the buffer contents from the Host and writes to the BRAM</li>
 <li>Upon transfer completion, DMA Engine updates the CIDX in H2C ring completion status and generates interrupt if required. In poll mode, QDMA driver polls on CIDX update.</li>
 <li>QDMA driver processes the completion status and sends the response back to the application</li>
 </ul>
 <img alt="_images/MM_H2C_Flow.PNG" class="align-center" src="_images/MM_H2C_Flow.PNG" />
+<p>For MM (H2C and C2H) bypass mode, application needs to enable the bypass mode on the required queues.
+Application can enable C2H/H2C bypass mode while starting the queue using <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> application by specifying <code class="docutils literal notranslate"><span class="pre">desc_bypass_en</span></code> flag .</p>
+<p>The MM descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">linux-kernel/libqdma/descq.c</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_mm_desc {
+        /** source address */
+        __be64 src_addr;
+        /** flags */
+        __be32 flag_len;
+        /** reserved 32 bits */
+        __be32 rsvd0;
+        /** destination address */
+        __be64 dst_addr;
+        /** reserved 64 bits */
+        __be64 rsvd1;
+};
+</pre></div>
+</div>
+<p>Update this structure if any changes required in the descriptor format for bypass mode.
+Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">descq_mm_proc_request()</span></code> functions in <code class="docutils literal notranslate"><span class="pre">linux-kernel/libqdma/descq.c</span></code>.</p>
 </div>
 <div class="section" id="mm-c2h-card-to-host">
 <h2>MM C2H(Card-to-Host)<a class="headerlink" href="#mm-c2h-card-to-host" title="Permalink to this headline">¶</a></h2>
 <p>This Example Design provides BRAM with AXI-MM interface to achieve the MM C2H functionality.
-The current driver with dmactl tool and dma_from_device application helps achieve the MM C2H functionality and QDMA driver takes care of HW updations.</p>
+The current driver with dmactl tool and dma_from_device application helps achieve the MM C2H functionality and QDMA driver takes care of HW updates.</p>
 <p>The complete flow between the Host components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
 <li>User needs to start the queue in MM mode and C2H direction</li>
@@ -225,14 +240,28 @@ to gather must be less than 64 KB.</p>
 <p>The complete flow between the Host components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
 <li>User needs to start the queue in ST mode and H2C direction</li>
-<li>Pass the  buffer to be transferred as an input to <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> application which inturn passes it to the QDMA Driver</li>
-<li>QDMA driver devides buffer as 4KB chunks for each descriptor and programs the descriptors with buffer base address and updates the H2C ring PIDX</li>
+<li>Pass the  buffer to be transferred as an input to <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> application which in turn passes it to the QDMA Driver</li>
+<li>QDMA driver divides buffer as 4KB chunks for each descriptor and programs the descriptors with buffer base address and updates the H2C ring PIDX</li>
 <li>Upon H2C ring PIDX update, DMA engine fetches the descriptors and passes them to H2C Stream Engine for processing</li>
 <li>H2C Stream Engine reads the buffer contents from the Host buffers the data</li>
 <li>Upon transfer completion, DMA Engine updates the CIDX in H2C ring completion status and generates interrupt if required. In poll mode, QDMA driver polls on CIDX update.</li>
 <li>QDMA driver processes the completion status and sends the response back to the application</li>
 </ul>
 <img alt="_images/ST_H2C_Flow.PNG" class="align-center" src="_images/ST_H2C_Flow.PNG" />
+<p>For ST H2C bypass mode, application needs to enable the bypass mode on the required queues.
+Application can enable H2C bypass mode while starting the queue using <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> application by specifying <code class="docutils literal notranslate"><span class="pre">desc_bypass_en</span></code> flag .</p>
+<p>The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">linux-kernel/libqdma/descq.c</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_h2c_desc {
+        __be16 cdh_flags;       /**&lt; cdh flags */
+        __be16 pld_len;         /**&lt; current packet length */
+        __be16 len;             /**&lt; total packet length */
+        __be16 flags;           /**&lt; descriptor flags */
+        __be64 src_addr;        /**&lt; source address */
+};
+</pre></div>
+</div>
+<p>Update this structure if any changes required in the descriptor format for bypass mode.
+Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">descq_proc_st_h2c_request</span>&#160; <span class="pre">()</span></code> functions in <code class="docutils literal notranslate"><span class="pre">linux-kernel/libqdma/descq.c</span></code>.</p>
 </div>
 <div class="section" id="st-c2h-card-to-host">
 <h2>ST C2H(Card-to-Host)<a class="headerlink" href="#st-c2h-card-to-host" title="Permalink to this headline">¶</a></h2>
@@ -246,7 +275,7 @@ provided by the Host QDMA driver through the C2H descriptor queue.</p>
 <li>Descriptor Prefetch Cache (PFCH)</li>
 <li>C2H-ST DMA Write Engine</li>
 </ul>
-<p>QDMA Driver needs to programm the prefetch context along with the per queue context to achieve the ST C2H functionality.</p>
+<p>QDMA Driver needs to program the prefetch context along with the per queue context to achieve the ST C2H functionality.</p>
 <p>The Prefetch Engine is responsible for calculating the number of descriptors needed for the DMA
 that is writing the packet. The buffer size is fixed per queue basis. For internal and cached bypass
 mode, the prefetch module can fetch up to 512 descriptors for a maximum of 64 different
@@ -266,7 +295,7 @@ the queue in any of these 3 modes.</p>
 <img alt="_images/ST_C2H_Flow.PNG" class="align-center" src="_images/ST_C2H_Flow.PNG" />
 <p>The current ST C2H functionality implemented in QDMA driver is tightly coupled with the Example Design.
 Though the completion entry descriptor as per PG is fully configurable, this Example Design
-madates to have the the color, error and desc_used bits in the first nibble.
+mandates to have the the color, error and desc_used bits in the first nibble.
 The completion entry format is defined in QDMA Driver code base <strong>libqdma/qdma_st_c2h.c</strong></p>
 <div class="highlight-none notranslate"><div class="highlight"><pre>struct cmpl_info {
 /* cmpl entry stat bits */
@@ -291,6 +320,23 @@ __be64 *entry;
 </div>
 <p>Completion entry is processed in <code class="docutils literal notranslate"><span class="pre">parse_cmpl_entry()</span></code> function which is part of <strong>libqdma/qdma_st_c2h.c</strong>.
 If a different example design is opted, the QDMA driver code in <strong>libqdma/qdma_st_c2h.h</strong> and <strong>libqdma/qdma_st_c2h.c</strong> shall be updated to suit to the new example design.</p>
+<p>The ST C2H descriptor format described above shall be changed as per example design requirements.</p>
+<p>Update this structure if any changes required in the descriptor format for bypass mode.</p>
+<p>Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">descq_process_completion_st_c2h</span> <span class="pre">()</span></code> functions in <code class="docutils literal notranslate"><span class="pre">linux-kernel/libqdma/qdma_st_c2h.c</span></code>.</p>
+</div>
+<div class="section" id="axi4-memory-mapped-with-completion">
+<h2>AXI4 Memory Mapped with Completion<a class="headerlink" href="#axi4-memory-mapped-with-completion" title="Permalink to this headline">¶</a></h2>
+<p>This example design is generated when the DMA Interface Selection option is set to <code class="docutils literal notranslate"><span class="pre">AXIMM</span> <span class="pre">with</span> <span class="pre">Completion</span></code> in the Basic tab. Refer to QDMA Product Guide for more details on the example design and its registers.</p>
+<p>The complete flow between the Host SW components and HW components for MM completion is depicted in below sequence diagram.</p>
+<ul class="simple">
+<li>Application add a queue in MM Mode and start the queue with MM Completions enabled</li>
+<li>Driver identifies the MM completion request from the Application provides flags and creates the completion ring along with Queue’s H2C or C2H rings.</li>
+<li>Driver allocates the resources for the rings created and programs the contexts</li>
+<li>Application configures the user logic to generate the completions and  calls the command to read the completions</li>
+<li>Driver reads the completion ring based on the HW generated PIDX in completion status descriptors and updates CIDX</li>
+<li>Driver send the completion entries to the Application</li>
+</ul>
+<img alt="_images/MM_CMPT_Flow.PNG" class="align-center" src="_images/MM_CMPT_Flow.PNG" />
 </div>
 </div>
 
@@ -301,10 +347,10 @@ If a different example design is opted, the QDMA driver code in <strong>libqdma/
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="userguide.html" class="btn btn-neutral float-right" title="User Guide" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="performance.html" class="btn btn-neutral float-right" title="QDMA Performance" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="qdma_design.html" class="btn btn-neutral" title="QDMA Linux Driver Design Flow" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="debugfs.html" class="btn btn-neutral" title="QDMA Debug File System Support" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -335,7 +381,7 @@ If a different example design is opted, the QDMA driver code in <strong>libqdma/
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2018.3',
+            VERSION:'2019.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

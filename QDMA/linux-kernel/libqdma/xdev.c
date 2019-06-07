@@ -35,6 +35,9 @@
 #include "qdma_regs.h"
 #include "xdev.h"
 #include "qdma_mbox.h"
+#include "qdma_intr.h"
+#include "qdma_resource_mgmt.h"
+#include "qdma_access.h"
 #ifdef DEBUGFS
 #include "qdma_debugfs_dev.h"
 #endif
@@ -42,6 +45,15 @@
 #ifdef __LIST_NEXT_ENTRY__
 #define list_next_entry(pos, member) \
 	list_entry((pos)->member.next, typeof(*(pos)), member)
+#endif
+
+#ifndef __QDMA_VF__
+#ifndef QDMA_QBASE
+#define QDMA_QBASE 0
+#endif
+#ifndef QDMA_TOTAL_Q
+#define QDMA_TOTAL_Q 2048
+#endif
 #endif
 
 /**
@@ -60,10 +72,11 @@ static DEFINE_MUTEX(xdev_mutex);
 		list_entry((ptr)->prev, type, member)
 #endif
 
-/* extern declarations */
-void qdma_device_attributes_get(struct xlnx_dma_dev *xdev);
-int qdma_device_init(struct xlnx_dma_dev *xdev);
-void qdma_device_cleanup(struct xlnx_dma_dev *xdev);
+struct qdma_resource_lock {
+	struct list_head node;
+	struct mutex lock;
+	uint8_t pci_bus_num;
+};
 
 /*****************************************************************************/
 /**
@@ -177,7 +190,6 @@ static inline void xdev_list_add(struct xlnx_dma_dev *xdev)
 		last_bus = _xdev->conf.pdev->bus->number;
 		last_dev = PCI_SLOT(xdev->conf.pdev->devfn);
 	}
-	xdev->conf.cur_cfg_state = QMAX_CFG_UNCONFIGURED;
 	mutex_unlock(&xdev_mutex);
 }
 
@@ -385,45 +397,25 @@ static int xdev_map_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
  *****************************************************************************/
 static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 {
+	int rv = 0;
 	int bar_idx = 0;
 	int map_len = 0;
-	u32 id;
 	u8 num_bars_present = 0;
-	void __iomem *regs;
 	int bar_id_list[QDMA_BAR_NUM];
 	int bar_id_idx = 0;
-	u32 user_bar_id = 0;
 
 	/* Verify that the config bar passed from the user is correct or not */
-	map_len = pci_resource_len(pdev, (int)xdev->conf.bar_num_config);
-	if (!map_len) {
-		pr_err("%s pci_resource_len function failed for bar %d.\n",
-				xdev->conf.name, xdev->conf.bar_num_config);
+#ifndef __QDMA_VF__
+	rv = qdma_is_config_bar(xdev, 0);
+#else
+	rv = qdma_is_config_bar(xdev, 1);
+#endif
+	if (rv < 0) {
+		pr_info("QDMA Config BAR passed by the user is wrong\n");
 		return -EINVAL;
 	}
 
-	if (map_len > QDMA_MAX_BAR_LEN_MAPPED)
-		map_len = QDMA_MAX_BAR_LEN_MAPPED;
-
-	regs = pci_iomap(pdev, xdev->conf.bar_num_config, map_len);
-	if (!regs) {
-		pr_err("%s unable to map bar %d.\n",
-				xdev->conf.name, xdev->conf.bar_num_config);
-		return -EINVAL;
-	}
-
-	id = readl(regs + QDMA_REG_CONFIG_BLOCK_IDENTIFIER);
-	if ((id & M_CONFIG_BAR_IDENTIFIER_MASK) == MAGIC_NUMBER) {
-		pr_info("QDMA Config BAR passed by the user matches with the identifier register value(0x%08x)\n",
-			id);
-	} else {
-		pr_info("QDMA Config BAR passed by the user doesn't match the identifier register value(0x%08x)\n",
-			id);
-
-		/* unmap BAR we previously mapped */
-		pci_iounmap(pdev, regs);
-		return -EINVAL;
-	}
+	pr_info("QDMA Config BAR passed by the user is correct\n");
 
 	/* Find out the number of bars present in the design */
 	for (bar_idx = 0; bar_idx < QDMA_BAR_NUM; bar_idx++) {
@@ -439,22 +431,14 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 	if (num_bars_present > 1) {
 		/* USER BAR IDENTIFICATION */
 #ifndef __QDMA_VF__
-		xdev->func_id = readl(regs + QDMA_REG_FUNC_ID);
-		user_bar_id = readl(regs + QDMA_REG_PF_USER_BAR_IDENTIFIER);
-		user_bar_id = (user_bar_id >> (6 * xdev->func_id)) &
-				M_USER_BAR_ID_MASK;
+		rv = qdma_get_user_bar(xdev, 0, &xdev->conf.bar_num_user);
 #else
-		user_bar_id = readl(regs + QDMA_REG_VF_USER_BAR_IDENTIFIER);
-		user_bar_id = user_bar_id & M_USER_BAR_ID_MASK;
+		rv = qdma_get_user_bar(xdev, 1, &xdev->conf.bar_num_user);
 #endif
-		for (bar_idx = 0; bar_idx < QDMA_BAR_NUM; bar_idx++) {
-			if (user_bar_id & (1 << bar_idx)) {
-				xdev->conf.bar_num_user = bar_idx;
-				pr_info("User BAR %d.\n",
-						xdev->conf.bar_num_user);
-				break;
-			}
-		}
+		if (rv < 0)
+			return rv;
+
+		pr_info("User BAR %d.\n", xdev->conf.bar_num_user);
 
 		/* BYPASS BAR IDENTIFICATION */
 		if (num_bars_present > 2) {
@@ -475,6 +459,7 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 	}
 	return 0;
 }
+
 /*****************************************************************************/
 /**
  * xdev_map_bars() - allocate the dma device
@@ -501,10 +486,10 @@ static struct xlnx_dma_dev *xdev_alloc(struct qdma_dev_conf *conf)
 	memcpy(&xdev->conf, conf, sizeof(*conf));
 
 	/* !! FIXME default to eanbled for everything */
-	xdev->flr_prsnt = 1;
-	xdev->st_mode_en = 1;
-	xdev->mm_mode_en = 1;
-	xdev->mm_channel_max = 1;
+	xdev->dev_cap.flr_present = 1;
+	xdev->dev_cap.st_en = 1;
+	xdev->dev_cap.mm_en = 1;
+	xdev->dev_cap.mm_channel_max = 1;
 
 	return xdev;
 }
@@ -539,7 +524,7 @@ static int pci_dma_mask_set(struct pci_dev *pdev)
 	return 0;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+#if KERNEL_VERSION(3, 5, 0) <= LINUX_VERSION_CODE
 static void pci_enable_relaxed_ordering(struct pci_dev *pdev)
 {
 	pcie_capability_set_word(pdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
@@ -604,17 +589,21 @@ void qdma_device_offline(struct pci_dev *pdev, unsigned long dev_hndl)
 
 	if (xlnx_dma_device_flag_check(xdev, XDEV_FLAG_OFFLINE))
 		return;
-	xdev_flag_set(xdev, XDEV_FLAG_OFFLINE);
+
+	qdma_device_cleanup(xdev);
+	qdma_device_interrupt_cleanup(xdev);
 
 #ifdef __QDMA_VF__
-	xdev_sriov_vf_offline(xdev, 0);
+	xdev_sriov_vf_offline(xdev, 0); /* should be last message */
+	qdma_mbox_stop(xdev);
 #elif defined(CONFIG_PCI_IOV)
 	xdev_sriov_disable(xdev);
 #endif
-
-	qdma_device_cleanup(xdev);
-
-	qdma_mbox_cleanup(xdev);
+	xdev_flag_set(xdev, XDEV_FLAG_OFFLINE);
+	intr_teardown(xdev);
+	xdev->flags &= ~(XDEV_FLAG_IRQ);
+	if (xdev->dev_cap.mailbox_en)
+		qdma_mbox_cleanup(xdev);
 }
 
 /*****************************************************************************/
@@ -643,32 +632,41 @@ int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl)
 		pr_info("pci_dev(0x%lx) != pdev(0x%lx)\n",
 			(unsigned long)xdev->conf.pdev, (unsigned long)pdev);
 	}
+	if (xdev->conf.qdma_drv_mode != POLL_MODE &&
+			xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE) {
 
+		if ((xdev->flags & XDEV_FLAG_IRQ) == 0x0) {
+			rv = intr_setup(xdev);
+			if (rv)
+				return -EINVAL;
+		}
+		xdev->flags |= XDEV_FLAG_IRQ;
+	}
+
+#ifndef __QDMA_VF__
+	if (xdev->dev_cap.mailbox_en)
+		qdma_mbox_init(xdev);
+#else
+	qdma_mbox_init(xdev);
+#endif
 	rv = qdma_device_init(xdev);
 	if (rv < 0) {
 		pr_warn("qdma_init failed %d.\n", rv);
-		goto cleanup_qdma;
+		return rv;
 	}
 	xdev_flag_clear(xdev, XDEV_FLAG_OFFLINE);
-	qdma_mbox_init(xdev);
 #ifdef __QDMA_VF__
-	/* PF mbox will start when vf > 0 */
 	qdma_mbox_start(xdev);
+	/* PF mbox will start when vf > 0 */
 	rv = xdev_sriov_vf_online(xdev, 0);
 	if (rv < 0)
-		goto cleanup_qdma;
-#elif defined(CONFIG_PCI_IOV)
-	if (xdev->conf.vf_max) {
-		rv = xdev_sriov_enable(xdev, xdev->conf.vf_max);
-		if (rv < 0)
-			goto cleanup_qdma;
-	}
+		return rv;
 #endif
-	return 0;
+	rv = qdma_device_interrupt_setup(xdev);
+	if (rv < 0)
+		return rv;
 
-cleanup_qdma:
-	qdma_device_cleanup(xdev);
-	return rv;
+	return 0;
 }
 
 /*****************************************************************************/
@@ -749,12 +747,20 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	pcie_set_readrq(pdev, 512);
 
+#ifndef __QDMA_VF__
+	rv = qdma_master_resource_create(pdev->bus->number, QDMA_QBASE,
+				    QDMA_TOTAL_Q);
+	if (rv == -QDMA_RESOURCE_MGMT_MEMALLOC_FAIL)
+		return -ENOMEM;
+#endif
+
 	/* allocate zeroed device book keeping structure */
 	xdev = xdev_alloc(conf);
 	if (!xdev)
 		goto disable_device;
 
 	strncpy(xdev->mod_name, mod_name, QDMA_DEV_NAME_MAXLEN - 1);
+
 
 	xdev_flag_set(xdev, XDEV_FLAG_OFFLINE);
 	xdev_list_add(xdev);
@@ -763,19 +769,29 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 		xdev->conf.bdf, dev_name(&xdev->conf.pdev->dev));
 	xdev->conf.name[rv] = '\0';
 
-#ifdef DEBUGFS
-	/** time to clean debugfs */
-	dbgfs_dev_init(xdev);
-#endif
-
-	rv = xdev_identify_bars(xdev, pdev);
-	if (rv)
-		goto remove_xdev;
-
 	/* Mapping bars */
 	rv = xdev_map_bars(xdev, pdev);
 	if (rv)
 		goto unmap_bars;
+
+	rv = xdev_identify_bars(xdev, pdev);
+	if (rv)
+		goto unmap_bars;
+
+#ifndef __QDMA_VF__
+	rv = qdma_get_function_number(xdev, &xdev->func_id);
+	if (rv < 0)
+		goto unmap_bars;
+
+	rv = qdma_dev_qinfo_get(pdev->bus->number, xdev->func_id,
+				&xdev->conf.qsets_base,
+				(uint32_t *) &xdev->conf.qsets_max);
+	if (rv < 0) {
+		rv = qdma_dev_entry_create(pdev->bus->number, xdev->func_id);
+		if (rv < 0)
+			goto disable_device;
+	}
+#endif
 
 	/* program STM port map */
 	if (xdev->stm_en) {
@@ -791,7 +807,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 	/* get the device attributes */
 	qdma_device_attributes_get(xdev);
 
-	if (!xdev->mm_mode_en && !xdev->st_mode_en) {
+	if (!xdev->dev_cap.mm_en && !xdev->dev_cap.st_en) {
 		pr_info("None of the modes ( ST or MM) are enabled\n");
 		rv = QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE;
 		goto unmap_bars;
@@ -800,13 +816,19 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	memcpy(conf, &xdev->conf, sizeof(*conf));
 
+
 	rv = qdma_device_online(pdev, (unsigned long)xdev);
 	if (rv < 0)
 		goto cleanup_qdma;
 
 	pr_info("%s, %05x, pdev 0x%p, xdev 0x%p, ch %u, q %u, vf %u.\n",
 		dev_name(&pdev->dev), xdev->conf.bdf, pdev, xdev,
-		xdev->mm_channel_max, conf->qsets_max, conf->vf_max);
+		xdev->dev_cap.mm_channel_max, conf->qsets_max, conf->vf_max);
+
+#ifdef DEBUGFS
+	/** time to clean debugfs */
+	dbgfs_dev_init(xdev);
+#endif
 
 	*dev_hndl = (unsigned long)xdev;
 
@@ -817,7 +839,6 @@ cleanup_qdma:
 
 unmap_bars:
 	xdev_unmap_bars(xdev, pdev);
-remove_xdev:
 	xdev_list_remove(xdev);
 	kfree(xdev);
 
@@ -857,15 +878,19 @@ void qdma_device_close(struct pci_dev *pdev, unsigned long dev_hndl)
 
 	qdma_device_offline(pdev, dev_hndl);
 
-	xdev_unmap_bars(xdev, pdev);
-
-	pci_release_regions(pdev);
-	pci_disable_device(pdev);
-
 #ifdef DEBUGFS
 	/** time to clean debugfs */
 	dbgfs_dev_exit(xdev);
 #endif
+#ifndef __QDMA_VF__
+	qdma_dev_entry_destroy(pdev->bus->number, xdev->func_id);
+	qdma_master_resource_destroy(pdev->bus->number);
+#endif
+
+	xdev_unmap_bars(xdev, pdev);
+
+	pci_release_regions(pdev);
+	pci_disable_device(pdev);
 
 	xdev_list_remove(xdev);
 
@@ -984,33 +1009,6 @@ int qdma_device_set_config(unsigned long dev_hndl, struct qdma_dev_conf *conf)
 		return -EINVAL;
 
 	memcpy(&xdev->conf, conf, sizeof(*conf));
-
-	return 0;
-}
-
-/*****************************************************************************/
-/**
- * qdma_device_set_cfg_state - set the device configuration state
- *
- * @param[in]	dev_hndl:	device handle
- * @param[in]	new_cfg_state:	dma device conf state to set
- *
- *
- * @return	0 on success ,<0 on failure
- *****************************************************************************/
-
-int qdma_device_set_cfg_state(unsigned long dev_hndl,
-					enum qdma_dev_qmax_state new_cfg_state)
-{
-	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-
-	if (new_cfg_state > QMAX_CFG_USER)
-		return -EINVAL;
-
-	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0)
-		return -EINVAL;
-
-	xdev->conf.cur_cfg_state = new_cfg_state;
 
 	return 0;
 }

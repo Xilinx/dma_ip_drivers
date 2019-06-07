@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -119,7 +119,7 @@
 #include "commands.h"
 #include "qdma_regs.h"
 #include "testapp.h"
-#include "../../drivers/net/qdma/qdma.h"
+#include "../../drivers/net/qdma/rte_pmd_qdma.h"
 
 /* Command help */
 struct cmd_help_result {
@@ -135,10 +135,10 @@ static void cmd_help_parsed(__attribute__((unused)) void *parsed_result,
 			"This is a readline-like interface that can be "
 			"used to\n debug your RTE application.\n\n"
 			"Supported Commands:\n"
-			"\tport_init            <port-id> <queue-id base> "
+			"\tport_init            <port-id> "
 						"<num-queues> <st-queues> "
 						"<ring-depth> <pkt-buff-size> "
-					    	"    :port-initailization\n"
+						"    :port-initailization\n"
 			"\tport_close           <port-id> "
 			":port-close\n"
 			"\treg_read             <port-id> <bar-num> <address> "
@@ -185,7 +185,6 @@ cmdline_parse_inst_t cmd_help = {
 struct cmd_obj_port_init_result {
 	cmdline_fixed_string_t action;
 	cmdline_fixed_string_t port_id;
-	cmdline_fixed_string_t queue_base;
 	cmdline_fixed_string_t num_queues;
 	cmdline_fixed_string_t st_queues;
 	cmdline_fixed_string_t nb_descs;
@@ -210,12 +209,11 @@ static void cmd_obj_port_init_parsed(void *parsed_result,
 	}
 
 	int num_queues   = atoi(res->num_queues);
-	int queue_base   = atoi(res->queue_base);
 	int st_queues   = atoi(res->st_queues);
 	int nb_descs	= atoi(res->nb_descs);
 	int buff_size	= atoi(res->buff_size);
 
-	if ((num_queues < 1) || (queue_base + num_queues > MAX_NUM_QUEUES)) {
+	if ((num_queues < 1) || (num_queues > MAX_NUM_QUEUES)) {
 		cmdline_printf(cl, "Error: please enter valid number of queues,"
 				"entered: %d max allowed: %d\n",
 				num_queues, MAX_NUM_QUEUES);
@@ -228,7 +226,7 @@ static void cmd_obj_port_init_parsed(void *parsed_result,
 		return;
 	}
 	{
-		int result = port_init(port_id, queue_base, num_queues,
+		int result = port_init(port_id, num_queues,
 					st_queues, nb_descs, buff_size);
 
 		if (result < 0)
@@ -247,9 +245,6 @@ cmdline_parse_token_string_t cmd_obj_action_port_init =
 cmdline_parse_token_string_t cmd_obj_port_init_port_id =
 	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_init_result, port_id,
 					NULL);
-cmdline_parse_token_string_t cmd_obj_port_init_queue_base =
-	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_init_result, queue_base,
-					NULL);
 cmdline_parse_token_string_t cmd_obj_port_init_num_queues =
 	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_init_result, num_queues,
 					NULL);
@@ -266,12 +261,11 @@ cmdline_parse_token_string_t cmd_obj_port_init_buff_size =
 cmdline_parse_inst_t cmd_obj_port_init = {
 	.f = cmd_obj_port_init_parsed,  /* function to call */
 	.data = NULL,      /* 2nd arg of func */
-	.help_str = "port_init  port-id queue-id-base num-queues st-queues "
+	.help_str = "port_init  port-id num-queues st-queues "
 			"queue-ring-size buffer-size",
 	.tokens = {        /* token list, NULL terminated */
 		(void *)&cmd_obj_action_port_init,
 		(void *)&cmd_obj_port_init_port_id,
-		(void *)&cmd_obj_port_init_queue_base,
 		(void *)&cmd_obj_port_init_num_queues,
 		(void *)&cmd_obj_port_init_st_queues,
 		(void *)&cmd_obj_port_init_nb_descs,
@@ -611,17 +605,18 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 				}
 
 #ifdef PERF_BENCHMARK
-				dst_addr = (dst_addr + (i * q_data_size)) %
-								BRAM_SIZE;
+				dst_addr = (i * q_data_size) % BRAM_SIZE;
 #else
-				dst_addr = dst_addr + (i * q_data_size);
+				dst_addr = i * q_data_size;
 #endif
-				ret =
-				update_queue_param(&rte_eth_devices[port_id], i,
-						     TX_DST_ADDRESS, dst_addr);
-				if (ret < 0) {
-					close(ifd);
-					return;
+				if ((unsigned int)i >= pinfo[port_id].st_queues) {
+					ret =
+					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
+							RTE_PMD_QDMA_TX, dst_addr);
+					if (ret < 0) {
+						close(ifd);
+						return;
+					}
 				}
 
 				cmdline_printf(cl, "DMA-to-Device: with "
@@ -817,17 +812,18 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 					return;
 				}
 #ifdef PERF_BENCHMARK
-				src_addr = (src_addr + (i * q_data_size)) %
-							BRAM_SIZE;
+				src_addr = (i * q_data_size) % BRAM_SIZE;
 #else
-				src_addr = src_addr + (i * q_data_size);
+				src_addr = i * q_data_size;
 #endif
-				ret =
-				update_queue_param(&rte_eth_devices[port_id], i,
-						     RX_SRC_ADDRESS, src_addr);
-				if (ret < 0) {
-					close(ofd);
-					return;
+				if ((unsigned int)i >= pinfo[port_id].st_queues) {
+					ret =
+					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
+							RTE_PMD_QDMA_RX, src_addr);
+					if (ret < 0) {
+						close(ofd);
+						return;
+					}
 				}
 
 				cmdline_printf(cl, "DMA-from-Device: with "
@@ -1103,9 +1099,9 @@ void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
 	base_offset = (QDMA_TRQ_SEL_IND + QDMA_IND_Q_PRG_OFF);
 
 	/** To read the H2C Queue **/
-	ctxt_sel = (QDMA_CTXT_SEL_DESC_SW_H2C<<CTXT_SEL_SHIFT_B) |
+	ctxt_sel = (QDMA_CNTXT_SEL_DESC_SW_H2C<<CTXT_SEL_SHIFT_B) |
 				(qid<<QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD<<OP_CODE_SHIFT_B);
+				(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
 	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
 
 	cmdline_printf(cl, "\nH2C context-data structure on queue-id:%d:\n",
@@ -1153,9 +1149,9 @@ void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
 	cmdline_printf(cl, "\nH2C Hardware Descriptor context-data structure "
 						"on queue-id:%d:\n", qid);
 
-	ctxt_sel = (QDMA_CTXT_SEL_DESC_HW_H2C<<CTXT_SEL_SHIFT_B) |
+	ctxt_sel = (QDMA_CNTXT_SEL_DESC_HW_H2C<<CTXT_SEL_SHIFT_B) |
 				(qid<<QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD<<OP_CODE_SHIFT_B);
+				(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
 	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
 
 	for (i = 0; i < 2; i++) {
@@ -1180,9 +1176,9 @@ void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
 	cmdline_printf(cl, "\nC2H context-data structure on queue-id:%d:\n",
 									qid);
 
-	ctxt_sel = (QDMA_CTXT_SEL_DESC_SW_C2H<<CTXT_SEL_SHIFT_B) |
+	ctxt_sel = (QDMA_CNTXT_SEL_DESC_SW_C2H<<CTXT_SEL_SHIFT_B) |
 					(qid<<QID_SHIFT_B) |
-					(QDMA_CTXT_CMD_RD<<OP_CODE_SHIFT_B);
+					(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
 	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
 
 	for (i = 0; i < 5; i++) {
@@ -1232,8 +1228,8 @@ void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
 	cmdline_printf(cl, "\nC2H Completion context-data structure "
 						"on queue-id:%d:\n", qid);
 
-	ctxt_sel = (QDMA_CTXT_SEL_DESC_CMPT << CTXT_SEL_SHIFT_B) |
-		    (qid<<QID_SHIFT_B) | (QDMA_CTXT_CMD_RD<<OP_CODE_SHIFT_B);
+	ctxt_sel = (QDMA_CNTXT_SEL_DESC_CMPT << CTXT_SEL_SHIFT_B) |
+		    (qid<<QID_SHIFT_B) | (QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
 	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
 
 	for (i = 0; i < 5; i++) {
@@ -1280,9 +1276,9 @@ void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
 	cmdline_printf(cl, "\nPrefetch context-data structure on "
 			"queue-id:%d:\n", qid);
 
-	ctxt_sel = (QDMA_CTXT_SEL_PFTCH << CTXT_SEL_SHIFT_B) |
+	ctxt_sel = (QDMA_CNTXT_SEL_PFTCH << CTXT_SEL_SHIFT_B) |
 			(qid << QID_SHIFT_B) |
-			(QDMA_CTXT_CMD_RD << OP_CODE_SHIFT_B);
+			(QDMA_CNTXT_CMD_RD << OP_CODE_SHIFT_B);
 	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
 
 	for (i = 0; i < 2; i++) {
@@ -1309,9 +1305,9 @@ void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
 	cmdline_printf(cl, "\nC2H Hardware Descriptor context-data structure "
 						"on queue-id:%d:\n", qid);
 
-	ctxt_sel = (QDMA_CTXT_SEL_DESC_HW_C2H<<CTXT_SEL_SHIFT_B) |
+	ctxt_sel = (QDMA_CNTXT_SEL_DESC_HW_C2H<<CTXT_SEL_SHIFT_B) |
 				(qid<<QID_SHIFT_B) |
-				(QDMA_CTXT_CMD_RD<<OP_CODE_SHIFT_B);
+				(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
 	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
 
 	for (i = 0; i < 2; i++) {

@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -42,10 +42,10 @@
 #endif
 #define MAX_NUM_QUEUES 2048
 #define DEFAULT_NUM_QUEUES 64
-#define RX_TX_MAX_RETRY			1000
+#define RX_TX_MAX_RETRY			1500
+#define DEFAULT_RX_WRITEBACK_THRESH	(64)
 
 #define MP_CACHE_SZ     512
-
 #define MBUF_POOL_NAME_PORT   "mbuf_pool_%d"
 
 /* User bar registers */
@@ -74,7 +74,7 @@ struct port_info {
 };
 
 extern struct port_info pinfo[QDMA_MAX_PORTS];
-int port_init(int portid, int queue_base, int num_queues, int st_queues,
+int port_init(int portid, int num_queues, int st_queues,
 				int nb_descs, int buff_size);
 int do_recv_st(int portid, int fd, int queueid, int input_size);
 int do_recv_mm(int portid, int fd, int queueid, int size, int tot_num_desc);

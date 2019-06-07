@@ -191,42 +191,4 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 int descq_st_c2h_read(struct qdma_descq *descq, struct qdma_request *req,
 			bool update, bool refill);
 
-/*****************************************************************************/
-/**
- * descq_cmpt_cidx_update() - inline function to update the writeback cidx
- *
- * @param[in]	descq:	pointer to qdma_descq
- * @param[in]	cidx:	cmpt consumer index
- *
- * @return	none
- *****************************************************************************/
-static inline void descq_cmpt_cidx_update(struct qdma_descq *descq,
-					unsigned int cidx)
-{
-#ifdef ERR_DEBUG
-	if (descq->induce_err & (1 << dsc)) {
-		cidx = descq->conf.rngsz;
-		pr_info("inducing error %d with pidx=%u cidx = %u", dsc,
-			descq->pidx, cidx);
-	}
-#endif
-	pr_debug("%s: cidx update 0x%x, reg 0x%x.\n", descq->conf.name, cidx,
-		QDMA_REG_CMPT_CIDX_BASE +
-		descq->conf.qidx * QDMA_REG_PIDX_STEP);
-
-	cidx |= (descq->conf.irq_en << S_CMPT_CIDX_UPD_EN_INT) |
-		(descq->conf.cmpl_stat_en << S_CMPT_CIDX_UPD_EN_STAT_DESC) |
-		(V_CMPT_CIDX_UPD_TRIG_MODE(descq->conf.cmpl_trig_mode)) |
-		(V_CMPT_CIDX_UPD_TIMER_IDX(descq->conf.cmpl_timer_idx)) |
-		(V_CMPT_CIDX_UPD_CNTER_IDX(descq->conf.cmpl_cnt_th_idx));
-
-	pr_debug("%s: cidx update 0x%x, reg 0x%x.\n", descq->conf.name, cidx,
-		QDMA_REG_CMPT_CIDX_BASE +
-		descq->conf.qidx * QDMA_REG_PIDX_STEP);
-
-	__write_reg(descq->xdev,
-		QDMA_REG_CMPT_CIDX_BASE + descq->conf.qidx * QDMA_REG_PIDX_STEP,
-		cidx);
-}
-
 #endif /* ifndef __QDMA_ST_C2H_H__ */

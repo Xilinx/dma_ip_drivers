@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -58,7 +58,7 @@
 #include "commands.h"
 #include "qdma_regs.h"
 #include "testapp.h"
-#include "../../drivers/net/qdma/qdma.h"
+#include "../../drivers/net/qdma/rte_pmd_qdma.h"
 
 int num_ports;
 char *filename;
@@ -153,7 +153,7 @@ int do_recv_mm(int portid, int fd, int queueid, int ld_size, int tot_num_desc)
 		}
 	}
 	fsync(fd);
-	printf("\nDMA received number of packets: %d, on queue-id:%d\n",
+	printf("DMA received number of packets: %d, on queue-id:%d\n",
 							nb_rx, queueid);
 	return 0;
 }
@@ -244,36 +244,34 @@ int do_recv_st(int portid, int fd, int queueid, int input_size)
 			 * again in this case and set the num_pkts to nb_rx
 			 * which is always Zero.
 			 */
-			diag = update_queue_param(&rte_eth_devices[portid],
-							queueid,
-							DUMP_IMMEDIATE_DATA, 1);
+			diag = rte_pmd_qdma_set_immediate_data_state(portid,
+							queueid, 1);
 			if (diag < 0)
-				rte_exit(EXIT_FAILURE, "updata_queue_param : "
-					  "Passing of DUMP_IMMEDIATE_DATA "
+				rte_exit(EXIT_FAILURE, "rte_pmd_qdma_set_immediate_data_state : "
 						"failed\n");
 			nb_rx = rte_eth_rx_burst(portid, queueid, pkts,
 								nb_pkts);
 			num_pkts = num_pkts_recv = nb_rx;
 
 			/* Reset the queue's DUMP_IMMEDIATE_DATA mode */
-			diag = update_queue_param(&rte_eth_devices[portid],
-							queueid,
-							DUMP_IMMEDIATE_DATA, 0);
+			diag = rte_pmd_qdma_set_immediate_data_state(portid,
+							queueid, 0);
 			if (diag < 0)
-				rte_exit(EXIT_FAILURE, "updata_queue_param : "
-					  "Passing of DUMP_IMMEDIATE_DATA "
+				rte_exit(EXIT_FAILURE, "rte_pmd_qdma_set_immediate_data_state : "
 					  "failed\n");
 		} else {
 			/* try to receive RX_BURST_SZ packets */
 
 			nb_rx = rte_eth_rx_burst(portid, queueid, pkts,
 							nb_pkts);
+
+			/* For zero byte packets, do not continue looping */
+			if (input_size == 0)
+				break;
+
 			tmp = nb_rx;
 			while ((nb_rx < nb_pkts) && max_rx_retry) {
-				printf("Couldn't receive all the packets:  "
-						"Expected = %d Received = %d.\n"
-						"Calling rte_eth_rx_burst "
-						"again\n", nb_pkts, nb_rx);
+				rte_delay_us(1);
 				nb_pkts -= nb_rx;
 				nb_rx = rte_eth_rx_burst(portid, queueid,
 								&pkts[tmp],
@@ -284,8 +282,9 @@ int do_recv_st(int portid, int fd, int queueid, int input_size)
 			num_pkts_recv = tmp;
 			if ((max_rx_retry == 0) && (num_pkts_recv == 0)) {
 				printf("ERROR: rte_eth_rx_burst failed for "
-						"port %d queue id %d\n",
-						portid, queueid);
+						"port %d queue id %d, Expected pkts = %d "
+						"Received pkts = %d\n",
+						portid, queueid, nb_pkts, num_pkts_recv);
 				break;
 			}
 		}
@@ -317,7 +316,9 @@ int do_recv_st(int portid, int fd, int queueid, int input_size)
 
 			mb = pkts[i];
 			rte_pktmbuf_free(mb);
+#ifndef PERF_BENCHMARK
 			printf("recv count: %d, with data-len: %d\n", i, ret);
+#endif
 			ret = 0;
 		}
 #ifdef DUMP_MEMPOOL_USAGE_STATS
@@ -328,7 +329,7 @@ int do_recv_st(int portid, int fd, int queueid, int input_size)
 				rte_mempool_in_use_count(mp), num_pkts_recv);
 #endif //DUMP_MEMPOOL_USAGE_STATS
 		num_pkts = num_pkts - num_pkts_recv;
-		printf("\nDMA received number of packets: %d, on queue-id:%d\n",
+		printf("DMA received number of packets: %d, on queue-id:%d\n",
 				num_pkts_recv, queueid);
 	}
 
@@ -443,6 +444,7 @@ int do_xmit(int portid, int fd, int queueid, int ld_size, int tot_num_desc,
 					"Transmitted = %d.\n"
 					"Calling rte_eth_tx_burst again\n",
 					num_pkts, nb_tx);
+			rte_delay_us(1);
 			num_pkts -= nb_tx;
 			nb_tx = rte_eth_tx_burst(portid, queueid, &mb[tmp],
 					num_pkts);
@@ -568,18 +570,17 @@ int parse_cmdline(int argc, char **argv)
 	return 0;
 }
 
-int port_init(int portid, int queue_base, int num_queues, int st_queues,
+int port_init(int portid, int num_queues, int st_queues,
 				int nb_descs, int buff_size)
 {
 	struct rte_mempool *mbuf_pool;
 	struct rte_eth_conf	    port_conf;
-	struct rte_eth_txconf       tx_conf;
-	struct rte_eth_rxconf       rx_conf;
-	int                         diag, x;
-	uint32_t		    nb_buff;
+	struct rte_eth_txconf   tx_conf;
+	struct rte_eth_rxconf   rx_conf;
+	int                     diag, x;
+	uint32_t                queue_base, nb_buff;
 
 	printf("Setting up port :%d.\n", portid);
-	printf("Setting up queue-base :%d.\n", queue_base);
 
 	snprintf(pinfo[portid].mem_pool, RTE_MEMPOOL_NAMESIZE,
 			MBUF_POOL_NAME_PORT, portid);
@@ -615,28 +616,15 @@ int port_init(int portid, int queue_base, int num_queues, int st_queues,
 	memset(&port_conf, 0x0, sizeof(struct rte_eth_conf));
 	memset(&tx_conf, 0x0, sizeof(struct rte_eth_txconf));
 	memset(&rx_conf, 0x0, sizeof(struct rte_eth_rxconf));
-	diag = get_param(&rte_eth_devices[portid], CONFIG_BAR,
-			&(pinfo[portid].config_bar_idx));
+	diag = rte_pmd_qdma_get_bar_details(portid, &(pinfo[portid].config_bar_idx),
+			&(pinfo[portid].user_bar_idx), &(pinfo[portid].bypass_bar_idx));
 
 	if (diag < 0)
-		rte_exit(EXIT_FAILURE, "get_param : CONFIG_BAR failed\n");
-	diag = get_param(&rte_eth_devices[portid], USER_BAR,
-			&(pinfo[portid].user_bar_idx));
-	if ((diag < 0) || (pinfo[portid].user_bar_idx < 0))
-		rte_exit(EXIT_FAILURE, "get_param : USER_BAR failed\n");
-	diag = get_param(&rte_eth_devices[portid], BYPASS_BAR,
-			&(pinfo[portid].bypass_bar_idx));
-	if ((diag < 0) || (pinfo[portid].bypass_bar_idx < 0))
-		printf("get_param : BYPASS_BAR is failed\n");
+		rte_exit(EXIT_FAILURE, "rte_pmd_qdma_get_bar_details failed\n");
 
 	printf("QDMA Config bar idx: %d\n", pinfo[portid].config_bar_idx);
 	printf("QDMA User bar idx: %d\n", pinfo[portid].user_bar_idx);
 	printf("QDMA Bypass bar idx: %d\n", pinfo[portid].bypass_bar_idx);
-
-	diag = update_param(&rte_eth_devices[portid], QUEUE_BASE, queue_base);
-	if (diag < 0)
-		rte_exit(EXIT_FAILURE, "updata_param : Passing of "
-				"QUEUE_BASE failed\n");
 
 	/* configure the device to use # queues */
 	diag = rte_eth_dev_configure(portid, num_queues, num_queues,
@@ -645,6 +633,10 @@ int port_init(int portid, int queue_base, int num_queues, int st_queues,
 		rte_exit(EXIT_FAILURE, "Cannot configure port %d (err=%d)\n",
 				portid, diag);
 
+	diag = rte_pmd_qdma_get_queue_base(portid, &queue_base);
+	if (diag < 0)
+		rte_exit(EXIT_FAILURE, "rte_pmd_qdma_get_queue_base : Querying of "
+				"QUEUE_BASE failed\n");
 	pinfo[portid].queue_base = queue_base;
 	pinfo[portid].num_queues = num_queues;
 	pinfo[portid].st_queues = st_queues;
@@ -652,17 +644,15 @@ int port_init(int portid, int queue_base, int num_queues, int st_queues,
 
 	for (x = 0; x < num_queues; x++) {
 		if (x < st_queues) {
-			diag = update_queue_param(&rte_eth_devices[portid], x,
-					QUEUE_MODE, 1);
+			diag = rte_pmd_qdma_set_queue_mode(portid, x, RTE_PMD_QDMA_STREAMING_MODE);
 			if (diag < 0)
-				rte_exit(EXIT_FAILURE, "updata_queue_param : "
+				rte_exit(EXIT_FAILURE, "rte_pmd_qdma_set_queue_mode : "
 						"Passing of QUEUE_MODE "
 						"failed\n");
 		} else {
-			update_queue_param(&rte_eth_devices[portid], x,
-					QUEUE_MODE, 0);
+			diag = rte_pmd_qdma_set_queue_mode(portid, x, RTE_PMD_QDMA_MEMORY_MAPPED_MODE);
 			if (diag < 0)
-				rte_exit(EXIT_FAILURE, "updata_queue_param : "
+				rte_exit(EXIT_FAILURE, "rte_pmd_qdma_set_queue_mode : "
 						"Passing of QUEUE_MODE "
 						"failed\n");
 		}
@@ -673,6 +663,7 @@ int port_init(int portid, int queue_base, int num_queues, int st_queues,
 			rte_exit(EXIT_FAILURE, "Cannot setup port %d "
 					"TX Queue id:%d "
 					"(err=%d)\n", portid, x, diag);
+		rx_conf.rx_thresh.wthresh = DEFAULT_RX_WRITEBACK_THRESH;
 		diag = rte_eth_rx_queue_setup(portid, x, nb_descs, 0,
 				&rx_conf, mbuf_pool);
 		if (diag < 0)
@@ -733,7 +724,6 @@ int main(int argc, char **argv)
 	int ret = 0;
 	const struct rte_memzone *mz = 0;
 	struct cmdline *cl;
-	char name[RTE_ETH_NAME_MAX_LEN];
 
 	/* Make sure the port is configured.  Zero everything and
 	 * hope for same defaults
@@ -747,10 +737,10 @@ int main(int argc, char **argv)
 		rte_exit(EXIT_FAILURE, "Error with EAL initialization\n");
 	rte_log_set_global_level(RTE_LOG_DEBUG);
 
-	printf("Ethernet Device Count: %d\n", (int)rte_eth_dev_count());
+	printf("Ethernet Device Count: %d\n", (int)rte_eth_dev_count_avail());
 	printf("Logical Core Count: %d\n", rte_lcore_count());
 
-	num_ports = rte_eth_dev_count();
+	num_ports = rte_eth_dev_count_avail();
 	if (num_ports < 1)
 		rte_exit(EXIT_FAILURE, "No Ethernet devices found."
 			" Try updating the FPGA image.\n");
@@ -780,13 +770,21 @@ int main(int argc, char **argv)
 		rte_delay_ms(100);
 	} else
 		cmdline_interact(cl);
-	for (port_id = 0; port_id < num_ports; port_id++) {
+	for (port_id = num_ports - 1; port_id >= 0; port_id--) {
+		struct rte_device *dev;
+
 		if (pinfo[port_id].num_queues)
 			port_close(port_id);
 
+		printf("Removing a device with port id %d\n", port_id);
+		dev = rte_eth_devices[port_id].device;
+		if (dev == NULL) {
+			printf("Port id %d already removed\n", port_id);
+			continue;
+		}
 		/*Detach the port, it will invoke device remove/uninit */
-		if (rte_eth_dev_detach(port_id, name))
-			printf("Failed to detach port '%s'\n", name);
+		if (rte_dev_remove(dev))
+			printf("Failed to detach port '%d'\n", port_id);
 	}
 	cmdline_stdin_exit(cl);
 

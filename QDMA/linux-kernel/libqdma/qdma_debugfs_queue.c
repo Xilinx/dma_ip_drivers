@@ -76,13 +76,6 @@ struct dbgfs_q_priv {
 	int datalen;
 };
 
-struct dbgfs_qctxt_entry {
-	char name[DBGFS_CTXT_ENTRY_NAME_SZ];
-	unsigned short word;
-	u32 pos;
-	u32 len;
-};
-
 enum dbgfs_desc_type {
 	DBGFS_DESC_TYPE_C2H = 0,
 	DBGFS_DESC_TYPE_H2C = DBGFS_DESC_TYPE_C2H,
@@ -90,145 +83,19 @@ enum dbgfs_desc_type {
 	DBGFS_DESC_TYPE_END = 2,
 };
 
-
-static struct dbgfs_qctxt_entry app_ctxt[] = {
-	/** format:
-	 *{<name>, <word>, <start_bit_index>, <len>}
-	 */
-
-	{"PIDX", DBGFS_CNTXT_W0, S_DESC_CTXT_W0_PIDX,
-		L_DESC_CTXT_W0_PIDX},
-	{"IRQ Arm", DBGFS_CNTXT_W0, S_DESC_CTXT_W0_F_INTR_ARM, 1},
-	{"Function Id", DBGFS_CNTXT_W0, S_DESC_CTXT_W0_FUNC_ID,
-		L_DESC_CTXT_W0_FUNC_ID},
-
-	{"Queue Enable", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_F_QEN, 1},
-	{"Fetch Credit Enable", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_FCRD_EN, 1},
-	{"Write back/Intr Check", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_CMPL_STATUS_PEND_CHK, 1},
-	{"Write back Acc Enable", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_CMPL_STATUS_ACC_EN, 1},
-	{"Address Translation", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_AT, 1},
-	{"Fetch Max", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_FETCH_MAX, L_DESC_CTXT_W1_FETCH_MAX},
-	{"Ring Size", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_RNG_SZ,
-		L_DESC_CTXT_W1_RNG_SZ},
-	{"Descriptor Size", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_DSC_SZ,
-		L_DESC_CTXT_W1_DSC_SZ},
-	{"Bypass Enable", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_F_BYP, 1},
-	{"MM Channel", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_F_MM_CHN, 1},
-	{"Writeback Enable", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_CMPL_STATUS_EN, 1},
-	{"Interrupt Enable", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_IRQ_EN, 1},
-	{"Port Id", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_PORT_ID,
-		L_DESC_CTXT_W1_PORT_ID},
-	{"Interrupt No Last", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_IRQ_NO_LAST, 1},
-	{"Error", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_ERR,
-		L_DESC_CTXT_W1_ERR},
-	{"Writeback Error Sent", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_CMPL_STATUS_ERR_SNT, 1},
-	{"IRQ Request", DBGFS_CNTXT_W1, S_DESC_CTXT_W1_F_IRQ_REQ, 1},
-	{"Marker Disable", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_MRKR_DIS, 1},
-	{"Is Memory Mapped", DBGFS_CNTXT_W1,
-		S_DESC_CTXT_W1_F_IS_MM, 1},
-	{"Interrupt Aggregation", DBGFS_CNTXT_W4,
-		S_DESC_CTXT_W1_F_INTR_AGGR, 1},
-
-	{"Descriptor Ring Base Addr (Low)", DBGFS_CNTXT_W2, 0, 32},
-
-	{"Descriptor Ring Base Addr (High)", DBGFS_CNTXT_W3, 0, 32},
-};
-
-static struct dbgfs_qctxt_entry hw_ctxt[] = {
-	{"CIDX", DBGFS_CNTXT_W0, 0, 16},
-	{"Credits Consumed", DBGFS_CNTXT_W0, 16, 16},
-
-	{"Descriptors Pending", DBGFS_CNTXT_W1, 8, 1},
-	{"Queue Invalid No Desc Pending", DBGFS_CNTXT_W1, 9, 1},
-	{"Eviction Pending", DBGFS_CNTXT_W1, 10, 1},
-	{"Fetch Peding", DBGFS_CNTXT_W1, 10, 1},
-};
-
-static struct dbgfs_qctxt_entry credit_ctxt[] = {
-	{"Credit", DBGFS_CNTXT_W0, 0, 16},
-};
-
-static struct dbgfs_qctxt_entry cmpt_ctxt[] = {
-	{"Enable Status Desc Update", DBGFS_CNTXT_W0,
-		S_CMPT_CTXT_W0_F_EN_STAT_DESC, 1},
-	{"Enable Interrupt", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_F_EN_INT, 1},
-	{"Trigger Mode", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_TRIG_MODE,
-		L_CMPT_CTXT_W0_TRIG_MODE},
-	{"Function Id", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_FNC_ID,
-		L_CMPT_CTXT_W0_FNC_ID},
-	{"Counter Index", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_COUNTER_IDX,
-		L_CMPT_CTXT_W0_COUNTER_IDX},
-	{"Timer Index", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_TIMER_IDX,
-		L_CMPT_CTXT_W0_TIMER_IDX},
-	{"Interrupt State", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_INT_ST,
-		L_CMPT_CTXT_W0_INT_ST},
-	{"Color", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_F_COLOR, 1},
-	{"Ring Size", DBGFS_CNTXT_W0, S_CMPT_CTXT_W0_RNG_SZ,
-		L_CMPT_CTXT_W0_RNG_SZ},
-
-	{"Base Address (Low)", DBGFS_CNTXT_W1, 0, 32},
-
-	{"Base Address (High)", DBGFS_CNTXT_W2, S_CMPT_CTXT_W2_BADDR_64,
-		L_CMPT_CTXT_W2_BADDR_64},
-	{"Descriptor Size", DBGFS_CNTXT_W2, S_CMPT_CTXT_W2_DESC_SIZE,
-		L_CMPT_CTXT_W2_DESC_SIZE},
-	{"PIDX (Low)", DBGFS_CNTXT_W2, S_CMPT_CTXT_W2_PIDX_L,
-		L_CMPT_CTXT_W3_PIDX_H},
-
-	{"PIDX (High)", DBGFS_CNTXT_W3, S_CMPT_CTXT_W3_PIDX_H,
-		L_CMPT_CTXT_W3_PIDX_H},
-	{"CIDX", DBGFS_CNTXT_W3, S_CMPT_CTXT_W3_CIDX, L_CMPT_CTXT_W3_CIDX},
-	{"Valid", DBGFS_CNTXT_W3, S_CMPT_CTXT_W3_F_VALID, 1},
-	{"ERROR", DBGFS_CNTXT_W3, S_CMPT_CTXT_W3_ERR, L_CMPT_CTXT_W3_ERR},
-	{"Trigger Pending", DBGFS_CNTXT_W3, S_CMPT_CTXT_W3_F_TRIG_PEND, 1},
-
-	{"Timer Running", DBGFS_CNTXT_W4, S_CMPT_CTXT_W4_F_TMR_RUNNING, 1},
-	{"Full Update", DBGFS_CNTXT_W4, S_CMPT_CTXT_W4_F_FULL_UPDATE, 1},
-	{"Over Flow Check Disable", DBGFS_CNTXT_W4,
-		S_CMPT_CTXT_W4_F_OVF_CHK_DIS, 1},
-	{"Address Translation", DBGFS_CNTXT_W4, S_CMPT_CTXT_W4_F_AT, 1},
-};
-
-/**TBD: enable them when RTL2 is stable */
-static struct dbgfs_qctxt_entry c2h_pftch_ctxt[] = {
-	{"Bypass", DBGFS_CNTXT_W0, S_PFTCH_W0_F_BYPASS, 1},
-	{"Buffer Size Index", DBGFS_CNTXT_W0, S_PFTCH_W0_BUF_SIZE_IDX,
-		L_PFTCH_W0_BUF_SIZE_IDX},
-	{"Port Id", DBGFS_CNTXT_W0, S_PFTCH_W0_PORT_ID, L_PFTCH_W0_PORT_ID},
-	{"Error", DBGFS_CNTXT_W0, S_PFTCH_W0_F_ERR, 1},
-	{"Prefetch Enable", DBGFS_CNTXT_W0, S_PFTCH_W0_F_EN_PFTCH, 1},
-	{"In Prefetch", DBGFS_CNTXT_W0, S_PFTCH_W0_F_Q_IN_PFTCH, 1},
-	{"Software Credit (Low)", DBGFS_CNTXT_W0, S_PFTCH_W0_SW_CRDT_L,
-		L_PFTCH_W0_SW_CRDT_L},
-
-	{"Software Credit (High)", DBGFS_CNTXT_W1, S_PFTCH_W1_SW_CRDT_H,
-		L_PFTCH_W1_SW_CRDT_H},
-	{"Valid", DBGFS_CNTXT_W1, S_PFTCH_W1_F_VALID, 1},
-};
-
 /** structure to hold file ops */
 static struct dbgfs_q_dbgf qf[DBGFS_QINFO_END];
 
 /** structure to hold file ops */
 static struct dbgfs_q_dbgf cmpt_qf[DBGFS_CMPT_QINFO_END];
-int q_dbg_file_open(struct inode *inode, struct file *fp);
-int q_dbg_file_release(struct inode *inode, struct file *fp);
-int qdbg_info_read(unsigned long dev_hndl, unsigned long id, char **data,
+static int q_dbg_file_open(struct inode *inode, struct file *fp);
+static int q_dbg_file_release(struct inode *inode, struct file *fp);
+static int qdbg_info_read(unsigned long dev_hndl, unsigned long id, char **data,
 		int *data_len, enum dbgfs_desc_type type);
-int qdbg_desc_read(unsigned long dev_hndl, unsigned long id, char **data,
+static int qdbg_desc_read(unsigned long dev_hndl, unsigned long id, char **data,
 		int *data_len, enum dbgfs_desc_type type);
-int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id, char **data,
-		int *data_len, enum dbgfs_desc_type type);
+static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
+		char **data, int *data_len, enum dbgfs_desc_type type);
 
 /*****************************************************************************/
 /**
@@ -503,13 +370,12 @@ int create_cmpt_q_dbg_files(struct qdma_descq *descq, struct dentry *queue_root)
  * @return	0: success
  * @return	<0: error
  *****************************************************************************/
-int q_dbg_file_open(struct inode *inode, struct file *fp)
+static int q_dbg_file_open(struct inode *inode, struct file *fp)
 {
 	int dev_id = -1;
 	int qidx = -1;
 	struct dbgfs_q_priv *priv = NULL;
 	int rv = 0;
-	int c2h = 0;
 	unsigned char dev_name[QDMA_DEV_NAME_SZ] = {0};
 	unsigned char *lptr = NULL, *rptr = NULL;
 	struct dentry *direction_dir = NULL;
@@ -528,13 +394,6 @@ int q_dbg_file_open(struct inode *inode, struct file *fp)
 	qid_dir = direction_dir->d_parent;
 	qroot_dir = qid_dir->d_parent;
 	dev_dir = qroot_dir->d_parent;
-
-	/* check the direction */
-	if (!strncmp((const char *)direction_dir->d_iname,
-				"c2h", strlen("c2h")) ||
-			!strncmp((const char *)direction_dir->d_iname,
-				"cmpt", strlen("cmpt")))
-		c2h = 1;
 
 	/* convert this string as integer */
 	rv = kstrtoint((const char *)qid_dir->d_iname, 0, &qidx);
@@ -570,10 +429,6 @@ int q_dbg_file_open(struct inode *inode, struct file *fp)
 
 	priv->dev_hndl = (unsigned long)descq->xdev;
 	priv->qhndl = qdma_device_get_id_from_descq(descq->xdev, descq);
-	if (priv->qhndl < 0) {
-		kfree(priv);
-		return -EINVAL;
-	}
 
 	fp->private_data = priv;
 
@@ -590,49 +445,13 @@ int q_dbg_file_open(struct inode *inode, struct file *fp)
  * @return	0: success
  * @return	<0: error
  *****************************************************************************/
-int q_dbg_file_release(struct inode *inode, struct file *fp)
+static int q_dbg_file_release(struct inode *inode, struct file *fp)
 {
 	kfree(fp->private_data);
 
 	fp->private_data = NULL;
 
 	return 0;
-}
-
-/*****************************************************************************/
-/**
- * qdbg_parse_ctxt_to_buf() - parses queue context to human readable format
- *
- * @param[in]	ctxt: raw context info
- * @param[in]	entries: context entries structure pointer
- * @param[in]	num_entries:	number of context entries
- * @param[out]	buf: buffer to write parsed context
- * @param[in]	buflen: buffer len
- *
- * @return	>0: size read
- * @return	<0: error
- *****************************************************************************/
-int qdbg_parse_ctxt_to_buf(u32 *ctxt,
-		struct dbgfs_qctxt_entry *entries,
-		int num_entries,
-		char *buf, int buflen)
-{
-	int i = 0, w;
-	u32 v;
-	u64 mask = 0;
-	int len = 0;
-
-	for (i = num_entries - 1; i >= 0; i--) {
-		w = entries[i].word;
-		v = ((ctxt[w] >> entries[i].pos) &
-				(~((~mask) << entries[i].len)));
-		len += snprintf(buf + len, buflen - len,
-				"\t%-47s %#-10x %u\n",
-				entries[i].name, v, v);
-	}
-	len += snprintf(buf + len, buflen - len, "\n");
-
-	return len;
 }
 
 /*****************************************************************************/
@@ -648,15 +467,14 @@ int qdbg_parse_ctxt_to_buf(u32 *ctxt,
  * @return	>0: size read
  * @return	<0: error
  *****************************************************************************/
-int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id, char **data,
-		int *data_len, enum dbgfs_desc_type type)
+static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
+		char **data, int *data_len, enum dbgfs_desc_type type)
 {
 	int rv = 0;
 	int len = 0;
-	int num_entries = 0;
 	char *buf = NULL;
 	int buflen = DEBUGFS_QUEUE_CTXT_SZ;
-	struct hw_descq_context ctxt;
+	struct qdma_descq_context ctxt;
 	struct qdma_descq *descq = NULL;
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 
@@ -679,10 +497,11 @@ int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id, char **data,
 	}
 
 	/** initialize the context */
-	memset(&ctxt, 0, sizeof(struct hw_descq_context));
+	memset(&ctxt, 0, sizeof(struct qdma_descq_context));
 	/** read the descq context for the given qid */
 	rv = qdma_descq_context_read(descq->xdev, descq->qidx_hw,
-			descq->conf.st, descq->conf.c2h, &ctxt);
+			descq->conf.st, descq->conf.c2h,
+			descq->mm_cmpt_ring_crtd, &ctxt);
 	if (rv < 0) {
 		len += sprintf(buf + len, "%s read context failed %d.\n",
 				descq->conf.name, rv);
@@ -696,39 +515,46 @@ int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id, char **data,
 	if (type == DBGFS_DESC_TYPE_CMPT) {
 		/** convert CMPT context to human readable text */
 		len += snprintf(buf + len, buflen - len, "CMPT CTXT:\n");
-		num_entries = sizeof(cmpt_ctxt)/sizeof(cmpt_ctxt[0]);
-		len += qdbg_parse_ctxt_to_buf(ctxt.cmpt, cmpt_ctxt,
-				num_entries, buf + len, buflen - len);
+		if (descq->xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE ||
+				descq->xdev->conf.qdma_drv_mode == AUTO_MODE)
+			qdma_fill_cmpt_ctxt(&ctxt.cmpt_ctxt, 1);
+		else
+			qdma_fill_cmpt_ctxt(&ctxt.cmpt_ctxt, 0);
+
+		len += qdma_parse_ctxt_to_buf(QDMA_CMPT_CNTXT,
+				buf + len, buflen - len);
 	} else {
 		/** convert SW context to human readable text */
 		len += snprintf(buf + len, buflen - len, "SOFTWARE CTXT:\n");
-		num_entries = sizeof(app_ctxt)/sizeof(app_ctxt[0]);
-		len += qdbg_parse_ctxt_to_buf(ctxt.sw, app_ctxt,
-				num_entries, buf + len, buflen - len);
+		if (descq->xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE ||
+				descq->xdev->conf.qdma_drv_mode == AUTO_MODE)
+			qdma_fill_sw_ctxt(&ctxt.sw_ctxt, 1);
+		else
+			qdma_fill_sw_ctxt(&ctxt.sw_ctxt, 0);
+		len += qdma_parse_ctxt_to_buf(QDMA_SW_CNTXT,
+				buf + len, buflen - len);
 
 		/** convert hardware context to human readable text */
 		len += snprintf(buf + len, buflen - len, "HARDWARE CTXT:\n");
-		num_entries = sizeof(hw_ctxt)/sizeof(hw_ctxt[0]);
-		len += qdbg_parse_ctxt_to_buf(ctxt.hw, hw_ctxt,
-				num_entries, buf + len, buflen - len);
+		qdma_fill_hw_ctxt(&ctxt.hw_ctxt);
+		len += qdma_parse_ctxt_to_buf(QDMA_HW_CNTXT,
+				buf + len, buflen - len);
 		if (!(descq->conf.st && descq->conf.c2h))
 			goto cntxt_exit;
 
 		/** convert credit context to human readable text */
 		len += snprintf(buf + len, buflen - len, "CREDIT CTXT:\n");
-		num_entries = sizeof(credit_ctxt)/sizeof(credit_ctxt[0]);
-		len += qdbg_parse_ctxt_to_buf(ctxt.cr, credit_ctxt,
-				num_entries, buf + len, buflen - len);
+		qdma_fill_credit_ctxt(&ctxt.cr_ctxt);
+		len += qdma_parse_ctxt_to_buf(QDMA_CR_CNTXT,
+				buf + len, buflen - len);
 
 		if (type == DBGFS_DESC_TYPE_C2H) {
 			/** convert prefetch context to human readable text */
 			len += snprintf(buf + len, buflen - len,
 							"PREFETCH CTXT:\n");
-			num_entries =
-			sizeof(c2h_pftch_ctxt)/sizeof(c2h_pftch_ctxt[0]);
-			len += qdbg_parse_ctxt_to_buf(ctxt.prefetch,
-							c2h_pftch_ctxt,
-					num_entries, buf + len, buflen - len);
+			qdma_fill_pfetch_ctxt(&ctxt.pfetch_ctxt);
+			len += qdma_parse_ctxt_to_buf(QDMA_PFETCH_CNTXT,
+					buf + len, buflen - len);
 		}
 	}
 
@@ -754,7 +580,7 @@ cntxt_exit:
  * @return	>0: size read
  * @return	<0: error
  *****************************************************************************/
-int qdbg_info_read(unsigned long dev_hndl, unsigned long id, char **data,
+static int qdbg_info_read(unsigned long dev_hndl, unsigned long id, char **data,
 		int *data_len, enum dbgfs_desc_type type)
 {
 	int len = 0;
@@ -795,7 +621,7 @@ int qdbg_info_read(unsigned long dev_hndl, unsigned long id, char **data,
  * @return	>0: size read
  * @return	<0: error
  *****************************************************************************/
-int qdbg_desc_read(unsigned long dev_hndl, unsigned long id, char **data,
+static int qdbg_desc_read(unsigned long dev_hndl, unsigned long id, char **data,
 		int *data_len, enum dbgfs_desc_type type)
 {
 	int len = 0;

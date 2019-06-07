@@ -21,17 +21,14 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
 
 #include "qdma_debugfs_dev.h"
-#include "xdev_regs.h"
+#include "qdma_reg_dump.h"
+#include "qdma_access.h"
+#include "qdma_context.h"
+#include "libqdma_export.h"
+#include "qdma_intr.h"
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/mutex.h>
-
-#define DEBUGFS_DEV_INFO_SZ		(256)
-
-#define DBGFS_ERR_BUFLEN	(64)
-#define DEBGFS_LINE_SZ		(81)
-#define DEBGFS_GEN_NAME_SZ	(32)
-#define REG_DUMP_SIZE_PER_LINE  (256)
 
 
 enum dbgfs_dev_dbg_file_type {
@@ -40,7 +37,18 @@ enum dbgfs_dev_dbg_file_type {
 	DBGFS_DEV_DBGF_END,
 };
 
+enum dbgfs_dev_intr_file_type {
+	DBFS_DEV_INTR_CTX = 0,
+	DBFS_DEV_INTR_ENTRIES = 1,
+	DBGFS_DEV_INTR_END,
+};
+
 struct dbgfs_dev_dbgf {
+	char name[DBGFS_DBG_FNAME_SZ];
+	struct file_operations fops;
+};
+
+struct dbgfs_dev_intr_dbgf {
 	char name[DBGFS_DBG_FNAME_SZ];
 	struct file_operations fops;
 };
@@ -58,10 +66,11 @@ enum bar_type {
 	DEBUGFS_BAR_BYPASS = 2,
 };
 
-extern struct dentry *qdma_debugfs_root;
-
 /** structure to hold file ops */
 static struct dbgfs_dev_dbgf dbgf[DBGFS_DEV_DBGF_END];
+
+/** structure to hold interrupt file ops */
+static struct dbgfs_dev_dbgf dbg_intrf[DBGFS_DEV_INTR_END];
 
 /*****************************************************************************/
 /**
@@ -95,119 +104,8 @@ static int dump_banner(char *dev_name, char *buf, int buf_sz)
 	return len;
 }
 
-/*****************************************************************************/
-/**
- * dump_reg() - static helper function to dump a specific reg
- *
- * @param[out]	buf:	buffer to dump the registers
- * @param[in]	buf_sz:	size of the buffer passed to func
- * @param[in]	rname:	register name
- * @param[in]	rval:	register value
- *
- * @return	len: length of the buffer printed
- *****************************************************************************/
-static int dump_reg(char *buf, int buf_sz, unsigned int raddr, char *rname,
-					unsigned int rval)
-{
-	int len = 0;
 
-	/* length of the line should not exceed 80 chars, so, checking
-	 * for min 80 chars. If below print pattern is changed, check for
-	 * new the buffer size requirement
-	 */
-	if (buf_sz < DEBGFS_LINE_SZ)
-		return -1;
-
-	len += sprintf(buf + len, "[%#7x] %-47s %#-10x %u\n",
-			raddr, rname, rval, rval);
-
-	return len;
-}
-
-/*****************************************************************************/
-/**
- * dump_bar_regs() - static helper function to dump a specific bar regs
- *
- * @param[in]	dev_hndl:	pointer to xdev device structure
- * @param[out]	buf:	buffer to dump the registers
- * @param[in]	buf_len:	size of the buffer passed
- * @param[in]	type:	bar type
- *
- * @return	len: returns the length buffer printed
- *****************************************************************************/
-static int dump_bar_regs(unsigned long dev_hndl, char *buf, int buf_len,
-		enum bar_type type)
-{
-	int num_regs = 0;
-	int i = 0, j = 0;
-	unsigned int val = 0;
-	unsigned int addr = 0;
-	int len = 0;
-	int rv;
-	char name[DEBGFS_GEN_NAME_SZ] = {0};
-	char bar_name[DEBGFS_GEN_NAME_SZ] = {0};
-	struct xreg_info *reg_info;
-	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-
-	if (type == DEBUGFS_BAR_CONFIG) {
-		num_regs = sizeof(qdma_config_regs)/sizeof(qdma_config_regs[0]);
-		reg_info = qdma_config_regs;
-		snprintf(bar_name, DEBGFS_GEN_NAME_SZ, "%s #%d", "CONFIG BAR",
-				xdev->conf.bar_num_config);
-	} else if (type == DEBUGFS_BAR_USER) {
-		num_regs = sizeof(qdma_user_regs)/sizeof(qdma_user_regs[0]);
-		reg_info = qdma_user_regs;
-		snprintf(bar_name, DEBGFS_GEN_NAME_SZ, "%s #%d", "USER BAR",
-				xdev->conf.bar_num_user);
-	}
-
-	num_regs -= 1;  /* last entry is empty */
-
-	/* print the bar name */
-	len += snprintf(buf + len, buf_len - len, "\n%s\n", bar_name);
-
-	/* now print all the registers of the corresponding bar */
-	for (i = 0; i < num_regs; i++) {
-		/* if there are more than one register of same type
-		 * loop and print 'repeat' number of times
-		 */
-		if (reg_info[i].repeat) {
-			for (j = 0; j < reg_info[i].repeat; j++) {
-				memset(name, 0, DEBGFS_GEN_NAME_SZ);
-				snprintf(name, DEBGFS_GEN_NAME_SZ, "%s_%d",
-						reg_info[i].name, j);
-
-				addr = reg_info[i].addr + (j * 4);
-
-				/* read the register value */
-				val = qdma_device_read_config_register(dev_hndl,
-						addr);
-
-				/* num print address, name & value of reg */
-				rv = dump_reg(buf + len, buf_len - len, addr,
-						name, val);
-				if (rv < 0) {
-					pr_warn("insufficient space to dump reg vals\n");
-					return len;
-				}
-				len += rv;
-			}
-		} else {
-			addr = reg_info[i].addr;
-			val = qdma_device_read_config_register(dev_hndl,
-					addr);
-			rv = dump_reg(buf + len, buf_len - len, addr,
-					(char *)reg_info[i].name, val);
-			if (rv < 0) {
-				pr_warn("inusfficient space to dump register values\n");
-				return len;
-			}
-			len += rv;
-		}
-	}
-
-	return len;
-}
+#define BANNER_LEN (81 * 5)
 
 /*****************************************************************************/
 /**
@@ -226,10 +124,7 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 	int len = 0;
 	int rv;
 	char *buf = NULL;
-	int num_elem =
-			((sizeof(qdma_config_regs)/sizeof(struct xreg_info)) + 1) +
-			((sizeof(qdma_user_regs)/sizeof(struct xreg_info)) + 1);
-	int buflen = num_elem * REG_DUMP_SIZE_PER_LINE;
+	int buflen = qdma_reg_dump_buf_len() + BANNER_LEN;
 
 	/** allocate memory */
 	buf = (char *) kzalloc(buflen, GFP_KERNEL);
@@ -243,19 +138,17 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 		return len;
 	}
 	len += rv;
-
-	rv = dump_bar_regs(dev_hndl, buf + len, buflen - len,
-			   DEBUGFS_BAR_USER);
+#ifndef __QDMA_VF__
+	rv = qdma_dump_config_regs((void *)dev_hndl, 0,
+			buf + len, buflen - len);
+#else
+	rv = qdma_dump_config_regs((void *)dev_hndl, 1,
+			buf + len, buflen - len);
+#endif
 	if (rv < 0) {
-		pr_warn("insufficient space to dump User bar register values\n");
-		return len;
-	}
-	len += rv;
-
-	rv = dump_bar_regs(dev_hndl, buf + len, buflen - len,
-			   DEBUGFS_BAR_CONFIG);
-	if (rv < 0) {
-		pr_warn("insufficient space to dump Config Bar register values\n");
+		pr_warn("Not able to dump Config Bar register values\n");
+		*data = buf;
+		*data_len = buflen;
 		return len;
 	}
 	len += rv;
@@ -319,6 +212,115 @@ static int dbgfs_dump_qdma_info(unsigned long dev_hndl, char *dev_name,
 	return len;
 }
 
+/*****************************************************************************/
+/**
+ * dbgfs_dump_intr_cntx() - static function to dump interrupt context
+ *
+ * @param[in]	xpdev:	pointer to qdma pci device structure
+ * @param[in]	buf:	buffer to dump the interrupt context
+ * @param[in]	buf_len:size of the buffer passed
+ *
+ * @return	0: success
+ * @return	<0: error
+ *****************************************************************************/
+static int dbgfs_dump_intr_cntx(unsigned long dev_hndl, char *dev_name,
+		char **data, int *data_len)
+{
+	int len = 0;
+	int rv = 0;
+	char *buf = NULL;
+	int i = 0;
+	int ring_index = 0;
+	struct qdma_indirect_intr_ctxt intr_ctxt;
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	int buflen = DEBUGFS_INTR_CNTX_SZ;
+
+
+	/** allocate memory */
+	buf = (char *) kzalloc(buflen, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	/** if interrupt aggregation is enabled
+	 *  add the interrupt context
+	 */
+	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
+			(xdev->conf.qdma_drv_mode == AUTO_MODE)) {
+		for (i = 0; i < QDMA_NUM_DATA_VEC_FOR_INTR_CXT; i++) {
+			ring_index = get_intr_ring_index(
+						xdev,
+						(i + xdev->dvec_start_idx));
+			rv = qdma_intr_context_read(
+						xdev,
+						ring_index,
+						&intr_ctxt);
+			if (rv < 0) {
+				len += sprintf(buf + len,
+							   "%s read intr context failed %d.\n",
+							   xdev->conf.name, rv);
+				return rv;
+			}
+			len += snprintf(buf + len, buflen - len,
+							"\tINTR CTXT:\n");
+			qdma_fill_intr_ctxt(&intr_ctxt);
+			len += qdma_parse_ctxt_to_buf(QDMA_INTR_CNTXT,
+					buf + len, buflen - len);
+		}
+	}
+
+	len += rv;
+
+	*data = buf;
+	*data_len = buflen;
+
+	return len;
+}
+
+/*****************************************************************************/
+/**
+ * dbgfs_dump_intr_ring() - static function to dump interrupt ring
+ *
+ * @param[in]	xpdev:	pointer to qdma pci device structure
+ * @param[in]	buf:	buffer to dump the interrupt ring
+ * @param[in]	buf_len:size of the buffer passed
+ *
+ * @return	0: success
+ * @return	<0: error
+ *****************************************************************************/
+static int dbgfs_dump_intr_ring(unsigned long dev_hndl, char *dev_name,
+		char **data, int *data_len)
+{
+	int len = 0;
+	int rv = 0;
+	char *buf = NULL;
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+
+	unsigned int vector_idx = xdev->msix[xdev->dvec_start_idx].entry;
+	int num_entries = (xdev->conf.intr_rngsz + 1) * 512;
+	int buflen = (45 * num_entries) + 1;
+
+
+	/** allocate memory */
+	buf = (char *) kzalloc(buflen, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	rv = qdma_intr_ring_dump(dev_hndl, vector_idx, 0,
+		 num_entries - 1, buf, buflen);
+	if (rv < 0) {
+		len += sprintf(buf + len,
+					   "%s read intr context failed %d.\n",
+					   xdev->conf.name, rv);
+		return rv;
+	}
+
+	len = strlen(buf);
+	buf[len++] = '\n';
+	*data = buf;
+	*data_len = buflen;
+
+	return len;
+}
 /*****************************************************************************/
 /**
  * dev_dbg_file_open() - static function that provides generic open
@@ -471,6 +473,77 @@ dev_dbg_file_read_exit:
 
 /*****************************************************************************/
 /**
+ * dev_intr_file_read() - static function that provides common read
+ *
+ * @param[in]	fp:	pointer to file structure
+ * @param[out]	user_buffer: pointer to user buffer
+ * @param[in]	count: size of data to read
+ * @param[in/out]	ppos: pointer to offset read
+ * @param[in]	type: information type
+ *
+ * @return	>0: size read
+ * @return	<0: error
+ *****************************************************************************/
+static ssize_t dev_intr_file_read(struct file *fp, char __user *user_buffer,
+		size_t count, loff_t *ppos, enum dbgfs_dev_intr_file_type type)
+{
+	char *buf = NULL;
+	int buf_len = 0;
+	int len = 0;
+	int rv = 0;
+	struct dbgfs_dev_priv *dev_priv =
+		(struct dbgfs_dev_priv *)fp->private_data;
+
+	if (dev_priv->data == NULL && dev_priv->datalen == 0) {
+		if (type == DBFS_DEV_INTR_CTX) {
+			rv = dbgfs_dump_intr_cntx(dev_priv->dev_hndl,
+					dev_priv->dev_name, &buf, &buf_len);
+		} else if (type == DBFS_DEV_INTR_ENTRIES) {
+			rv = dbgfs_dump_intr_ring(dev_priv->dev_hndl,
+					dev_priv->dev_name, &buf, &buf_len);
+		}
+
+		if (rv < 0)
+			goto dev_intr_file_read_exit;
+
+		dev_priv->datalen = rv;
+		dev_priv->data = buf;
+	}
+
+	buf = dev_priv->data;
+	len = dev_priv->datalen;
+
+	if (!buf)
+		goto dev_intr_file_read_exit;
+
+	/** write to user buffer */
+	if (*ppos >= len) {
+		rv = 0;
+		goto dev_intr_file_read_exit;
+	}
+
+	if (*ppos + count > len)
+		count = len - *ppos;
+
+	if (copy_to_user(user_buffer, buf + *ppos, count)) {
+		rv = -EFAULT;
+		goto dev_intr_file_read_exit;
+	}
+
+	*ppos += count;
+	rv = count;
+
+	pr_debug("nuber of bytes written to user space is %zu\n", count);
+
+dev_intr_file_read_exit:
+	kfree(buf);
+	dev_priv->data = NULL;
+	dev_priv->datalen = 0;
+	return rv;
+}
+
+/*****************************************************************************/
+/**
  * dev_info_open() - static function that executes info open
  *
  * @param[in]	inode:	pointer to file inode
@@ -539,6 +612,74 @@ static ssize_t dev_regs_read(struct file *fp, char __user *user_buffer,
 
 /*****************************************************************************/
 /**
+ * dev_intr_cntx_open() -static function to open interrupt context debug file
+ *
+ * @param[in]	inode:	pointer to file inode
+ * @param[in]	fp:	pointer to file structure
+ *
+ * @return	0: success
+ * @return	<0: error
+ *****************************************************************************/
+static int dev_intr_cntx_open(struct inode *inode, struct file *fp)
+{
+	return dev_dbg_file_open(inode, fp);
+}
+
+/*****************************************************************************/
+/**
+ * dev_intr_cntx_read() - static function that executes interrupt context read
+ *			  file
+ *
+ * @param[in]	fp:	pointer to file structure
+ * @param[out]	user_buffer: pointer to user buffer
+ * @param[in]	count: size of data to read
+ * @param[in/out]	ppos: pointer to offset read
+ *
+ * @return	>0: size read
+ * @return	<0: error
+ *****************************************************************************/
+static ssize_t dev_intr_cntx_read(struct file *fp, char __user *user_buffer,
+		size_t count, loff_t *ppos)
+{
+	return dev_intr_file_read(fp, user_buffer, count, ppos,
+			DBFS_DEV_INTR_CTX);
+}
+
+/*****************************************************************************/
+/**
+ * dev_intr_ring_open() -static function to open interrupt ring entries file
+ *
+ * @param[in]	inode:	pointer to file inode
+ * @param[in]	fp:	pointer to file structure
+ *
+ * @return	0: success
+ * @return	<0: error
+ *****************************************************************************/
+static int dev_intr_ring_open(struct inode *inode, struct file *fp)
+{
+	return dev_dbg_file_open(inode, fp);
+}
+/*****************************************************************************/
+/**
+ * dev_intr_ring_read() - static function that reads interrupt ring entries to
+ *						  file
+ *
+ * @param[in]	fp:	pointer to file structure
+ * @param[out]	user_buffer: pointer to user buffer
+ * @param[in]	count: size of data to read
+ * @param[in/out]	ppos: pointer to offset read
+ *
+ * @return	>0: size read
+ * @return	<0: error
+ *****************************************************************************/
+static ssize_t dev_intr_ring_read(struct file *fp, char __user *user_buffer,
+		size_t count, loff_t *ppos)
+{
+	return dev_intr_file_read(fp, user_buffer, count, ppos,
+			DBFS_DEV_INTR_ENTRIES);
+}
+/*****************************************************************************/
+/**
  * create_dev_dbg_files() - static function to create queue debug files
  *
  * @param[in]	dev_root:	debugfs root for the device
@@ -584,6 +725,60 @@ int create_dev_dbg_files(struct xlnx_dma_dev *xdev, struct dentry *dev_root)
 
 /*****************************************************************************/
 /**
+ * create_dev_intr_files() - static function to create intr ring files
+ *
+ * @param[in]	dev_root:	debugfs root for the device
+ *
+ * @return	>0: size read
+ * @return	<0: error
+ *****************************************************************************/
+int create_dev_intr_files(struct xlnx_dma_dev *xdev, struct dentry *intr_root)
+{
+	struct dentry  *fp[DBGFS_DEV_DBGF_END] = { NULL };
+	struct file_operations *fops = NULL;
+	int i = 0;
+	char intr_dir[16] = {0};
+	struct dentry *dbgfs_intr_ring = NULL;
+
+	snprintf(intr_dir, 8, "%d",
+			 get_intr_ring_index(xdev,
+			 xdev->dvec_start_idx));
+
+	dbgfs_intr_ring = debugfs_create_dir(intr_dir, intr_root);
+	memset(dbg_intrf, 0, sizeof(
+		struct dbgfs_dev_intr_dbgf) * DBGFS_DEV_INTR_END);
+
+	for (i = 0; i < DBGFS_DEV_INTR_END; i++) {
+		fops = &dbg_intrf[i].fops;
+		fops->owner = THIS_MODULE;
+		switch (i) {
+		case DBFS_DEV_INTR_CTX:
+			snprintf(dbg_intrf[i].name, 64, "%s", "cntxt");
+			fops->open = dev_intr_cntx_open;
+			fops->read = dev_intr_cntx_read;
+			fops->release = dev_dbg_file_release;
+			break;
+		case DBFS_DEV_INTR_ENTRIES:
+			snprintf(dbg_intrf[i].name, 64, "%s", "entries");
+			fops->open = dev_intr_ring_open;
+			fops->read = dev_intr_ring_read;
+			fops->release = dev_dbg_file_release;
+			break;
+		}
+	}
+
+	for (i = 0; i < DBGFS_DEV_INTR_END; i++) {
+		fp[i] = debugfs_create_file(dbg_intrf[i].name, 0644,
+					dbgfs_intr_ring,
+					xdev, &dbg_intrf[i].fops);
+		if (!fp[i])
+			return -1;
+	}
+	return 0;
+}
+
+/*****************************************************************************/
+/**
  * dbgfs_dev_init() - function to initialize device debugfs files
  *
  * @param[in]	xdev:	Xilinx dma device
@@ -597,6 +792,7 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 	char dname[QDMA_DEV_NAME_SZ] = {0};
 	struct dentry *dbgfs_dev_root = NULL;
 	struct dentry *dbgfs_queues_root = NULL;
+	struct dentry *dbgfs_intr_root = NULL;
 	struct pci_dev *pdev = xdev->conf.pdev;
 	int rv = 0;
 
@@ -625,8 +821,25 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 		pr_err("Failed to create queueus directory under device directory\n");
 		goto dbgfs_dev_init_fail;
 	}
+	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
+			(xdev->conf.qdma_drv_mode == AUTO_MODE)) {
+		/* create a directory for the intr in debugfs */
+		dbgfs_intr_root = debugfs_create_dir("intr_rings",
+				xdev->dbgfs_dev_root);
+		if (!dbgfs_queues_root) {
+			pr_err("Failed to create intr_ring directory under device directory\n");
+			goto dbgfs_dev_init_fail;
+		}
 
+		/* create debug files for intr */
+		rv = create_dev_intr_files(xdev, dbgfs_intr_root);
+		if (rv < 0) {
+			pr_err("Failed to create intr ring files\n");
+			goto dbgfs_dev_init_fail;
+		}
+	}
 	xdev->dbgfs_queues_root = dbgfs_queues_root;
+	xdev->dbgfs_intr_root = dbgfs_intr_root;
 	spin_lock_init(&xdev->qidx_lock);
 
 	return 0;
@@ -646,10 +859,10 @@ dbgfs_dev_init_fail:
  *****************************************************************************/
 void dbgfs_dev_exit(struct xlnx_dma_dev *xdev)
 {
-	if (xdev->dbgfs_dev_root)
-		debugfs_remove_recursive(xdev->dbgfs_dev_root);
+	debugfs_remove_recursive(xdev->dbgfs_dev_root);
 	xdev->dbgfs_dev_root = NULL;
 	xdev->dbgfs_queues_root = NULL;
+	xdev->dbgfs_intr_root = NULL;
 }
 
 #endif

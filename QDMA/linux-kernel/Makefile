@@ -13,7 +13,7 @@ SHELL = /bin/bash
 #
 # - enable_cmpt_immediate_data=<0|1>	enable immediate data in writeback desc.
 # - disable_st_c2h_completion=<0|1>	disable completion
-#
+# - CROSS_COMPILE=,  gcc compiler prefix for architecture eg. aarch64-linux-gnu-
 
 # Define grep error output to NULL, since -s is not portable.
 grep = grep 2>/dev/null
@@ -121,13 +121,16 @@ export KINC
 ifeq ($(ARCH),aarch64)
   ifeq ($(wildcard $(KOBJ)/arch/$(ARCH)/Makefile),)
     override MAKECMDGOALS = $(MAKECMDGOALS) "ARCH=arm64"
+    export ARCH
   else
     export ARCH
   endif
 else
   export ARCH
 endif
-export FLAGS
+CFLAGS += -I$(srcdir)/drv/libqdma/qdma_access
+CFLAGS += -I$(srcdir)/drv/libqdma
+export FLAGS += $(CFLAGS)
 #export FLAGS += $(CFLAGS) $(EXTRA_CFLAGS) $(CPPFLAGS)
 export verbose
 export utsrelease
@@ -136,6 +139,11 @@ export kseries
 export modulesymfile
 
 export enable_xvc
+
+CROSS_COMPILE_FLAG = $(CROSS_COMPILE)
+export CROSS_COMPILE_FLAG
+$(info CROSS_COMPILE_FLAG = $(CROSS_COMPILE_FLAG).)
+$(info ARCH = $(ARCH).)
 
 # evaluate install paths
 ifeq ($(install_path),)
@@ -156,6 +164,7 @@ else # bundled install
 endif
 
 $(shell rm -f $(srcdir)/drv/libqdma; ln -fs $(srcdir)/libqdma $(srcdir)/drv;)
+$(shell rm -f $(srcdir)/include/qdma_reg_dump.h; ln -fs $(srcdir)/../qdma_access/qdma_reg_dump.h $(srcdir)/include/qdma_reg_dump.h;)
 
 .PHONY: eval.mak
 
@@ -248,7 +257,7 @@ install-user:
 	@install -v -m 755 build/dmactl* $(user_install_path)
 	@install -v -m 755 tools/dma_from_device $(user_install_path)
 	@install -v -m 755 tools/dma_to_device $(user_install_path)
-	@install -v -m 755 tools/dmautils $(user_install_path)
+	@install -v -m 755 tools/dmaperf $(user_install_path)
 	@echo "MAN PAGES:"
 	@mkdir -p -m 755 $(docs_install_path)
 	@install -v -m 644 docs/dmactl.8.gz $(docs_install_path)
@@ -279,7 +288,7 @@ uninstall-user:
 	@/bin/rm -f $(user_install_path)/dmactl
 	@/bin/rm -f $(user_install_path)/dma_from_device
 	@/bin/rm -f $(user_install_path)/dma_to_device
-	@/bin/rm -f $(user_install_path)/dmautils
+	@/bin/rm -f $(user_install_path)/dmaperf
 
 .PHONY: uninstall-dev
 uninstall-dev:

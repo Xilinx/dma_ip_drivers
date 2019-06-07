@@ -1,0 +1,312 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Driver Design &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+        <link rel="up" title="Developers Guide" href="dev-guide.html"/>
+        <link rel="next" title="DPDK Callback APIs" href="dpdk-callbacks.html"/>
+        <link rel="prev" title="Developers Guide" href="dev-guide.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QDMA DPDK Driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2019.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building QDMA DPDK Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dev-guide.html">Developers Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Driver Design</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#driver-interfaces-and-callbacks">Driver interfaces and callbacks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dpdk-callbacks.html">DPDK Callback APIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qdma_pmd_export.html">QDMA DPDK PMD Exported APIs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#resource-management">Resource Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qdma_resmgmt.html">QDMA Queue Resource Management</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mailbox-communication">Mailbox Communication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="qdma_mailbox.html">QDMA Mailbox</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dpdk-driver-debug">DPDK Driver debug</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA DPDK Driver UseCases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="perf.html">QDMA DPDK Performance</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">QDMA DPDK Driver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="dev-guide.html">Developers Guide</a> &raquo;</li>
+      
+    <li>Driver Design</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/driver-design.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="driver-design">
+<h1>Driver Design<a class="headerlink" href="#driver-design" title="Permalink to this headline">¶</a></h1>
+<p>QDMA DPDK driver is implemented as an Ethernet poll mode driver in DPDK v18.11.
+It supports both streaming (network) and memory (compute) interface to QDMA.
+Below diagram gives a high level system overview of the QDMA DPDK driver.</p>
+<img alt="_images/dpdk_overview.png" class="align-center" src="_images/dpdk_overview.png" />
+<div class="section" id="driver-interfaces-and-callbacks">
+<h2>Driver interfaces and callbacks<a class="headerlink" href="#driver-interfaces-and-callbacks" title="Permalink to this headline">¶</a></h2>
+<p>The Driver registers two driver interfaces (<code class="docutils literal notranslate"><span class="pre">net_qdma</span></code> for PFs and <code class="docutils literal notranslate"><span class="pre">net_qdma_vf</span></code> for VFs) with DPDK RTE.
+Below <code class="docutils literal notranslate"><span class="pre">eth_dev_ops</span></code> callbacks are implemented by both driver interfaces of the DPDK driver.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>static struct eth_dev_ops qdma_eth_dev_ops = {
+        .dev_configure          = qdma_dev_configure,
+        .dev_infos_get          = qdma_dev_infos_get,
+        .dev_start              = qdma_dev_start,
+        .dev_stop               = qdma_dev_stop,
+        .dev_close              = qdma_dev_close,
+        .link_update            = qdma_dev_link_update,
+        .rx_queue_setup         = qdma_dev_rx_queue_setup,
+        .tx_queue_setup         = qdma_dev_tx_queue_setup,
+        .rx_queue_release       = qdma_dev_rx_queue_release,
+        .tx_queue_release       = qdma_dev_tx_queue_release,
+        .rx_queue_start         = qdma_dev_rx_queue_start,
+        .rx_queue_stop          = qdma_dev_rx_queue_stop,
+        .tx_queue_start         = qdma_dev_tx_queue_start,
+        .tx_queue_stop          = qdma_dev_tx_queue_stop,
+        .stats_get              = qdma_dev_stats_get,
+};
+</pre></div>
+</div>
+<p>Below sequence diagram depicts the application call flow to these driver callbacks and their high level operations.</p>
+<img alt="_images/dpdk_call_flow.png" src="_images/dpdk_call_flow.png" />
+<p>Implementation details of the callback APIs is described further in</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dpdk-callbacks.html">DPDK Callback APIs</a></li>
+</ul>
+</div>
+<p>Additional interfaces are exported by the driver for QDMA configuration. These new interfaces are described in</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qdma_pmd_export.html">QDMA DPDK PMD Exported APIs</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="resource-management">
+<h2>Resource Management<a class="headerlink" href="#resource-management" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qdma_resmgmt.html">QDMA Queue Resource Management</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="mailbox-communication">
+<h2>Mailbox Communication<a class="headerlink" href="#mailbox-communication" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qdma_mailbox.html">QDMA Mailbox</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="qdma-hardware-error-monitoring">
+<h2>QDMA Hardware Error Monitoring<a class="headerlink" href="#qdma-hardware-error-monitoring" title="Permalink to this headline">¶</a></h2>
+<p>There are various causes for errors in QDMA IP e.g. descriptor errors, DMA engine errors, etc.
+If the errors are enabled by SW, QDMA logs the status of error in the respective global status registers.</p>
+<p>DPDK driver executes a poll thread <code class="docutils literal notranslate"><span class="pre">qdma_check_errors()</span></code> every 1 second to check the error status and log the type of HW error occured on the console.</p>
+</div>
+<div class="section" id="dpdk-driver-debug">
+<h2>DPDK Driver debug<a class="headerlink" href="#dpdk-driver-debug" title="Permalink to this headline">¶</a></h2>
+<p>DPDK driver provides API <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_xdebug()</span></code> to dump debug information. Below debug information can be dumped using this API</p>
+<ul class="simple">
+<li>Dump QDMA registers</li>
+<li>Dump queue contexts for the given queue id</li>
+<li>Dump software information for the given queue id</li>
+<li>Dump the specified descriptor ring of the given queue id</li>
+</ul>
+<p>User application can call this API to dump the required debug information.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dpdk-callbacks.html" class="btn btn-neutral float-right" title="DPDK Callback APIs" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dev-guide.html" class="btn btn-neutral" title="Developers Guide" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Xilinx, Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2019.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

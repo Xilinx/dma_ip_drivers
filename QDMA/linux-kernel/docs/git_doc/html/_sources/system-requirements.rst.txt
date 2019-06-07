@@ -12,26 +12,31 @@ Xilinx Accelerator Card
 Host Platform
 -------------
 
-1. x86_64
+x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 32GB RAM
+on same CPU node for 2K queues.
+For VM testing, host system must support virtualization and it must be enabled in the BIOS.
 
 
 Host System Configuration
 -------------------------
 
-Linux QDMA Driver latest release is verified on following Host system configuration for PF anf VF functionality
+Linux QDMA Driver latest release is verified on following Host system configuration for PF and VF functionality
 
 +--------------------------+-------------------------------------------------------------+
 | Host System              | Configuration Details                                       |
 +==========================+=============================================================+
-| Operating System         | Ubuntu 16.04.3 LTS                                          |
+| Operating System         | Ubuntu 18.04 LTS                                            |
 +--------------------------+-------------------------------------------------------------+
-| Linux Kernel             | 4.4.0-93-generic                                            |
+| Linux Kernel             | 4.15.0-23-generic                                           |
 +--------------------------+-------------------------------------------------------------+
-| RAM                      | 32GB                                                        |
+| RAM                      | 64GB on local NUMA node                                     |
++--------------------------+-------------------------------------------------------------+
+| Hypervisor               | KVM                                                         |
 +--------------------------+-------------------------------------------------------------+
 | Qemu Version             | QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.15)|
 +--------------------------+-------------------------------------------------------------+
 
+Note: QEMU is a hosted virtual machine monitor which emulates the machine's processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.
 
 Guest System Configuration
 --------------------------
@@ -43,8 +48,8 @@ Guest System(VM)          Configuration Details
 ========================= ==================================
 Operating System          Ubuntu 18.04 LTS
 Linux Kernel              4.15.1-20-generic
-RAM 					  4GB
-Cores              		  4
+RAM 			  4GB
+Cores              	  4
 ========================= ==================================
 
 
@@ -57,23 +62,27 @@ Linux QDMA Driver also supported on following OS and kernel versions
 +-------------------------+-------------+----------------+
 | Operating System        | OS Version  | Kernel Version |          
 +=========================+=============+================+
-| CentOS                  | 7.2.1511    |                |
+| CentOS                  |7.4-1708     |3.10.0-693      |
+|                         +-------------+----------------+
+|                         |7.5-1804     |3.10.0-862      |
+|                         +-------------+----------------+
+|                         |7.6-1810     |3.10.0-957      |
 +-------------------------+-------------+----------------+
-|Fedora                   |24           |4.5.5-300       |
+|Fedora                   |28           |4.16            |
 |                         +-------------+----------------+
-|                         |26           |4.11.8-300      |
+|                         |29           |4.18            |
 |                         +-------------+----------------+
-|                         |27           |4.13.9-300      |
-|                         +-------------+----------------+
-|                         |28           |4.16.3-301      |
+|                         |30           |5.0             |
 +-------------------------+-------------+----------------+
-|Ubuntu                   |16.04        |4.4.0-93        |
+|Ubuntu                   |14.04.06     |4.4.0-93        |
 |                         +-------------+----------------+
-|                         |17.10.1      |4.13.0-21       |
+|                         |16.04        |4.10            |
 |                         +-------------+----------------+
 |                         |18.04        |4.15.0-23       |
 |                         +-------------+----------------+
-|                         |14.04.5      |3.10.0          |
+|                         |18.04.2      |3.10.0          |
+|                         +-------------+----------------+
+|                         |18.04.2      |3.10.0          |
 +-------------------------+-------------+----------------+
 
 
@@ -85,15 +94,17 @@ Linux QDMA Driver verified on following kernel.org versions
 +-------------------------+-----------------+
 |Kernel.org               | Kernel Version  |
 +=========================+=================+
-|                         | 3.2.101         |
+|                         | 3.16.66         |
 |                         +-----------------+
-|                         | 3.18.108        |
+|                         | 4.4.179         |
 |                         +-----------------+
-|                         | 4.4.131         |
+|                         | 4.19.41         |
 |                         +-----------------+
-|                         | 4.14.40         |
+|                         | 4.14.117        |
 |                         +-----------------+
-|                         | 4.15.18         |
+|                         | 4.9.174         |
+|                         +-----------------+
+|                         | 5.0.14          |
 +-------------------------+-----------------+
 
 The following kernel functions shall be included in the OS kernel being used. Make sure that these functions are included in the kernel.

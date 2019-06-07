@@ -33,134 +33,24 @@
 #include "qdma_device.h"
 #include "qdma_regs.h"
 #include "qdma_context.h"
+#include "qdma_intr.h"
 #include "qdma_mbox.h"
-#include "qdma_qconf_mgr.h"
 
 #define MBOX_TIMER_INTERVAL	(1)
 
-/*
- * mailbox opcode string
- */
-static const char *mbox_op_str[MBOX_OP_MAX] = {
-	"noop",
-	"bye",
-	"hello",
-
-	"fmap",
-	"csr",
-	"intr_ctrx",
-	"qctrx_wrt",
-	"qctrx_rd",
-	"qctrx_clr",
-	"qctrx_inv",
-
-	"qconf",
-	"rsvd_0x0b",
-	"rsvd_0x0c",
-	"rsvd_0x0d",
-	"rsvd_0x0e",
-	"rsvd_0x0f",
-	"rsvd_0x10",
-	"rsvd_0x11",
-
-	"hello_resp",
-	"fmap_resp",
-	"csr_resp",
-	"intr_ctrx_resp",
-	"qctrx_wrt_resp",
-	"qctrx_rd_resp",
-	"qctrx_clr_resp",
-	"qctrx_inv_resp",
-	"qconf_resp",
-};
-
-/*
- * mailbox h/w registers access
- */
-
-#ifndef __QDMA_VF__
-static inline void mbox_pf_hw_clear_func_ack(struct xlnx_dma_dev *xdev,
-					u8 func_id)
-{
-	int idx = func_id / 32; /* bitmask, u32 reg */
-	int bit = func_id % 32;
-
-	/* clear the function's ack status */
-	__write_reg(xdev,
-		MBOX_BASE + MBOX_PF_ACK_BASE + idx * MBOX_PF_ACK_STEP,
-		(1 << bit));
-}
-
-static void mbox_pf_hw_clear_ack(struct xlnx_dma_dev *xdev)
-{
-	u32 v = __read_reg(xdev, MBOX_BASE + MBOX_FN_STATUS);
-	u32 reg = MBOX_BASE + MBOX_PF_ACK_BASE;
-	int i;
-
-	if ((v & F_MBOX_FN_STATUS_ACK) == 0)
-		return;
-
-	for (i = 0; i < MBOX_PF_ACK_COUNT; i++, reg += MBOX_PF_ACK_STEP) {
-		u32 v = __read_reg(xdev, reg);
-
-		if (!v)
-			continue;
-
-		/* clear the ack status */
-		pr_debug("%s, PF_ACK %d, 0x%x.\n", xdev->conf.name, i, v);
-		__write_reg(xdev, reg, v);
-	}
-}
+#ifdef __QDMA_VF__
+#define QDMA_DEV QDMA_DEV_VF
+#else
+#define QDMA_DEV QDMA_DEV_PF
 #endif
 
 static int mbox_hw_send(struct qdma_mbox *mbox, struct mbox_msg *m)
 {
 	struct xlnx_dma_dev *xdev = mbox->xdev;
-	struct mbox_msg_hdr *hdr = &m->hdr;
-	u32 fn_id = hdr->dst;
-	int i;
-	u32 reg = MBOX_OUT_MSG_BASE;
-	u32 v;
-	int rv = -EAGAIN;
-
-	pr_debug("%s, dst 0x%x, op 0x%x, %s, status reg 0x%x.\n",
-		xdev->conf.name, fn_id, m->hdr.op, mbox_op_str[m->hdr.op],
-		__read_reg(xdev, MBOX_BASE + MBOX_FN_STATUS));
+	int rv;
 
 	spin_lock_bh(&mbox->hw_tx_lock);
-
-#ifndef __QDMA_VF__
-	__write_reg(xdev, MBOX_BASE + MBOX_FN_TARGET,
-			V_MBOX_FN_TARGET_ID(fn_id));
-#endif
-
-	v = __read_reg(xdev, MBOX_BASE + MBOX_FN_STATUS);
-	if (v & F_MBOX_FN_STATUS_OUT_MSG) {
-		pr_debug("%s, func 0x%x, outgoing message busy, 0x%x.\n",
-			xdev->conf.name, fn_id, v);
-		goto unlock;
-	}
-
-	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP)
-		__write_reg(xdev, MBOX_BASE + reg, m->raw[i]);
-
-	pr_debug("%s, send op 0x%x,%s, src 0x%x, dst 0x%x, s 0x%x:\n",
-		xdev->conf.name, m->hdr.op, mbox_op_str[m->hdr.op], m->hdr.src,
-		m->hdr.dst, m->hdr.status);
-#if 0
-	print_hex_dump(KERN_INFO, "mbox snd: ", DUMP_PREFIX_OFFSET,
-			16, 1, (void *)m, 64, false);
-#endif
-
-#ifndef __QDMA_VF__
-	/* clear the outgoing ack */
-	mbox_pf_hw_clear_func_ack(xdev, fn_id);
-#endif
-
-	__write_reg(xdev, MBOX_BASE + MBOX_FN_CMD, F_MBOX_FN_CMD_SND);
-	rv = 0;
-
-unlock:
+	rv = qdma_mbox_send(xdev, QDMA_DEV, m->raw);
 	spin_unlock_bh(&mbox->hw_tx_lock);
 
 	return rv;
@@ -169,67 +59,12 @@ unlock:
 static int mbox_hw_rcv(struct qdma_mbox *mbox, struct mbox_msg *m)
 {
 	struct xlnx_dma_dev *xdev = mbox->xdev;
-	u32 reg = MBOX_IN_MSG_BASE;
-	u32 v = 0;
-	int all_zero_msg = 1;
-	int i;
-	int rv = -EAGAIN;
-#ifndef __QDMA_VF__
-	unsigned int from_id = 0;
-#endif
+	int rv;
 
 	spin_lock_bh(&mbox->hw_rx_lock);
-
-	v = __read_reg(xdev, MBOX_BASE + MBOX_FN_STATUS);
-
-#if 0
-	if ((v & MBOX_FN_STATUS_MASK))
-		pr_debug("%s, base 0x%x, status 0x%x.\n",
-			xdev->conf.name, MBOX_BASE, v);
-#endif
-
-	if (!(v & M_MBOX_FN_STATUS_IN_MSG))
-		goto unlock;
-
-#ifndef __QDMA_VF__
-	from_id = G_MBOX_FN_STATUS_SRC(v);
-	__write_reg(xdev, MBOX_BASE + MBOX_FN_TARGET, from_id);
-#endif
-
-	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP) {
-		m->raw[i] = __read_reg(xdev, MBOX_BASE + reg);
-		/* if rcv'ed message is all zero, stop and disable the mbox,
-		 * the h/w mbox is not working properly
-		 */
-		if (m->raw[i])
-			all_zero_msg = 0;
-	}
-	if (all_zero_msg) {
-		rv = -EPIPE;
-		goto unlock;
-	}
-
-	pr_debug("%s, rcv op 0x%x, %s, src 0x%x, dst 0x%x, s 0x%x:\n",
-		xdev->conf.name, m->hdr.op, mbox_op_str[m->hdr.op], m->hdr.src,
-		m->hdr.dst, m->hdr.status);
-#if 0
-	print_hex_dump(KERN_INFO, "mbox rcv: ", DUMP_PREFIX_OFFSET,
-			16, 1, (void *)m, 64, false);
-#endif
-
-#ifndef __QDMA_VF__
-	if (from_id != m->hdr.src) {
-		pr_debug("%s, src 0x%x -> func_id 0x%x.\n",
-			xdev->conf.name, m->hdr.src, from_id);
-		m->hdr.src = from_id;
-	}
-#endif
-
-	/* ack'ed the sender */
-	__write_reg(xdev, MBOX_BASE + MBOX_FN_CMD, F_MBOX_FN_CMD_RCV);
-	rv = 0;
-
-unlock:
+	memset(m->raw, 0, MBOX_MSG_REG_MAX *
+	       sizeof(uint32_t));
+	rv = qdma_mbox_rcv(xdev, QDMA_DEV, m->raw);
 	spin_unlock_bh(&mbox->hw_rx_lock);
 	return rv;
 }
@@ -249,30 +84,15 @@ void __qdma_mbox_msg_free(const char *f, struct mbox_msg *m)
 	kref_put(&m->refcnt, mbox_msg_destroy);
 }
 
-struct mbox_msg *qdma_mbox_msg_alloc(struct xlnx_dma_dev *xdev,
-				enum mbox_msg_op op)
+struct mbox_msg *qdma_mbox_msg_alloc(void)
 {
-	struct mbox_msg *m = kmalloc(sizeof(struct mbox_msg), GFP_KERNEL);
-	struct mbox_msg_hdr *hdr;
+	struct mbox_msg *m = kzalloc(sizeof(struct mbox_msg), GFP_KERNEL);
 
-	if (!m) {
-		pr_info("%s OOM, %lu, op 0x%x, %s.\n",
-			xdev->conf.name, sizeof(struct mbox_msg), op,
-			mbox_op_str[op]);
+	if (!m)
 		return NULL;
-	}
-
-	memset(m, 0, sizeof(struct mbox_msg));
 
 	kref_init(&m->refcnt);
 	qdma_waitq_init(&m->waitq);
-
-	hdr = &m->hdr;
-	hdr->op = op;
-	hdr->src = xdev->func_id;
-#ifdef __QDMA_VF__
-	hdr->dst = xdev->func_id_parent;
-#endif
 
 	return m;
 }
@@ -288,20 +108,11 @@ void qdma_mbox_msg_cancel(struct xlnx_dma_dev *xdev, struct mbox_msg *m)
 }
 
 int qdma_mbox_msg_send(struct xlnx_dma_dev *xdev, struct mbox_msg *m,
-			bool wait_resp, u8 resp_op, unsigned int timeout_ms)
+			bool wait_resp, unsigned int timeout_ms)
 {
 	struct qdma_mbox *mbox = &xdev->mbox;
-	struct mbox_msg_hdr *hdr = &m->hdr;
-
 
 	m->wait_resp = wait_resp ? 1 : 0;
-	m->wait_op = resp_op;
-
-
-	if (unlikely(xlnx_dma_device_flag_check(mbox->xdev, XDEV_FLAG_OFFLINE))
-		&& (hdr->op != MBOX_OP_BYE))
-		/* allow BYE message even if the device is going down */
-		return -ENODEV;
 
 	/* queue up to ensure order */
 	spin_lock_bh(&mbox->list_lock);
@@ -311,30 +122,24 @@ int qdma_mbox_msg_send(struct xlnx_dma_dev *xdev, struct mbox_msg *m,
 	/* kick start the tx */
 	queue_work(mbox->workq, &mbox->tx_work);
 
-	if (!wait_resp)
+	if (!wait_resp) {
+		m->retry_cnt = (timeout_ms / 1000) + 1;
 		return 0;
+	}
 
-	qdma_waitq_wait_event_timeout(m->waitq, hdr->op == resp_op,
+	qdma_waitq_wait_event_timeout(m->waitq, m->resp_op_matched,
 			msecs_to_jiffies(timeout_ms));
 
-	if (hdr->op != resp_op) {
+	if (!m->resp_op_matched) {
 		/* delete from mbox list */
 		spin_lock_bh(&mbox->list_lock);
 		list_del(&m->list);
 		spin_unlock_bh(&mbox->list_lock);
 
-		pr_err("%s mbox timed out. op 0x%x, %s, timeout %u ms.\n",
-				xdev->conf.name, hdr->op, mbox_op_str[hdr->op],
-				timeout_ms);
+		pr_err("%s mbox timed out. timeout %u ms.\n",
+				xdev->conf.name, timeout_ms);
 
 		return -EPIPE;
-	}
-
-	if (hdr->status) {
-		pr_err("%s mbox msg op failed %d. op 0x%x, %s.\n",
-				xdev->conf.name, hdr->status, hdr->op,
-				mbox_op_str[hdr->op]);
-		return hdr->status;
 	}
 
 	return 0;
@@ -345,65 +150,40 @@ int qdma_mbox_msg_send(struct xlnx_dma_dev *xdev, struct mbox_msg *m,
  */
 #ifdef __QDMA_VF__
 
-void dump_rx_pend_list(struct qdma_mbox *mbox)
-{
-	struct xlnx_dma_dev *xdev = mbox->xdev;
-	struct mbox_msg *_msg = NULL, *_tmp = NULL;
-
-	spin_lock_bh(&mbox->list_lock);
-	list_for_each_entry_safe(_msg, _tmp, &mbox->rx_pend_list, list) {
-		pr_debug("m_snd(%u) : wait_op/src/dst = %x/%u/%u\n",
-				xdev->func_id, _msg->wait_op,
-				_msg->hdr.src, _msg->hdr.dst);
-	}
-	spin_unlock_bh(&mbox->list_lock);
-}
-
 static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 {
-	struct xlnx_dma_dev *xdev = mbox->xdev;
 	struct mbox_msg *m_rcv = &mbox->rx;
-	struct mbox_msg_hdr *hdr_rcv = &m_rcv->hdr;
-	struct mbox_msg *m_snd = NULL;
+	struct mbox_msg *m_snd = NULL, *tmp1 = NULL, *tmp2 = NULL;
 
-	u8 op = hdr_rcv->op;
-
-	if (xdev->func_id == xdev->func_id_parent) {
-		/* fill in VF's func_id */
-		xdev->func_id = hdr_rcv->dst;
-		xdev->func_id_parent = hdr_rcv->src;
+	if (mbox->xdev->func_id == mbox->xdev->func_id_parent) {
+		mbox->xdev->func_id = qdma_mbox_vf_func_id_get(m_rcv->raw);
+		mbox->xdev->func_id_parent = qdma_mbox_vf_parent_func_id_get(
+				m_rcv->raw);
 	}
-
 	spin_lock_bh(&mbox->list_lock);
-	if (!list_empty(&mbox->rx_pend_list))
-		m_snd = list_first_entry(&mbox->rx_pend_list, struct mbox_msg,
-					list);
-	spin_unlock_bh(&mbox->list_lock);
-
-
-	if (!m_snd || op != m_snd->wait_op) {
-		if (op != MBOX_OP_HELLO_RESP) {
-			pr_err("%s: unexpected op 0x%x, %s.\n",
-					xdev->conf.name, hdr_rcv->op,
-					mbox_op_str[hdr_rcv->op]);
-			if (m_snd)
-				pr_err("m_snd : wait_op/src/dst = %x/%u/%u\n",
-						m_snd->wait_op,
-						m_snd->hdr.src,
-						m_snd->hdr.dst);
-			dump_rx_pend_list(mbox);
+	/* check if the sent request expired */
+	if (!list_empty(&mbox->rx_pend_list)) {
+		list_for_each_entry_safe(tmp1, tmp2, &mbox->rx_pend_list,
+					 list) {
+			if (qdma_mbox_is_msg_response(tmp1->raw, m_rcv->raw)) {
+				m_snd = tmp1;
+				m_snd->resp_op_matched = 1;
+				break;
+			}
 		}
-		return 0;
 	}
-
-	/* a matching request is found */
-	spin_lock_bh(&mbox->list_lock);
-	list_del(&m_snd->list);
 	spin_unlock_bh(&mbox->list_lock);
 
-	memcpy(m_snd->raw, m_rcv->raw, sizeof(u32) * MBOX_MSG_REG_MAX);
-	/* wake up anyone waiting on the response */
-	qdma_waitq_wakeup(&m_snd->waitq);
+	if (m_snd) {
+		/* a matching request is found */
+		spin_lock_bh(&mbox->list_lock);
+		list_del(&m_snd->list);
+		spin_unlock_bh(&mbox->list_lock);
+		memcpy(m_snd->raw, m_rcv->raw, MBOX_MSG_REG_MAX *
+		       sizeof(uint32_t));
+		/* wake up anyone waiting on the response */
+		qdma_waitq_wakeup(&m_snd->waitq);
+	}
 
 	return 0;
 }
@@ -412,209 +192,34 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 {
 	struct mbox_msg *m = &mbox->rx;
-	struct mbox_msg_hdr *hdr = &m->hdr;
-	struct xlnx_dma_dev *xdev = mbox->xdev;
-	u8 op = hdr->op;
-	struct mbox_msg *m_resp;
-	struct mbox_msg_hdr *hdr_resp;
-	int rv = 0;
-	struct qconf_entry *entry = NULL;
+	struct mbox_msg *m_resp = qdma_mbox_msg_alloc();
+	int rv;
 
-	pr_debug("%s, src 0x%x op 0x%x,%s.\n",
-		xdev->conf.name, hdr->src, hdr->op, mbox_op_str[hdr->op]);
+	rv = qdma_mbox_pf_rcv_msg_handler(mbox->xdev,
+					  mbox->xdev->conf.pdev->bus->number,
+					  mbox->xdev->func_id,
+					  m->raw, m_resp->raw);
 
-	switch (op) {
-	case MBOX_OP_BYE:
-	{
-		unsigned int qbase = 0;
-		unsigned int qmax = 0;
+	if (rv == QDMA_MBOX_VF_OFFLINE) {
+#ifdef CONFIG_PCI_IOV
+		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m_resp->raw);
 
-		hw_read_fmap(xdev, hdr->src, &qbase, &qmax);
-		hw_init_qctxt_memory(xdev, qbase, qmax);
+		xdev_sriov_vf_offline(mbox->xdev, vf_func_id);
+#endif
+		qdma_mbox_msg_free(m_resp);
+	} else if (rv == QDMA_MBOX_VF_ONLINE) {
+#ifdef CONFIG_PCI_IOV
+		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m_resp->raw);
 
-		hw_set_fmap(xdev, hdr->src, 0, 0);
-		xdev_sriov_vf_offline(xdev, hdr->src);
+		xdev_sriov_vf_online(mbox->xdev, vf_func_id);
+#endif
+		qdma_mbox_msg_send(mbox->xdev, m_resp, 0, 0);
+	} else
+		qdma_mbox_msg_send(mbox->xdev, m_resp, 0, 0);
 
-		pr_debug("%s: clear 0x%x FMAP, Q 0x%x+0x%x.\n",
-			xdev->conf.name, hdr->src, qbase, qmax);
-
-		xdev_destroy_qconf(PCI_TYPE_VF, hdr->src);
-		/* no response needed */
-		return 0;
-	}
-	break;
-	case MBOX_OP_HELLO:
-	{
-		xdev_sriov_vf_online(xdev, hdr->src);
-		entry = xdev_create_qconf(PCI_TYPE_VF, hdr->src);
-		if (entry) {
-			int rsp_offset =
-					sizeof(struct mbox_msg_hdr)/sizeof(u32);
-			m->raw[rsp_offset] = entry->qmax;
-			m->raw[rsp_offset + 1] = entry->qbase;
-			pr_debug("qmax = %u qbase = %u m_resp->raw[%d] = %u, m_resp->raw[%d] = %u\n",
-					entry->qmax, entry->qbase,
-					rsp_offset, m->raw[rsp_offset],
-					rsp_offset + 1, m->raw[rsp_offset + 1]);
-		}
-	}
-	break;
-	case MBOX_OP_FMAP:
-	{
-		struct mbox_msg_fmap *fmap = &m->fmap;
-		int ret = xdev_set_qmax(PCI_TYPE_VF, hdr->src,
-				fmap->qmax, &fmap->qbase);
-		if (ret < 0) {
-			rv = ret;
-			pr_err("VF qmax set failed %s: set 0x%x QCONF, Q 0x%x+0x%x. ret = %d\n",
-					xdev->conf.name, hdr->src,
-					fmap->qbase, fmap->qmax, ret);
-		} else {
-			pr_debug("VF qmax set success %s: set 0x%x QCONF, Q 0x%x+0x%x.\n",
-					xdev->conf.name, hdr->src,
-					fmap->qbase, fmap->qmax);
-
-			pr_debug("%s: set 0x%x FMAP, Q 0x%x+0x%x.\n",
-					xdev->conf.name, hdr->src, fmap->qbase,
-					fmap->qmax);
-
-			hw_set_fmap(xdev, hdr->src, fmap->qbase, fmap->qmax);
-
-			xdev_sriov_vf_fmap(xdev, hdr->src, fmap->qbase,
-					fmap->qmax);
-		}
-	}
-	break;
-	case MBOX_OP_QCONF:
-	{
-		struct mbox_msg_fmap *fmap = &m->fmap;
-
-		int ret = xdev_set_qmax(PCI_TYPE_VF, hdr->src,
-				fmap->qmax, &fmap->qbase);
-		if (ret < 0) {
-			rv = ret;
-			pr_err("VF qmax set failed %s: set 0x%x QCONF, Q 0x%x+0x%x.\n",
-					xdev->conf.name, hdr->src,
-					fmap->qbase, fmap->qmax);
-		} else {
-			pr_debug("VF qmax set success %s: set 0x%x QCONF, Q 0x%x+0x%x.\n",
-					xdev->conf.name, hdr->src,
-					fmap->qbase, fmap->qmax);
-		}
-	}
-	break;
-
-	case MBOX_OP_CSR:
-	{
-		struct mbox_msg_csr *csr = &m->csr;
-
-		rv = qdma_csr_read(xdev, &csr->csr_info, 0);
-	}
-	break;
-	case MBOX_OP_INTR_CTXT:
-	{
-		struct mbox_msg_intr_ctxt *ictxt = &m->intr_ctxt;
-
-		pr_debug("%s, rcv 0x%x INTR_CTXT, programing the context\n",
-			xdev->conf.name, hdr->src);
-		rv = qdma_prog_intr_context(xdev, ictxt);
-	}
-	break;
-	case MBOX_OP_QCTXT_CLR:
-	{
-		struct mbox_msg_qctxt *qctxt = &m->qctxt;
-
-		 rv = qdma_descq_context_clear(xdev, qctxt->qid,
-					qctxt->st, qctxt->c2h, 0);
-	}
-	break;
-	case MBOX_OP_QCTXT_RD:
-	{
-		struct mbox_msg_qctxt *qctxt = &m->qctxt;
-
-		rv = qdma_descq_context_read(xdev, qctxt->qid,
-					qctxt->st, qctxt->c2h,
-					&qctxt->context);
-	}
-	break;
-	case MBOX_OP_QCTXT_WRT:
-	{
-		struct mbox_msg_qctxt *qctxt = &m->qctxt;
-
-		pr_debug("%s, rcv 0x%x QCTXT_WRT, qid 0x%x.\n",
-			xdev->conf.name, hdr->src, qctxt->qid);
-
-		/* always clear the context first */
-		rv = qdma_descq_context_clear(xdev, qctxt->qid,
-					qctxt->st, qctxt->c2h, 1);
-		if (rv < 0) {
-			pr_err("%s, 0x%x QCTXT_WRT, qid 0x%x, clr failed %d.\n",
-				xdev->conf.name, hdr->src, qctxt->qid,
-				rv);
-			break;
-		}
-
-		rv = qdma_descq_context_program(xdev, qctxt->qid,
-					qctxt->st, qctxt->c2h,
-					&qctxt->context);
-	}
-	break;
-	default:
-		pr_info("%s: rcv mbox UNKNOWN op 0x%x.\n",
-			xdev->conf.name, hdr->op);
-		print_hex_dump(KERN_INFO, "mbox rcv: ",
-				DUMP_PREFIX_OFFSET, 16, 1, (void *)hdr,
-				64, false);
-		return -EINVAL;
-	break;
-	}
-
-	/* respond */
-	m_resp = qdma_mbox_msg_alloc(xdev, op);
-	if (!m_resp)
-		return -ENOMEM;
-
-	hdr_resp = &m_resp->hdr;
-
-	memcpy(m_resp->raw, m->raw, sizeof(u32) * MBOX_MSG_REG_MAX);
-
-	hdr_resp->op |= MBOX_MSG_OP_PF_MASK;
-	hdr_resp->dst = hdr->src;
-	hdr_resp->src = xdev->func_id;
-
-	hdr_resp->status = rv ? -1 : 0;
-
-	qdma_mbox_msg_send(xdev, m_resp, 0, 0, 0);
-
-	return rv;
+	return 0;
 }
 #endif
-
-/*
- * tx & rx workqueue handler
- */
-static void mbox_tx_work(struct work_struct *work)
-{
-	struct qdma_mbox *mbox = container_of(work, struct qdma_mbox, tx_work);
-
-	spin_lock_bh(&mbox->list_lock);
-	while (!list_empty(&mbox->tx_todo_list)) {
-		struct mbox_msg *m = list_first_entry(&mbox->tx_todo_list,
-						struct mbox_msg, list);
-		if (mbox_hw_send(mbox, m) == 0) {
-			/* message sent */
-			list_del(&m->list);
-
-			/* response needed */
-			if (m->wait_resp)
-				list_add_tail(&m->list, &mbox->rx_pend_list);
-			else
-				qdma_mbox_msg_free(m);
-		} else
-			break;
-	}
-	spin_unlock_bh(&mbox->list_lock);
-}
 
 static inline void mbox_timer_stop(struct qdma_mbox *mbox)
 {
@@ -628,17 +233,69 @@ static inline void mbox_timer_start(struct qdma_mbox *mbox)
 	qdma_timer_start(timer, MBOX_TIMER_INTERVAL);
 }
 
+/*
+ * tx & rx workqueue handler
+ */
+static void mbox_tx_work(struct work_struct *work)
+{
+	struct qdma_mbox *mbox = container_of(work, struct qdma_mbox, tx_work);
+
+	while (1) {
+		struct mbox_msg *m = NULL;
+
+		spin_lock_bh(&mbox->list_lock);
+		if (list_empty(&mbox->tx_todo_list)) {
+			spin_unlock_bh(&mbox->list_lock);
+			break;
+		}
+
+		m = list_first_entry(&mbox->tx_todo_list,
+						struct mbox_msg, list);
+
+		list_del(&m->list); /* remove from list first*/
+		spin_unlock_bh(&mbox->list_lock);
+
+		if (mbox_hw_send(mbox, m) == 0) {
+			mbox->send_busy = 0;
+			/* message sent */
+
+			/* response needed */
+			if (m->wait_resp) {
+				spin_lock_bh(&mbox->list_lock);
+				list_add_tail(&m->list, &mbox->rx_pend_list);
+				spin_unlock_bh(&mbox->list_lock);
+			} else
+				qdma_mbox_msg_free(m);
+		} else {
+			if (!xlnx_dma_device_flag_check(mbox->xdev,
+							XDEV_FLAG_OFFLINE)) {
+				if (!m->wait_resp) {
+					m->retry_cnt--;
+					if (!m->retry_cnt) {
+						qdma_mbox_msg_free(m);
+						break;
+					}
+				}
+				mbox->send_busy = 1;
+				spin_lock_bh(&mbox->list_lock);
+				/* put it back at the top of the list */
+				list_add(&m->list, &mbox->tx_todo_list);
+				spin_unlock_bh(&mbox->list_lock);
+				mbox_timer_start(mbox);
+			} else
+				qdma_mbox_msg_free(m);
+			break;
+		}
+	}
+}
+
 static void mbox_rx_work(struct work_struct *work)
 {
 	struct qdma_mbox *mbox = container_of(work, struct qdma_mbox, rx_work);
 	struct xlnx_dma_dev *xdev = mbox->xdev;
 	struct mbox_msg *m = &mbox->rx;
 	int rv;
-
-#ifndef __QDMA_VF__
-	/* clear the ack status */
-	mbox_pf_hw_clear_ack(mbox->xdev);
-#endif
+	int mbox_stop = 0;
 
 	rv = mbox_hw_rcv(mbox, m);
 	while (rv == 0) {
@@ -647,37 +304,47 @@ static void mbox_rx_work(struct work_struct *work)
 			break;
 		else if (mbox_rcv_one_msg(mbox) == -EINVAL)
 			break;
-
 		rv = mbox_hw_rcv(mbox, m);
 	}
 
-	if (rv == -EPIPE) {
-		pr_info("%s: rcv'ed all zero mbox msg, status 0x%x=0x%x. disable mbox processing.\n",
-			xdev->conf.name, MBOX_BASE + MBOX_FN_STATUS,
-			__read_reg(xdev, MBOX_BASE + MBOX_FN_STATUS));
-		mbox_timer_stop(mbox);
+	if (rv == -QDMA_MBOX_ALL_ZERO_MSG) {
+		mbox_stop = 1;
+
+		pr_info("%s: rcv'ed all zero mbox msg, disable mbox processing.\n",
+			xdev->conf.name);
 	} else if (xlnx_dma_device_flag_check(xdev, XDEV_FLAG_OFFLINE))
-		mbox_timer_stop(mbox);
-	else
-		mbox_timer_start(mbox);
+		mbox_stop = 1;
+
+	if (mbox->rx_poll) {
+
+		if (mbox_stop == 1)
+			mbox_timer_stop(mbox);
+		else
+			mbox_timer_start(mbox);
+	} else {
+		if (mbox_stop != 0)
+			qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
+	}
 }
 
 /*
  * non-interrupt mode: use timer for periodic checking of new messages
  */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
-static void mbox_rx_timer_handler(struct timer_list *t)
+#if KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE
+static void mbox_timer_handler(struct timer_list *t)
 #else
-static void mbox_rx_timer_handler(unsigned long arg)
+static void mbox_timer_handler(unsigned long arg)
 #endif
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+#if KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE
 	struct qdma_mbox *mbox = from_timer(mbox, t, timer);
 #else
 	struct qdma_mbox *mbox = (struct qdma_mbox *)arg;
 #endif
-
-	queue_work(mbox->workq, &mbox->rx_work);
+	if (mbox->rx_poll)
+		queue_work(mbox->workq, &mbox->rx_work);
+	if (mbox->send_busy)
+		queue_work(mbox->workq, &mbox->tx_work);
 }
 
 /*
@@ -685,21 +352,43 @@ static void mbox_rx_timer_handler(unsigned long arg)
  */
 void qdma_mbox_stop(struct xlnx_dma_dev *xdev)
 {
+	struct qdma_mbox *mbox = &xdev->mbox;
+
+	do {
+		spin_lock_bh(&mbox->list_lock);
+		if (list_empty(&mbox->tx_todo_list))
+			break;
+		spin_unlock_bh(&mbox->list_lock);
+		mdelay(10); /* sleep 10ms for msgs to be sent or freed */
+	} while (1);
+	spin_unlock_bh(&mbox->list_lock);
 	mbox_timer_stop(&xdev->mbox);
+#ifndef MAILBOX_INTERRUPT_DISABLE
+	if (!xdev->mbox.rx_poll)
+		qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
+#endif
 }
 
 void qdma_mbox_start(struct xlnx_dma_dev *xdev)
 {
-	mbox_timer_start(&xdev->mbox);
+	if (xdev->mbox.rx_poll)
+		mbox_timer_start(&xdev->mbox);
+#ifndef MAILBOX_INTERRUPT_DISABLE
+	else
+		qdma_mbox_enable_interrupts(xdev, QDMA_DEV);
+#endif
 }
 
 void qdma_mbox_cleanup(struct xlnx_dma_dev *xdev)
 {
 	struct qdma_mbox *mbox = &xdev->mbox;
 
-	mbox_timer_stop(mbox);
-
 	if (mbox->workq) {
+		mbox_timer_stop(mbox);
+#ifndef MAILBOX_INTERRUPT_DISABLE
+		if (!xdev->mbox.rx_poll)
+			qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
+#endif
 		flush_workqueue(mbox->workq);
 		destroy_workqueue(mbox->workq);
 	}
@@ -709,19 +398,11 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 {
 	struct qdma_mbox *mbox = &xdev->mbox;
 	struct timer_list *timer = &mbox->timer;
+#ifndef __QDMA_VF__
+	int i;
+#endif
 	struct mbox_msg m;
 	char name[80];
-
-	/* ack any received messages in the Q */
-#ifdef __QDMA_VF__
-	u32 v;
-
-	v = __read_reg(xdev, MBOX_BASE + MBOX_FN_STATUS);
-	if (!(v & M_MBOX_FN_STATUS_IN_MSG))
-		__write_reg(xdev, MBOX_BASE + MBOX_FN_CMD, F_MBOX_FN_CMD_RCV);
-#elif defined(CONFIG_PCI_IOV)
-	mbox_pf_hw_clear_ack(xdev);
-#endif
 
 	mbox->xdev = xdev;
 
@@ -733,26 +414,34 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 	INIT_WORK(&mbox->rx_work, mbox_rx_work);
 
 	snprintf(name, 80, "%s_mbox_wq", xdev->conf.name);
-		mbox->workq = create_singlethread_workqueue(name);
+	mbox->workq = create_singlethread_workqueue(name);
 
-		if (!mbox->workq) {
-			pr_info("%s OOM, mbox workqueue.\n", xdev->conf.name);
-			goto cleanup;
-		}
+	if (!mbox->workq) {
+		pr_info("%s OOM, mbox workqueue.\n", xdev->conf.name);
+		goto cleanup;
+	}
+
 
 	/* read & discard whatever in the incoming message buffer */
-#ifdef __QDMA_VF__
-	mbox_hw_rcv(mbox, &m);
-#else
-{
-	int i;
-
+#ifndef __QDMA_VF__
 	for (i = 0; i < 256; i++)
 		mbox_hw_rcv(mbox, &m);
-}
+#else
+	mbox_hw_rcv(mbox, &m);
 #endif
-
-	qdma_timer_setup(timer, mbox_rx_timer_handler, mbox);
+	/* ack any received messages in the Q */
+	qdma_mbox_hw_init(xdev, QDMA_DEV);
+#ifndef MAILBOX_INTERRUPT_DISABLE
+	if ((xdev->conf.qdma_drv_mode != POLL_MODE) &&
+		(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) {
+		mbox->rx_poll = 0;
+		qdma_mbox_enable_interrupts(xdev, QDMA_DEV);
+	} else
+		mbox->rx_poll = 1;
+#else
+	mbox->rx_poll = 1;
+#endif
+	qdma_timer_setup(timer, mbox_timer_handler, mbox);
 
 	return 0;
 

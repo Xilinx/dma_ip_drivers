@@ -31,9 +31,10 @@
 
 #include "libqdma_export.h"
 #include "qdma_mbox.h"
-#include "qdma_qconf_mgr.h"
 #ifdef DEBUGFS
 #include "qdma_debugfs.h"
+
+extern struct dentry *qdma_debugfs_root;
 #endif
 
 /**
@@ -131,8 +132,8 @@ struct intr_coal_conf {
 	struct qdma_intr_ring *intr_ring_base;
 	/**< color value indicates the valid entry in the interrupt ring */
 	u8 color;
-	/**< interrupt ring consumer index */
-	unsigned int cidx;
+	/**< Interrupt cidx info to be written to INTR CIDX register */
+	struct qdma_intr_cidx_reg_info intr_cidx_info;
 };
 
 /**
@@ -152,6 +153,7 @@ enum intr_type_list {
 	INTR_TYPE_ERROR,	/**< error interrupt */
 	INTR_TYPE_USER,		/**< user interrupt */
 	INTR_TYPE_DATA,		/**< data interrupt */
+	INTR_TYPE_MBOX,		/**< mail box interrupt */
 	INTR_TYPE_MAX		/**< max interrupt */
 };
 
@@ -175,6 +177,8 @@ struct intr_info_t {
 	int intr_list_cnt;
 	/**< interrupt vector map */
 	struct intr_vec_map_type intr_vec_map;
+	/**< interrupt lock per vector */
+	spinlock_t vec_q_list;
 };
 
 /**
@@ -186,6 +190,8 @@ struct xlnx_dma_dev {
 	char mod_name[QDMA_DEV_NAME_MAXLEN];
 	/**< DMA device configuration */
 	struct qdma_dev_conf conf;
+	/**< csr info */
+	struct global_csr_conf csr_info;
 	/**< DMA device list */
 	struct list_head list_head;
 	/**< DMA device lock to protects concurrent access */
@@ -194,20 +200,18 @@ struct xlnx_dma_dev {
 	spinlock_t hw_prg_lock;
 	/**< device flags */
 	unsigned int flags;
-	u8 flr_prsnt:1;
-	/**< flag to indicate the FLR present status */
-	u8 st_mode_en:1;
-	/**< flag to indicate the streaming mode enabled status */
-	u8 mm_mode_en:1;
-	/**< flag to indicate the memory mapped mode enabled status */
 	u8 stm_en:1;
 	/**< flag to indicate the presence of STM */
+	struct qdma_dev_attributes dev_cap;
+	/**< device capabilities */
 	/**< sriov info */
 	void *vf_info;
 	/**< number of virtual functions */
 	u8 vf_count;
+	/**< wait q for vf offline */
+	qdma_wait_queue wq;
 	/**< function id */
-	u16 func_id;
+	u8 func_id;
 #ifdef __QDMA_VF__
 	/**< parent function id, valid only for virtual function */
 	u8 func_id_parent;
@@ -215,14 +219,11 @@ struct xlnx_dma_dev {
 	/**< number of physical functions */
 	u8 pf_count;
 #endif
-	/**< max mm channels */
-	u8 mm_channel_max;
 	u8 stm_rev;
 	/**< PCIe config. bar */
 	void __iomem *regs;
 	/** PCIe Bar for STM config */
 	void __iomem *stm_regs;
-
 	/**< number of MSI-X interrupt vectors per device */
 	int num_vecs;
 	/**< msix_entry list for all MSIx vectors associated for device */
@@ -253,6 +254,8 @@ struct xlnx_dma_dev {
 	struct dentry *dbgfs_dev_root;
 	/** debugfs queue root */
 	struct dentry *dbgfs_queues_root;
+	/** debugfs intr ring root */
+	struct dentry *dbgfs_intr_root;
 	/* lock for creating qidx directory */
 	spinlock_t qidx_lock;
 #endif
@@ -310,10 +313,9 @@ static inline int xlnx_dma_device_flag_test_n_set(struct xlnx_dma_dev *xdev,
 	int rv = 0;
 
 	spin_lock_irqsave(&xdev->lock, flags);
-	if (xdev->flags & f) {
-		spin_unlock_irqrestore(&xdev->lock, flags);
+	if (xdev->flags & f)
 		rv = 1;
-	} else
+	else
 		xdev->flags |= f;
 	spin_unlock_irqrestore(&xdev->lock, flags);
 	return rv;
@@ -526,6 +528,7 @@ int xdev_sriov_vf_fmap(struct xlnx_dma_dev *xdev, u8 func_id,
  *  When virtual function is not enabled
  */
 #define xdev_sriov_vf_online(xdev, func_id)
+
 #endif
 
 #endif /* XDMA_LIB_H */

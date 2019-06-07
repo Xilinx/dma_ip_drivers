@@ -6,16 +6,18 @@ This section describes the details on controlling and configuring the QDMA IP
 System Level Configurations
 ---------------------------
 
-QDMA driver provides the sysfs interface to enable to user to perform system level configuations. QDMA ``PF`` and ``VF`` drivers expose several ``sysfs`` nodes under the ``pci`` device root node.
+QDMA driver provides the sysfs interface to enable to user to perform system level configurations. QDMA ``PF`` and ``VF`` drivers expose several ``sysfs`` nodes under the ``pci`` device root node.
 
 Once the qdma module is inserted and until any queue is added into the system and FMAP programming is not done, sysfs provides an interface to configure parameters for the module configuration.
 
-[xilinx@]# lspci | grep -i Xilinx
+::
 
-| 01:00.0 Memory controller: Xilinx Corporation Device 903f
-| 01:00.1 Memory controller: Xilinx Corporation Device 913f
-| 01:00.2 Memory controller: Xilinx Corporation Device 923f
-| 01:00.3 Memory controller: Xilinx Corporation Device 933f
+	[xilinx@]# lspci | grep -i Xilinx
+
+	01:00.0 Memory controller: Xilinx Corporation Device 903f
+	01:00.1 Memory controller: Xilinx Corporation Device 913f
+	01:00.2 Memory controller: Xilinx Corporation Device 923f
+	01:00.3 Memory controller: Xilinx Corporation Device 933f
 
 Based on the above lspci output, traverse to ``/sys/bus/pci/devices/<device node>/qdma`` to find the list of configurable parameters specific to PF or VF driver.
 
@@ -29,11 +31,15 @@ QDMA IP supports 252 Virtual Functions(VFs). ``/sys/bus/pci/devices/<device node
 
 Display the currently supported max VFs:
 
-[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/sriov_totalvfs
+::
+
+	[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/sriov_totalvfs
 
 Instantiate the required number of VFs for a PF:
 
-[xilinx@]# echo 3 > /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs
+::
+
+	[xilinx@]# echo 3 > /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs
 
 Once the VFS are instantiated, required number of queues can be allocated the VF using ``qmax`` sysfs entry available in VF at
 /sys/bus/pci/devices/<VF function number>/qdma/qmax
@@ -42,7 +48,7 @@ Once the VFS are instantiated, required number of queues can be allocated the VF
 2. **Allocate the Queues to a function**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QDMA IP supports maximum of 2048 queues. By default all the queues are equally distributed to the physical functions and each function gets 512 queues each.
+QDMA IP supports maximum of 2048 queues. By default there are no queues assigned to the functions. 
 
 ``qmax`` configuration parameter enables the user to update the number of queues for a PF. This configuration parameter indicates "Maximum number of queues associated for the current pf".
 
@@ -52,29 +58,35 @@ Once the number of queues for any PF is changed from the default value, the rema
 
 Display the current value:
 
-[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
+::
+
+	[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
+	0
 
 Set a new value:
 
-[xilinx@]# echo 1024 > /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
+::
 
-Ex: Default queue sets for all PFs
+	[xilinx@]# echo 1024 > /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
 
-[xilinx@]# dmactl dev list
+	[xilinx@]# dmactl dev list
 
-| qdma01000	0000:01:00.0	max QP: 449, 0~448
-| qdma01001	0000:01:00.1	max QP: 449, 449~897
-| qdma01002	0000:01:00.2	max QP: 449, 898~1346
-| qdma01003	0000:01:00.3	max QP: 449, 1347~1795
+	qdma01000	0000:01:00.0	max QP: 1024, 0~1023
+	qdma01001	0000:01:00.1	max QP: 0, -~-
+	qdma01002	0000:01:00.2	max QP: 0, -~-
+	qdma01003	0000:01:00.3	max QP: 0, -~-
 
-[xilinx@]# echo 1770 >  /sys/bus/pci/devices/0000\:01\:00.0/qdma/qmax
+	[xilinx@]# echo 1770 >  /sys/bus/pci/devices/0000\:01\:00.0/qdma/qmax
+	[xilinx@]# echo 8 >  /sys/bus/pci/devices/0000\:01\:00.1/qdma/qmax
+	[xilinx@]# echo 8 >  /sys/bus/pci/devices/0000\:01\:00.2/qdma/qmax
+	[xilinx@]# echo 8 >  /sys/bus/pci/devices/0000\:01\:00.3/qdma/qmax
 
-[xilinx@]# dmactl dev list
+	[xilinx@]# dmactl dev list
 
-| qdma01000	0000:01:00.0	max QP: 1770, 0~1769
-| qdma01001	0000:01:00.1	max QP: 8, 1770~1777
-| qdma01002	0000:01:00.2	max QP: 8, 1778~1785
-| qdma01003	0000:01:00.3	max QP: 8, 1786~1793
+	qdma01000	0000:01:00.0	max QP: 1770, 0~1769
+	qdma01001	0000:01:00.1	max QP: 8, 1770~1777
+	qdma01002	0000:01:00.2	max QP: 8, 1778~1785
+	qdma01003	0000:01:00.3	max QP: 8, 1786~1793
 
 
 ``qmax`` configuration parameter is available for virtual functions as well.  Once the ``qmax_vfs`` is configured, qmax for each VF can be updated from pool of queues assigned for the VFs.
@@ -83,21 +95,22 @@ Ex: Default queue sets for all PFs
 3. **Reserve the Queues to VFs**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QDMA IP supports 2048 queues and all the queues are allocated to PFs by default. From the set of 2048 queues, ``qmax_vfs`` configuration parameter enables the user to allocate a set of queues to the VFs.
+QDMA IP supports 2048 queues and from the set of 2048 queues, use the ``qmax`` sysfs entry to allocate queues to VFs similar to PFs.
 
-This entry is available only for Master PF.
-
-Before instantiating the VFs, allocate required number of queues for VFs from the available pool.
-
-Assume that PF0 is the master PF.
 
 Display the current value:
 
-[xilinx@] #cat /sys/bus/pci/devices/0000:81:00.0/qdma/qmax_vfs
+::
 
+	[xilinx@] #cat /sys/bus/pci/devices/0000:81:00.4/qdma/qmax
+	0
+	
 Set a new value:
 
-[xilinx@] #echo 1024 > /sys/bus/pci/devices/0000:81:00.0/qdma/qmax_vfs
+::
+
+	[xilinx@] #echo 1024 > /sys/bus/pci/devices/0000:81:00.4/qdma/qmax
+
 
 4. **Set Interrupt Ring Size**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,11 +132,16 @@ User can configure he interrupt ring entries in multiples of 512 hence set the `
 
 Display the current value:
 
-[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
+::
 
+	[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
+	0
+	
 Set a new value:
 
-[xilinx@]# echo 2 > /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
+::
+
+	[xilinx@]# echo 2 > /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
 
 
 5. **Set Completion Interval**
@@ -146,11 +164,16 @@ Accumulation can be disabled via queue context.
 
 Display the current value:
 
-[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/cmpt_intrvl
+::
 
+	[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/cmpt_intrvl
+	0
+	
 Set a new value:
 
-[xilinx@]# echo 2 > /sys/bus/pci/devices/0000:81:00.0/qdma/cmpt_intrvl
+::
+
+	[xilinx@]# echo 2 > /sys/bus/pci/devices/0000:81:00.0/qdma/cmpt_intrvl
 
 
 Queue Management

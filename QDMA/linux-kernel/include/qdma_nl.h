@@ -74,9 +74,11 @@
 #define XNL_F_PFETCH_BYPASS_EN  0x00002000
 /** Q parameter: disable CMPT overflow check */
 #define XNL_F_CMPT_OVF_CHK_DIS	0x00004000
+/** Q parameter: MM completion required? */
+#define XNL_F_EN_MM_CMPL         0x00008000
 
 /** maximum number of queue flags to control queue configuration*/
-#define MAX_QFLAGS 15
+#define MAX_QFLAGS 17
 
 /** maximum number of interrupt ring entries*/
 #define QDMA_MAX_INT_RING_ENTRIES 512
@@ -96,23 +98,36 @@ enum xnl_attr_t {
 	XNL_ATTR_PCI_DEV,		/**< pci device number */
 	XNL_ATTR_PCI_FUNC,		/**< pci function id */
 
-	XNL_ATTR_DEV_STAT_MMH2C_PKTS1, /**< number of MM H2C packkts */
-	XNL_ATTR_DEV_STAT_MMH2C_PKTS2, /**< number of MM H2C packkts */
-	XNL_ATTR_DEV_STAT_MMC2H_PKTS1, /**< number of MM C2H packkts */
-	XNL_ATTR_DEV_STAT_MMC2H_PKTS2, /**< number of MM C2H packkts */
-	XNL_ATTR_DEV_STAT_STH2C_PKTS1, /**< number of ST H2C packkts */
-	XNL_ATTR_DEV_STAT_STH2C_PKTS2, /**< number of ST H2C packkts */
-	XNL_ATTR_DEV_STAT_STC2H_PKTS1, /**< number of ST C2H packkts */
-	XNL_ATTR_DEV_STAT_STC2H_PKTS2, /**< number of ST C2H packkts */
+	XNL_ATTR_DEV_STAT_MMH2C_PKTS1, /**< number of MM H2C packets */
+	XNL_ATTR_DEV_STAT_MMH2C_PKTS2, /**< number of MM H2C packets */
+	XNL_ATTR_DEV_STAT_MMC2H_PKTS1, /**< number of MM C2H packets */
+	XNL_ATTR_DEV_STAT_MMC2H_PKTS2, /**< number of MM C2H packets */
+	XNL_ATTR_DEV_STAT_STH2C_PKTS1, /**< number of ST H2C packets */
+	XNL_ATTR_DEV_STAT_STH2C_PKTS2, /**< number of ST H2C packets */
+	XNL_ATTR_DEV_STAT_STC2H_PKTS1, /**< number of ST C2H packets */
+	XNL_ATTR_DEV_STAT_STC2H_PKTS2, /**< number of ST C2H packets */
 
 	XNL_ATTR_DEV_CFG_BAR,	/**< device config bar number */
 	XNL_ATTR_DEV_USR_BAR,	/**< device user bar number */
 	XNL_ATTR_DEV_QSET_MAX,	/**< max queue sets */
 	XNL_ATTR_DEV_QSET_QBASE,	/**< queue base start */
 
+	XNL_ATTR_VERSION_INFO,          /**< version info*/
+	XNL_ATTR_DEV_NUMQS,            /**< num of queues */
+	XNL_ATTR_DEV_NUM_PFS,          /**< num of PFs */
+	XNL_ATTR_DEV_MM_CHANNEL_MAX,   /**< mm channels */
+	XNL_ATTR_DEV_MAILBOX_ENABLE,   /**< mailbox enable */
+	XNL_ATTR_DEV_FLR_PRESENT,      /**< flr present */
+	XNL_ATTR_DEV_ST_ENABLE,        /**< device st capability */
+	XNL_ATTR_DEV_MM_ENABLE,        /**< device mm capability */
+	XNL_ATTR_DEV_MM_CMPT_ENABLE,   /**< device mm cmpt capability */
+
 	XNL_ATTR_REG_BAR_NUM,	/**< register bar number */
 	XNL_ATTR_REG_ADDR,		/**< register address */
 	XNL_ATTR_REG_VAL,		/**< register value */
+
+	XNL_ATTR_CSR_INDEX,     /**< csr index */
+	XNL_ATTR_CSR_COUNT,     /**< csr count */
 
 	XNL_ATTR_QIDX,			/**< queue index */
 	XNL_ATTR_NUM_Q,			/**< number of queues */
@@ -139,6 +154,7 @@ enum xnl_attr_t {
 	XNL_ATTR_PIPE_SLR_ID,           /**< pipe slr id */
 	XNL_ATTR_PIPE_TDEST,            /**< pipe tdest */
 	XNL_ATTR_DEV_STM_BAR,	/**< device STM bar number */
+	XNL_ATTR_Q_STATE,
 #ifdef ERR_DEBUG
 	XNL_ATTR_QPARAM_ERR_INFO,		/**< queue param info */
 #endif
@@ -158,69 +174,80 @@ enum xnl_st_c2h_cmpt_desc_size {
 };
 
 enum xnl_qdma_rngsz_idx {
+	XNL_QDMA_RNGSZ_2048_IDX,
 	XNL_QDMA_RNGSZ_64_IDX,
 	XNL_QDMA_RNGSZ_128_IDX,
+	XNL_QDMA_RNGSZ_192_IDX,
 	XNL_QDMA_RNGSZ_256_IDX,
+	XNL_QDMA_RNGSZ_384_IDX,
 	XNL_QDMA_RNGSZ_512_IDX,
+	XNL_QDMA_RNGSZ_768_IDX,
 	XNL_QDMA_RNGSZ_1024_IDX,
-	XNL_QDMA_RNGSZ_2048_IDX,
+	XNL_QDMA_RNGSZ_1536_IDX,
+	XNL_QDMA_RNGSZ_3072_IDX,
 	XNL_QDMA_RNGSZ_4096_IDX,
+	XNL_QDMA_RNGSZ_6144_IDX,
 	XNL_QDMA_RNGSZ_8192_IDX,
+	XNL_QDMA_RNGSZ_12288_IDX,
 	XNL_QDMA_RNGSZ_16384_IDX,
-	XNL_QDMA_RNGSZ_32768_IDX,
-	XNL_QDMA_RNGSZ_65536_IDX,
-	XNL_QDMA_RNGSZ_131072_IDX,
-	XNL_QDMA_RNGSZ_262177_IDX,
-	XNL_QDMA_RNGSZ_524288_IDX,
-	XNL_QDMA_RNGSZ_1048576_IDX,
-	XNL_QDMA_RNGSZ_2097152_IDX,
 	XNL_QDMA_RNGSZ_IDXS
 };
 
-/** XNL attributes list */
-static const char *xnl_attr_str[XNL_ATTR_MAX] = {
-	"GENMSG",		/**< XNL_ATTR_GENMSG */
-	"DRV_INFO",		/**< XNL_ATTR_DRV_INFO */
 
-	"DEV_IDX",		/**< XNL_ATTR_DEV_IDX */
-
-	"DEV_PCIBUS",	/**< XNL_ATTR_PCI_BUS */
-	"DEV_PCIDEV",	/**< XNL_ATTR_PCI_DEV */
-	"DEV_PCIFUNC",	/**< XNL_ATTR_PCI_FUNC */
-
-	"DEV_CFG_BAR",	/**< XNL_ATTR_DEV_CFG_BAR */
-	"DEV_USR_BAR",	/**< XNL_ATTR_DEV_USER_BAR */
-	"DEV_QSETMAX",	/**< XNL_ATTR_DEV_QSET_MAX */
-	"DEV_QBASE",	/**< XNL_ATTR_DEV_QSET_QBASE */
-
-	"REG_BAR",		/**< XNL_ATTR_REG_BAR_NUM */
-	"REG_ADDR",		/**< XNL_ATTR_REG_ADDR */
-	"REG_VAL",		/**< XNL_ATTR_REG_VAL */
-
-	"QIDX",			/**< XNL_ATTR_QIDX */
-	"NUM_Q",		/**< XNL_ATTR_NUM_Q */
-	"QFLAG",		/**< XNL_ATTR_QFLAG */
-
-	"CMPT_DESC_SZ",	/**< XNL_ATTR_CMPT_DESC_SIZE */
-	"SW_DESC_SIZE", /**< XNL_ATTR_SW_DESC_SIZE */
-	"QRINGSZ_IDX",	/**< XNL_ATTR_QRNGSZ */
-	"C2H_BUFSZ_IDX",	/**< XNL_ATTR_QBUFSZ */
-	"CMPT_TIMER_IDX",	/**< XNL_ATTR_CMPT_TIMER_IDX */
+static const char *xnl_attr_str[XNL_ATTR_MAX + 1] = {
+	"GENMSG",		        /**< XNL_ATTR_GENMSG */
+	"DRV_INFO",		        /**< XNL_ATTR_DRV_INFO */
+	"DEV_IDX",		        /**< XNL_ATTR_DEV_IDX */
+	"DEV_PCIBUS",	        /**< XNL_ATTR_PCI_BUS */
+	"DEV_PCIDEV",	        /**< XNL_ATTR_PCI_DEV */
+	"DEV_PCIFUNC",	        /**< XNL_ATTR_PCI_FUNC */
+	"DEV_STAT_MMH2C_PKTS1", /**< number of MM H2C packkts */
+	"DEV_STAT_MMH2C_PKTS2", /**< number of MM H2C packkts */
+	"DEV_STAT_MMC2H_PKTS1", /**< number of MM C2H packkts */
+	"DEV_STAT_MMC2H_PKTS2", /**< number of MM C2H packkts */
+	"DEV_STAT_STH2C_PKTS1", /**< number of ST H2C packkts */
+	"DEV_STAT_STH2C_PKTS2", /**< number of ST H2C packkts */
+	"DEV_STAT_STC2H_PKTS1", /**< number of ST C2H packkts */
+	"DEV_STAT_STC2H_PKTS2", /**< number of ST C2H packkts */
+	"DEV_CFG_BAR",	        /**< XNL_ATTR_DEV_CFG_BAR */
+	"DEV_USR_BAR",	        /**< XNL_ATTR_DEV_USER_BAR */
+	"DEV_QSETMAX",	        /**< XNL_ATTR_DEV_QSET_MAX */
+	"DEV_QBASE",	        /**< XNL_ATTR_DEV_QSET_QBASE */
+	"REG_BAR",		        /**< XNL_ATTR_REG_BAR_NUM */
+	"REG_ADDR",		        /**< XNL_ATTR_REG_ADDR */
+	"REG_VAL",		        /**< XNL_ATTR_REG_VAL */
+	"CSR_INDEX",			/**< XNL_ATTR_CSR_INDEX*/
+	"CSR_COUNT",			/**< XNL_ATTR_CSR_COUNT*/
+	"QIDX",			        /**< XNL_ATTR_QIDX */
+	"NUM_Q",		        /**< XNL_ATTR_NUM_Q */
+	"QFLAG",		        /**< XNL_ATTR_QFLAG */
+	"CMPT_DESC_SZ",	        /**< XNL_ATTR_CMPT_DESC_SIZE */
+	"SW_DESC_SIZE",         /**< XNL_ATTR_SW_DESC_SIZE */
+	"QRINGSZ_IDX",	        /**< XNL_ATTR_QRNGSZ */
+	"C2H_BUFSZ_IDX",	    /**< XNL_ATTR_QBUFSZ */
+	"CMPT_TIMER_IDX",	    /**< XNL_ATTR_CMPT_TIMER_IDX */
 	"CMPT_CNTR_IDX",		/**< XNL_ATTR_CMPT_CNTR_IDX */
-	"CMPT_TRIG_MODE",	/**< XNL_ATTR_CMPT_TRIG_MODE */
-
-	"RANGE_START",		/**< XNL_ATTR_RANGE_START */
-	"RANGE_END",		/**< XNL_ATTR_RANGE_END */
-	"INTR_VECTOR_IDX", /**< XNL_ATTR_INTR_VECTOR_IDX */
-	"INTR_VECTOR_START_IDX", /**< XNL_ATTR_INTR_VECTOR_START_IDX */
-	"INTR_VECTOR_END_IDX", /**< XNL_ATTR_INTR_VECTOR_END_IDX */
+	"CMPT_TRIG_MODE",	    /**< XNL_ATTR_CMPT_TRIG_MODE */
+	"RANGE_START",		    /**< XNL_ATTR_RANGE_START */
+	"RANGE_END",		    /**< XNL_ATTR_RANGE_END */
+	"INTR_VECTOR_IDX",      /**< XNL_ATTR_INTR_VECTOR_IDX */
+	"INTR_VECTOR_START_IDX",/**< XNL_ATTR_INTR_VECTOR_START_IDX */
+	"INTR_VECTOR_END_IDX",  /**< XNL_ATTR_INTR_VECTOR_END_IDX */
 	"RSP_BUF_LEN",			/**< XNL_ATTR_RSP_BUF_LEN */
-	"GLOBAL_CSR",	/**< global csr data */
+	"GLOBAL_CSR",	        /**< global csr data */
+	"PIPE_GL_MAX",		    /**< max no. of gl for pipe */
+	"PIPE_FLOW_ID",         /**< pipe flow id */
+	"PIPE_SLR_ID",          /**< pipe slr id */
+	"PIPE_TDEST",           /**< pipe tdest */
+	"DEV_STM_BAR",	        /**< device STM bar number */
+	"Q_STATE",				/**< XNL_ATTR_Q_STATE*/
 #ifdef ERR_DEBUG
-	"QPARAM_ERR_INFO",
+	"QPARAM_ERR_INFO",      /**< queue param info */
 #endif
-
+	"ATTR_MAX",
 };
+
+
 
 /* commands, 0 ~ 0x7F */
 /**
@@ -245,6 +272,7 @@ enum xnl_op_t {
 	XNL_CMD_Q_DESC,		/**< dump descriptor information*/
 	XNL_CMD_Q_CMPT,		/**< dump writeback descriptor information*/
 	XNL_CMD_Q_RX_PKT,	/**< dump packet information*/
+	XNL_CMD_Q_CMPT_READ,	/**< read the cmpt data */
 #ifdef ERR_DEBUG
 	XNL_CMD_Q_ERR_INDUCE, /**< induce an error*/
 #endif
@@ -252,8 +280,9 @@ enum xnl_op_t {
 	XNL_CMD_INTR_RING_DUMP,	/**< dump interrupt ring information*/
 	XNL_CMD_Q_UDD,		/**< dump the user defined data */
 	XNL_CMD_GLOBAL_CSR,	/**< get all global csr register values */
-	XNL_CMD_VERSION,	/**< list RTL version and Vivado release ID */
-	XNL_CMD_MAX,			/**< max number of XNL commands*/
+	XNL_CMD_DEV_CAP,	/**< list h/w capabilities , hw and sw version */
+	XNL_CMD_GET_Q_STATE,	/**< get the queue state */
+	XNL_CMD_MAX,		/**< max number of XNL commands*/
 };
 
 /**
@@ -278,12 +307,19 @@ static const char *xnl_op_str[XNL_CMD_MAX] = {
 	"Q_DESC",	/** XNL_CMD_Q_DESC */
 	"Q_CMPT",	/** XNL_CMD_Q_CMPT */
 	"Q_RX_PKT",	/** XNL_CMD_Q_RX_PKT */
-
+	"Q_CMPT_READ",	/** XNL_CMD_Q_CMPT_READ */
 	"INTR_RING_DUMP", /** XNL_CMD_INTR_RING_DUMP */
 #ifdef ERR_DEBUG
 	"Q_ERR_INDUCE"  /** XNL_CMD_Q_ERR_INDUCE */
 #endif
 };
+
+enum qdma_queue_state {
+	QUEUE_DISABLED,
+	QUEUE_ENABLED,
+	QUEUE_ONLINE
+};
+
 
 /**
  * qdma_err_idx - Induce error

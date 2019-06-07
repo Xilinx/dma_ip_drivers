@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -57,19 +57,14 @@
 
 #define QDMA_IND_Q_PRG_OFF	(0x4)
 
-#define QDMA_CTXT_CMD_CLR	(0)
-#define QDMA_CTXT_CMD_WR	(1)
-#define QDMA_CTXT_CMD_RD	(2)
-#define QDMA_CTXT_CMD_INV	(3)
+#define QDMA_CNTXT_CMD_RD	(2)
 
-#define QDMA_CTXT_SEL_DESC_SW_C2H	(0)
-#define QDMA_CTXT_SEL_DESC_SW_H2C	(1)
-#define QDMA_CTXT_SEL_DESC_HW_C2H	(2)
-#define QDMA_CTXT_SEL_DESC_HW_H2C	(3)
-#define QDMA_CTXT_SEL_CR_C2H	(4)
-#define QDMA_CTXT_SEL_CR_H2C	(5)
-#define QDMA_CTXT_SEL_DESC_CMPT	(6)
-#define QDMA_CTXT_SEL_PFTCH	(7)
+#define QDMA_CNTXT_SEL_DESC_SW_C2H	(0)
+#define QDMA_CNTXT_SEL_DESC_SW_H2C	(1)
+#define QDMA_CNTXT_SEL_DESC_HW_C2H	(2)
+#define QDMA_CNTXT_SEL_DESC_HW_H2C	(3)
+#define QDMA_CNTXT_SEL_DESC_CMPT	(6)
+#define QDMA_CNTXT_SEL_PFTCH	(7)
 
 #define QID_SHIFT_B		(7)
 #define OP_CODE_SHIFT_B		(5)

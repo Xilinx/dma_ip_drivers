@@ -42,4 +42,7 @@
  *****************************************************************************/
 int xnl_respond_buffer(struct genl_info *info, char *buf, int buflen);
 
+int xlnx_nl_init(void);
+void  xlnx_nl_exit(void);
+
 #endif /* ifndef __QDMA_DRV_NL_H__ */

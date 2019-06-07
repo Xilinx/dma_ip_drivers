@@ -20,11 +20,20 @@
 
 #include "reg_cmd.h"
 #include "cmd_parse.h"
-#include "xdev_regs.h"
+#include "qdma_user_reg_dump.h"
 
 #define QDMA_CFG_BAR_SIZE 0xB400
 #define QDMA_USR_BAR_SIZE 0x100
 #define STM_BAR_SIZE	0x0200003C
+
+/* Macros for reading device capability */
+#define QDMA_GLBL2_MISC_CAP                       0x134
+#define     QDMA_GLBL2_MM_CMPT_EN_MASK            0x4
+#define QDMA_GLBL2_CHANNEL_MDMA                   0x118
+#define     QDMA_GLBL2_ST_C2H_MASK                0x10000
+#define     QDMA_GLBL2_ST_H2C_MASK                0x20000
+#define     QDMA_GLBL2_MM_C2H_MASK                0x100
+#define     QDMA_GLBL2_MM_H2C_MASK                0x1
 
 struct xdev_info {
 	unsigned char bus;
@@ -37,10 +46,10 @@ struct xdev_info {
 
 static struct xreg_info qdma_dmap_regs[] = {
 /* QDMA_TRQ_SEL_QUEUE_PF (0x6400) */
-	{"DMAP_SEL_INT_CIDX",				0x6400, 512, 0x10, 0, 0,},
-	{"DMAP_SEL_H2C_DSC_PIDX",			0x6404, 512, 0x10, 0, 0,},
-	{"DMAP_SEL_C2H_DSC_PIDX",			0x6408, 512, 0x10, 0, 0,},
-	{"DMAP_SEL_CMPT_CIDX",				0x640C, 512, 0x10, 0, 0,},
+	{"DMAP_SEL_INT_CIDX", 0x6400, 512, 0x10, 0, 0, QDMA_MM_ST_MODE},
+	{"DMAP_SEL_H2C_DSC_PIDX", 0x6404, 512, 0x10, 0, 0,  QDMA_MM_ST_MODE},
+	{"DMAP_SEL_C2H_DSC_PIDX", 0x6408, 512, 0x10, 0, 0, QDMA_MM_ST_MODE},
+	{"DMAP_SEL_CMPT_CIDX", 0x640C, 512, 0x10, 0, 0, QDMA_MM_ST_MODE},
 	{"", 0, 0, 0 }
 };
 
@@ -48,35 +57,35 @@ static struct xreg_info qdma_dmap_regs[] = {
  * INTERNAL: for debug testing only
  */
 static struct xreg_info stm_regs[] = {
-	{"H2C_DATA_0",					0x02000000, 0, 0, 0, 0,},
-	{"H2C_DATA_1",					0x02000004, 0, 0, 0, 0,},
-	{"H2C_DATA_2",					0x02000008, 0, 0, 0, 0,},
-	{"H2C_DATA_3",					0x0200000C, 0, 0, 0, 0,},
-	{"H2C_DATA_4",					0x02000010, 0, 0, 0, 0,},
-	{"IND_CTXT_CMD",				0x02000014, 0, 0, 0, 0,},
-	{"STM_REV",					0x02000018, 0, 0, 0, 0,},
-	{"CAM_CLR_STATUS",				0x0200001C, 0, 0, 0, 0,},
-	{"C2H_DATA8",					0x02000020, 0, 0, 0, 0,},
-	{"H2C_DATA_5",					0x02000024, 0, 0, 0, 0,},
-	{"STATUS",					0x0200002C, 0, 0, 0, 0,},
-	{"H2C_MODE",					0x02000030, 0, 0, 0, 0,},
-	{"H2C_STATUS",					0x02000034, 0, 0, 0, 0,},
-	{"C2H_MODE",					0x02000038, 0, 0, 0, 0,},
-	{"C2H_STATUS",					0x0200003C, 0, 0, 0, 0,},
-	{"H2C_PORT0_DEBUG0",                            0x02000040, 0, 0, 0, 0,},
-	{"H2C_PORT1_DEBUG0",                            0x02000044, 0, 0, 0, 0,},
-	{"H2C_PORT2_DEBUG0",                            0x02000048, 0, 0, 0, 0,},
-	{"C2H_PORT0_DEBUG0",                            0x02000050, 0, 0, 0, 0,},
-	{"C2H_PORT1_DEBUG0",                            0x02000054, 0, 0, 0, 0,},
-	{"C2H_PORT2_DEBUG0",                            0x02000058, 0, 0, 0, 0,},
-	{"H2C_DEBUG0",                                  0x02000060, 0, 0, 0, 0,},
-	{"H2C_DEBUG1",                                  0x02000064, 0, 0, 0, 0,},
-	{"AWERR",                                       0x02000068, 0, 0, 0, 0,},
-	{"ARERR",                                       0x0200006C, 0, 0, 0, 0,},
-	{"H2C_PORT0_DEBUG1",                            0x02000070, 0, 0, 0, 0,},
-	{"H2C_PORT1_DEBUG1",                            0x02000074, 0, 0, 0, 0,},
-	{"H2C_PORT2_DEBUG1",                            0x02000078, 0, 0, 0, 0,},
-	{"", 0, 0, 0 }
+	{"H2C_DATA_0", 0x02000000, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DATA_1", 0x02000004, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DATA_2", 0x02000008, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DATA_3", 0x0200000C, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DATA_4", 0x02000010, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"IND_CTXT_CMD", 0x02000014, 0, 0, 0, 0,QDMA_ST_MODE},
+	{"STM_REV", 0x02000018, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"CAM_CLR_STATUS", 0x0200001C, 0, 0, 0, 0,  QDMA_ST_MODE},
+	{"C2H_DATA8", 0x02000020, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DATA_5", 0x02000024, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"STATUS", 0x0200002C, 0, 0, 0, 0, QDMA_ST_MODE },
+	{"H2C_MODE", 0x02000030, 0, 0, 0, 0, QDMA_ST_MODE },
+	{"H2C_STATUS", 0x02000034, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"C2H_MODE", 0x02000038, 0, 0, 0, 0,QDMA_ST_MODE},
+	{"C2H_STATUS", 0x0200003C, 0, 0, 0, 0,  QDMA_ST_MODE},
+	{"H2C_PORT0_DEBUG0", 0x02000040, 0, 0, 0, 0,QDMA_ST_MODE},
+	{"H2C_PORT1_DEBUG0", 0x02000044, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_PORT2_DEBUG0", 0x02000048, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"C2H_PORT0_DEBUG0", 0x02000050, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"C2H_PORT1_DEBUG0", 0x02000054, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"C2H_PORT2_DEBUG0", 0x02000058, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DEBUG0", 0x02000060, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_DEBUG1", 0x02000064, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"AWERR", 0x02000068, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"ARERR", 0x0200006C, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_PORT0_DEBUG1", 0x02000070, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_PORT1_DEBUG1", 0x02000074, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"H2C_PORT2_DEBUG1", 0x02000078, 0, 0, 0, 0, QDMA_ST_MODE},
+	{"", 0, 0, 0, 0 }
 };
 
 
@@ -202,6 +211,82 @@ static void print_repeated_reg(uint32_t *bar, struct xreg_info *xreg,
 	}
 }
 
+static void dump_config_regs(uint32_t *bar, struct xreg_info *reg_list, struct xdev_info *xdev, struct xcmd_info *xcmd)
+{
+	struct xreg_info *xreg = reg_list;
+	int32_t rv = 0;
+	uint32_t val = 0;
+	struct xnl_cb cb;
+	int mm_en = 0, st_en = 0, mm_cmpt_en = 0, mailbox_en = 0;
+	unsigned int temp = 0;
+	unsigned char op;
+
+	/* Get the capabilities of the Device */
+	op = xcmd->op;
+	xcmd->op = XNL_CMD_DEV_CAP;
+	rv = xnl_connect(&cb, 0);
+	if (rv < 0)
+		return;
+
+	rv = xnl_send_cmd(&cb, xcmd);
+	if(rv != 0)
+		return;
+
+	xnl_close(&cb);
+
+	xcmd->op = op;
+	mm_en = xcmd->u.cap.mm_en;
+	mm_cmpt_en = xcmd->u.cap.mm_cmpt_en;
+	st_en = xcmd->u.cap.st_en;
+	mailbox_en = xcmd->u.cap.mailbox_en;
+
+	for (xreg = reg_list; strlen(xreg->name); xreg++) {
+
+		if ((GET_CAPABILITY_MASK(mm_en,	st_en, mm_cmpt_en,
+				mailbox_en) & xreg->mode) == 0)
+		    continue;
+
+		if (!xreg->len) {
+			if (xreg->repeat) {
+				if (xdev == NULL)
+					print_repeated_reg(bar, xreg, 0, xreg->repeat, NULL, NULL);
+				else
+					print_repeated_reg(NULL, xreg, 0, xreg->repeat, xdev, xcmd);
+			} else {
+				uint32_t addr = xreg->addr;
+				if (xdev == NULL) {
+					val = le32toh(bar[addr / 4]);
+				} else {
+					xcmd->u.reg.reg = addr;
+					rv = reg_read_mmap(xdev, xcmd->u.reg.bar, xcmd, &val);
+					if (rv < 0)
+						continue;
+				}
+				printf("[%#7x] %-47s %#-10x %u\n",
+					addr, xreg->name, val, val);
+			}
+		} else {
+			uint32_t addr = xreg->addr;
+			if (xdev == NULL) {
+				uint32_t val = le32toh(bar[addr / 4]);
+			} else {
+				xcmd->u.reg.reg = addr;
+				rv = reg_read_mmap(xdev, xcmd->u.reg.bar, xcmd, &val);
+				if (rv < 0)
+					continue;
+			}
+
+			uint32_t v = (val >> xreg->shift) &
+					((1 << xreg->len) - 1);
+
+			printf("    %*u:%u %-47s %#-10x %u\n",
+				xreg->shift < 10 ? 3 : 2,
+				xreg->shift + xreg->len - 1,
+				xreg->shift, xreg->name, v, v);
+		}
+	}
+}
+
 static void dump_regs(uint32_t *bar, struct xreg_info *reg_list, struct xdev_info *xdev, struct xcmd_info *xcmd)
 {
 	struct xreg_info *xreg = reg_list;
@@ -209,6 +294,7 @@ static void dump_regs(uint32_t *bar, struct xreg_info *reg_list, struct xdev_inf
 	int32_t rv = 0;
 
 	for (xreg = reg_list; strlen(xreg->name); xreg++) {
+
 		if (!xreg->len) {
 			if (xreg->repeat) {
 				if (xcmd == NULL)
@@ -262,11 +348,17 @@ static void reg_dump_mmap(struct xdev_info *xdev, unsigned char barno,
 	if (!bar) {
 		xcmd->op = XNL_CMD_REG_RD;
 		xcmd->u.reg.bar = barno;
-		dump_regs(NULL, reg_list, xdev, xcmd);
+		if (barno == xdev->config_bar)
+			dump_config_regs(NULL, reg_list, xdev, xcmd);
+		else
+			dump_regs(NULL, reg_list, xdev, xcmd);
 		return;
 	}
 
-	dump_regs(bar, reg_list, NULL, NULL);
+	if (barno == xdev->config_bar)
+		dump_config_regs(bar, reg_list, NULL, xcmd);
+	else
+		dump_regs(bar, reg_list, NULL, NULL);
 	munmap(bar, max);
 }
 
@@ -332,18 +424,23 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 			(1 << XNL_ATTR_PCI_FUNC) | (1 << XNL_ATTR_DEV_CFG_BAR) |
 			(1 << XNL_ATTR_DEV_USR_BAR);
 	unsigned int barno;
+	struct xnl_cb cb;
+	unsigned char op;
 	int32_t v;
 
-	if ((xcmd->attr_mask & mask) != mask) {
-		fprintf(stderr, "%s: device info missing, 0x%x/0x%x.\n",
-			__FUNCTION__, xcmd->attr_mask, mask);
+	rv = xnl_connect(&cb, xcmd->vf);
+	if (rv < 0)
 		return -EINVAL;
-	}
+
+	op = xcmd->op;
+	xcmd->op = XNL_CMD_DEV_INFO;
+	rv = xnl_send_cmd(&cb, xcmd);
+	xcmd->op = op;
 
 	memset(&xdev, 0, sizeof(struct xdev_info));
-	xdev.bus = xcmd->attrs[XNL_ATTR_PCI_BUS];
-	xdev.dev = xcmd->attrs[XNL_ATTR_PCI_DEV];
-	xdev.func = xcmd->attrs[XNL_ATTR_PCI_FUNC];
+	xdev.bus = (xcmd->if_bdf >> 12);
+	xdev.dev = ((xcmd->if_bdf >> 4) & 0x1F);
+	xdev.func = (xcmd->if_bdf & 0x07);
 	xdev.config_bar = xcmd->attrs[XNL_ATTR_DEV_CFG_BAR];
 	xdev.user_bar = xcmd->attrs[XNL_ATTR_DEV_USR_BAR];
 	xdev.stm_bar = xcmd->attrs[XNL_ATTR_DEV_STM_BAR];
@@ -397,5 +494,6 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 	default:
 		break;
 	}
+
 	return 0;
 }

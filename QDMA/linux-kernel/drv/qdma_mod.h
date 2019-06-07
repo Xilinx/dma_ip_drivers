@@ -26,12 +26,26 @@
  */
 #include <linux/types.h>
 #include <linux/pci.h>
-#include <linux/workqueue.h> 
+#include <linux/workqueue.h>
 #include <net/genetlink.h>
 
 #include "libqdma/libqdma_export.h"
-#include "libqdma/xdev.h"
 #include "cdev.h"
+
+
+/**
+ * enum qdma_drv_mod_param_type - Indicate the module parameter type
+ *
+ * QDMA PF/VF drivers takes module parameters mode and config bar is the same
+ * format, This enum is unsed to identify the parameter type
+ *
+ */
+enum qdma_drv_mod_param_type {
+	/** @DRV_MODE : Driver mode mod param */
+	DRV_MODE,
+	/** @CONFIG_BAR : Config Bar mod param */
+	CONFIG_BAR,
+};
 
 /**
  * @struct - xlnx_qdata
@@ -52,14 +66,13 @@ struct xlnx_nl_work_q_ctrl {
 
 struct xlnx_nl_work {
 	struct work_struct work;
-	struct genl_info nl_info;
 	struct xlnx_pci_dev *xpdev;
 	wait_queue_head_t wq;
-	spinlock_t lock;
 	unsigned int q_start_handled;
-	union {
-		struct xlnx_nl_work_q_ctrl qctrl;
-	};
+	unsigned int buflen;
+	char *buf;
+	struct xlnx_nl_work_q_ctrl qctrl;
+	int ret;
 };
 
 /**
@@ -75,9 +88,9 @@ struct xlnx_pci_dev {
 	spinlock_t cdev_lock;		/**< character device lock*/
 	unsigned int qmax;		/**< max number of queues for device*/
 	unsigned int idx;		/**< device index*/
-	void __iomem *user_bar_regs; 	/**< PCIe user bar */
+	void __iomem *user_bar_regs;	/**< PCIe user bar */
 	void __iomem *bypass_bar_regs;  /**< PCIe bypass bar */
-	struct xlnx_qdata qdata[0];	/**< queue data*/
+	struct xlnx_qdata *qdata;	/**< queue data*/
 };
 
 /*****************************************************************************/
@@ -170,11 +183,13 @@ int xpdev_nl_queue_start(struct xlnx_pci_dev *xpdev, void *nl_info, u8 is_qp,
  *
  * @param[in]	xpdev:		pointer to xlnx_pci_dev
  * @param[in]	reg_addr:	register address
+ * @param[out]	value:	pointer to hold the register value
  *
- * @return	value of the user bar register
+ * @return	0: success
+ * @return	<0: failure
  *****************************************************************************/
-unsigned int qdma_device_read_user_register(struct xlnx_pci_dev *xpdev,
-					unsigned int reg_addr);
+int qdma_device_read_user_register(struct xlnx_pci_dev *xpdev,
+		u32 reg_addr, u32 *value);
 
 /*****************************************************************************/
 /**
@@ -184,9 +199,11 @@ unsigned int qdma_device_read_user_register(struct xlnx_pci_dev *xpdev,
  * @param[in]	reg_addr:	register address
  * @param[in]	value:		register value to be written
  *
+ * @return	0: success
+ * @return	<0: failure
  *****************************************************************************/
-void qdma_device_write_user_register(struct xlnx_pci_dev *xpdev,
-					unsigned int reg_addr, u32 value);
+int qdma_device_write_user_register(struct xlnx_pci_dev *xpdev,
+		u32 reg_addr, u32 value);
 
 /*****************************************************************************/
 /**
@@ -194,11 +211,13 @@ void qdma_device_write_user_register(struct xlnx_pci_dev *xpdev,
  *
  * @param[in]	xpdev:		pointer to xlnx_pci_dev
  * @param[in]	reg_addr:	register address
+ * @param[out]	value:	pointer to hold the register value
  *
- * @return	value of the bypass bar register
+ * @return	0: success
+ * @return	<0: failure
  *****************************************************************************/
-unsigned int qdma_device_read_bypass_register(struct xlnx_pci_dev *xpdev,
-					unsigned int reg_addr);
+int qdma_device_read_bypass_register(struct xlnx_pci_dev *xpdev,
+		u32 reg_addr, u32 *value);
 
 /*****************************************************************************/
 /**
@@ -208,8 +227,10 @@ unsigned int qdma_device_read_bypass_register(struct xlnx_pci_dev *xpdev,
  * @param[in]	reg_addr:	register address
  * @param[in]	value:		register value to be written
  *
+ * @return	0: success
+ * @return	<0: failure
  *****************************************************************************/
-void qdma_device_write_bypass_register(struct xlnx_pci_dev *xpdev,
-					unsigned int reg_addr, u32 value);
+int qdma_device_write_bypass_register(struct xlnx_pci_dev *xpdev,
+		u32 reg_addr, u32 value);
 
 #endif /* ifndef __QDMA_MODULE_H__ */

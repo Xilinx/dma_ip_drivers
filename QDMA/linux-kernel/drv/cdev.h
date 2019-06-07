@@ -78,16 +78,17 @@ struct qdma_cdev {
 	/* flag to indicate if memcpy is required */
 	unsigned char no_memcpy;
 	/** call back function for open a device */
-	int (*fp_open_extra)(struct qdma_cdev *);
+	int (*fp_open_extra)(struct qdma_cdev *xcdev);
 	/** call back function for close a device */
-	int (*fp_close_extra)(struct qdma_cdev *);
+	int (*fp_close_extra)(struct qdma_cdev *xcdev);
 	/** call back function to handle ioctl message */
-	long (*fp_ioctl_extra)(struct qdma_cdev *, unsigned int, unsigned long);
+	long (*fp_ioctl_extra)(struct qdma_cdev *xcdev, unsigned int cmd,
+			unsigned long arg);
 	/** call back function to handle read write request*/
 	ssize_t (*fp_rw)(unsigned long dev_hndl, unsigned long qhndl,
-			struct qdma_request *);
+			struct qdma_request *req);
 	ssize_t (*fp_aiorw)(unsigned long dev_hndl, unsigned long qhndl,
-			unsigned long count, struct qdma_request **);
+			unsigned long count, struct qdma_request **reqv);
 	/** name of the character device*/
 	char name[0];
 };

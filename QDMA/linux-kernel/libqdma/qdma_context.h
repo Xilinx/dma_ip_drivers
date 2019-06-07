@@ -27,6 +27,95 @@
 #include "xdev.h"
 #include "qdma_mbox.h"
 
+#define CTXT_ENTRY_NAME_SZ        64
+
+struct qctxt_entry {
+	char name[CTXT_ENTRY_NAME_SZ];
+	u32 value;
+};
+
+enum qdma_q_cntxt {
+	QDMA_SW_CNTXT,
+	QDMA_HW_CNTXT,
+	QDMA_CMPT_CNTXT,
+	QDMA_PFETCH_CNTXT,
+	QDMA_CR_CNTXT,
+	QDMA_INTR_CNTXT
+};
+
+/*****************************************************************************/
+/**
+ * qdma_fill_sw_ctxt() - Filling up the sw_ctxt array
+ *
+ * @param[in]	sw_ctxt: pointer to software context structure
+ *
+ * @return	None
+ *****************************************************************************/
+void qdma_fill_sw_ctxt(struct qdma_descq_sw_ctxt *sw_ctxt, u8 ind_mode);
+
+/*****************************************************************************/
+/**
+ * qdma_fill_cmpt_ctxt() - Filling up the cmpt_ctxt array
+ *
+ * @param[in]	cmpt_ctxt: pointer to cmpt context structure
+ *
+ * @return	None
+ *****************************************************************************/
+void qdma_fill_cmpt_ctxt(struct qdma_descq_cmpt_ctxt *cmpt_ctxt, u8 ind_mode);
+
+/*****************************************************************************/
+/**
+ * qdma_fill_hw_ctxt() - Filling up the hw_ctxt array
+ *
+ * @param[in]	hw_ctxt: pointer to hardware context structure
+ *
+ * @return	None
+ *****************************************************************************/
+void qdma_fill_hw_ctxt(struct qdma_descq_hw_ctxt *hw_ctxt);
+
+/*****************************************************************************/
+/**
+ * qdma_fill_credit_ctxt() - Filling up the credit_ctxt array
+ *
+ * @param[in]	cr_ctxt: pointer to credit context structure
+ *
+ * @return	None
+ *****************************************************************************/
+void qdma_fill_credit_ctxt(struct qdma_descq_credit_ctxt *cr_ctxt);
+
+/*****************************************************************************/
+/**
+ * qdma_fill_pfetch_ctxt() - Filling up the c2h_pftch_ctxt array
+ *
+ * @param[in]	pfetch_ctxt: pointer to prefetch context structure
+ *
+ * @return	None
+ *****************************************************************************/
+void qdma_fill_pfetch_ctxt(struct qdma_descq_prefetch_ctxt *pfetch_ctxt);
+
+/*****************************************************************************/
+/**
+ * qdma_fill_intr_ctxt() - Filling up the ind_intr_ctxt array
+ *
+ * @param[in]	intr_ctxt: pointer to interrupt context structure
+ *
+ * @return	None
+ *****************************************************************************/
+void qdma_fill_intr_ctxt(struct qdma_indirect_intr_ctxt *intr_ctxt);
+
+/*****************************************************************************/
+/**
+ * parse_ctxt_to_buf() - parses queue context to human readable format
+ *
+ * @param[in]	cntxt: context to parse. An enum value
+ * @param[out]	buf: buffer to write parsed context
+ * @param[in]	buflen: buffer len
+ *
+ * @return	>0: size read
+ * @return	<0: error
+ *****************************************************************************/
+int qdma_parse_ctxt_to_buf(enum qdma_q_cntxt cntxt, char *buf, int buflen);
+
 /*****************************************************************************/
 /**
  * qdma_intr_context_setup() - handler to set the qdma interrupt context
@@ -94,14 +183,15 @@ int qdma_descq_stm_clear(struct qdma_descq *descq);
  * @param[in]	xdev:	pointer to xdev
  * @param[in]	qid_hw:	hw qidx
  * @param[in]	st:		indicated whether the mm mode or st mode
- * @param[in]	c2h:	indicates whether the h2c or c2h direction
+ * @param[in]	c2h:		indicates whether the h2c or c2h direction
+ * @param[in]	mm_cmpt_en:	indicates whether cmpt is enabled for mm or not
  * @param[in]	clr:	flag to indicate whether to clear the context or not
  *
  * @return	0: success
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-				bool st, bool c2h, bool clr);
+				bool st, bool c2h, bool mm_cmpt_en, bool clr);
 
 /*****************************************************************************/
 /**
@@ -110,15 +200,16 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
  * @param[in]	xdev:	pointer to xdev
  * @param[in]	qid_hw:	hw qidx
  * @param[in]	st:		indicated whether the mm mode or st mode
- * @param[in]	c2h:	indicates whether the h2c or c2h direction
+ * @param[in]	c2h:		indicates whether the h2c or c2h direction
+ * @param[in]	mm_cmpt_en:	indicates whether cmpt is enabled for mm or not
  * @param[out]	ctxt:	pointer to context data
  *
  * @return	0: success
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-				bool st, bool c2h,
-				struct hw_descq_context *ctxt);
+				bool st, bool c2h, bool mm_cmpt_en,
+				struct qdma_descq_context *ctxt);
 
 /*****************************************************************************/
 /**
@@ -133,8 +224,7 @@ int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
  * @return	<0: failure
  *****************************************************************************/
 int qdma_intr_context_read(struct xlnx_dma_dev *xdev,
-				int ring_index, unsigned int ctxt_sz,
-				u32 *context);
+	int ring_index, struct qdma_indirect_intr_ctxt *ctxt);
 
 #ifndef __QDMA_VF__
 /*****************************************************************************/
@@ -144,15 +234,16 @@ int qdma_intr_context_read(struct xlnx_dma_dev *xdev,
  * @param[in]	xdev:	pointer to xdev
  * @param[in]	qid_hw:	hw qidx
  * @param[in]	st:		indicated whether the mm mode or st mode
- * @param[in]	c2h:	indicates whether the h2c or c2h direction
+ * @param[in]	c2h:		indicates whether the h2c or c2h direction
+ * @param[in]	mm_cmpt_en:	indicates whether cmpt is enabled for mm or not*
  * @param[out]	ctxt:	pointer to context data
  *
  * @return	0: success
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_context_program(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-				bool st, bool c2h,
-				struct hw_descq_context *ctxt);
+				bool st, bool c2h, bool mm_cmpt_en,
+				struct qdma_descq_context *ctxt);
 
 
 /*****************************************************************************/

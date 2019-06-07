@@ -36,7 +36,7 @@
 #include <linux/wait.h>
 #include <linux/kthread.h>
 #include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
+#if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 #include <linux/uio.h>
 #endif
 
@@ -132,7 +132,7 @@ static int qdma_req_completed(struct qdma_request *req,
 	if (caio->cmpl_count == caio->req_count) {
 		res = caio->cmpl_count - caio->err_cnt;
 		res2 = caio->res2;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+#if KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
 #else
 		aio_complete(caio->iocb, res, res2);
@@ -205,11 +205,11 @@ static long cdev_gen_ioctl(struct file *file, unsigned int cmd,
 	struct qdma_cdev *xcdev = (struct qdma_cdev *)file->private_data;
 
 	switch (cmd) {
-		case QDMA_CDEV_IOCTL_NO_MEMCPY:
-			get_user(xcdev->no_memcpy, (unsigned char *)arg);
-			return 0;
-		default:
-			break;
+	case QDMA_CDEV_IOCTL_NO_MEMCPY:
+		get_user(xcdev->no_memcpy, (unsigned char *)arg);
+		return 0;
+	default:
+		break;
 	}
 	if (xcdev->fp_ioctl_extra)
 		return xcdev->fp_ioctl_extra(xcdev, cmd, arg);
@@ -442,9 +442,8 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		caio->qiocb[i].buf = io[i].iov_base;
 		caio->qiocb[i].len = io[i].iov_len;
 		rv = map_user_buf_to_sgl(&(caio->qiocb[i]), true);
-		if (rv < 0) {
+		if (rv < 0)
 			break;
-		}
 
 		caio->reqv[i]->write = 1;
 		caio->reqv[i]->sgcnt = caio->qiocb[i].pages_nr;
@@ -503,7 +502,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		return -ENOMEM;
 	}
 	memset(caio, 0, sizeof(struct cdev_async_io));
-	caio->qiocb = kzalloc (count * (sizeof(struct qdma_io_cb) +
+	caio->qiocb = kzalloc(count * (sizeof(struct qdma_io_cb) +
 			sizeof(struct qdma_request *)), GFP_KERNEL);
 	if (!caio->qiocb) {
 		pr_err("failed to allocate qiocb");
@@ -516,9 +515,8 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		caio->qiocb[i].buf = io[i].iov_base;
 		caio->qiocb[i].len = io[i].iov_len;
 		rv = map_user_buf_to_sgl(&(caio->qiocb[i]), false);
-		if (rv < 0) {
+		if (rv < 0)
 			break;
-		}
 
 		caio->reqv[i]->write = 0;
 		caio->reqv[i]->sgcnt = caio->qiocb[i].pages_nr;
@@ -549,7 +547,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 	return rv;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
+#if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
 	return cdev_aio_write(iocb, io->iov, io->nr_segs, iocb->ki_pos);
@@ -566,13 +564,13 @@ static const struct file_operations cdev_gen_fops = {
 	.open = cdev_gen_open,
 	.release = cdev_gen_close,
 	.write = cdev_gen_write,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
+#if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 	.write_iter = cdev_write_iter,
 #else
 	.aio_write = cdev_aio_write,
 #endif
 	.read = cdev_gen_read,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
+#if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 	.read_iter = cdev_read_iter,
 #else
 	.aio_read = cdev_aio_read,
@@ -723,7 +721,8 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 	}
 
 	/* Check if same bus id device is added in global list
-	 * If found then assign same major number */
+	 * If found then assign same major number
+	 */
 	mutex_lock(&xlnx_phy_dev_mutex);
 	list_for_each_entry_safe(phy_dev, tmp, &xlnx_phy_dev_list, list_head) {
 		if (phy_dev->device_bus == xcb->xpdev->pdev->bus->number) {
@@ -746,7 +745,7 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 	new_phy_dev = kzalloc(sizeof(struct xlnx_phy_dev), GFP_KERNEL);
 	if (!new_phy_dev) {
 		pr_err("unable to allocate xlnx_dev.\n");
-		return-ENOMEM;
+		return -ENOMEM;
 	}
 	new_phy_dev->major = xcb->cdev_major;
 	new_phy_dev->device_bus = xcb->xpdev->pdev->bus->number;

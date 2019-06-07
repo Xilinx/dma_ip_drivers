@@ -28,6 +28,7 @@ struct xcmd_info {
 		struct xcmd_intr intr;
 		struct xcmd_reg reg;
 		struct xcmd_q_parm qparm;
+		struct xcmd_dev_cap cap;
 	} u;
 	uint32_t if_bdf;
 	uint32_t attr_mask;

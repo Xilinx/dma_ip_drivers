@@ -34,6 +34,7 @@
 #include "qdma_intr.h"
 #include "thread.h"
 #include "version.h"
+#include "qdma_resource_mgmt.h"
 
 /*****************************************************************************/
 /**
@@ -47,53 +48,31 @@
  * @return	QDMA_OPERATION_SUCCESSFUL on success
  * @return	< 0 on failure
  *****************************************************************************/
-int qdma_set_qmax(unsigned long dev_hndl, u32 qsets_max, bool forced)
+int qdma_set_qmax(unsigned long dev_hndl, int qbase, u32 qsets_max)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev;
-	int rv = -1;
+	int rv = 0;
 
 	/**
-	 *  If xdev is NULL or qdev is NULL, return error as Invalid parameter
+	 *  If xdev is NULL, return error as Invalid parameter
 	 */
 	if (!xdev)
 		return -EINVAL;
 
-	qdev = xdev_2_qdev(xdev);
 
-	if (!qdev)
+	/* update the device with requested qmax and qbase */
+	rv = qdma_dev_update(xdev->conf.pdev->bus->number,
+			     xdev->func_id, qsets_max, &qbase);
+	if (rv < 0)
 		return -EINVAL;
-
-	/** If qdev->init_qrange is set,
-	 *  it indicates that FMAP programming is done
-	 *	That means at least one queue is added in the system.
-	 *  qmax is not allowed to change after FMAP programming is done.
-	 *  Hence, If qdev->init_qrange is set, return error as qmax
-	 *  cannot be changed now.
-	 */
-	if (qdev->init_qrange) {
-		pr_err("xdev 0x%p, FMAP prog done, can not modify qmax [%d]\n",
-						xdev,
-						qdev->qmax);
-		return rv;
-	}
-
-	/** If the input qsets_max is same as the current xdev->conf.qsets_max,
-	 *	return, as there is nothing to be changed
-	 */
-	if ((qsets_max == xdev->conf.qsets_max) && !forced) {
-		pr_err("xdev 0x%p, Current qsets_max is same as [%d].Nothing to be done\n",
-				xdev, xdev->conf.qsets_max);
-		return rv;
-	}
-
-
-	/** FMAP programming is not done yet
-	 *  remove the already created qdev and recreate it using the
-	 *  newly configured size
-	 */
 	qdma_device_cleanup(xdev);
+
+	rv = qdma_dev_qinfo_get(xdev->conf.pdev->bus->number,
+			     xdev->func_id, &qbase, &qsets_max);
+	if (rv < 0)
+		return -EINVAL;
 	xdev->conf.qsets_max = qsets_max;
+	xdev->conf.qsets_base = qbase;
 	rv = qdma_device_init(xdev);
 	if (rv < 0) {
 		pr_warn("qdma_init failed %d.\n", rv);
@@ -140,18 +119,12 @@ unsigned int qdma_get_qmax(unsigned long dev_hndl)
 int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev;
 	int rv = -1;
 
 	/**
-	 *  If xdev is NULL or qdev is NULL, return error as Invalid parameter
+	 *  If xdev is NULL, return error as Invalid parameter
 	 */
 	if (!xdev)
-		return -EINVAL;
-
-	qdev = xdev_2_qdev(xdev);
-
-	if (!qdev)
 		return -EINVAL;
 
 	/** If the input intr_rngsz is same as the
@@ -173,24 +146,30 @@ int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz)
 		return rv;
 	}
 
-	/** If qdev->init_qrange is set,
-	 *  it indicates that FMAP programming is done
-	 *	That means at least one queue is added in the system.
-	 *  intr_rngsz is not allowed to change after FMAP programming is done.
-	 *  Hence, If qdev->init_qrange is set, return error as intr_rngsz
-	 *  cannot be changed now.
+	/** If qdma_get_active_queue_count() > 0,
+	 *  intr_rngsz is not allowed to change.
 	 */
-	if (qdev->init_qrange) {
+	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify intr ring size [%d]\n",
 				xdev,
 				xdev->conf.intr_rngsz);
 		return rv;
 	}
 
+	/** intr_rngsz > QDMA_INDIRECT_INTR_RING_SIZE_32KB,
+	 *  is invalid.
+	 */
+	if (intr_rngsz > QDMA_INDIRECT_INTR_RING_SIZE_32KB) {
+		pr_err("Invalid intr ring size\n");
+		return rv;
+	}
+
 	/**
 	 *  FMAP programming is not done yet, update the intr_rngsz
 	 */
+	qdma_device_interrupt_cleanup(xdev);
 	xdev->conf.intr_rngsz = intr_rngsz;
+	qdma_device_interrupt_setup(xdev);
 
 	return QDMA_OPERATION_SUCCESSFUL;
 }
@@ -233,6 +212,7 @@ unsigned int qdma_get_intr_rngsz(unsigned long dev_hndl)
 	return xdev->conf.intr_rngsz;
 }
 #ifndef __QDMA_VF__
+#ifdef QDMA_CSR_REG_UPDATE
 /*****************************************************************************/
 /**
  * qdma_set_buf_sz() - Handler function to set the buf_sz value
@@ -246,25 +226,19 @@ unsigned int qdma_get_intr_rngsz(unsigned long dev_hndl)
 int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	int rv = -1;
 
 	/**
-	 *  If xdev is NULL or qdev is NULL,
-	 *  return error as Invalid parameter
+	 *  If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev || !qdev)
+	if (!xdev)
 		return -EINVAL;
 
 
-	/** If qdev->init_qrange is set,
-	 *  it indicates that FMAP programming is done
-	 *	That means at least one queue is added in the system.
-	 *  intr_rngsz is not allowed to change after FMAP programming is done.
-	 *  Hence, If qdev->init_qrange is set, return error as buf_sz
-	 *  cannot be changed now.
+	/** If qdma_get_active_queue_count() > 0,
+	 *  buf_sz is not allowed to change.
 	 */
-	if (qdev->init_qrange) {
+	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify buf size\n",
 				xdev);
 		return rv;
@@ -273,10 +247,18 @@ int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	/**
 	 * Write the given buf sizes to the registers
 	 */
-	rv = qdma_csr_write_bufsz(xdev, buf_sz);
+	rv = qdma_set_global_buffer_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			buf_sz);
+	if (rv < 0)
+		return -EINVAL;
+
+	qdma_csr_read(xdev, &xdev->csr_info);
+
+
 
 	return rv;
 }
+#endif
 
 /*****************************************************************************/
 /**
@@ -298,11 +280,14 @@ unsigned int qdma_get_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	if (!xdev)
 		return -EINVAL;
 
-	qdma_csr_read_bufsz(xdev, buf_sz);
+	if (qdma_get_global_buffer_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			buf_sz))
+		return -EINVAL;
 
 	return QDMA_OPERATION_SUCCESSFUL;
 }
 
+#ifdef QDMA_CSR_REG_UPDATE
 /*****************************************************************************/
 /**
  * qdma_set_glbl_rng_sz() - Handler function to set the buf_sz value
@@ -316,37 +301,37 @@ unsigned int qdma_get_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 int qdma_set_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	int rv = -1;
 
 	/**
-	 *  If xdev is NULL or qdev is NULL,
-	 *  return error as Invalid parameter
+	 *  If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev || !qdev)
+	if (!xdev)
 		return -EINVAL;
 
 
-	/** If qdev->init_qrange is set,
-	 *  it indicates that FMAP programming is done
-	 *	That means at least one queue is added in the system.
-	 *  intr_rngsz is not allowed to change after FMAP programming is done.
-	 *  Hence, If qdev->init_qrange is set, return error as glbl_rng_sz
-	 *  cannot be changed now.
+	/** If qdma_get_active_queue_count() > 0,
+	 *  glbl_rng_sz is not allowed to change.
 	 */
-	if (qdev->init_qrange) {
+	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify glbl_rng_sz\n",
 				xdev);
 		return rv;
 	}
 
 	/**
-	 * Write the given buf sizes to the registers
+	 * Write the given ring sizes to the registers
 	 */
-	rv = qdma_csr_write_rngsz(xdev, glbl_rng_sz);
+	rv = qdma_set_ring_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			glbl_rng_sz);
+	if (rv < 0)
+		return -EINVAL;
+
+	qdma_csr_read(xdev, &xdev->csr_info);
 
 	return rv;
 }
+#endif
 
 /*****************************************************************************/
 /**
@@ -368,11 +353,14 @@ unsigned int qdma_get_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 	if (!xdev)
 		return -EINVAL;
 
-	qdma_csr_read_rngsz(xdev, glbl_rng_sz);
+	if (qdma_get_ring_sizes(xdev,  0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			glbl_rng_sz))
+		return -EINVAL;
 
 	return QDMA_OPERATION_SUCCESSFUL;
 }
 
+#ifdef QDMA_CSR_REG_UPDATE
 /*****************************************************************************/
 /**
  * qdma_set_timer_cnt() - Handler function to set the buf_sz value
@@ -386,29 +374,34 @@ unsigned int qdma_get_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	int rv = -1;
 
-	if (!xdev || !qdev)
+	if (!xdev)
 		return -EINVAL;
 
-   /**  If qdev->init_qrange is set,
-    *  it indicates that FMAP programming is done
-    *      That meansat least one queue is added in the system.
-    *  qmax is not allowed to change after FMAP programming is done.
-    *  Hence, If qdev->init_qrange is set, return error as qmax
-    *  cannot be changed now.
-    */
-	if (qdev->init_qrange) {
+	/** If qdma_get_active_queue_count() > 0,
+	 *  tmr_cnt is not allowed to change.
+	 */
+	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
 		pr_err("xdev 0x%p, FMAP prog done, can not modify timer count\n",
 						xdev);
 		return rv;
 	}
 
-	rv = qdma_csr_write_timer_cnt(xdev, tmr_cnt);
+
+	rv = qdma_set_global_timer_count(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			tmr_cnt);
+	if (rv < 0) {
+		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
+			return -EPERM;
+		else
+			return -EINVAL;
+	}
+	qdma_csr_read(xdev, &xdev->csr_info);
 
 	return rv;
 }
+#endif
 
 /*****************************************************************************/
 /**
@@ -423,6 +416,7 @@ int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 unsigned int qdma_get_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	int rv = -1;
 
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
@@ -430,11 +424,19 @@ unsigned int qdma_get_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 	if (!xdev)
 		return -EINVAL;
 
-	qdma_csr_read_timer_cnt(xdev, tmr_cnt);
+	rv = qdma_get_global_timer_count(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			tmr_cnt);
+	if (rv < 0) {
+		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
+			return -EPERM;
+		else
+			return -EINVAL;
+	}
 
 	return QDMA_OPERATION_SUCCESSFUL;
 }
 
+#ifdef QDMA_CSR_REG_UPDATE
 /*****************************************************************************/
 /**
  * qdma_set_cnt_thresh() - Handler function to set the counter threshold value
@@ -448,30 +450,33 @@ unsigned int qdma_get_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 int qdma_set_cnt_thresh(unsigned long dev_hndl, unsigned int *cnt_th)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	int rv = -1;
 
-	if (!xdev || !qdev)
+	if (!xdev)
 		return -EINVAL;
 
-   /** If qdev->init_qrange is set,
-    *  it indicates that FMAP programming is done
-    *  That means at least one queue is added in the system.
-    *  csr count threshold is not allowed to change after FMAP
-    *  programming is done.
-    *  Hence, If qdev->init_qrange is set, return error as csr count threshold
-    *  cannot be changed now.
-    */
-	if (qdev->init_qrange) {
+	/** If qdma_get_active_queue_count() > 0,
+	 *  cnt_th is not allowed to change.
+	 */
+	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
 		pr_err("xdev 0x%p, FMAP prog done, can not modify threshold count\n",
 						xdev);
 		return rv;
 	}
 
-	rv = qdma_csr_write_cnt_thresh(xdev, cnt_th);
+	rv = qdma_set_global_counter_threshold(xdev, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th);
+	if (rv < 0) {
+		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
+			return -EPERM;
+		else
+			return -EINVAL;
+	}
+	qdma_csr_read(xdev, &xdev->csr_info);
 
 	return rv;
 }
+#endif
 
 /*****************************************************************************/
 /**
@@ -486,6 +491,7 @@ int qdma_set_cnt_thresh(unsigned long dev_hndl, unsigned int *cnt_th)
 unsigned int qdma_get_cnt_thresh(unsigned long dev_hndl, u32 *cnt_th)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	int rv = -1;
 
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
@@ -493,11 +499,19 @@ unsigned int qdma_get_cnt_thresh(unsigned long dev_hndl, u32 *cnt_th)
 	if (!xdev)
 		return -EINVAL;
 
-	qdma_csr_read_cnt_thresh(xdev, cnt_th);
+	rv = qdma_get_global_counter_threshold(xdev, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th);
+	if (rv < 0) {
+		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
+			return -EPERM;
+		else
+			return -EINVAL;
+	}
 
 	return QDMA_OPERATION_SUCCESSFUL;
 }
 
+#ifdef QDMA_CSR_REG_UPDATE
 /*****************************************************************************/
 /**
  * qdma_set_cmpl_status_acc() -  Handler function to set the cmpl_status_acc
@@ -512,8 +526,7 @@ unsigned int qdma_get_cnt_thresh(unsigned long dev_hndl, u32 *cnt_th)
 int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
-	unsigned int reg;
+	int rv = 0;
 
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
@@ -521,7 +534,10 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 	if (!xdev)
 		return -EINVAL;
 
-	if (qdev->init_qrange) {
+	/** If qdma_get_active_queue_count() > 0,
+	 *  cmpl_status_acc is not allowed to change.
+	 */
+	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify cmpt acc\n",
 				xdev);
 		return -EINVAL;
@@ -529,13 +545,18 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 	/**
 	 * Write the given cmpl_status_acc value to the register
 	 */
-	reg = __read_reg(xdev, QDMA_REG_GLBL_DSC_CFG);
-	reg &= ~QDMA_REG_GLBL_DSC_CFG_CMPL_STATUS_ACC_MASK;
-	reg |= cmpl_status_acc;
-	__write_reg(xdev, QDMA_REG_GLBL_DSC_CFG, reg);
+	rv = qdma_set_global_writeback_interval(xdev, cmpl_status_acc);
+	if (rv < 0) {
+		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
+			return -EPERM;
+		else
+			return -EINVAL;
+	}
+	qdma_csr_read(xdev, &xdev->csr_info);
 
 	return QDMA_OPERATION_SUCCESSFUL;
 }
+#endif
 
 /*****************************************************************************/
 /**
@@ -550,10 +571,11 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
  * @return	<0 on failure
  *
  *****************************************************************************/
-unsigned int qdma_get_cmpl_status_acc(unsigned long dev_hndl)
+unsigned int qdma_get_wb_intvl(unsigned long dev_hndl)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	unsigned int cs_acc;
+	unsigned int wb_intvl;
+	int rv = -1;
 
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
@@ -564,9 +586,14 @@ unsigned int qdma_get_cmpl_status_acc(unsigned long dev_hndl)
 	/**
 	 * Read the current cmpl_status_acc value from the register and return
 	 */
-	cs_acc = __read_reg(xdev, QDMA_REG_GLBL_DSC_CFG) &
-			QDMA_REG_GLBL_DSC_CFG_CMPL_STATUS_ACC_MASK;
+	rv = qdma_get_global_writeback_interval(xdev, &wb_intvl);
+	if (rv < 0) {
+		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
+			return -EPERM;
+		else
+			return -EINVAL;
+	}
 
-	return cs_acc;
+	return wb_intvl;
 }
 #endif

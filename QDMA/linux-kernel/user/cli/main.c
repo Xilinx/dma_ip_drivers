@@ -10,11 +10,25 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include "nl_user.h"
 #include "cmd_parse.h"
 #include "reg_cmd.h"
 
+static void dump_dev_info(struct xcmd_info *xcmd)
+{
+	printf("%s", xcmd->u.cap.version_str);
+	printf("=============Hardware Capabilities============\n\n");
+	printf("Number of PFs supported                : %d\n", xcmd->u.cap.num_pfs);
+	printf("Total number of queues supported       : %d\n", xcmd->u.cap.num_qs);
+	printf("MM channels                            : %d\n", xcmd->u.cap.mm_channel_max);
+	printf("FLR Present                            : %s\n", xcmd->u.cap.flr_present ? "yes":"no");
+	printf("ST enabled                             : %s\n",	xcmd->u.cap.st_en ? "yes":"no");
+	printf("MM enabled                             : %s\n", xcmd->u.cap.mm_en ? "yes":"no");
+	printf("Mailbox enabled                        : %s\n", xcmd->u.cap.mailbox_en ? "yes":"no");
+	printf("MM completion enabled                  : %s\n\n", xcmd->u.cap.mm_cmpt_en ? "yes":"no");
+}
 int main(int argc, char *argv[])
 {
 	struct xnl_cb cb;
@@ -50,25 +64,29 @@ int main(int argc, char *argv[])
 		xnl_close(&cb);
 
 		goto close;
-	}
-
-	/* for all other command, query the target device info first */
-	rv = xnl_connect(&cb, xcmd.vf);
-	if (rv < 0)
-		goto close;
-
- 	op = xcmd.op;
-	xcmd.op = XNL_CMD_DEV_INFO;
-	rv = xnl_send_cmd(&cb, &xcmd);
-	xcmd.op = op;
-	if (rv < 0)
-		goto close;
-
-	if ((xcmd.op == XNL_CMD_REG_DUMP) || (xcmd.op == XNL_CMD_REG_RD) ||
-	    (xcmd.op == XNL_CMD_REG_WRT))
+	} else if ((xcmd.op == XNL_CMD_REG_DUMP) ||
+			(xcmd.op == XNL_CMD_REG_RD) ||
+			(xcmd.op == XNL_CMD_REG_WRT)) {
 		rv = proc_reg_cmd(&xcmd);
-	else
+		return rv;
+	} else {
+		/* for all other command, query the target device info first */
+		rv = xnl_connect(&cb, xcmd.vf);
+		if (rv < 0)
+			goto close;
+
+		op = xcmd.op;
+		xcmd.op = XNL_CMD_DEV_INFO;
 		rv = xnl_send_cmd(&cb, &xcmd);
+		xcmd.op = op;
+		if (rv < 0)
+			goto close;
+		else
+			rv = xnl_send_cmd(&cb, &xcmd);
+
+		if (xcmd.op == XNL_CMD_DEV_CAP)
+			dump_dev_info(&xcmd);
+	}
 
 close:
 	xnl_close(&cb);

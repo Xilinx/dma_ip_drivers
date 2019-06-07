@@ -326,7 +326,8 @@ static int recv_nl_msg(struct xnl_hdr *hdr, struct xcmd_info *xcmd)
 {
 	unsigned int op = hdr->g.cmd;
 	unsigned int usr_bar;
-
+	unsigned char *p = (unsigned char *)(hdr + 1);
+	struct nlattr *na = (struct nlattr *)p;
 	recv_attrs(hdr, xcmd);
 
 	switch(op) {
@@ -358,7 +359,22 @@ static int recv_nl_msg(struct xnl_hdr *hdr, struct xcmd_info *xcmd)
 		break;
 	case XNL_CMD_DEV_STAT_CLEAR:
 		break;
-	case XNL_CMD_VERSION:
+	case XNL_CMD_DEV_CAP:
+		xcmd->u.cap.mailbox_en = xcmd->attrs[XNL_ATTR_DEV_MAILBOX_ENABLE];
+		xcmd->u.cap.mm_channel_max = xcmd->attrs[XNL_ATTR_DEV_MM_CHANNEL_MAX];
+		xcmd->u.cap.num_pfs = xcmd->attrs[XNL_ATTR_DEV_NUM_PFS];
+		xcmd->u.cap.mailbox_en = xcmd->attrs[XNL_ATTR_DEV_MAILBOX_ENABLE];
+		xcmd->u.cap.mm_channel_max = xcmd->attrs[XNL_ATTR_DEV_MM_CHANNEL_MAX];
+		xcmd->u.cap.num_pfs = xcmd->attrs[XNL_ATTR_DEV_NUM_PFS];
+		xcmd->u.cap.num_qs = xcmd->attrs[XNL_ATTR_DEV_NUMQS];
+		xcmd->u.cap.flr_present = xcmd->attrs[XNL_ATTR_DEV_FLR_PRESENT];
+		xcmd->u.cap.mm_en = xcmd->attrs[XNL_ATTR_DEV_MM_ENABLE];
+		xcmd->u.cap.mm_cmpt_en =
+				xcmd->attrs[XNL_ATTR_DEV_MM_CMPT_ENABLE];
+		xcmd->u.cap.st_en = xcmd->attrs[XNL_ATTR_DEV_ST_ENABLE];
+		if (na->nla_type == XNL_ATTR_VERSION_INFO) {
+			strncpy(xcmd->u.cap.version_str, (char *)(na + 1), VERSION_INFO_STR_LENGTH);
+		}
 		break;
 	case XNL_CMD_Q_LIST:
 		break;
@@ -427,33 +443,38 @@ static int get_cmd_resp_buf_len(struct xcmd_info *xcmd)
 	unsigned int row_len = 50;
 
 	switch (xcmd->op) {
-	        case XNL_CMD_Q_DESC:
-	        	row_len *= 2;
-	        case XNL_CMD_Q_CMPT:
-	        	buf_len += ((xcmd->u.qparm.range_end -
-	        			xcmd->u.qparm.range_start)*row_len);
-	        	break;
-	        case XNL_CMD_INTR_RING_DUMP:
-	        	buf_len += ((xcmd->u.intr.end_idx -
-					     xcmd->u.intr.start_idx)*row_len);
-	        	break;
-	        case XNL_CMD_DEV_LIST:
-	        case XNL_CMD_Q_START:
-	        case XNL_CMD_Q_STOP:
-	        case XNL_CMD_Q_DEL:
-	        	return buf_len;
-	        case XNL_CMD_Q_LIST:
-	        case XNL_CMD_Q_DUMP:
-	        	break;
-	        default:
-	        	buf_len = XNL_RESP_BUFLEN_MIN;
-	        	break;
+		case XNL_CMD_Q_DESC:
+        	row_len *= 2;
+        case XNL_CMD_Q_CMPT:
+        	buf_len += ((xcmd->u.qparm.range_end -
+        			xcmd->u.qparm.range_start)*row_len);
+        	break;
+        case XNL_CMD_INTR_RING_DUMP:
+        	buf_len += ((xcmd->u.intr.end_idx -
+				     xcmd->u.intr.start_idx)*row_len);
+        	break;
+        case XNL_CMD_DEV_LIST:
+        case XNL_CMD_DEV_INFO:
+        case XNL_CMD_DEV_CAP:
+        case XNL_CMD_Q_START:
+        case XNL_CMD_Q_STOP:
+        case XNL_CMD_Q_DEL:
+        	return buf_len;
+		case XNL_CMD_Q_ADD:
+        case XNL_CMD_Q_LIST:
+        case XNL_CMD_Q_DUMP:
+        case XNL_CMD_Q_CMPT_READ:
+        	break;
+        default:
+        	buf_len = XNL_RESP_BUFLEN_MIN;
+        	return buf_len;
 	}
 	if ((xcmd->u.qparm.flags & XNL_F_QDIR_BOTH) == XNL_F_QDIR_BOTH)
 		buf_len *= 2;
-	if (xcmd->u.qparm.flags & XNL_F_QDIR_BOTH)
-		buf_len *= xcmd->u.qparm.num_q;
-
+	if(xcmd->u.qparm.num_q > 1)
+			buf_len *= xcmd->u.qparm.num_q;
+	if(buf_len > MAX_KMALLOC_SIZE)
+		buf_len = MAX_KMALLOC_SIZE;
 	return buf_len;
 }
 
@@ -471,7 +492,6 @@ int xnl_send_cmd(struct xnl_cb *cb, struct xcmd_info *xcmd)
 	printf("%s: op %s, 0x%x, ifname %s.\n", __FUNCTION__,
 		xnl_op_str[xcmd->op], xcmd->op, xcmd->ifname);
 #endif
-
 	msg = xnl_msg_alloc(dlen);
 	if (!msg) {
 		fprintf(stderr, "%s: OOM, %s, op %s,0x%x.\n", __FUNCTION__,
@@ -507,6 +527,7 @@ int xnl_send_cmd(struct xnl_cb *cb, struct xcmd_info *xcmd)
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_QIDX, xcmd->u.qparm.idx);
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_Q, xcmd->u.qparm.num_q);
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_QFLAG, xcmd->u.qparm.flags);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_RSP_BUF_LEN, dlen);
 		break;
         case XNL_CMD_Q_DESC:
         case XNL_CMD_Q_CMPT:
@@ -524,6 +545,12 @@ int xnl_send_cmd(struct xnl_cb *cb, struct xcmd_info *xcmd)
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_Q, xcmd->u.qparm.num_q);
 		/* hard coded to C2H */
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_QFLAG, XNL_F_QDIR_C2H);
+		break;
+        case XNL_CMD_Q_CMPT_READ:
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_QIDX, xcmd->u.qparm.idx);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_QFLAG, xcmd->u.qparm.flags);
+		/*xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_ENTRIES,
+					xcmd->u.qparm.num_entries);*/
 		break;
         case XNL_CMD_INTR_RING_DUMP:
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_INTR_VECTOR_IDX,

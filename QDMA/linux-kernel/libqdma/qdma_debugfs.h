@@ -28,7 +28,6 @@
 #include <linux/slab.h>
 
 #define DBGFS_DBG_FNAME_SZ  (64)
-#define DBGFS_CTXT_ENTRY_NAME_SZ  (64)
 #define QDMA_DEV_NAME_SZ	(64)
 
 /*****************************************************************************/

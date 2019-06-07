@@ -127,13 +127,6 @@ int intr_ring_setup(struct xlnx_dma_dev *xdev);
 
 /*****************************************************************************/
 /**
- * intr_legacy_init() - legacy interrupt init
- *
- *****************************************************************************/
-void intr_legacy_init(void);
-
-/*****************************************************************************/
-/**
  * intr_legacy_setup() - setup the legacy interrupt handler
  *
  * @param[in]	descq:	descq on which the interrupt needs to be setup
@@ -170,11 +163,10 @@ void intr_work(struct work_struct *work);
  * qdma_err_intr_setup() - set up the error interrupt
  *
  * @param[in]	xdev:		pointer to xdev
- * @param[in]	rearm:		flag to control the error interrupt arming
  *
  * @return	none
  *****************************************************************************/
-void qdma_err_intr_setup(struct xlnx_dma_dev *xdev, u8 rearm);
+int qdma_err_intr_setup(struct xlnx_dma_dev *xdev);
 
 /*****************************************************************************/
 /**

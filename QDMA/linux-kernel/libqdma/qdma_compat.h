@@ -33,7 +33,7 @@
  * if linux kernel version is < 3.19.0
  * then define the dma_rmb and dma_wmb
  */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 19, 0)
+#if KERNEL_VERSION(3, 19, 0) > LINUX_VERSION_CODE
 
 #ifndef dma_rmb
 #define dma_rmb		rmb
@@ -45,29 +45,30 @@
 
 #endif
 
-/* use simple wait queue (swaitq) with newer kernels */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+/* use simple wait queue (swaitq) with kernels > 4.6.0 but < 4.19.0  */
+#if ((KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE) && \
+		(KERNEL_VERSION(4, 19, 0) >= LINUX_VERSION_CODE))
 #include <linux/swait.h>
 
-#define qdma_wait_queue			struct swait_queue_head
-#define qdma_waitq_init			init_swait_queue_head
-#define qdma_waitq_wakeup		swake_up
-#define qdma_waitq_wait_event		swait_event_interruptible
-#define qdma_waitq_wait_event_timeout	swait_event_interruptible_timeout
+#define qdma_wait_queue                 struct swait_queue_head
+#define qdma_waitq_init                 init_swait_queue_head
+#define qdma_waitq_wakeup               swake_up
+#define qdma_waitq_wait_event           swait_event_interruptible
+#define qdma_waitq_wait_event_timeout   swait_event_interruptible_timeout
 
 #else
 #include <linux/wait.h>
 
-#define qdma_wait_queue			wait_queue_head_t
-#define qdma_waitq_init			init_waitqueue_head
-#define qdma_waitq_wakeup		wake_up_interruptible
-#define qdma_waitq_wait_event		wait_event_interruptible
-#define qdma_waitq_wait_event_timeout	wait_event_interruptible_timeout
+#define qdma_wait_queue                 wait_queue_head_t
+#define qdma_waitq_init                 init_waitqueue_head
+#define qdma_waitq_wakeup               wake_up_interruptible
+#define qdma_waitq_wait_event           wait_event_interruptible
+#define qdma_waitq_wait_event_timeout   wait_event_interruptible_timeout
 
-#endif	/* swaitq */
+#endif  /* swaitq */
 
 /* timer */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+#if KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE
 #define qdma_timer_setup(timer, fp_handler, data) \
 		timer_setup(timer, fp_handler, 0)
 

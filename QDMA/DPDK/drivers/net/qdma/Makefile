@@ -1,6 +1,6 @@
 #   BSD LICENSE
 #
-#   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+#   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -46,10 +46,11 @@ LIB = librte_pmd_qdma.a
 # versioning export map
 EXPORT_MAP := rte_pmd_qdma_version.map
 
-CFLAGS += -O3 -DDMA_BRAM_SIZE=$(BRAM_SIZE)
+CFLAGS += -O3 -DDMA_BRAM_SIZE=$(BRAM_SIZE) -DMBOX_INTR
 #CFLAGS += -g
 CFLAGS += $(WERROR_FLAGS)
-
+CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/qdma_access/
+CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/
 ifeq ($(TEST_64B_DESC_BYPASS),1)
   CFLAGS += -DTEST_64B_DESC_BYPASS
 endif
@@ -68,11 +69,19 @@ SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_devops.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_common.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_rxtx.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_xdebug.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_access.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_list.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_resource_mgmt.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_mbox_protocol.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_mbox.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_platform.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += rte_pmd_qdma.c
+
 
 #
 ## Export include files
 #
-SYMLINK-y-include += qdma_export.h
+SYMLINK-y-include += rte_pmd_qdma.h
 
 
 include $(RTE_SDK)/mk/rte.lib.mk

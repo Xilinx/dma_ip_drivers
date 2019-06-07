@@ -37,7 +37,7 @@ struct qdma_descq;
  * 1: queue processing thread
  * 2: queue completion handler thread
  *
- * @param[in] num_threads - number of threads to be created 
+ * @param[in] num_threads - number of threads to be created
  *
  * @return	0: success
  * @return	<0: failure

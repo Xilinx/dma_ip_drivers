@@ -27,8 +27,8 @@
 
 function print_help() {
 	echo ""
-	echo "Usage : $0 <bdf> <qid_start> <num_qs> <desc_bypass_en> <pftch_en> <pfetch_bypass_en>"
-	echo "Ex : $0 81000 0 4 1 1 1"
+	echo "Usage : $0 <bdf> <qid_start> <num_qs> <desc_bypass_en> <pftch_en> <pfetch_bypass_en> <flr_on>"
+	echo "Ex : $0 06000 0 4 1 1 1 1"
 	echo "<bdf> : PF Bus device function in bbddf format ex:06000"
 	echo ""
 	echo "<qid_start> : qid start"
@@ -44,6 +44,10 @@ function print_help() {
 	echo ""
 	echo "<pftch_bypass_en> : Enable prefetch bypass"
 	echo "           Default - 0 "
+	echo ""
+	echo "<flr_on> : Apply Function Level Reset"
+	echo "           Default - 0 "
+	echo ""
 	echo ""
     echo ""
     exit 1
@@ -61,6 +65,7 @@ num_qs=4
 desc_byp=0
 pftch=0
 pftch_byp=0
+flr_on=0
 
 if [ ! -z $3 ]; then
 	num_qs=$3
@@ -77,6 +82,9 @@ fi
 if [ ! -z $6 ]; then #if arg6 is there pfetch byp enable
 	pftch_byp=$6
 fi
+if [ ! -z $6 ]; then #if arg7 is there FLR enable
+	flr_on=$7
+fi
 
 echo "$pf $qid_start $num_qs $desc_byp $pftch $pftch_byp"
 size=1024
@@ -86,7 +94,7 @@ declare -a bypass_mode_lst=(NO_BYPASS_MODE DESC_BYPASS_MODE CACHE_BYPASS_MODE SI
 
 
 function get_dev () {
-	pf_list="$(dmactl dev list | grep qdma)"
+	pf_list="$(dmactl dev list | grep qdma | grep -v qdmavf)"
 	echo "$pf_list"
 	while read -r line; do
 		IFS=$'\t ,~' read -r -a array <<< "$line"	
@@ -97,6 +105,17 @@ function get_dev () {
 		qbase_array+=("${array[5]}")
  	done <<< "$pf_list"
 
+}
+
+function set_flr() { 
+	echo "Applying function level reset"
+	for pf_bdf in ${bdf_array[@]}; do
+		pci_bus=${pf_bdf:0:2}
+		pci_device=${pf_bdf:2:2}
+		pci_func=${pf_bdf:4:1}
+		echo "echo 1 > /sys/bus/pci/devices/0000\:${pci_bus}\:${pci_device}.${pci_func}/reset"
+		echo 1 > /sys/bus/pci/devices/0000\:${pci_bus}\:${pci_device}.${pci_func}/reset
+	done
 }
 
 function set_bypass_mode() {
@@ -444,6 +463,9 @@ echo "QDMA Test on All PFs Starts" >> "run_pf.log"
 echo "###############################################################" >> "run_pf.log"
 
 get_dev
+if [ $flr_on -ne 0 ]; then
+	set_flr
+fi
 run_mm_h2c_c2h 
 run_st_h2c
 run_st_c2h

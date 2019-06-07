@@ -1,39 +1,39 @@
 /*-
- *   BSD LICENSE
+ * BSD LICENSE
  *
- *   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
  *
- *   Redistribution and use in source and binary forms, with or without
- *   modification, are permitted provided that the following conditions
- *   are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in
- *       the documentation and/or other materials provided with the
- *       distribution.
- *     * Neither the name of the copyright holder nor the names of its
- *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of the copyright holder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
- *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <rte_mbuf.h>
 #include <rte_cycles.h>
 #include "qdma.h"
-#include "qdma_regs.h"
+#include "qdma_access.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -72,9 +72,10 @@ int dma_wb_monitor(void *xq, uint8_t dir, uint16_t expected_count)
 			PMD_DRV_LOG(DEBUG, "poll wait on wb-count:%d and "
 					"expected-count:%d\n",
 					wb_status->cidx, expected_count);
+			rte_delay_us(2);
 			i++;
 		}
-		PMD_DRV_LOG(ERR, "DMA Engine write-back monitor "
+		PMD_DRV_LOG(DEBUG, "DMA Engine write-back monitor "
 				"timeout error occurred\n");
 		return -1;
 	}
@@ -88,8 +89,9 @@ int dma_wb_monitor(void *xq, uint8_t dir, uint16_t expected_count)
 	 */
 	while (i < WB_TIMEOUT) {
 		if (mode) {
-			wb_tail = (rxq->rx_cmpt_tail + expected_count) %
-				(rxq->nb_rx_cmpt_desc - 1);
+			wb_tail =
+			(rxq->cmpt_cidx_info.wrb_cidx + expected_count) %
+			(rxq->nb_rx_cmpt_desc - 1);
 			if (wb_tail == wb_status->pidx) {
 				PMD_DRV_LOG(DEBUG, "ST: Poll cmpt count matches"
 						" to the expected count :%d",
@@ -110,6 +112,7 @@ int dma_wb_monitor(void *xq, uint8_t dir, uint16_t expected_count)
 					"and expected-count:%d\n",
 					wb_status->cidx, expected_count);
 		}
+		rte_delay_us(2);
 		i++;
 	}
 	return -1;
@@ -133,19 +136,22 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 	uint16_t mbuf_index = 0;
 	uint16_t pkt_len[QDMA_MAX_BURST_SIZE];
 	uint16_t rx_buff_size;
-	uint16_t cmpt_pidx;
+	uint16_t cmpt_pidx, c2h_pidx;
 	uint16_t pending_desc;
+	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
 #endif
 
-	id = rxq->rx_tail; /* Descriptor index */
+	if (unlikely(rxq->err))
+		return 0;
+
 	PMD_DRV_LOG(DEBUG, "recv start on rx queue-id :%d, on "
 			"tail index:%d number of pkts %d",
 			rxq->queue_id, rxq->rx_tail, nb_pkts);
 
 	wb_status = rxq->wb_status;
-	rx_cmpt_tail = rxq->rx_cmpt_tail;
+	rx_cmpt_tail = rxq->cmpt_cidx_info.wrb_cidx;
 	rx_buff_size = rxq->rx_buff_size;
 
 #ifdef TEST_64B_DESC_BYPASS
@@ -195,6 +201,14 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 						      rxq->cmpt_desc_len));
 		pkt_length = cmpt_ring->length;
 
+		if (unlikely(cmpt_ring->err || cmpt_ring->data_frmt)) {
+			PMD_DRV_LOG(ERR, "Error detected on CMPT ring at index %d, "
+					 "len = %d, queue_id = %d\n",
+					 rx_cmpt_tail, cmpt_ring->length,
+					 rxq->queue_id);
+			rxq->err = 1;
+			return 0;
+		}
 		if (unlikely(!cmpt_ring->desc_used))
 			pkt_length = 0;
 		if (unlikely(rxq->dump_immediate_data)) {
@@ -238,10 +252,10 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 		count++;
 	}
 
-	rte_wmb();
-	rxq->rx_cmpt_tail = rx_cmpt_tail;
 	// Update the CPMT CIDX
-	*rxq->rx_cidx = rxq->rx_cmpt_tail;
+	rxq->cmpt_cidx_info.wrb_cidx = rx_cmpt_tail;
+	qdma_queue_cmpt_cidx_update(rxq->dev, qdma_dev->is_vf,
+		rxq->queue_id, &rxq->cmpt_cidx_info);
 
 	if (rxq->status != RTE_ETH_QUEUE_STATE_STARTED) {
 		PMD_DRV_LOG(DEBUG, "%s(): %d: rxq->status = %d\n",
@@ -251,6 +265,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 
 	count = 0;
 	mbuf_index = 0;
+	id = rxq->rx_tail;
 	while (count < nb_pkts) {
 		pkt_length = pkt_len[count];
 
@@ -298,11 +313,12 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 	}
 
 	rxq->rx_tail = id;
+	c2h_pidx = rxq->q_pidx_info.pidx;
 
-	pending_desc = rxq->rx_tail - rxq->c2h_pidx;
-	if (rxq->rx_tail < rxq->c2h_pidx)
-		pending_desc = rxq->nb_rx_desc - 1 + rxq->rx_tail -
-				rxq->c2h_pidx;
+	pending_desc = rxq->rx_tail - c2h_pidx - 1;
+	if (rxq->rx_tail < (c2h_pidx + 1))
+		pending_desc = rxq->nb_rx_desc - 2 + rxq->rx_tail -
+				c2h_pidx;
 
 	/* Batch the PIDX updates, this minimizes overhead on
 	 * descriptor engine
@@ -312,12 +328,16 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 		/* allocate new buffer */
 		if (rte_mempool_get_bulk(rxq->mb_pool, (void *)tmp_sw_ring,
 						pending_desc) != 0){
-			PMD_DRV_LOG(ERR, "%s(): %d: No MBUFS\n",
-					__func__, __LINE__);
+			PMD_DRV_LOG(ERR, "%s(): %d: No MBUFS, queue id = %d,"
+			"mbuf_avail_count = %d,"
+			" mbuf_in_use_count = %d, pending_desc = %d\n",
+			__func__, __LINE__, rxq->queue_id,
+			rte_mempool_avail_count(rxq->mb_pool),
+			rte_mempool_in_use_count(rxq->mb_pool), pending_desc);
 			return count_pkts;
 		}
 
-		id = rxq->c2h_pidx;
+		id = c2h_pidx;
 		for (mbuf_index = 0; mbuf_index < pending_desc; mbuf_index++) {
 			mb = tmp_sw_ring[mbuf_index];
 			/* low 32-bits of phys addr must be 4KB aligned... */
@@ -344,12 +364,9 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 		 */
 		rte_wmb();
 
-		if (rxq->rx_tail == 0)
-			*rxq->rx_pidx = (rxq->nb_rx_desc - 2);
-		else
-			*rxq->rx_pidx = (rxq->rx_tail - 1);
-
-		rxq->c2h_pidx = rxq->rx_tail;
+		rxq->q_pidx_info.pidx = id;
+		qdma_queue_pidx_update(rxq->dev, qdma_dev->is_vf,
+			rxq->queue_id, 1, &rxq->q_pidx_info);
 	}
 
 #ifdef DUMP_MEMPOOL_USAGE_STATS
@@ -377,6 +394,7 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 	uint64_t phys_addr;
 	uint32_t len;
 	int ret;
+	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
 #endif
@@ -384,10 +402,10 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 	if (rxq->status != RTE_ETH_QUEUE_STATE_STARTED)
 		return 0;
 
-	id = rxq->rx_tail; /* Descriptor index */
+	id = rxq->q_pidx_info.pidx; /* Descriptor index */
 
 	PMD_DRV_LOG(DEBUG, "recv start on rx queue-id :%d, on tail index:%d\n",
-			rxq->queue_id, rxq->rx_tail);
+			rxq->queue_id, id);
 
 #ifdef TEST_64B_DESC_BYPASS
 	if (unlikely(rxq->en_bypass &&
@@ -408,8 +426,13 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 	for (count = 0; count < nb_pkts; count++) {
 		/* allocate new buffer */
 		if (rte_mempool_get(rxq->mb_pool, (void *)&mb) != 0) {
-			rte_panic("No MBUFS\n");
-			break;
+			PMD_DRV_LOG(ERR, "%s(): %d: No MBUFS, queue id = %d,"
+			"mbuf_avail_count = %d,"
+			" mbuf_in_use_count = %d\n",
+			__func__, __LINE__, rxq->queue_id,
+			rte_mempool_avail_count(rxq->mb_pool),
+			rte_mempool_in_use_count(rxq->mb_pool));
+			return 0;
 		}
 
 		/* low 32-bits of phys addr must be 4KB aligned... */
@@ -423,13 +446,13 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 
 		desc->src_addr = rxq->ep_addr;
 		desc->dst_addr = phys_addr;
-		desc->dv = QDMA_DESC_VALID;
+		desc->dv = 1;
 		desc->sop = 0;
 		desc->eop = 0;
 		if ((count + 1) == nb_pkts)
-			desc->eop = QDMA_DESC_EOP;
+			desc->eop = 1;
 		if (count == 0)
-			desc->sop = QDMA_DESC_SOP;
+			desc->sop = 1;
 
 		desc->len = (int)rxq->rx_buff_size;
 		len = (int)rxq->rx_buff_size;
@@ -447,8 +470,7 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 		rx_pkts[count] = mb;
 
 		rxq->ep_addr = (rxq->ep_addr + len) % DMA_BRAM_SIZE;
-		rxq->rx_tail = (rxq->rx_tail + 1) % (rxq->nb_rx_desc - 1);
-		id  = rxq->rx_tail;
+		id = (id + 1) % (rxq->nb_rx_desc - 1);
 	}
 
 	/* Make sure writes to the C2H descriptors are synchronized
@@ -457,13 +479,19 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 	rte_wmb();
 
 	/* update pidx pointer for MM-mode*/
-	if (count > 0)
-		*rxq->rx_pidx = id;
+	if (count > 0) {
+		rxq->q_pidx_info.pidx = id;
+		qdma_queue_pidx_update(rxq->dev, qdma_dev->is_vf,
+			rxq->queue_id, 1, &rxq->q_pidx_info);
+	}
 
 	ret = dma_wb_monitor(rxq, DMA_FROM_DEVICE, id);
 	if (ret) {//Error
 		PMD_DRV_LOG(ERR, "DMA Engine write-back monitor "
-				"timeout error occurred\n");
+				"timeout error occurred, wb-count:%d "
+				"and expected-count:%d\n",
+				rxq->wb_status->cidx, id);
+
 		return 0;
 	}
 	return count;
@@ -507,8 +535,10 @@ static void reclaim_tx_mbuf(struct qdma_tx_queue *txq, uint16_t cidx)
 		fl_desc += (txq->nb_tx_desc - 1);
 
 	for (count = 0; count < fl_desc; count++) {
-		rte_pktmbuf_free(txq->sw_ring[id]);
-		txq->sw_ring[id] = NULL;
+		if (txq->sw_ring[id]) {
+			rte_pktmbuf_free(txq->sw_ring[id]);
+			txq->sw_ring[id] = NULL;
+		}
 		id++;
 		if (unlikely(id >= (txq->nb_tx_desc - 1)))
 			id -= (txq->nb_tx_desc - 1);
@@ -524,8 +554,9 @@ static uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
 	uint8_t *tx_ring_st_bypass = NULL;
 	int ofd = -1, ret = 0;
 	char fln[50];
+	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
 
-	id = txq->tx_tail;
+	id = txq->q_pidx_info.pidx;
 
 	for (count = 0; count < nb_pkts; count++) {
 		tx_ring_st_bypass = (uint8_t *)txq->tx_ring;
@@ -564,8 +595,9 @@ static uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
 	 */
 	rte_wmb();
 
-	txq->tx_tail = id;
-	*txq->tx_pidx = txq->tx_tail;
+	txq->q_pidx_info.pidx = id;
+	qdma_queue_pidx_update(txq->dev, qdma_dev->is_vf,
+		txq->queue_id, 0, &txq->q_pidx_info);
 
 	PMD_DRV_LOG(DEBUG, " xmit completed with count:%d\n", count);
 
@@ -583,7 +615,9 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	int avail, in_use;
 	uint16_t pkt_len;
 	uint16_t cidx = 0;
+	int nsegs, gl;
 	struct qdma_h2c_desc *tx_ring_st = NULL;
+	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
 
@@ -593,7 +627,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	}
 #endif
 
-	id = txq->tx_tail;
+	id = txq->q_pidx_info.pidx;
 	cidx = txq->wb_status->cidx;
 	PMD_DRV_LOG(DEBUG, "Xmit start on tx queue-id:%d, tail index:%d\n",
 			txq->queue_id, id);
@@ -601,7 +635,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	/* Free transmitted mbufs back to pool */
 	reclaim_tx_mbuf(txq, cidx);
 
-	in_use = (int)txq->tx_tail - cidx;
+	in_use = (int)id - cidx;
 	if (in_use < 0)
 		in_use += (txq->nb_tx_desc - 1);
 
@@ -615,45 +649,49 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 		PMD_DRV_LOG(DEBUG, "Tx queue full, in_use = %d", in_use);
 		return 0;
 	}
-
-	if (nb_pkts > avail)
-		nb_pkts = avail;
-
 	tx_ring_st = (struct qdma_h2c_desc *)txq->tx_ring;
 	for (count = 0; count < nb_pkts; count++) {
-		desc = (struct qdma_h2c_desc *)&tx_ring_st[id];
-
 		mb = tx_pkts[count];
-		txq->sw_ring[id] = mb;
-
-		phys_addr = mb->buf_physaddr + mb->data_off;
-
-		if (rte_pktmbuf_pkt_len(mb) !=
-				rte_pktmbuf_data_len(mb)) {
-			PMD_DRV_LOG(ERR, "Scatter buffers are not "
-					"supported");
+		nsegs = mb->nb_segs;
+		if (nsegs > avail) {
+			/* Number of segments in current mbuf are greater
+			 * than number of descriptors available,
+			 * hence update PIDX and return
+			 */
 			break;
 		}
-		desc->len = rte_pktmbuf_data_len(mb);
-		pkt_len = rte_pktmbuf_data_len(mb);
+		avail -= nsegs;
+		txq->sw_ring[id] = mb;
+		pkt_len = rte_pktmbuf_pkt_len(mb);
+		gl = nsegs;
 
-		desc->pld_len = pkt_len;
-		PMD_DRV_LOG(DEBUG, "xmit number of bytes:%d, count:%d ",
-				pkt_len, count);
-		desc->src_addr = phys_addr;
-		desc->flags = 0;
-		desc->cdh_flags = 0;
-		if (count == 0)
-			desc->flags |= S_H2C_DESC_F_SOP;
-		if ((count + 1) == nb_pkts)
-			desc->flags |= S_H2C_DESC_F_EOP;
+		while (nsegs && mb) {
+			phys_addr = mb->buf_physaddr + mb->data_off;
 
+			desc = (struct qdma_h2c_desc *)&tx_ring_st[id];
+			desc->len = rte_pktmbuf_data_len(mb);
+			desc->pld_len = desc->len;
+			desc->src_addr = phys_addr;
+			desc->flags = 0;
+			if ((count == 0) && gl)
+				// 1st desc of 1st packet
+				desc->flags |= S_H2C_DESC_F_SOP;
+			else if (((count + 1) == nb_pkts) && (nsegs == 1))
+				// last desc of last packet
+				desc->flags |= S_H2C_DESC_F_EOP;
+			desc->cdh_flags = 0;
+			--nsegs;
+			gl = 0;
+			mb = mb->next;
+			id++;
+			if (unlikely(id >= (txq->nb_tx_desc - 1)))
+				id -= (txq->nb_tx_desc - 1);
+		}
+
+		PMD_DRV_LOG(DEBUG, "xmit number of bytes:%d",
+				pkt_len);
 		txq->stats.pkts++;
 		txq->stats.bytes += pkt_len;
-
-		id++;
-		if (unlikely(id >= (txq->nb_tx_desc - 1)))
-			id -= (txq->nb_tx_desc - 1);
 	}
 
 	/* Make sure writes to the H2C descriptors are synchronized
@@ -662,14 +700,16 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	rte_wmb();
 
 	rte_spinlock_lock(&txq->pidx_update_lock);
-	txq->tx_tail = id;
+	txq->q_pidx_info.pidx = id;
 	txq->tx_desc_pend += count;
 
 	/* Send PIDX update only if pending desc is more than threshold
 	 * Saves frequent Hardware transactions
 	 */
 	if (txq->tx_desc_pend >= MIN_TX_PIDX_UPDATE_THRESHOLD) {
-		*txq->tx_pidx = txq->tx_tail;
+		qdma_queue_pidx_update(txq->dev, qdma_dev->is_vf,
+			txq->queue_id, 0, &txq->q_pidx_info);
+
 		txq->tx_desc_pend = 0;
 	}
 	rte_spinlock_unlock(&txq->pidx_update_lock);
@@ -689,11 +729,14 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	int avail, in_use;
 	int ret;
 	struct qdma_mm_desc *tx_ring = (struct qdma_mm_desc *)txq->tx_ring;
+	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+	uint16_t cidx = 0;
+
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
 #endif
 
-	id = txq->tx_tail;
+	id = txq->q_pidx_info.pidx;
 	PMD_DRV_LOG(DEBUG, "Xmit start on tx queue-id:%d, tail index:%d\n",
 			txq->queue_id, id);
 
@@ -705,7 +748,10 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 		return 0;
 	}
 #endif
-	in_use = txq->tx_tail - txq->wb_status->cidx;
+	cidx = txq->wb_status->cidx;
+	/* Free transmitted mbufs back to pool */
+	reclaim_tx_mbuf(txq, cidx);
+	in_use = (int)id - cidx;
 	if (in_use < 0)
 		in_use += (txq->nb_tx_desc - 1);
 
@@ -725,22 +771,18 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 
 	// Set the xmit descriptors and control bits
 	for (count = 0; count < nb_pkts; count++) {
-		/* Free the n/w buffer associated with the descriptor 'id'
-		 * to mpool
-		 */
-		rte_pktmbuf_free(txq->sw_ring[id]);
 
 		/* see if there is something to receive */
 		desc = (struct qdma_mm_desc *)&tx_ring[id];
 
 		/* Set the descriptor control bits */
-		desc->dv = QDMA_DESC_VALID;
+		desc->dv = 1;
 		desc->sop = 0;
 		desc->eop = 0;
 		if ((count + 1) == nb_pkts)
-			desc->eop = QDMA_DESC_EOP;
+			desc->eop = 1;
 		if (count == 0)
-			desc->sop = QDMA_DESC_SOP;
+			desc->sop = 1;
 
 		mb = tx_pkts[count];
 		txq->sw_ring[id] = mb;
@@ -749,10 +791,6 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 
 		desc->len = rte_pktmbuf_data_len(mb);
 
-		/*if (desc->len > (DMA_BRAM_SIZE / txq->num_queues))
-		 * desc->len = DMA_BRAM_SIZE / txq->num_queues;
-		 */
-
 		PMD_DRV_LOG(DEBUG, "xmit number of bytes:%d, count:%d ",
 				desc->len, count);
 		desc->src_addr = phys_addr;
@@ -760,8 +798,7 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 		desc->dst_addr = txq->ep_addr;
 
 		txq->ep_addr = (txq->ep_addr + desc->len) % DMA_BRAM_SIZE;
-		txq->tx_tail = (txq->tx_tail + 1) % (txq->nb_tx_desc - 1);
-		id = txq->tx_tail;
+		id = (id + 1) % (txq->nb_tx_desc - 1);
 	}
 
 	/* Make sure writes to the H2C descriptors are synchronized before
@@ -770,13 +807,19 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	rte_wmb();
 
 	/* update pidx pointer */
-	if (count > 0)
-		*txq->tx_pidx = id;
+	if (count > 0) {
+		txq->q_pidx_info.pidx = id;
+		PMD_DRV_LOG(INFO, "tx PIDX=%d", txq->q_pidx_info.pidx);
+		qdma_queue_pidx_update(txq->dev, qdma_dev->is_vf,
+			txq->queue_id, 0, &txq->q_pidx_info);
+	}
 
 	ret = dma_wb_monitor(txq, DMA_TO_DEVICE, id);
 	if (ret) {
 		PMD_DRV_LOG(ERR, "DMA Engine write-back monitor "
-				"timeout error occurred\n");
+				"timeout error occurred, wb-count:%d "
+				"and expected-count:%d\n",
+				txq->wb_status->cidx, id);
 		return 0;
 	}
 

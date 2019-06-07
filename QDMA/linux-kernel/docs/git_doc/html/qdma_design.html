@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA Linux Driver Design Flow &mdash; QDMA Linux Driver 2018.3 documentation</title>
+  <title>QDMA Linux Driver Design Flow &mdash; QDMA Linux Driver 2019.1 documentation</title>
   
 
   
@@ -33,10 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2018.3 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
         <link rel="up" title="Developers Guide" href="devguide.html"/>
-        <link rel="next" title="QDMA Linux Driver UseCases" href="qdma_usecases.html"/>
-        <link rel="prev" title="Libqdma APIs" href="libqdma_apis.html"/> 
+        <link rel="next" title="QDMA Queue Resource Management" href="qdma_resmgmt.html"/>
+        <link rel="prev" title="QDMA Linux Driver Exported APIs" href="qdma_linux_export.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                2018.3
+                2019.1
               </div>
             
           
@@ -90,27 +90,34 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="libqdma_apis.html">Libqdma APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export.html">QDMA Linux Driver Exported APIs</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">QDMA Linux Driver Design Flow</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#driver-initialization">Driver Initialization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#driver-de-initialization">Driver De-Initialization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-driver-data-structures">QDMA Driver Data Structures</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#device-initialization">Device Initialization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#device-de-initialization">Device De-Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-de-initialization">Device De-Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#resource-management">Resource Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mailbox-communication">Mailbox Communication</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#configure-the-queues-for-pf-vf">Configure the Queues for PF/VF</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#add-a-queue">Add a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#start-a-queue">Start a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#stop-a-queue">Stop a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#delete-a-queue">Delete a Queue</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#read-write-from-a-queue">Read/Write from a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#read-write-from-a-queue">Read/Write from a Queue</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qdma-debug-support">QDMA Debug Support</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
 </ul>
 
@@ -168,11 +175,11 @@ It is a loadable kernel module which has three main components</p>
 <li><dl class="first docutils">
 <dt>libqdma</dt>
 <dd><p class="first"><em>libqdma</em> is a library which provides the APIs to manage the functions, queues and mailbox communication.
-It creates multiple threads per each available core in the x86 system to parallely manage these entities.</p>
+It creates multiple threads per each available core in the x86 system to manage these entities.</p>
 <ul class="simple">
-<li><strong>main thread</strong>: responsible for accepting the requets from clients and submit the request to HW</li>
-<li><strong>completion status processing thread</strong>: respondible for processing the MM and ST completions</li>
-<li><strong>completion staus pending monitor thread</strong>: responsible for monitoring the completion status pending requests</li>
+<li><strong>main thread</strong>: responsible for accepting the request from clients and submit the request to HW</li>
+<li><strong>completion status processing thread</strong>: responsible for processing the MM and ST completions</li>
+<li><strong>completion status pending monitor thread</strong>: responsible for monitoring the completion status pending requests</li>
 </ul>
 <p class="last">Apart from creating the threads, libqdma also initializes the framework required for handling the legacy interrupts and
 debugfs framework to collect the debug status information during runtime.</p>
@@ -183,14 +190,14 @@ debugfs framework to collect the debug status information during runtime.</p>
 <dt>drv</dt>
 <dd><p class="first last"><em>drv</em> is a character device created as a wrapper around libqdma to enable the applications to perform read and write operations on the queues.
 It also manages multiple devices attached to a single Host system.
-It creates a list of physical devices attached to the Host system and manages the requests comming from
-appilications to read/write to these devices.</p>
+It creates a list of physical devices attached to the Host system and manages the requests coming from
+applications to read/write to these devices.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>xlnx_nl</dt>
-<dd><p class="first last"><em>xlnx_nl</em> module creates and registers with netlink socket interface to provide various netlink interfcaes to perform device,
+<dd><p class="first last"><em>xlnx_nl</em> module creates and registers with netlink socket interface to provide various netlink interfaces to perform device,
 queue and function related operations</p>
 </dd>
 </dl>
@@ -214,7 +221,7 @@ queue and function related operations</p>
 };
 </pre></div>
 </div>
-<p>Using the PCI device interface, driver lists the possible devices as par of the <code class="docutils literal notranslate"><span class="pre">pci_ids</span></code> and provides the probe and remove handler.
+<p>Using the PCI device interface, driver lists the possible devices as per the <code class="docutils literal notranslate"><span class="pre">pci_ids</span></code> and provides the probe and remove handler.
 These handlers are called by each device in the list.
 QDMA IP supports SRIOV and error handling functionality as well and QDMA driver enables the functions to configure SRIOV
 using <code class="docutils literal notranslate"><span class="pre">sriov_config</span></code>  and <code class="docutils literal notranslate"><span class="pre">qdma_err_handler</span></code> handlers respectively.</p>
@@ -240,7 +247,7 @@ During initialization, qdma driver probes each PCI function and creates the corr
 <code class="docutils literal notranslate"><span class="pre">xdev</span></code> is a driver level software structure maintained to preserve the software level details to manage a function.
 <code class="docutils literal notranslate"><span class="pre">libqdma</span></code> also creates another data structure <code class="docutils literal notranslate"><span class="pre">qdma_dev(qdev)</span></code> corresponds to each function to keep track of the
 h2c and c2h descriptor lists associated with each function. <code class="docutils literal notranslate"><span class="pre">qdma_descq(descq)</span></code> is a data structure maintained
-for each queue in the system. <code class="docutils literal notranslate"><span class="pre">qdev</span></code> tracks the the list of queues associated with a function uisng <code class="docutils literal notranslate"><span class="pre">descq</span></code> and it inturn stores <code class="docutils literal notranslate"><span class="pre">xdev</span></code>.</p>
+for each queue in the system. <code class="docutils literal notranslate"><span class="pre">qdev</span></code> tracks the the list of queues associated with a function using <code class="docutils literal notranslate"><span class="pre">descq</span></code> and it in turn stores <code class="docutils literal notranslate"><span class="pre">xdev</span></code>.</p>
 <img alt="_images/libqdma_data_structures.PNG" class="align-center" src="_images/libqdma_data_structures.PNG" />
 <p><code class="docutils literal notranslate"><span class="pre">xdev</span></code> is associated with the driver level configuration called <code class="docutils literal notranslate"><span class="pre">qdma_dev_conf</span></code> and <code class="docutils literal notranslate"><span class="pre">descq</span></code> is associated with
 queue level configuration called <code class="docutils literal notranslate"><span class="pre">qdma_queue_conf</span></code>.</p>
@@ -254,8 +261,8 @@ queue level configuration called <code class="docutils literal notranslate"><spa
 <li><p class="first">Identifying the Master PF</p>
 <blockquote>
 <div><p>QDMA driver enables the users of the QDMA IP to choose one of the available PFs as master_pf.
-This is a software only feature and the HW does not have any knowledge on master_pf. HW treates all the PFs as equal.</p>
-<p>This PF has the following special software controlled previllages:</p>
+This is a software only feature and the HW does not have any knowledge on master_pf. HW treats all the PFs as equal.</p>
+<p>This PF has the following special software controlled privileges:</p>
 <ul class="simple">
 <li>Programming the global CSR(Control and Status Registers)</li>
 <li>Handling the errors reported by HW using a dedicated interrupt vector</li>
@@ -291,22 +298,22 @@ Ex: config_bar_pf=0x0902020202,0x0a00000000</p>
 To indicate the DMA Bar QDMA IP programs 0x0 register with 0x1FD3 identifier.
 Driver can find DMA BAR by reading address 0x0 from each BAR and check for (return value &amp; 0xFFFF0000) &gt;&gt; 16 == 0x1fd3 to find DMA BAR
 By default BAR#0 is considered as DMA Bar by the Driver.
-If user does not pass the <code class="docutils literal notranslate"><span class="pre">config_bar</span></code> module parameter, Driver tries to accessess the PCI Bar#0 and reads the 0x0 register.
-If it does not have the 1FD3 idenfier, driver will fail to initialize the corresponding PF/VF.
+If user does not pass the <code class="docutils literal notranslate"><span class="pre">config_bar</span></code> module parameter, Driver tries to accesses the PCI Bar#0 and reads the 0x0 register.
+If it does not have the 1FD3 identifier, driver will fail to initialize the corresponding PF/VF.
 If user passes the <code class="docutils literal notranslate"><span class="pre">config_bar</span></code> parameter, driver validates the given bar number with HW configured bar number and
 if they match, the bar will be memory mapped.</p>
-<p>Upon idenfying the DMA Bar, Driver identifies the User Bar using register
+<p>Upon identifying the DMA Bar, Driver identifies the User Bar using register
 QDMA_GLBL2_PF_VF_BARLITE_INT((0x10C for PF and 0x1018 for VF) and the remaining bar is marked as bypass bar.</p>
 </div></blockquote>
 </li>
 <li><p class="first">Create xdev and add to xdev list</p>
 <blockquote>
 <div><p>xdev is a libqdma level bok keeping structure which holds the information required for each function.
-It is created from pdev and device configration updated according.
+It is created from pdev and device configuration updated according.
 Once the xdev is created, it is added to the xdev list to keep track of the multiple functions.</p>
 </div></blockquote>
 </li>
-<li><p class="first">Mark the device as online</p>
+<li><p class="first">Mark the device as on line</p>
 <blockquote>
 <div><p>In this phase, The allocation of I/O ports and irqs is done via standard kernel functions.
 First, it clears the HW context memory for all the queues if the current function is marked as a master_pf.
@@ -322,27 +329,38 @@ Global CSR registers are set with default values and mm channels are enabled.</p
 </div>
 <div class="section" id="device-de-initialization">
 <h2>Device De-Initialization<a class="headerlink" href="#device-de-initialization" title="Permalink to this headline">¶</a></h2>
-<p>During the driver de-inilization i.e when user performs “rmmmod”, all the devices managed by the driver are de-initialized by
+<p>During the driver de-initialization i.e when user performs “rmmmod”, all the devices managed by the driver are de-initialized by
 invoking the “remove” handler.</p>
-<p>During the device de-initialization, following operations are perfomed</p>
+<p>During the device de-initialization, following operations are performed</p>
 <ul class="simple">
 <li>Configuration for all the queues corresponding to the device are cleared</li>
 <li>The character device interface created for the device is released</li>
 <li>PCI bars are unmapped</li>
-<li>Set the device to offline and removed the device from the device list</li>
+<li>Set the device to off line and removed the device from the device list</li>
 </ul>
 <img alt="_images/remove_one.PNG" class="align-center" src="_images/remove_one.PNG" />
+<div class="section" id="resource-management">
+<h3>Resource Management<a class="headerlink" href="#resource-management" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qdma_resmgmt.html">QDMA Queue Resource Management</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="mailbox-communication">
+<h3>Mailbox Communication<a class="headerlink" href="#mailbox-communication" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qdma_mailbox.html">QDMA Mailbox</a></li>
+</ul>
+</div>
+</div>
 </div>
 <div class="section" id="configure-the-queues-for-pf-vf">
 <h2>Configure the Queues for PF/VF<a class="headerlink" href="#configure-the-queues-for-pf-vf" title="Permalink to this headline">¶</a></h2>
-<p>During the driver initialization, the available queues is the system are evenly distributed across the available PFs.
-Ex: if the device has 4 PFs and 2K queues, each PF is assigned with 512 queues.</p>
 <p>QDMA driver provides a sysfs interface to change the default distribution of queues according to user choice.
 <code class="docutils literal notranslate"><span class="pre">/sys/bus/pci/devices/&lt;pci_device_bdf&gt;/qdma/qmax</span></code> sysfs entry is created for each function to facilitate this user configuration.
 User can set the required number of queues using this sysfs entry.</p>
-<p>If the queues in the system needs to be allocated for VFs, master_pf has a sysfs entry <code class="docutils literal notranslate"><span class="pre">/sys/bus/pci/devices/&lt;pci_device_bdf&gt;/qdma/qmax_vfs</span></code>.
-The queues configured for <code class="docutils literal notranslate"><span class="pre">qmax_vfs</span></code> is a pool of queues which will be used to distribute across all available VFs created for this device.
-The remining queues are evenly distibuted across the PFs.</p>
 <img alt="_images/set_qmax.PNG" class="align-center" src="_images/set_qmax.PNG" />
 <img alt="_images/set_qmax_vfs.PNG" class="align-center" src="_images/set_qmax_vfs.PNG" />
 </div>
@@ -383,6 +401,14 @@ Queue handle is released and character device interface is deleted</p>
 <p><code class="docutils literal notranslate"><span class="pre">dma_from_device</span></code> and <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> utilities are provided with QDMA Linux driver to perform
 a read(C2H) and write(H2C) operations on a queue.</p>
 <img alt="_images/read_write_request.PNG" class="align-center" src="_images/read_write_request.PNG" />
+<div class="section" id="qdma-debug-support">
+<h3>QDMA Debug Support<a class="headerlink" href="#qdma-debug-support" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="debugfs.html">QDMA Debug File System Support</a></li>
+</ul>
+</div>
+</div>
 </div>
 </div>
 
@@ -393,10 +419,10 @@ a read(C2H) and write(H2C) operations on a queue.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="qdma_usecases.html" class="btn btn-neutral float-right" title="QDMA Linux Driver UseCases" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="qdma_resmgmt.html" class="btn btn-neutral float-right" title="QDMA Queue Resource Management" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="libqdma_apis.html" class="btn btn-neutral" title="Libqdma APIs" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="qdma_linux_export.html" class="btn btn-neutral" title="QDMA Linux Driver Exported APIs" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -427,7 +453,7 @@ a read(C2H) and write(H2C) operations on a queue.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2018.3',
+            VERSION:'2019.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

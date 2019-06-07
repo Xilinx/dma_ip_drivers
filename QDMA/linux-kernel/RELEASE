@@ -1,21 +1,14 @@
-Release: 2018.3
-===========================
+Release: 2019.1
+===============
 
 NOTE:
-	This release is based on the 2018.3 QDMA design
+	This release is based on the 2019.1 QDMA design
 
-	Performance benchmark numbers are captured in perforamcne report
+	Performance benchmark numbers are captured in performance report
 	for this version of driver and released along with the driver package
 
 	QDMA Linux driver is supported in auto mode by default
-	(refer to 2018.3 Features below for more details on auto mode)
-	
-	QDMA 2018.3 Linux driver is not backaward compatible with 2018.2 IP
 
-
-DRIVER LIMITATIONS:
-===================
-- Driver compilation on Fedora 28 with gcc8.1 results compilation warnings
 
 SUPPORTED FEATURES:
 ===================
@@ -32,11 +25,11 @@ SUPPORTED FEATURES:
 	- User Interrupts
 	- Error Interrupts
 - C2H Stream Completion queue entry coalescing
-- Supports SR-IOV with upto 4 Physical Functions(PF) and 252 Virtual Functions(VF)
-- Allows only Privileged/Physical functions to program the contexts & registers
+- Supports SR-IOV with up to 4 Physical Functions(PF) and 252 Virtual Functions(VF)
+- Allows only Privileged/Physical functions to program the contexts and registers
 - Function Level Reset(FLR) Support
 - Mailbox Support
-- Descriptor bypass(8,16,32 descriptor sizes)
+- Descriptor bypass(8, 16, 32 descriptor sizes)
 - Descriptor Prefetching
 - Asynchronous and Synchronous IO support
 - ST H2C to C2H and C2H to H2C loopback support
@@ -45,11 +38,12 @@ SUPPORTED FEATURES:
 - Dynamic queue configuration
 - Dynamic driver configuration
 
-2018.3 Features:
+2018.3 Features
+---------------
 - Auto mode support for PF & VF driver
 	- MM and ST H2C requests are services in poll mode
 	- ST C2H is services in Interrupt Aggregation mode
-- Support 64B descriptor format in byapss mode
+- Support 64B descriptor format in bypass mode
 - Support for Completion queue descriptors of 64 bytes size
 - Support flexible BAR mapping for QDMA configuration register space
 - Indirect programming of FMAP registers
@@ -61,12 +55,21 @@ SUPPORTED FEATURES:
 - Legacy Interrupt Support
 - VF driver support in direct and indirect interrupt mode
 
+2019.1 Features
+---------------
+- Interrupt support for Mailbox events
+- Support Completions in Memory mapped mode
+- Interoperability between Linux driver (as PF/VF) and DPDK driver (as PF/VF)
+- Driver restructuring to partition QDMA access code such that it can be used across different drivers
 
 KNOWN ISSUES:
 =============
-- Occasionally, C2H completions are not observed when 
-	payload and immediate data transfers are combined
-- In the Host only mode, When VFs are loaded in mixed interrupt mode(i.e
-	some VFs are in direct interrupt mode and some VFs are in indirect
-	interrupt mode),C2H completions are not observed for the VF with direct
-	mode interrupt which follows a VF with indirect interrupt mode
+- Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+
+
+DRIVER LIMITATIONS:
+===================
+- Driver compilation on Fedora 28 with gcc8.1 results compilation warnings
+- Big endian systems are not supported
+- All VFs created by a PF should be shut down before terminating the parent PF. This is needed as all the QDMA VF configuration is through this parent PF.
+- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.

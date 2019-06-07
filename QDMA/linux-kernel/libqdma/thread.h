@@ -39,7 +39,7 @@ struct qdma_kthread {
 	/**  thread lock*/
 	spinlock_t lock;
 	/**  name of the thread */
-	char name[16];
+	char name[26];
 	/**  cpu number for which the thread associated with */
 	unsigned short cpu;
 	/**  thread id */
@@ -59,13 +59,13 @@ struct qdma_kthread {
 	/**  thread work list count */
 	struct list_head work_list;
 	/**  thread initialization handler */
-	int (*finit)(struct qdma_kthread *);
+	int (*finit)(struct qdma_kthread *thp);
 	/**  thread pending handler */
-	int (*fpending)(struct list_head *);
+	int (*fpending)(struct list_head *work_item);
 	/**  thread peocessing handler */
-	int (*fproc)(struct list_head *);
+	int (*fproc)(struct list_head *work_item);
 	/**  thread done handler */
-	int (*fdone)(struct qdma_kthread *);
+	int (*fdone)(struct qdma_kthread *thp);
 };
 
 /*****************************************************************************/
@@ -98,7 +98,8 @@ int qdma_kthread_dump(struct qdma_kthread *thp, char *buf, int buflen,
 #define qdma_kthread_wakeup(thp)	\
 	do { \
 		pr_debug("signaling thp %s ...\n", (thp)->name); \
-		wake_up_process((thp)->task); \
+		thp->schedule = 1; \
+		qdma_waitq_wakeup(&thp->waitq); \
 	} while (0)
 
 #define pr_debug_thread(fmt, ...) pr_debug(fmt, __VA_ARGS__)

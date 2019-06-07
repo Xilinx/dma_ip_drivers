@@ -29,8 +29,8 @@ static const char *progname;
 				(1 << QPARM_MODE)  | \
 				(1 << QPARM_DIR))
 #define Q_START_ATTR_IGNORE_MASK ((1 << QPARM_MODE)  | \
-                                  (1 << QPARM_DESC) | \
-                                  (1 << QPARM_CMPT))
+				(1 << QPARM_DESC) | \
+				(1 << QPARM_CMPT))
 #define Q_STOP_ATTR_IGNORE_MASK ~((1 << QPARM_IDX) | \
 				(1 << QPARM_DIR))
 #define Q_DEL_ATTR_IGNORE_MASK ~((1 << QPARM_IDX)  | \
@@ -46,12 +46,13 @@ static const char *progname;
 				(1 << QPARM_CMPT_CNTR_IDX) | \
 				(1 << QPARM_CMPT_TRIG_MODE) | \
 				(1 << QPARM_CMPTSZ))
-
+#define Q_CMPT_READ_ATTR_IGNORE_MASK ~((1 << QPARM_IDX) | \
+				      (1 << QPARM_DIR))
 #define Q_ADD_FLAG_IGNORE_MASK ~(XNL_F_QMODE_ST | \
 				XNL_F_QMODE_MM | \
 				XNL_F_QDIR_BOTH)
 #define Q_START_FLAG_IGNORE_MASK (XNL_F_QMODE_ST | \
-                                  XNL_F_QMODE_MM)
+				XNL_F_QMODE_MM)
 #define Q_STOP_FLAG_IGNORE_MASK ~(XNL_F_QMODE_ST | \
 					XNL_F_QMODE_MM | \
 					XNL_F_QDIR_BOTH)
@@ -66,6 +67,10 @@ static const char *progname;
 					XNL_F_QDIR_C2H)
 #define Q_H2C_FLAG_IGNORE_MASK  (XNL_F_C2H_CMPL_INTR_EN | \
 				XNL_F_CMPL_UDD_EN)
+
+#define Q_CMPT_READ_FLAG_IGNORE_MASK  ~(XNL_F_QMODE_ST | \
+					XNL_F_QMODE_MM | \
+					XNL_F_QDIR_BOTH)
 
 #ifdef ERR_DEBUG
 char *qdma_err_str[qdma_errs] = {
@@ -192,7 +197,7 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 	fprintf(fp,
 		"\tqdma[N] [operation]: per QDMA FPGA operations\n");
 	fprintf(fp,
-		"\t\tversion                 lists the Hardware and Software version\n"
+		"\t\tdevinfo                 lists the Hardware and Software version and capabilities\n"
 		"\t\tstat                    statistics of qdma[N] device\n"
 		"\t\tstat clear              clear all statistics data of qdma[N} device\n"
 		"\t\tq list                  list all queues\n"
@@ -200,12 +205,12 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 		"\t\t                                                  *mode default to mm\n"
 		"\t\t                                                  *dir default to h2c\n"
 	        "\t\tq add list <start_idx> <num_Qs> [mode <mm|st>] [dir <h2c|c2h|bi>] - add multiple queues at once\n"
-	        "\t\tq start idx <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
+	        "\t\tq start idx <N> [dir <h2c|c2h|bi>] [en_mm_cmpl] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
 		"                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
 	        "                                    [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
 	        "                                    [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en]\n"
 	        "                                    [cmpl_ovf_dis] [dis_fetch_credit] [dis_cmpl_status] [c2h_cmpl_intr_en] - start a single queue\n"
-	        "\t\tq start list <start_idx> <num_Qs> [dir <h2c|c2h|bi>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
+	        "\t\tq start list <start_idx> <num_Qs> [en_mm_cmpl] [dir <h2c|c2h|bi>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
 		"                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
 	        "                                    [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
 	        "                                    [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [cmpl_ovf_dis]\n"
@@ -220,6 +225,7 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] desc <x> <y> - dump desc ring entry x ~ y\n"
 		"\t\tq dump idx <N> dir [<h2c|c2h|bi>] cmpt <x> <y> - dump cmpt ring entry x ~ y\n"
 		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] cmpt <x> <y> - dump cmpt ring entry x ~ y\n"
+		"\t\tq cmpt_read idx <N> dir [<h2c|c2h|bi>] - read the completion data\n"
 #ifdef ERR_DEBUG
 		"\t\tq err help - help to induce errors  \n"
 		"\t\tq err idx <N> [<err <[1|0]>>] dir <[h2c|c2h|bi]> - induce errors on q idx <N>  \n"
@@ -467,6 +473,7 @@ static int read_range(int argc, char *argv[], int i, unsigned int *v1,
 	return ++i;
 }
 
+/** 1:1 mapping to entries in q_parm_type of nl_user.h */
 static char *qparm_type_str[QPARM_MAX] = {
 	"idx",
 	"mode",
@@ -489,6 +496,7 @@ static char *qparm_type_str[QPARM_MAX] = {
 #endif
 };
 
+/** 1:1 mapping for flags from qdma_nl.h #defines flags */
 static char *qflag_type_str[MAX_QFLAGS] = {
 	"mode",
 	"mode",
@@ -504,12 +512,15 @@ static char *qflag_type_str[MAX_QFLAGS] = {
 	"dis_cmpl_status",
 	"c2h_cmpl_intr_en",
 	"c2h_udd_en",
-	"cmpl_ovf_dis"
+	"pftch_bypass_en",
+	"cmpl_ovf_dis",
+	"en_mm_cmpl"
 };
 
 #define IS_SIZE_IDX_VALID(x) (x < 16)
 
-static void print_ignored_params(uint32_t ignore_mask, uint8_t isflag)
+static void print_ignored_params(uint32_t ignore_mask, uint8_t isflag,
+		char *ignored_dir)
 {
 	unsigned int maxcount = isflag ? MAX_QFLAGS : QPARM_MAX;
 	char **qparam = isflag ? qflag_type_str : qparm_type_str;
@@ -517,11 +528,17 @@ static void print_ignored_params(uint32_t ignore_mask, uint8_t isflag)
 	unsigned int i;
 
 	for (i = 0; ignore_mask && (i < maxcount); i++) {
-		if (ignore_mask & 0x01)
-			warnx("Warn: Ignoring %s: %s", pdesc, qparam[i]);
+		if (ignore_mask & 0x01) {
+			if(ignored_dir == NULL)
+				warnx("Warn: Ignoring %s: %s", pdesc, qparam[i]);
+			else
+				warnx("Info: Ignoring %s \"%s\" for %s direction only", pdesc, qparam[i],
+						ignored_dir);
+		}
 		ignore_mask >>= 1;
 	}
 }
+
 
 static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 {
@@ -533,9 +550,9 @@ static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 			break;
 		case XNL_CMD_Q_ADD:
 			print_ignored_params(qparm->sflags &
-					     Q_ADD_ATTR_IGNORE_MASK, 0);
+					     Q_ADD_ATTR_IGNORE_MASK, 0, NULL);
 			print_ignored_params(qparm->flags &
-					     Q_ADD_FLAG_IGNORE_MASK, 1);
+					     Q_ADD_FLAG_IGNORE_MASK, 1, NULL);
 			break;
 		case XNL_CMD_Q_START:
 			if (!IS_SIZE_IDX_VALID(qparm->c2h_bufsz_idx)) {
@@ -573,14 +590,33 @@ static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 					break;
 				}
 			}
-			if (qparm->flags & XNL_F_QDIR_H2C) {
-				print_ignored_params(qparm->sflags &
-						     (Q_START_ATTR_IGNORE_MASK |
-						     Q_H2C_ATTR_IGNORE_MASK), 0);
-				print_ignored_params(qparm->flags &
-						     (Q_START_FLAG_IGNORE_MASK |
-						     Q_H2C_FLAG_IGNORE_MASK), 1);
+
+			print_ignored_params(qparm->sflags &
+						Q_START_ATTR_IGNORE_MASK,
+						0, NULL);
+
+			if (!(qparm->flags & XNL_F_EN_MM_CMPL)) {
+				if ((qparm->flags & XNL_F_QDIR_H2C) == 
+					(qparm->flags &
+					  (XNL_F_QDIR_H2C | XNL_F_QDIR_C2H))) {
+				  print_ignored_params(qparm->sflags &
+						  Q_H2C_ATTR_IGNORE_MASK,
+						  0, NULL);
+				  print_ignored_params(qparm->flags &
+						  Q_H2C_FLAG_IGNORE_MASK,
+						  1, NULL);
+				} else if((qparm->flags & 
+					(XNL_F_QDIR_H2C | XNL_F_QDIR_C2H)) ==
+					  (XNL_F_QDIR_H2C | XNL_F_QDIR_C2H)) {
+				  print_ignored_params(qparm->sflags &
+						  Q_H2C_ATTR_IGNORE_MASK,
+						  0, "H2C");
+				  print_ignored_params(qparm->flags &
+						  Q_H2C_FLAG_IGNORE_MASK,
+						  1, "H2C");
+				}
 			}
+
 			if ((qparm->sflags & (1 << QPARM_SW_DESC_SZ))) {
 				/* TODO: in 2018.3 RTL1 , only 64B sw_desc_size is supported */
 				if (qparm->sw_desc_sz != DESC_SIZE_64B) {
@@ -588,19 +624,18 @@ static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 					invalid = -EINVAL;
 				}
 			}
-
 			break;
 		case XNL_CMD_Q_STOP:
 			print_ignored_params(qparm->sflags &
-					     Q_STOP_ATTR_IGNORE_MASK, 0);
+					     Q_STOP_ATTR_IGNORE_MASK, 0, NULL);
 			print_ignored_params(qparm->flags &
-					     Q_STOP_FLAG_IGNORE_MASK, 1);
+					     Q_STOP_FLAG_IGNORE_MASK, 1, NULL);
 			break;
 		case XNL_CMD_Q_DEL:
 			print_ignored_params(qparm->sflags &
-					     Q_DEL_ATTR_IGNORE_MASK, 0);
+					     Q_DEL_ATTR_IGNORE_MASK, 0, NULL);
 			print_ignored_params(qparm->flags &
-					     Q_DEL_FLAG_IGNORE_MASK, 1);
+					     Q_DEL_FLAG_IGNORE_MASK, 1, NULL);
 			break;
 		case XNL_CMD_Q_CMPT:
 		case XNL_CMD_Q_DUMP:
@@ -613,9 +648,9 @@ static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 			}
 		case XNL_CMD_Q_DESC:
 			print_ignored_params(qparm->sflags &
-					     Q_DUMP_ATTR_IGNORE_MASK, 0);
+					     Q_DUMP_ATTR_IGNORE_MASK, 0, NULL);
 			print_ignored_params(qparm->flags &
-					     Q_DUMP_FLAG_IGNORE_MASK, 1);
+					     Q_DUMP_FLAG_IGNORE_MASK, 1, NULL);
 			break;
 		case XNL_CMD_Q_RX_PKT:
 			if (qparm->flags & XNL_F_QDIR_H2C) {
@@ -624,9 +659,15 @@ static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 				break;
 			}
 			print_ignored_params(qparm->sflags &
-					     Q_DUMP_PKT_ATTR_IGNORE_MASK, 0);
+					     Q_DUMP_PKT_ATTR_IGNORE_MASK, 0, NULL);
 			print_ignored_params(qparm->flags &
-					     Q_DUMP_PKT_FLAG_IGNORE_MASK, 1);
+					     Q_DUMP_PKT_FLAG_IGNORE_MASK, 1, NULL);
+			break;
+		case XNL_CMD_Q_CMPT_READ:
+			print_ignored_params(qparm->sflags &
+					     Q_CMPT_READ_ATTR_IGNORE_MASK, 0, NULL);
+			print_ignored_params(qparm->flags &
+					     Q_CMPT_READ_FLAG_IGNORE_MASK, 1, NULL);
 			break;
 #ifdef ERR_DEBUG
 		case XNL_CMD_Q_ERR_INDUCE:
@@ -814,7 +855,6 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 			f_arg_set |= 1 << QPARM_PIPE_GL_MAX;
 			i++;
 
-
 		} else if (!strcmp(argv[i], "pipe_flow_id")) {
 			rv = next_arg_read_int(argc, argv, &i, &v1);
 			if (rv < 0)
@@ -879,7 +919,6 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 			return rv;
 		    i = rv;
 		    f_arg_set |= 1 << QPARM_CMPT;
-
 		} else if (!strcmp(argv[i], "cmptsz")) {
 		    get_next_arg(argc, argv, &i);
 		    sscanf(argv[i], "%hhu", &qparm->cmpt_entry_size);
@@ -920,6 +959,9 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 		} else if (!strcmp(argv[i], "c2h_udd_en")) {
 			qparm->flags |= XNL_F_CMPL_UDD_EN;
 			i++;
+		} else if (!strcmp(argv[i], "en_mm_cmpl")) {
+			qparm->flags |= XNL_F_EN_MM_CMPL;
+			i++;
 		} else {
 			warnx("unknown q parameter %s.\n", argv[i]);
 			return -EINVAL;
@@ -928,7 +970,7 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 	if ((f_arg_required & (1 << QPARM_RNGSZ_IDX)) &&
 			!(f_arg_set & (1 << QPARM_RNGSZ_IDX))) {
 		warnx("Info: Default ring size set to 2048");
-		qparm->qrngsz_idx = 5;
+		qparm->qrngsz_idx = 9;
 		f_arg_set |= 1 << QPARM_RNGSZ_IDX;
 	}
 	/* check for any missing mandatory parameters */
@@ -1026,13 +1068,16 @@ static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 		xcmd->op = XNL_CMD_Q_DEL;
 		get_next_arg(argc, argv, &i);
 		rv = read_qparm(argc, argv, i, qparm, (1 << QPARM_IDX));
-
 	} else if (!strcmp(argv[i], "dump")) {
 		xcmd->op = XNL_CMD_Q_DUMP;
 		get_next_arg(argc, argv, &i);
 		rv = read_qparm(argc, argv, i, qparm, (1 << QPARM_IDX));
 	} else if (!strcmp(argv[i], "pkt")) {
 		xcmd->op = XNL_CMD_Q_RX_PKT;
+		get_next_arg(argc, argv, &i);
+		rv = read_qparm(argc, argv, i, qparm, (1 << QPARM_IDX));
+	} else if (!strcmp(argv[i], "cmpt_read")) {
+		xcmd->op = XNL_CMD_Q_CMPT_READ;
 		get_next_arg(argc, argv, &i);
 		rv = read_qparm(argc, argv, i, qparm, (1 << QPARM_IDX));
 #ifdef ERR_DEBUG
@@ -1180,9 +1225,9 @@ int parse_cmd(int argc, char *argv[], struct xcmd_info *xcmd)
 		rv = parse_q_cmd(argc, argv, i, xcmd);
 	} else if (!strcmp(argv[2], "intring")){
 		rv = parse_intr_cmd(argc, argv, i, xcmd);
-	} else if (!strcmp(argv[2], "version")){
+	} else if (!strcmp(argv[2], "devinfo")){
 		rv = 3;
-		xcmd->op = XNL_CMD_VERSION;
+		xcmd->op = XNL_CMD_DEV_CAP;
 	} else {
 		warnx("bad parameter \"%s\".\n", argv[2]);
 		return -EINVAL;

@@ -83,20 +83,34 @@ _____________________________________________________________________________
   3 - Interrupt Aggregation Mode or Indirect Interrupt Mode
   4 - Legacy Interrupt Mode
 
+  Find the QDMA device bus number from lspci. Ex : 01:00.0 is the BDF of the device.
+  By default, all the functions are loaded in Auto Mode.
+  To load a device in any other mode, load the module as follows:
+  
+  [root@]# modprobe qdma mode=0x<device_bus_number><pf0_mode><pf1_mode><pf2_mode><pf3_mode>
+  
+	or
+	
+  [root@]# modprobe qdma mode=0x<device_bus_number><vfg0_mode><vfg1_mode><vfg2_mode><vfg3_mode>
+    
   To load the module in poll mode run modprobe as follows:
 
-  [root@]# modprobe qdma mode=1
+  [root@]# modprobe qdma mode=0x011111
 
   Or on a VM:
-  [root@]# modprobe qdma_vf
+  [root@]# modprobe qdma_vf mode=0x011111
 
   To load the module in direct interrupt mode run modprobe as follows:
 
-  [root@]# modprobe qdma mode=2
+  [root@]# modprobe qdma mode=0x012222
 
   To load the module in indirect interrupt mode run modprobe as follows:
 
-  [root@]# modprobe qdma mode=3
+  [root@]# modprobe qdma mode=0x013333
+   
+  To load the module with each pf is different mode, run modprobe as follows:
+
+  [root@]# modprobe qdma mode=0x011234
   
   To set a master pf other than the first pf, load the module as follows:
 
