@@ -51,6 +51,7 @@ SUPPORTED FEATURES:
 KNOWN BUGS:
 ===========
 - Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+- dma_from_device command in qdma_testapp application requests more data from user logic than specified
 
 LIMITATIONS:
 ===========
