@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+# Copyright (c) 2017-present,  Xilinx, Inc.
+# All rights reserved.
+#
 # This script is designed for general as well as stress testing. VF distruction can be done by appropriately
 # configuring pf_nvf_lst.
 # 

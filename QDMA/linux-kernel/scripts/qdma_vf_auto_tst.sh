@@ -1,5 +1,9 @@
 #!/bin/bash
 #
+# Copyright (c) 2017-present,  Xilinx, Inc.
+# All rights reserved.
+#
+#
 # Simple script to automate the VF regression testing using gtest framework
 # 
 # This script will insert the module, configure the qmax_vfs, and instantiate

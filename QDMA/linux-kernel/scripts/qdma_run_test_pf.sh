@@ -1,5 +1,9 @@
 #!/bin/bash
 #
+# Copyright (c) 2017-present,  Xilinx, Inc.
+# All rights reserved.
+#
+#
 # Simple run script to test QDMA in AXI-MM and AXI-St mode.
 # 
 # AXI-MM Transfer

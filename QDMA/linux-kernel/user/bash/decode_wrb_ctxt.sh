@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright (c) 2017-present,  Xilinx, Inc.
+# All rights reserved.
+#
 
 if [ $# -lt 4 ]; then
 	echo "$0: <w3> <w2> <w1> <w0>"

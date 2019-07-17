@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright (c) 2017-present,  Xilinx, Inc.
+# All rights reserved.
+#
 
 if [ $# -lt 1 ]; then
 	echo "Invalid arguements."

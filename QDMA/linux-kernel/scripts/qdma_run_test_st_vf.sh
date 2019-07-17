@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Copyright (c) 2017-present,  Xilinx, Inc.
+# All rights reserved.
+#
 # Simple run script to test QDMA in VF AXI-ST mode.
 # 
 # VF AXI-ST Transfer
