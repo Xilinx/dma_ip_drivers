@@ -66,9 +66,6 @@ Usage:
         cd tools
   - Compile the provided example test tools.
         make
-  - Copy the provided driver rules from the etc directory to the /etc/ directory
-    on your system.
-        cp ../etc/udev/rules.d/* /etc/udev/rules.d/
   - Load the kernel module driver:
 	a. modprobe xdma
 	b. using the provided script.
@@ -98,9 +95,6 @@ Frequently asked questions:
   A: Use the following commands to uninstall the driver.
        - Uninstall the kernel module.
              rmmod -s xdma
-       - Delete the dma rules that were added.
-             rm -f /etc/udev/rules.d/60-xdma.rules
-             rm -f /etc/udev/rules.d/xdma-udev-command.sh
 
   Q: How do I modify the PCIe Device IDs recognized by the kernel module driver?
   A: The xdma/xdma_mod.c file constains the pci_device_id struct that identifies
