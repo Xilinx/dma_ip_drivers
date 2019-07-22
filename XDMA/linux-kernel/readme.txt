@@ -15,10 +15,6 @@ Directory and file description:
  - include/: This directory contains all include files that are needed for
 	compiling driver.
 
- - etc/: This directory contains rules for the Xilinx PCIe DMA kernel module
-	and software. The files in this directory should be copied to the /etc/
-	directory on your linux system.
-
  - tests/: This directory contains example application software to exercise the
 	provided kernel module driver and Xilinx PCIe DMA IP. This directory
 	also contains the following scripts and directories.
