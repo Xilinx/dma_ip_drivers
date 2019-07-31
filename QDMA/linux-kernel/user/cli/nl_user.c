@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-present,  Xilinx, Inc.
+ * Copyright (c) 2018-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -60,7 +60,7 @@ static int xnl_send(struct xnl_cb *cb, struct xnl_hdr *hdr)
 
 	rv = sendto(cb->fd, (char *)hdr, hdr->n.nlmsg_len, 0,
 			(struct sockaddr *)&addr, sizeof(addr));
-        if (rv != hdr->n.nlmsg_len) {
+    if (rv != hdr->n.nlmsg_len) {
 		perror("nl send err");
 		return -1;
 	}
@@ -330,6 +330,9 @@ static int recv_nl_msg(struct xnl_hdr *hdr, struct xcmd_info *xcmd)
 	struct nlattr *na = (struct nlattr *)p;
 	recv_attrs(hdr, xcmd);
 
+	if (xcmd->attrs[XNL_ATTR_ERROR] != 0)
+		return (int)xcmd->attrs[XNL_ATTR_ERROR];
+
 	switch(op) {
 	case XNL_CMD_DEV_LIST:
 		break;
@@ -460,7 +463,7 @@ static int get_cmd_resp_buf_len(struct xcmd_info *xcmd)
         case XNL_CMD_Q_STOP:
         case XNL_CMD_Q_DEL:
         	return buf_len;
-		case XNL_CMD_Q_ADD:
+        case XNL_CMD_Q_ADD:
         case XNL_CMD_Q_LIST:
         case XNL_CMD_Q_DUMP:
         case XNL_CMD_Q_CMPT_READ:
@@ -518,6 +521,7 @@ int xnl_send_cmd(struct xnl_cb *cb, struct xcmd_info *xcmd)
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_QIDX, xcmd->u.qparm.idx);
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_Q, xcmd->u.qparm.num_q);
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_QFLAG, xcmd->u.qparm.flags);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_RSP_BUF_LEN, dlen );
 		break;
         case XNL_CMD_Q_START:
         	xnl_msg_add_extra_config_attrs(hdr, xcmd);

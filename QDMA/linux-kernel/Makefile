@@ -181,10 +181,10 @@ vf: user mod_vf
 mod: mod_pf mod_vf 
 
 .PHONY: install
-install: install-mods install-user install-etc install-dev
+install: install-user install-etc install-dev
 
 .PHONY: uninstall
-uninstall: uninstall-mod uninstall-user uninstall-dev
+uninstall: uninstall-user uninstall-dev
 
 .PHONY: user
 user:
@@ -276,8 +276,8 @@ install-etc:
 		install -v -m 644 etc/30-qdma.rules $(udev_install_path); \
 	fi;
 
-.PHONY: uninstall-mod
-uninstall-mod:
+.PHONY: uninstall-mods
+uninstall-mods:
 	@echo "Un-installing $(kernel_install_path) ..."
 	@/bin/rm -rf $(kernel_install_path)/*
 	@depmod -a
@@ -298,9 +298,10 @@ uninstall-dev:
 .PHONY: help
 help:
 	@echo "Build Targets:";\
-	 echo " install             - Installs all compiled drivers.";\
-	 echo " uninstall           - Uninstalls drivers.";\
-	 echo " clean               - Removes all generated files.";\
+	 echo " install             - Installs user tools and development headers.";\
+	 echo " uninstall           - Uninstalls user tools and development headers.";\
+	 echo " install-mods        - Installs drivers.";\
+	 echo " uninstall-mods      - Uninstalls drivers.";\
 	 echo;\
 	 echo "Build Options:";\
 	 echo " KOBJ=<path>         - Kernel build (object) path.";\
@@ -312,5 +313,4 @@ help:
 	 echo " kernel_install_path=<path>";\
 	 echo "                     - kernel module install path.";\
 	 echo " user_install_path=<path>";\
-	 echo "                     - user cli tool install path.";\
-	 ech_;
+	 echo "                     - user cli tool install path.";

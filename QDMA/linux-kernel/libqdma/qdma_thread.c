@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -33,8 +33,8 @@ static unsigned int thread_cnt;
 /** completion status threads */
 static struct qdma_kthread *cs_threads;
 
-spinlock_t	qcnt_lock;
-unsigned int cpu_count;
+static spinlock_t	qcnt_lock;
+static unsigned int cpu_count;
 static unsigned int *per_cpu_qcnt;
 
 /* ********************* static function declarations *********************** */

@@ -1,17 +1,5 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #include "qdma_access.h"
@@ -1001,7 +989,7 @@ static int hw_monitor_reg(void *dev_hndl, unsigned int reg, uint32_t mask,
 	if ((v & mask) == val)
 		return QDMA_SUCCESS;
 
-	return -QDMA_BUSY_TIMEOUT_ERR;
+	return -QDMA_ERR_HWACC_BUSY_TIMEOUT;
 }
 
 static int qdma_indirect_reg_invalidate(void *dev_hndl,
@@ -1024,7 +1012,7 @@ static int qdma_indirect_reg_invalidate(void *dev_hndl,
 			QDMA_REG_POLL_DFLT_INTERVAL_US,
 			QDMA_REG_POLL_DFLT_TIMEOUT_US)) {
 		qdma_reg_access_release(dev_hndl);
-		return -QDMA_CONTEXT_BUSY_TIMEOUT_ERR;
+		return -QDMA_ERR_HWACC_BUSY_TIMEOUT;
 	}
 
 	qdma_reg_access_release(dev_hndl);
@@ -1052,7 +1040,7 @@ static int qdma_indirect_reg_clear(void *dev_hndl,
 			QDMA_REG_POLL_DFLT_INTERVAL_US,
 			QDMA_REG_POLL_DFLT_TIMEOUT_US)) {
 		qdma_reg_access_release(dev_hndl);
-		return -QDMA_CONTEXT_BUSY_TIMEOUT_ERR;
+		return -QDMA_ERR_HWACC_BUSY_TIMEOUT;
 	}
 
 	qdma_reg_access_release(dev_hndl);
@@ -1081,7 +1069,7 @@ static int qdma_indirect_reg_read(void *dev_hndl, enum ind_ctxt_cmd_sel sel,
 			QDMA_REG_POLL_DFLT_INTERVAL_US,
 			QDMA_REG_POLL_DFLT_TIMEOUT_US)) {
 		qdma_reg_access_release(dev_hndl);
-		return -QDMA_CONTEXT_BUSY_TIMEOUT_ERR;
+		return -QDMA_ERR_HWACC_BUSY_TIMEOUT;
 	}
 
 	for (index = 0; index < cnt; index++, reg_addr += sizeof(uint32_t))
@@ -1126,7 +1114,7 @@ static int qdma_indirect_reg_write(void *dev_hndl, enum ind_ctxt_cmd_sel sel,
 			QDMA_REG_POLL_DFLT_INTERVAL_US,
 			QDMA_REG_POLL_DFLT_TIMEOUT_US)) {
 		qdma_reg_access_release(dev_hndl);
-		return -QDMA_CONTEXT_BUSY_TIMEOUT_ERR;
+		return -QDMA_ERR_HWACC_BUSY_TIMEOUT;
 	}
 
 	qdma_reg_access_release(dev_hndl);
@@ -1166,7 +1154,7 @@ int qdma_fmap_write(void *dev_hndl, uint16_t func_id,
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_FMAP;
 
 	if (!dev_hndl || !config)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	fmap[num_words_count++] =
 		FIELD_SET(QDMA_FMAP_CTXT_W0_QID_MASK, config->qbase);
@@ -1185,7 +1173,7 @@ int qdma_fmap_read(void *dev_hndl, uint16_t func_id,
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_FMAP;
 
 	if (!dev_hndl || !config)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, func_id,
 			QDMA_FMAP_NUM_WORDS, fmap);
@@ -1203,7 +1191,7 @@ int qdma_fmap_clear(void *dev_hndl, uint16_t func_id)
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_FMAP;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, func_id);
 }
@@ -1219,7 +1207,7 @@ int qdma_sw_context_write(void *dev_hndl, uint8_t c2h,
 
 	/* Input args check */
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	sw_ctxt[num_words_count++] =
 		FIELD_SET(QDMA_SW_CTXT_W0_PIDX, ctxt->pidx) |
@@ -1268,7 +1256,7 @@ int qdma_sw_context_read(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_SW_C2H : QDMA_CTXT_SEL_SW_H2C;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, hw_qid,
 			QDMA_SW_CONTEXT_NUM_WORDS, sw_ctxt);
@@ -1319,7 +1307,7 @@ int qdma_sw_context_clear(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_SW_C2H : QDMA_CTXT_SEL_SW_H2C;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, hw_qid);
 }
@@ -1331,7 +1319,7 @@ int qdma_sw_context_invalidate(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_SW_C2H : QDMA_CTXT_SEL_SW_H2C;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_invalidate(dev_hndl, sel, hw_qid);
 }
@@ -1345,7 +1333,7 @@ int qdma_pfetch_context_write(void *dev_hndl, uint16_t hw_qid,
 	uint16_t num_words_count = 0;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	sw_crdt_l =
 		FIELD_GET(QDMA_PFTCH_CTXT_SW_CRDT_GET_L_MASK, ctxt->sw_crdt);
@@ -1379,7 +1367,7 @@ int qdma_pfetch_context_read(void *dev_hndl, uint16_t hw_qid,
 	uint32_t sw_crdt_l, sw_crdt_h;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, hw_qid,
 			QDMA_PFETCH_CONTEXT_NUM_WORDS, pfetch_ctxt);
@@ -1417,7 +1405,7 @@ int qdma_pfetch_context_clear(void *dev_hndl, uint16_t hw_qid)
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_PFTCH;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, hw_qid);
 }
@@ -1427,7 +1415,7 @@ int qdma_pfetch_context_invalidate(void *dev_hndl, uint16_t hw_qid)
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_PFTCH;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_invalidate(dev_hndl, sel, hw_qid);
 }
@@ -1442,10 +1430,10 @@ int qdma_cmpt_context_write(void *dev_hndl, uint16_t hw_qid,
 
 	/* Input args check */
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if (ctxt->trig_mode > QDMA_CMPT_UPDATE_TRIG_MODE_TMR_CNTR)
-		return QDMA_INVALID_PARAM_ERR;
+		return QDMA_ERR_INV_PARAM;
 
 	baddr_l = (uint32_t)FIELD_GET(QDMA_COMPL_CTXT_BADDR_GET_L_MASK,
 			ctxt->bs_addr);
@@ -1507,7 +1495,7 @@ int qdma_cmpt_context_read(void *dev_hndl, uint16_t hw_qid,
 	uint32_t baddr_l, baddr_h, pidx_l, pidx_h;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, hw_qid,
 			QDMA_CMPT_CONTEXT_NUM_WORDS, cmpt_ctxt);
@@ -1570,7 +1558,7 @@ int qdma_cmpt_context_clear(void *dev_hndl, uint16_t hw_qid)
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_CMPT;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, hw_qid);
 }
@@ -1580,7 +1568,7 @@ int qdma_cmpt_context_invalidate(void *dev_hndl, uint16_t hw_qid)
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_CMPT;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_invalidate(dev_hndl, sel, hw_qid);
 }
@@ -1594,7 +1582,7 @@ int qdma_hw_context_read(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_HW_H2C;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, hw_qid,
 			QDMA_HW_CONTEXT_NUM_WORDS, hw_ctxt);
@@ -1620,7 +1608,7 @@ int qdma_hw_context_clear(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_HW_H2C;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, hw_qid);
 }
@@ -1632,7 +1620,7 @@ int qdma_hw_context_invalidate(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_HW_H2C;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_invalidate(dev_hndl, sel, hw_qid);
 }
@@ -1647,7 +1635,7 @@ int qdma_credit_context_read(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_CR_H2C;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, hw_qid,
 			QDMA_CR_CONTEXT_NUM_WORDS, cr_ctxt);
@@ -1666,7 +1654,7 @@ int qdma_credit_context_clear(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_CR_H2C;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, hw_qid);
 }
@@ -1678,7 +1666,7 @@ int qdma_credit_context_invalidate(void *dev_hndl, uint8_t c2h,
 			QDMA_CTXT_SEL_CR_H2C;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_invalidate(dev_hndl, sel, hw_qid);
 }
@@ -1692,7 +1680,7 @@ int qdma_indirect_intr_context_write(void *dev_hndl, uint16_t ring_index,
 	uint16_t num_words_count = 0;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	baddr_l = (uint32_t)FIELD_GET(QDMA_INTR_CTXT_BADDR_GET_L_MASK,
 			ctxt->baddr_4k);
@@ -1730,7 +1718,7 @@ int qdma_indirect_intr_context_read(void *dev_hndl, uint16_t ring_index,
 	uint64_t baddr_l, baddr_m, baddr_h;
 
 	if (!dev_hndl || !ctxt)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = qdma_indirect_reg_read(dev_hndl, sel, ring_index,
 			QDMA_IND_INTR_CONTEXT_NUM_WORDS, intr_ctxt);
@@ -1764,7 +1752,7 @@ int qdma_indirect_intr_context_clear(void *dev_hndl, uint16_t ring_index)
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_INT_COAL;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_clear(dev_hndl, sel, ring_index);
 }
@@ -1775,7 +1763,7 @@ int qdma_indirect_intr_context_invalidate(void *dev_hndl,
 	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_INT_COAL;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	return qdma_indirect_reg_invalidate(dev_hndl, sel, ring_index);
 }
@@ -1796,7 +1784,7 @@ int qdma_set_default_global_csr(void *dev_hndl)
 	struct qdma_dev_attributes *dev_cap = NULL;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -1877,10 +1865,10 @@ int qdma_set_global_ring_sizes(void *dev_hndl, uint8_t index, uint8_t count,
 		const uint32_t *glbl_rng_sz)
 {
 	if (!dev_hndl || !glbl_rng_sz || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_RING_SIZES)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_write_csr_values(dev_hndl, QDMA_OFFSET_GLBL_RNG_SZ, index, count,
 			glbl_rng_sz);
@@ -1892,10 +1880,10 @@ int qdma_get_global_ring_sizes(void *dev_hndl, uint8_t index, uint8_t count,
 		uint32_t *glbl_rng_sz)
 {
 	if (!dev_hndl || !glbl_rng_sz || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_RING_SIZES)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_read_csr_values(dev_hndl, QDMA_OFFSET_GLBL_RNG_SZ, index, count,
 			glbl_rng_sz);
@@ -1911,10 +1899,10 @@ int qdma_set_global_timer_count(void *dev_hndl, uint8_t index, uint8_t count,
 
 
 	if (!dev_hndl || !glbl_tmr_cnt || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_C2H_TIMERS)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -1922,7 +1910,7 @@ int qdma_set_global_timer_count(void *dev_hndl, uint8_t index, uint8_t count,
 		qdma_write_csr_values(dev_hndl, QDMA_OFFSET_C2H_TIMER_CNT,
 				index, count, glbl_tmr_cnt);
 	else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -1933,10 +1921,10 @@ int qdma_get_global_timer_count(void *dev_hndl, uint8_t index, uint8_t count,
 	struct qdma_dev_attributes *dev_cap;
 
 	if (!dev_hndl || !glbl_tmr_cnt || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_C2H_TIMERS)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -1944,7 +1932,7 @@ int qdma_get_global_timer_count(void *dev_hndl, uint8_t index, uint8_t count,
 		qdma_read_csr_values(dev_hndl, QDMA_OFFSET_C2H_TIMER_CNT, index,
 				count, glbl_tmr_cnt);
 	else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -1955,10 +1943,10 @@ int qdma_set_global_counter_threshold(void *dev_hndl, uint8_t index,
 	struct qdma_dev_attributes *dev_cap;
 
 	if (!dev_hndl || !glbl_cnt_th || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_C2H_COUNTERS)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -1966,7 +1954,7 @@ int qdma_set_global_counter_threshold(void *dev_hndl, uint8_t index,
 		qdma_write_csr_values(dev_hndl, QDMA_OFFSET_C2H_CNT_TH, index,
 				count, glbl_cnt_th);
 	else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -1977,10 +1965,10 @@ int qdma_get_global_counter_threshold(void *dev_hndl, uint8_t index,
 	struct qdma_dev_attributes *dev_cap;
 
 	if (!dev_hndl || !glbl_cnt_th || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_C2H_COUNTERS)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -1988,7 +1976,7 @@ int qdma_get_global_counter_threshold(void *dev_hndl, uint8_t index,
 		qdma_read_csr_values(dev_hndl, QDMA_OFFSET_C2H_CNT_TH, index,
 				count, glbl_cnt_th);
 	else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -1999,10 +1987,10 @@ int qdma_set_global_buffer_sizes(void *dev_hndl, uint8_t index,
 	struct qdma_dev_attributes *dev_cap = NULL;
 
 	if (!dev_hndl || !glbl_buf_sz || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_C2H_BUFFER_SIZES)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2010,7 +1998,7 @@ int qdma_set_global_buffer_sizes(void *dev_hndl, uint8_t index,
 		qdma_write_csr_values(dev_hndl, QDMA_OFFSET_C2H_BUF_SZ, index,
 				count, glbl_buf_sz);
 	else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -2023,10 +2011,10 @@ int qdma_get_global_buffer_sizes(void *dev_hndl, uint8_t index, uint8_t count,
 
 
 	if (!dev_hndl || !glbl_buf_sz || !count)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if ((index + count) > QDMA_NUM_C2H_BUFFER_SIZES)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2034,7 +2022,7 @@ int qdma_get_global_buffer_sizes(void *dev_hndl, uint8_t index, uint8_t count,
 		qdma_read_csr_values(dev_hndl, QDMA_OFFSET_C2H_BUF_SZ, index,
 				count, glbl_buf_sz);
 	else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -2048,10 +2036,10 @@ int qdma_set_global_writeback_interval(void *dev_hndl,
 
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if (wb_int >=  QDMA_NUM_WRB_INTERVALS)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2061,7 +2049,7 @@ int qdma_set_global_writeback_interval(void *dev_hndl,
 
 		qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_DSC_CFG, reg_val);
 	} else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -2075,7 +2063,7 @@ int qdma_get_global_writeback_interval(void *dev_hndl,
 
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2084,7 +2072,7 @@ int qdma_get_global_writeback_interval(void *dev_hndl,
 		*wb_int = (enum qdma_wrb_interval)FIELD_GET(
 				QDMA_GLBL_DSC_CFG_WB_ACC_INT_MASK, reg_val);
 	} else
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	return QDMA_SUCCESS;
 }
@@ -2095,7 +2083,7 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 	uint32_t reg_addr = 0;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if (!is_vf) {
 		reg_addr = (is_c2h) ?  QDMA_OFFSET_DMAP_SEL_C2H_DSC_PIDX :
@@ -2119,7 +2107,7 @@ int qdma_queue_cmpt_cidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 		QDMA_OFFSET_DMAP_SEL_CMPT_CIDX;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_addr += (qid * QDMA_CMPT_CIDX_STEP);
 
@@ -2135,7 +2123,7 @@ int qdma_queue_intr_cidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 		QDMA_OFFSET_DMAP_SEL_INT_CIDX;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_addr += qid * QDMA_INT_CIDX_STEP;
 
@@ -2152,7 +2140,7 @@ int qdma_queue_cmpt_cidx_read(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 			QDMA_OFFSET_DMAP_SEL_CMPT_CIDX;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_addr += qid * QDMA_CMPT_CIDX_STEP;
 
@@ -2182,7 +2170,7 @@ int qdma_mm_channel_enable(void *dev_hndl, uint8_t channel, uint8_t is_c2h)
 
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2204,7 +2192,7 @@ int qdma_mm_channel_disable(void *dev_hndl, uint8_t channel, uint8_t is_c2h)
 
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2223,7 +2211,7 @@ int qdma_initiate_flr(void *dev_hndl, uint8_t is_vf)
 			QDMA_OFFSET_PF_REG_FLR_STATUS;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_reg_write(dev_hndl, reg_addr, 1);
 
@@ -2237,7 +2225,7 @@ int qdma_is_flr_done(void *dev_hndl, uint8_t is_vf, uint8_t *done)
 			QDMA_OFFSET_PF_REG_FLR_STATUS;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	/* wait for it to become zero */
 	rv = hw_monitor_reg(dev_hndl, reg_addr, QDMA_FLR_STATUS_MASK,
@@ -2258,12 +2246,12 @@ int qdma_is_config_bar(void *dev_hndl, uint8_t is_vf)
 			QDMA_OFFSET_CONFIG_BLOCK_ID;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, reg_addr);
 
 	if (FIELD_GET(QDMA_CONFIG_BLOCK_ID_MASK, reg_val) != QDMA_MAGIC_NUMBER)
-		return -QDMA_INVALID_CONFIG_BAR;
+		return -QDMA_ERR_HWACC_INV_CONFIG_BAR;
 
 	return QDMA_SUCCESS;
 }
@@ -2278,7 +2266,7 @@ int qdma_get_user_bar(void *dev_hndl, uint8_t is_vf, uint8_t *user_bar)
 			QDMA_OFFSET_GLBL2_PF_BARLITE_EXT;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	user_bar_id = qdma_reg_read(dev_hndl, reg_addr);
 
@@ -2299,7 +2287,7 @@ int qdma_get_user_bar(void *dev_hndl, uint8_t is_vf, uint8_t *user_bar)
 	}
 	if (bar_found == 0) {
 		*user_bar = 0;
-		return -QDMA_BAR_NOT_FOUND;
+		return -QDMA_ERR_HWACC_BAR_NOT_FOUND;
 	}
 
 	return QDMA_SUCCESS;
@@ -2308,7 +2296,7 @@ int qdma_get_user_bar(void *dev_hndl, uint8_t is_vf, uint8_t *user_bar)
 int qdma_get_function_number(void *dev_hndl, uint8_t *func_id)
 {
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	*func_id = (uint8_t)qdma_reg_read(dev_hndl,
 			QDMA_OFFSET_GLBL2_CHANNEL_FUNC_RET);
@@ -2325,7 +2313,7 @@ int qdma_get_version(void *dev_hndl, uint8_t is_vf,
 			QDMA_OFFSET_GLBL2_MISC_CAP;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, reg_addr);
 
@@ -2412,7 +2400,7 @@ int qdma_get_device_attributes(void *dev_hndl,
 	uint32_t reg_val = 0;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	/* number of PFs */
 	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL2_PF_BARLITE_INT);
@@ -2456,7 +2444,7 @@ int qdma_error_interrupt_setup(void *dev_hndl, uint16_t func_id,
 	uint32_t reg_val = 0;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val =
 		FIELD_SET(QDMA_GLBL_ERR_FUNC_MASK, func_id) |
@@ -2464,7 +2452,7 @@ int qdma_error_interrupt_setup(void *dev_hndl, uint16_t func_id,
 
 	qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_ERR_INT, reg_val);
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_error_interrupt_rearm(void *dev_hndl)
@@ -2472,14 +2460,14 @@ int qdma_error_interrupt_rearm(void *dev_hndl)
 	uint32_t reg_val = 0;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL_ERR_INT);
 	reg_val |= FIELD_SET(QDMA_GLBL_ERR_ARM_MASK, 1);
 
 	qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_ERR_INT, reg_val);
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_error_enable(void *dev_hndl, enum qdma_error_idx err_idx)
@@ -2489,10 +2477,10 @@ int qdma_error_enable(void *dev_hndl, enum qdma_error_idx err_idx)
 	struct qdma_dev_attributes *dev_cap;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if (err_idx > QDMA_ERRS_ALL)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2544,10 +2532,10 @@ int qdma_error_enable(void *dev_hndl, enum qdma_error_idx err_idx)
 		qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_ERR_MASK, reg_val);
 	}
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
-const char *qdma_get_error_name(enum qdma_error_idx err_idx)
+const char *qdma_get_hw_error_name(enum qdma_error_idx err_idx)
 {
 	if (err_idx >= QDMA_ERRS_ALL)
 		return NULL;
@@ -2572,7 +2560,7 @@ int qdma_error_process(void *dev_hndl)
 	};
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2606,15 +2594,13 @@ int qdma_error_process(void *dev_hndl)
 	/* Write 1 to the global status register to clear the bits */
 	qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_ERR_STAT, glbl_err_stat);
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 
 static int dump_reg(char *buf, int buf_sz, unsigned int raddr,
 		const char *rname, unsigned int rval)
 {
-	int len = 0;
-
 	/* length of the line should not exceed 80 chars, so, checking
 	 * for min 80 chars. If below print pattern is changed, check for
 	 * new the buffer size requirement
@@ -2622,11 +2608,9 @@ static int dump_reg(char *buf, int buf_sz, unsigned int raddr,
 	if (buf_sz < DEBGFS_LINE_SZ)
 		return -1;
 
-	len += QDMA_SNPRINTF(buf + len, DEBGFS_LINE_SZ,
-					"[%#7x] %-47s %#-10x %u\n", raddr,
-					rname, rval, rval);
-
-	return len;
+	return QDMA_SNPRINTF(buf, DEBGFS_LINE_SZ,
+			"[%#7x] %-47s %#-10x %u\n",
+			raddr, rname, rval, rval);
 }
 
 
@@ -2643,14 +2627,14 @@ int qdma_dump_config_regs(void *dev_hndl, uint8_t is_vf,
 	struct qdma_dev_attributes *dev_cap;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	if (buflen < qdma_reg_dump_buf_len())
 		return -ERROR_INSUFFICIENT_BUFFER_SPACE;
 
 	//TODO : VF register space to be added later.
 	if (is_vf)
-		return -QDMA_FEATURE_NOT_SUPPORTED;
+		return -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED;
 
 	qdma_get_device_attr(dev_hndl, &dev_cap);
 
@@ -2696,13 +2680,13 @@ int qdma_is_legacy_interrupt_pending(void *dev_hndl)
 	uint32_t reg_val;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL_INTERRUPT_CFG);
 	if (FIELD_GET(QDMA_GLBL_INTR_LGCY_INTR_PEND_MASK, reg_val))
 		return QDMA_SUCCESS;
 
-	return -QDMA_NO_PENDING_LEGACY_INTERRUPT;
+	return -QDMA_ERR_HWACC_NO_PEND_LEGCY_INTR;
 }
 
 
@@ -2711,7 +2695,7 @@ int qdma_clear_pending_legacy_intrrupt(void *dev_hndl)
 	uint32_t reg_val;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL_INTERRUPT_CFG);
 	reg_val |= FIELD_SET(QDMA_GLBL_INTR_LGCY_INTR_PEND_MASK, 1);
@@ -2725,7 +2709,7 @@ int qdma_disable_legacy_interrupt(void *dev_hndl)
 	uint32_t reg_val;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL_INTERRUPT_CFG);
 	reg_val |= FIELD_SET(QDMA_GLBL_INTR_CFG_EN_LGCY_INTR_MASK, 0);
@@ -2739,11 +2723,17 @@ int qdma_enable_legacy_interrupt(void *dev_hndl)
 	uint32_t reg_val;
 
 	if (!dev_hndl)
-		return -QDMA_INVALID_PARAM_ERR;
+		return -QDMA_ERR_INV_PARAM;
 
 	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL_INTERRUPT_CFG);
 	reg_val |= FIELD_SET(QDMA_GLBL_INTR_CFG_EN_LGCY_INTR_MASK, 1);
 	qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_INTERRUPT_CFG, reg_val);
 
 	return QDMA_SUCCESS;
+}
+
+int qdma_get_error_code(int acc_err_code)
+{
+
+	return qdma_get_err_code(acc_err_code);
 }

@@ -20,7 +20,7 @@ For VM testing, host system must support virtualization and it must be enabled i
 Host System Configuration
 -------------------------
 
-Linux QDMA Driver latest release is verified on following Host system configuration for PF and VF functionality
+Linux QDMA Driver release is verified on following Host system configuration for PF and VF functionality
 
 +--------------------------+-------------------------------------------------------------+
 | Host System              | Configuration Details                                       |
@@ -41,7 +41,7 @@ Note: QEMU is a hosted virtual machine monitor which emulates the machine's proc
 Guest System Configuration
 --------------------------
 
-Linux QDMA VF Driver latest release is verified on following Host system configuration for VF functionality
+Linux QDMA VF Driver release is verified on following Guest system configuration for VF functionality
 
 ========================= ==================================
 Guest System(VM)          Configuration Details             
@@ -53,43 +53,43 @@ Cores              	  4
 ========================= ==================================
 
 
-Supported OS List
-------------------
+Supported Linux Distributions
+-----------------------------
 
-Linux QDMA Driver also supported on following OS and kernel versions
-
-
-+-------------------------+-------------+----------------+
-| Operating System        | OS Version  | Kernel Version |          
-+=========================+=============+================+
-| CentOS                  |7.4-1708     |3.10.0-693      |
-|                         +-------------+----------------+
-|                         |7.5-1804     |3.10.0-862      |
-|                         +-------------+----------------+
-|                         |7.6-1810     |3.10.0-957      |
-+-------------------------+-------------+----------------+
-|Fedora                   |28           |4.16            |
-|                         +-------------+----------------+
-|                         |29           |4.18            |
-|                         +-------------+----------------+
-|                         |30           |5.0             |
-+-------------------------+-------------+----------------+
-|Ubuntu                   |14.04.06     |4.4.0-93        |
-|                         +-------------+----------------+
-|                         |16.04        |4.10            |
-|                         +-------------+----------------+
-|                         |18.04        |4.15.0-23       |
-|                         +-------------+----------------+
-|                         |18.04.2      |3.10.0          |
-|                         +-------------+----------------+
-|                         |18.04.2      |3.10.0          |
-+-------------------------+-------------+----------------+
+Linux QDMA Driver is supported on the following linux distributions
 
 
-Supported Kernel.org Version List
----------------------------------
++-------------------------+---------------------+----------------+
+| Linux Distribution      | Version             | Kernel Version |          
++=========================+=====================+================+
+| CentOS                  |7.4-1708             |3.10.0-693      |
+|                         +---------------------+----------------+
+|                         |7.5-1804             |3.10.0-862      |
+|                         +---------------------+----------------+
+|                         |7.6-1810             |3.10.0-957      |
++-------------------------+---------------------+----------------+
+|Fedora                   |28                   |4.16            |
+|                         +---------------------+----------------+
+|                         |29                   |4.18            |
+|                         +---------------------+----------------+
+|                         |30                   |5.0             |
++-------------------------+---------------------+----------------+
+|Ubuntu                   |14.04.06             |4.4.0-93        |
+|                         +---------------------+----------------+
+|                         |16.04                |4.10            |
+|                         +---------------------+----------------+
+|                         |18.04                |4.15.0-23       |
+|                         +---------------------+----------------+
+|                         |18.04.2              |3.10.0          |
+|                         +---------------------+----------------+
+|                         |18.04.2              |3.10.0          |
++-------------------------+---------------------+----------------+
 
-Linux QDMA Driver verified on following kernel.org versions
+
+Supported Kernel Versions
+-------------------------
+
+Linux QDMA Driver is verified on following kernel.org Linux kernel versions
 
 +-------------------------+-----------------+
 |Kernel.org               | Kernel Version  |
@@ -107,11 +107,10 @@ Linux QDMA Driver verified on following kernel.org versions
 |                         | 5.0.14          |
 +-------------------------+-----------------+
 
-The following kernel functions shall be included in the OS kernel being used. Make sure that these functions are included in the kernel.
+The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.
 
 - Timer Functions 
 - PCIe Functions 
 - Kernel Memory functions
-- Kernel threads
 - Memory and GFP Functions
 

@@ -1,17 +1,5 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #ifndef QDMA_RESOURCE_MGMT_H_
@@ -28,18 +16,6 @@ extern "C" {
  * signatures exported for QDMA queue management.
  */
 #include "qdma_platform_env.h"
-
-/**
- * Error codes
- */
-#define QDMA_RESOURCE_MGMT_SUCCESS             (0)
-#define QDMA_RESOURCE_MGMT_MEMALLOC_FAIL       (1)
-#define QDMA_MASTER_RESOURCE_ALREADY_EXISTS    (2)
-#define QDMA_MASTER_RESOURCE_DOES_NOT_EXIST    (3)
-#define QDMA_DEV_ALREADY_EXISTS                (4)
-#define QDMA_DEV_DOES_NOT_EXIST                (5)
-#define QDMA_RESOURCE_NOT_ENOUGH_QUEUE         (6)
-#define QDMA_QMAX_PROG_FREEZE                  (7)
 
 /**
  * enum qdma_dev_q_range: Q ranage check

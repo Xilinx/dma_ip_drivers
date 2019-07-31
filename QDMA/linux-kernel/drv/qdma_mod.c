@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -76,15 +76,6 @@ module_param(num_threads, uint, 0644);
 MODULE_PARM_DESC(num_threads,
 "Number of threads to be created each for request and writeback processing");
 
-static unsigned int tm_mode_en;
-module_param(tm_mode_en, uint, 0644);
-MODULE_PARM_DESC(tm_mode_en,
-	"Enable Traffic Manager mode for bypass ST H2C xmit. Default disabled");
-
-static unsigned int tm_one_cdh_en;
-module_param(tm_one_cdh_en, uint, 0644);
-MODULE_PARM_DESC(tm_one_cdh_en,
-		"Enable 1 CDH for Traffic Manager mode. Default is Zero CDH");
 
 #include "pci_ids.h"
 
@@ -248,13 +239,9 @@ static ssize_t set_qmax(struct device *dev,
 static ssize_t show_cmpl_status_acc(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
-	struct pci_dev *pdev = to_pci_dev(dev);
 	struct xlnx_pci_dev *xpdev;
 	int len;
 	unsigned int cmpl_status_acc = 0;
-
-	if (!pdev)
-		return -EINVAL;
 
 	xpdev = (struct xlnx_pci_dev *)dev_get_drvdata(dev);
 	if (!xpdev)
@@ -335,14 +322,10 @@ static ssize_t set_cmpl_status_acc(struct device *dev,
 static ssize_t show_c2h_buf_sz(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	struct pci_dev *pdev = to_pci_dev(dev);
 	struct xlnx_pci_dev *xpdev;
 	int len = 0;
 	int i;
 	unsigned int c2h_buf_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
-
-	if (!pdev)
-		return -EINVAL;
 
 	xpdev = (struct xlnx_pci_dev *)dev_get_drvdata(dev);
 	if (!xpdev)
@@ -449,14 +432,10 @@ input_err:
 static ssize_t show_glbl_rng_sz(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
-	struct pci_dev *pdev = to_pci_dev(dev);
 	struct xlnx_pci_dev *xpdev;
 	int len = 0;
 	int i;
 	unsigned int glbl_ring_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
-
-	if (!pdev)
-		return -EINVAL;
 
 	xpdev = (struct xlnx_pci_dev *)dev_get_drvdata(dev);
 	if (!xpdev)
@@ -562,14 +541,10 @@ input_err:
 static ssize_t show_c2h_timer_cnt(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
-	struct pci_dev *pdev = to_pci_dev(dev);
 	struct xlnx_pci_dev *xpdev;
 	int len = 0;
 	int i;
 	unsigned int c2h_timer_cnt[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
-
-	if (!pdev)
-		return -EINVAL;
 
 	xpdev = (struct xlnx_pci_dev *)dev_get_drvdata(dev);
 	if (!xpdev)
@@ -679,14 +654,10 @@ input_err:
 static ssize_t show_c2h_cnt_th(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct pci_dev *pdev = to_pci_dev(dev);
 	struct xlnx_pci_dev *xpdev;
 	int len = 0;
 	int i;
 	unsigned int c2h_cnt_th[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
-
-	if (!pdev)
-		return -EINVAL;
 
 	xpdev = (struct xlnx_pci_dev *)dev_get_drvdata(dev);
 	if (!xpdev)
@@ -1295,28 +1266,6 @@ q_start:
 			goto send_resp;
 		}
 
-#ifndef __QDMA_VF__
-		{
-			struct xlnx_dma_dev *xdev =
-				(struct xlnx_dma_dev *)(xpdev->dev_hndl);
-
-			if (xdev->stm_en) {
-				rv = qdma_queue_prog_stm(xpdev->dev_hndl,
-							 qdata->qhndl,
-							 ebuf, nl_work->buflen);
-				if (rv < 0) {
-					pr_info("%s, idx %u, c2h %u, prog stm failed %d.\n",
-						dev_name(&xpdev->pdev->dev),
-						qidx, c2h, rv);
-					snprintf(ebuf, nl_work->buflen,
-						 "Q idx %u, c2h %u, prog stm failed %d.\n",
-						 qidx, c2h, rv);
-					goto send_resp;
-				}
-			}
-		}
-#endif
-
 		if (is_qp && c2h == qctrl->is_c2h) {
 			c2h = !qctrl->is_c2h;
 			goto q_start;
@@ -1378,7 +1327,7 @@ int xpdev_nl_queue_start(struct xlnx_pci_dev *xpdev, void *nl_info, u8 is_qp,
 	wait_event_interruptible(nl_work->wq, nl_work->q_start_handled);
 	rv = nl_work->ret;
 	kfree(nl_work);
-	xnl_respond_buffer(nl_info, ebuf, strlen(ebuf));
+	xnl_respond_buffer(nl_info, ebuf, strlen(ebuf), rv);
 
 	return rv;
 }
@@ -1633,8 +1582,6 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 		intr_legacy_init();
 
 	conf.intr_rngsz = QDMA_INTR_COAL_RING_SIZE;
-	conf.tm_mode_en = tm_mode_en;
-	conf.tm_one_cdh_en = tm_one_cdh_en;
 	conf.pdev = pdev;
 
 	/* initialize all the bar numbers with -1 */
@@ -1903,7 +1850,7 @@ static int __init qdma_mod_init(void)
 
 	pr_info("%s", version);
 
-	rv = libqdma_init(num_threads);
+	rv = libqdma_init(num_threads, NULL);
 	if (rv < 0)
 		return rv;
 

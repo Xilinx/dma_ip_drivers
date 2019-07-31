@@ -1,17 +1,5 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #include "qdma_mbox_protocol.h"
@@ -336,7 +324,7 @@ static int get_ring_idx(void *dev_hndl, uint16_t ring_sz, uint16_t *rng_idx)
 		}
 	}
 
-	return -QDMA_MBOX_ERR_RINGSZ;
+	return -QDMA_ERR_MBOX_INV_RINGSZ;
 }
 
 static int get_buf_idx(void *dev_hndl,  uint16_t buf_sz, uint16_t *buf_idx)
@@ -355,7 +343,7 @@ static int get_buf_idx(void *dev_hndl,  uint16_t buf_sz, uint16_t *buf_idx)
 		}
 	}
 
-	return -QDMA_MBOX_ERR_BUFSZ;
+	return -QDMA_ERR_MBOX_INV_BUFSZ;
 }
 
 static int get_cntr_idx(void *dev_hndl, uint8_t cntr_val, uint8_t *cntr_idx)
@@ -374,7 +362,7 @@ static int get_cntr_idx(void *dev_hndl, uint8_t cntr_val, uint8_t *cntr_idx)
 		}
 	}
 
-	return -QDMA_MBOX_ERR_CNTR_TH;
+	return -QDMA_ERR_MBOX_INV_CNTR_TH;
 }
 
 static int get_tmr_idx(void *dev_hndl, uint8_t tmr_val, uint8_t *tmr_idx)
@@ -393,7 +381,7 @@ static int get_tmr_idx(void *dev_hndl, uint8_t tmr_val, uint8_t *tmr_idx)
 		}
 	}
 
-	return -QDMA_MBOX_ERR_TMR_TH;
+	return -QDMA_ERR_MBOX_INV_TMR_TH;
 }
 
 static int mbox_compose_sw_context(void *dev_hndl,
@@ -404,7 +392,7 @@ static int mbox_compose_sw_context(void *dev_hndl,
 	int rv = 0;
 
 	if (!qctxt || !sw_ctxt)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	rv = get_ring_idx(dev_hndl, qctxt->descq_conf.ringsz, &rng_idx);
 	if (rv < 0)
@@ -449,7 +437,7 @@ static int mbox_compose_prefetch_context(void *dev_hndl,
 	int rv = 0;
 
 	if (!qctxt || !pfetch_ctxt)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 	rv = get_buf_idx(dev_hndl, qctxt->descq_conf.bufsz, &buf_idx);
 	if (rv < 0)
 		return rv;
@@ -472,7 +460,7 @@ static int mbox_compose_cmpt_context(void *dev_hndl,
 	int rv = 0;
 
 	if (!qctxt || !cmpt_ctxt)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 	rv = get_cntr_idx(dev_hndl, qctxt->descq_conf.cnt_thres, &cntr_idx);
 	if (rv < 0)
 		return rv;
@@ -518,32 +506,32 @@ static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	if (cmpt_ctxt_type == QDMA_MBOX_CMPT_CTXT_ONLY) {
 		rv = qdma_cmpt_context_clear(dev_hndl, qid_hw);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 	} else {
 		rv = qdma_dev_qinfo_get(pci_bus_num, func_id, &qbase, &qmax);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC;
+			return rv;
 
 		q_range = qdma_dev_is_queue_in_range(pci_bus_num,
 						func_id, qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			return -QDMA_MBOX_ERR_QID;
+			return -QDMA_ERR_MBOX_INV_QID;
 
 		rv = qdma_sw_context_clear(dev_hndl, c2h, qid_hw);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 
 		if (st && c2h) {
 			rv = qdma_pfetch_context_clear(dev_hndl, qid_hw);
 			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+				return rv;
 		}
 
 		if ((cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
 		    (cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_ST)) {
 			rv = qdma_cmpt_context_clear(dev_hndl, qid_hw);
 			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+				return rv;
 		}
 	}
 
@@ -563,32 +551,32 @@ static int mbox_invalidate_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	if (cmpt_ctxt_type == QDMA_MBOX_CMPT_CTXT_ONLY) {
 		rv = qdma_cmpt_context_invalidate(dev_hndl, qid_hw);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 	} else {
 		rv = qdma_dev_qinfo_get(pci_bus_num, func_id, &qbase, &qmax);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC;
+			return rv;
 
 		q_range = qdma_dev_is_queue_in_range(pci_bus_num,
 						func_id, qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			return -QDMA_MBOX_ERR_QID;
+			return -QDMA_ERR_MBOX_INV_QID;
 
 		rv = qdma_sw_context_invalidate(dev_hndl, c2h, qid_hw);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 
 		if (st && c2h) {
 			rv = qdma_pfetch_context_invalidate(dev_hndl, qid_hw);
 			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+				return rv;
 		}
 
 		if ((cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
 		    (cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_ST)) {
 			rv = qdma_cmpt_context_invalidate(dev_hndl, qid_hw);
 			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+				return rv;
 		}
 	}
 
@@ -609,13 +597,13 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	rv = qdma_dev_qinfo_get(pci_bus_num, qctxt->descq_conf.func_id,
 				&qbase, &qmax);
 	if (rv < 0)
-		return -QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC;
+		return rv;
 
 	q_range = qdma_dev_is_queue_in_range(pci_bus_num,
 					     qctxt->descq_conf.func_id,
 					     qctxt->qid_hw);
 	if (q_range != QDMA_DEV_Q_IN_RANGE)
-		return -QDMA_MBOX_ERR_QID;
+		return -QDMA_ERR_MBOX_INV_QID;
 
 	qdma_mbox_memset(&descq_ctxt, 0, sizeof(struct qdma_descq_context));
 
@@ -627,12 +615,12 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 
 		rv = qdma_cmpt_context_clear(dev_hndl, qid_hw);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 
 		rv = qdma_cmpt_context_write(dev_hndl, qid_hw,
 			     &descq_ctxt.cmpt_ctxt);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 
 	} else {
 		rv = mbox_compose_sw_context(dev_hndl, qctxt,
@@ -666,13 +654,13 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 		rv = qdma_sw_context_write(dev_hndl, qctxt->c2h, qid_hw,
 					   &descq_ctxt.sw_ctxt);
 		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			return rv;
 
 		if (qctxt->st && qctxt->c2h) {
 			rv = qdma_pfetch_context_write(dev_hndl, qid_hw,
 						       &descq_ctxt.pfetch_ctxt);
 			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+				return rv;
 		}
 
 		if ((qctxt->cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
@@ -680,7 +668,7 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 			rv = qdma_cmpt_context_write(dev_hndl, qid_hw,
 						     &descq_ctxt.cmpt_ctxt);
 			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+				return rv;
 		}
 	}
 	return 0;
@@ -734,7 +722,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 	int ret = 0;
 
 	if (!rcv)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	switch (rcv->hdr.op) {
 	case MBOX_OP_BYE:
@@ -789,7 +777,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		rv = qdma_fmap_write(dev_hndl, hdr->src_func_id,
 				     &fmap_cfg);
 		if (rv < 0)
-			rv = -QDMA_MBOX_ERR_FMAP;
+			rv = -QDMA_ERR_MBOX_FMAP_WR_FAILED;
 	}
 	break;
 	case MBOX_OP_CSR:
@@ -804,28 +792,24 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 
 		rv = qdma_get_global_ring_sizes(dev_hndl, 0,
 				QDMA_GLOBAL_CSR_ARRAY_SZ, ringsz);
-		if (rv < 0) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
+		if (rv < 0)
 			goto exit_func;
-		}
+
 		rv = qdma_get_global_buffer_sizes(dev_hndl, 0,
 				QDMA_GLOBAL_CSR_ARRAY_SZ, bufsz);
-		if (rv < 0 && (rv != -QDMA_FEATURE_NOT_SUPPORTED)) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
+		if (rv < 0 && (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED))
 			goto exit_func;
-		}
+
 		rv = qdma_get_global_timer_count(dev_hndl, 0,
 				QDMA_GLOBAL_CSR_ARRAY_SZ, tmr_th);
-		if (rv < 0 && (rv != -QDMA_FEATURE_NOT_SUPPORTED)) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
+		if (rv < 0 && (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED))
 			goto exit_func;
-		}
+
 		rv = qdma_get_global_counter_threshold(dev_hndl, 0,
 				QDMA_GLOBAL_CSR_ARRAY_SZ, cntr_th);
-		if (rv < 0 && (rv != -QDMA_FEATURE_NOT_SUPPORTED)) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
+		if (rv < 0 && (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED))
 			goto exit_func;
-		}
+
 		for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
 			rsp_csr->csr_info.ringsz[i] = ringsz[i] &
 					0xFFFF;
@@ -838,8 +822,8 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 			}
 		}
 
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			rv = 0;
+		if (rv == -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED)
+			rv = QDMA_SUCCESS;
 	}
 	break;
 	case MBOX_OP_QREQ:
@@ -855,7 +839,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 						&resp->fmap.qbase,
 						&resp->fmap.qmax);
 		if (rv < 0)
-			rv = -QDMA_MBOX_ERR_NUM_QUEUES;
+			rv = -QDMA_ERR_MBOX_NUM_QUEUES;
 		else {
 			struct qdma_fmap_cfg fmap_cfg;
 
@@ -876,7 +860,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 				q_notify->hdr.src_func_id,
 				q_notify->qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			rv = -QDMA_MBOX_ERR_QID;
+			rv = -QDMA_ERR_MBOX_INV_QID;
 		else
 			rv = qdma_dev_increment_active_queue(
 					pci_bus_num,
@@ -893,7 +877,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 				q_notify->hdr.src_func_id,
 				q_notify->qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			rv = -QDMA_MBOX_ERR_QID;
+			rv = -QDMA_ERR_MBOX_INV_QID;
 		else
 			rv = qdma_dev_decrement_active_queue(
 					pci_bus_num,
@@ -914,13 +898,11 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 			rv = qdma_indirect_intr_context_clear(dev_hndl,
 						      ring_index);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 			rv = qdma_indirect_intr_context_write(dev_hndl,
 						      ring_index, ctxt);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 		}
 	}
 	break;
@@ -938,8 +920,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 						      ring_index,
 						      &rsp_ictxt->ictxt[i]);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 
 		}
 	}
@@ -954,8 +935,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 					dev_hndl,
 					ictxt->ring_index_list[i]);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 		}
 	}
 	break;
@@ -969,8 +949,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 					dev_hndl,
 					ictxt->ring_index_list[i]);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 		}
 	}
 	break;
@@ -1021,7 +1000,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 	}
 	break;
 	default:
-		return -QDMA_MBOX_ERR_INVALID_MSG;
+		return -QDMA_ERR_MBOX_INV_MSG;
 	break;
 	}
 
@@ -1041,7 +1020,7 @@ int qmda_mbox_compose_vf_online(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_HELLO;
@@ -1058,7 +1037,7 @@ int qdma_mbox_compose_vf_offline(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_BYE;
@@ -1073,7 +1052,7 @@ int qdma_mbox_compose_vf_qreq(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QREQ;
@@ -1090,7 +1069,7 @@ int qdma_mbox_compose_vf_notify_qadd(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QNOTIFY_ADD;
@@ -1106,7 +1085,7 @@ int qdma_mbox_compose_vf_notify_qdel(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QNOTIFY_DEL;
@@ -1123,7 +1102,7 @@ int qdma_mbox_compose_vf_fmap_prog(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_FMAP;
@@ -1143,7 +1122,7 @@ int qdma_mbox_compose_vf_qctxt_write(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_WRT;
@@ -1167,7 +1146,7 @@ int qdma_mbox_compose_vf_qctxt_read(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_RD;
@@ -1188,7 +1167,7 @@ int qdma_mbox_compose_vf_qctxt_invalidate(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_INV;
@@ -1209,7 +1188,7 @@ int qdma_mbox_compose_vf_qctxt_clear(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_CLR;
@@ -1228,7 +1207,7 @@ int qdma_mbox_compose_csr_read(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_CSR;
@@ -1244,7 +1223,7 @@ int qdma_mbox_compose_vf_intr_ctxt_write(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_WRT;
@@ -1262,7 +1241,7 @@ int qdma_mbox_compose_vf_intr_ctxt_read(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_RD;
@@ -1280,7 +1259,7 @@ int qdma_mbox_compose_vf_intr_ctxt_clear(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_CLR;
@@ -1298,7 +1277,7 @@ int qdma_mbox_compose_vf_intr_ctxt_invalidate(uint16_t func_id,
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
 	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+		return -QDMA_ERR_INV_PARAM;
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_INV;
@@ -1448,7 +1427,7 @@ int qdma_mbox_send(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 	if (v & F_MBOX_FN_STATUS_OUT_MSG)
-		return -QDMA_MBOX_SEND_BUSY;
+		return -QDMA_ERR_MBOX_SEND_BUSY;
 
 	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP)
 		qdma_reg_write(dev_hndl, mbox_base + reg, raw_data[i]);
@@ -1476,7 +1455,7 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 
 
 	if (!(v & M_MBOX_FN_STATUS_IN_MSG))
-		return -QDMA_MOBX_NO_MSG_IN;
+		return -QDMA_ERR_MOBX_NO_MSG_IN;
 
 	if (!is_vf) {
 		from_id = G_MBOX_FN_STATUS_SRC(v);
@@ -1493,7 +1472,7 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 	/* ack'ed the sender */
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_CMD, F_MBOX_FN_CMD_RCV);
 	if (all_zero_msg)
-		return -QDMA_MBOX_ALL_ZERO_MSG;
+		return -QDMA_ERR_MBOX_ALL_ZERO_MSG;
 
 	if (!is_vf && (from_id != msg->hdr.src_func_id))
 		msg->hdr.src_func_id = from_id;

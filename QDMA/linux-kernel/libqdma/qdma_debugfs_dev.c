@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -133,8 +133,9 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 
 	/* print the banner with device info */
 	rv = dump_banner(dev_name, buf + len, buflen - len);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_warn("insufficient space to dump register banner\n");
+		kfree(buf);
 		return len;
 	}
 	len += rv;
@@ -145,8 +146,9 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 	rv = qdma_dump_config_regs((void *)dev_hndl, 1,
 			buf + len, buflen - len);
 #endif
-	if (rv < 0) {
-		pr_warn("Not able to dump Config Bar register values\n");
+	if (unlikely(rv < 0)) {
+		pr_warn("Not able to dump Config Bar register values with error = %d\n",
+								rv);
 		*data = buf;
 		*data_len = buflen;
 		return len;
@@ -254,10 +256,12 @@ static int dbgfs_dump_intr_cntx(unsigned long dev_hndl, char *dev_name,
 						xdev,
 						ring_index,
 						&intr_ctxt);
-			if (rv < 0) {
+			if (unlikely(rv < 0)) {
 				len += sprintf(buf + len,
 							   "%s read intr context failed %d.\n",
 							   xdev->conf.name, rv);
+				*data = buf;
+				*data_len = buflen;
 				return rv;
 			}
 			len += snprintf(buf + len, buflen - len,
@@ -307,10 +311,11 @@ static int dbgfs_dump_intr_ring(unsigned long dev_hndl, char *dev_name,
 
 	rv = qdma_intr_ring_dump(dev_hndl, vector_idx, 0,
 		 num_entries - 1, buf, buflen);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		len += sprintf(buf + len,
 					   "%s read intr context failed %d.\n",
 					   xdev->conf.name, rv);
+		kfree(buf);
 		return rv;
 	}
 
@@ -361,7 +366,7 @@ static int dev_dbg_file_open(struct inode *inode, struct file *fp)
 
 	/* convert this string as hex integer */
 	rv = kstrtoint((const char *)dev_name, 16, &dev_id);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		rv = -ENODEV;
 		return rv;
 	}
@@ -432,7 +437,7 @@ static ssize_t dev_dbg_file_read(struct file *fp, char __user *user_buffer,
 					dev_priv->dev_name, &buf, &buf_len);
 		}
 
-		if (rv < 0)
+		if (unlikely(rv < 0))
 			goto dev_dbg_file_read_exit;
 
 		dev_priv->datalen = rv;
@@ -462,7 +467,7 @@ static ssize_t dev_dbg_file_read(struct file *fp, char __user *user_buffer,
 	*ppos += count;
 	rv = count;
 
-	pr_debug("nuber of bytes written to user space is %zu\n", count);
+	pr_debug("number of bytes written to user space is %zu\n", count);
 
 dev_dbg_file_read_exit:
 	kfree(buf);
@@ -503,7 +508,7 @@ static ssize_t dev_intr_file_read(struct file *fp, char __user *user_buffer,
 					dev_priv->dev_name, &buf, &buf_len);
 		}
 
-		if (rv < 0)
+		if (unlikely(rv < 0))
 			goto dev_intr_file_read_exit;
 
 		dev_priv->datalen = rv;
@@ -700,13 +705,13 @@ int create_dev_dbg_files(struct xlnx_dma_dev *xdev, struct dentry *dev_root)
 		fops->owner = THIS_MODULE;
 		switch (i) {
 		case DBGFS_DEV_DBGF_INFO:
-			snprintf(dbgf[i].name, 64, "%s", "info");
+			snprintf(dbgf[i].name, 64, "%s", "qdma_info");
 			fops->open = dev_info_open;
 			fops->read = dev_info_read;
 			fops->release = dev_dbg_file_release;
 			break;
 		case DBGFS_DEV_DBGF_REGS:
-			snprintf(dbgf[i].name, 64, "%s", "regs");
+			snprintf(dbgf[i].name, 64, "%s", "qdma_regs");
 			fops->open = dev_regs_open;
 			fops->read = dev_regs_read;
 			fops->release = dev_dbg_file_release;
@@ -796,21 +801,24 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 	struct pci_dev *pdev = xdev->conf.pdev;
 	int rv = 0;
 
-	snprintf(dname, QDMA_DEV_NAME_SZ, "%02x:%02x:%x",
-			pdev->bus->number,
-			PCI_SLOT(pdev->devfn),
-			PCI_FUNC(pdev->devfn));
-	/* create a directory for the device in debugfs */
-	dbgfs_dev_root = debugfs_create_dir(dname, qdma_debugfs_root);
-	if (!dbgfs_dev_root) {
-		pr_err("Failed to create device direcotry\n");
-		return -1;
-	}
-	xdev->dbgfs_dev_root = dbgfs_dev_root;
+	if (!xdev->conf.debugfs_dev_root) {
+		snprintf(dname, QDMA_DEV_NAME_SZ, "%02x:%02x:%x",
+				pdev->bus->number,
+				PCI_SLOT(pdev->devfn),
+				PCI_FUNC(pdev->devfn));
+		/* create a directory for the device in debugfs */
+		dbgfs_dev_root = debugfs_create_dir(dname, qdma_debugfs_root);
+		if (!dbgfs_dev_root) {
+			pr_err("Failed to create device direcotry\n");
+			return -1;
+		}
+		xdev->dbgfs_dev_root = dbgfs_dev_root;
+	} else
+		xdev->dbgfs_dev_root = xdev->conf.debugfs_dev_root;
 
 	/* create debug files for qdma device */
-	rv = create_dev_dbg_files(xdev, dbgfs_dev_root);
-	if (rv < 0) {
+	rv = create_dev_dbg_files(xdev, xdev->dbgfs_dev_root);
+	if (unlikely(rv < 0)) {
 		pr_err("Failed to create device debug files\n");
 		goto dbgfs_dev_init_fail;
 	}
@@ -818,7 +826,7 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 	/* create a directory for the queues in debugfs */
 	dbgfs_queues_root = debugfs_create_dir("queues", xdev->dbgfs_dev_root);
 	if (!dbgfs_queues_root) {
-		pr_err("Failed to create queueus directory under device directory\n");
+		pr_err("Failed to create queues directory under device directory\n");
 		goto dbgfs_dev_init_fail;
 	}
 	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
@@ -833,7 +841,7 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 
 		/* create debug files for intr */
 		rv = create_dev_intr_files(xdev, dbgfs_intr_root);
-		if (rv < 0) {
+		if (unlikely(rv < 0)) {
 			pr_err("Failed to create intr ring files\n");
 			goto dbgfs_dev_init_fail;
 		}
@@ -846,7 +854,7 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 
 dbgfs_dev_init_fail:
 
-	debugfs_remove_recursive(dbgfs_dev_root);
+	debugfs_remove_recursive(xdev->dbgfs_dev_root);
 	return -1;
 }
 
@@ -859,7 +867,8 @@ dbgfs_dev_init_fail:
  *****************************************************************************/
 void dbgfs_dev_exit(struct xlnx_dma_dev *xdev)
 {
-	debugfs_remove_recursive(xdev->dbgfs_dev_root);
+	if (!xdev->conf.debugfs_dev_root)
+		debugfs_remove_recursive(xdev->dbgfs_dev_root);
 	xdev->dbgfs_dev_root = NULL;
 	xdev->dbgfs_queues_root = NULL;
 	xdev->dbgfs_intr_root = NULL;

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -32,6 +32,8 @@
 #ifdef ERR_DEBUG
 #include "qdma_nl.h"
 #endif
+#include "qdma_ul_ext.h"
+
 
 enum q_state_t {
 	/** Queue is not taken */
@@ -42,13 +44,6 @@ enum q_state_t {
 	 *  data consumption
 	 */
 	Q_STATE_ONLINE,
-};
-
-enum qdma_req_state {
-	QDMA_REQ_NOT_SUBMITTED,
-	QDMA_REQ_SUBMIT_PARTIAL,
-	QDMA_REQ_SUBMITTED,
-	QDMA_REQ_COMPLETE
 };
 
 #define QDMA_FLQ_SIZE 80
@@ -140,14 +135,14 @@ struct qdma_descq {
 	unsigned int pidx_cmpt;
 	/** completion cidx */
 	unsigned int cidx_cmpt;
-	/** pending writeback cidx */
-	unsigned int cidx_cmpt_pend;
 	/** number of packets processed in q */
 	unsigned long long total_cmpl_descs;
 	/** @mm_cmpt_ring_crtd: CMPT ring created for MM */
 	u8 mm_cmpt_ring_crtd;
 	/** descriptor writeback, data type depends on the cmpt_entry_len */
 	void *desc_cmpt_cur;
+	/* descriptor list to be provided for ul extenstion call */
+	struct qdma_q_desc_list *desc_list;
 	/** pointer to completion entry */
 	u8 *desc_cmpt;
 	/** descriptor dma bus address*/
@@ -281,20 +276,6 @@ void qdma_descq_free_resource(struct qdma_descq *descq);
  *****************************************************************************/
 int qdma_descq_prog_hw(struct qdma_descq *descq);
 
-#ifndef __QDMA_VF__
-/*****************************************************************************/
-/**
- * qdma_descq_prog_stm() - program the STM
- *
- * @param[in]	descq:		pointer to qdma_descq
- * @param[in]   clear:		flag to program/clear stm context
- *
- * @return	0: success
- * @return	<0: failure
- *****************************************************************************/
-int qdma_descq_prog_stm(struct qdma_descq *descq, bool clear);
-#endif
-
 /*****************************************************************************/
 /**
  * qdma_descq_context_cleanup() - clean up the queue context
@@ -397,20 +378,20 @@ struct qdma_sgt_req_cb {
 	unsigned int desc_nr;
 	/** offset in the page*/
 	unsigned int offset;
-	/** number of data byte not yet proccessed*/
-	unsigned int left;
 	/** offset in the scatter gather list*/
 	unsigned int sg_offset;
+	/** next sg to be processed */
+	void *sg;
 	/** scatter gather ebtry index*/
 	unsigned int sg_idx;
+	/** number of data byte not yet proccessed*/
+	unsigned int left;
 	/** status of the request*/
 	int status;
 	/** indicates whether request processing is done or not*/
 	u8 done;
 	/** indicates whether to unmap the kernel pages*/
 	u8 unmap_needed:1;
-	/* flag to indicate partial req submit */
-	enum qdma_req_state req_state;
 };
 
 /** macro to get the request call back data */
@@ -480,28 +461,8 @@ void sgl_unmap(struct pci_dev *pdev, struct qdma_sw_sg *sg, unsigned int sgcnt,
  *****************************************************************************/
 void descq_flq_free_resource(struct qdma_descq *descq);
 
-struct cmpl_info {
-	/* cmpl entry stat bits */
-	union {
-		u8 fbits;
-		struct cmpl_flag {
-			u8 format:1;
-			u8 color:1;
-			u8 err:1;
-			u8 desc_used:1;
-			u8 eot:1;
-			u8 filler:3;
-		} f;
-	};
-	u8 rsvd;
-	u16 len;
-	/* for tracking */
-	unsigned int pidx;
-	__be64 *entry;
-};
-
-int rcv_udd_only(struct qdma_descq *descq, struct cmpl_info *cmpl);
-int parse_cmpl_entry(struct qdma_descq *descq, struct cmpl_info *cmpl);
+int rcv_udd_only(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl);
+int parse_cmpl_entry(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl);
 void cmpt_next(struct qdma_descq *descq);
 
 /* CIDX/PIDX update macros */

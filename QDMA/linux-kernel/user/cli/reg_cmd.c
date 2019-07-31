@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-present,  Xilinx, Inc.
+ * Copyright (c) 2018-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -24,7 +24,6 @@
 
 #define QDMA_CFG_BAR_SIZE 0xB400
 #define QDMA_USR_BAR_SIZE 0x100
-#define STM_BAR_SIZE	0x0200003C
 
 /* Macros for reading device capability */
 #define QDMA_GLBL2_MISC_CAP                       0x134
@@ -41,7 +40,6 @@ struct xdev_info {
 	unsigned char func;
 	unsigned char config_bar;
 	unsigned char user_bar;
-	char stm_bar;
 };
 
 static struct xreg_info qdma_dmap_regs[] = {
@@ -52,42 +50,6 @@ static struct xreg_info qdma_dmap_regs[] = {
 	{"DMAP_SEL_CMPT_CIDX", 0x640C, 512, 0x10, 0, 0, QDMA_MM_ST_MODE},
 	{"", 0, 0, 0 }
 };
-
-/*
- * INTERNAL: for debug testing only
- */
-static struct xreg_info stm_regs[] = {
-	{"H2C_DATA_0", 0x02000000, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DATA_1", 0x02000004, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DATA_2", 0x02000008, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DATA_3", 0x0200000C, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DATA_4", 0x02000010, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"IND_CTXT_CMD", 0x02000014, 0, 0, 0, 0,QDMA_ST_MODE},
-	{"STM_REV", 0x02000018, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"CAM_CLR_STATUS", 0x0200001C, 0, 0, 0, 0,  QDMA_ST_MODE},
-	{"C2H_DATA8", 0x02000020, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DATA_5", 0x02000024, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"STATUS", 0x0200002C, 0, 0, 0, 0, QDMA_ST_MODE },
-	{"H2C_MODE", 0x02000030, 0, 0, 0, 0, QDMA_ST_MODE },
-	{"H2C_STATUS", 0x02000034, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"C2H_MODE", 0x02000038, 0, 0, 0, 0,QDMA_ST_MODE},
-	{"C2H_STATUS", 0x0200003C, 0, 0, 0, 0,  QDMA_ST_MODE},
-	{"H2C_PORT0_DEBUG0", 0x02000040, 0, 0, 0, 0,QDMA_ST_MODE},
-	{"H2C_PORT1_DEBUG0", 0x02000044, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_PORT2_DEBUG0", 0x02000048, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"C2H_PORT0_DEBUG0", 0x02000050, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"C2H_PORT1_DEBUG0", 0x02000054, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"C2H_PORT2_DEBUG0", 0x02000058, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DEBUG0", 0x02000060, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_DEBUG1", 0x02000064, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"AWERR", 0x02000068, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"ARERR", 0x0200006C, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_PORT0_DEBUG1", 0x02000070, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_PORT1_DEBUG1", 0x02000074, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"H2C_PORT2_DEBUG1", 0x02000078, 0, 0, 0, 0, QDMA_ST_MODE},
-	{"", 0, 0, 0, 0 }
-};
-
 
 /*
  * Register I/O through mmap of BAR0.
@@ -443,7 +405,6 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 	xdev.func = (xcmd->if_bdf & 0x07);
 	xdev.config_bar = xcmd->attrs[XNL_ATTR_DEV_CFG_BAR];
 	xdev.user_bar = xcmd->attrs[XNL_ATTR_DEV_USR_BAR];
-	xdev.stm_bar = xcmd->attrs[XNL_ATTR_DEV_STM_BAR];
 
 	barno = (regcmd->sflags & XCMD_REG_F_BAR_SET) ?
 			 regcmd->bar : xdev.config_bar;
@@ -477,12 +438,6 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 		fprintf(stdout, "\nUSER BAR #%d\n", xdev.user_bar);
 		reg_dump_mmap(&xdev, xdev.user_bar, qdma_user_regs,
 				QDMA_USR_BAR_SIZE, xcmd);
-
-		if (xdev.stm_bar != -1) {
-			fprintf(stdout, "\nSTM BAR #%d\n", xdev.stm_bar);
-			reg_dump_mmap(&xdev, xdev.stm_bar, stm_regs,
-				      STM_BAR_SIZE, xcmd);
-		}
 
 		fprintf(stdout, "\nCONFIG BAR #%d\n", xdev.config_bar);
 		reg_dump_mmap(&xdev, xdev.config_bar, qdma_config_regs,

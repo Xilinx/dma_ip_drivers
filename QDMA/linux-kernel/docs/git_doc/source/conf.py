@@ -27,9 +27,9 @@ author = 'Xilinx, Inc'
 
 # The short X.Y version
 #version = u''
-version = '2019.1'
+version = '2019.1 Patch'
 # The full version, including alpha/beta/rc tags
-release = u'2019.1'
+release = u'2019.1 Patch'
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -40,6 +40,7 @@ static int make_intr_context(struct xlnx_dma_dev *xdev,
 
 	if ((xdev->conf.qdma_drv_mode != INDIRECT_INTR_MODE) &&
 			(xdev->conf.qdma_drv_mode != AUTO_MODE)) {
+		pr_err("Invalid driver mode: %d", xdev->conf.qdma_drv_mode);
 		return -EINVAL;
 	}
 
@@ -60,71 +61,6 @@ static int make_intr_context(struct xlnx_dma_dev *xdev,
 }
 
 #ifndef __QDMA_VF__
-static int make_stm_c2h_context(struct qdma_descq *descq, u32 *data)
-{
-	int pipe_slr_id = descq->conf.pipe_slr_id;
-	int pipe_flow_id = descq->conf.pipe_flow_id;
-	int pipe_tdest = descq->conf.pipe_tdest;
-
-	/* 191..160 */
-	data[5] = F_STM_C2H_CTXT_ENTRY_VALID;
-
-	/* 128..159 */
-	data[1] = (pipe_slr_id << S_STM_CTXT_C2H_SLR) |
-		  ((pipe_tdest & 0xFF00) << S_STM_CTXT_C2H_TDEST_H);
-
-	/* 96..127 */
-	data[0] = ((pipe_tdest & 0xFF) << S_STM_CTXT_C2H_TDEST_L) |
-		  (pipe_flow_id << S_STM_CTXT_C2H_FID);
-
-	pr_debug("%s, STM 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x.\n",
-		 descq->conf.name, data[0], data[1], data[2], data[3], data[4],
-		 data[5]);
-	return 0;
-}
-
-static int make_stm_h2c_context(struct qdma_descq *descq, u32 *data)
-{
-	int pipe_slr_id = descq->conf.pipe_slr_id;
-	int pipe_flow_id = descq->conf.pipe_flow_id;
-	int pipe_tdest = descq->conf.pipe_tdest;
-	int dppkt = 1;
-	int log2_dppkt = ilog2(dppkt);
-	int pkt_lim = 0;
-	int max_ask = 8;
-
-	/* 191..160 */
-	data[5] = F_STM_H2C_CTXT_ENTRY_VALID;
-
-	/* 128..159 */
-	data[4] = (descq->qidx_hw << S_STM_CTXT_QID);
-
-	/* 96..127 */
-	data[3] = (pipe_slr_id << S_STM_CTXT_H2C_SLR) |
-		  ((pipe_tdest & 0xFF00) << S_STM_CTXT_H2C_TDEST_H);
-
-	/* 64..95 */
-	data[2] = ((pipe_tdest & 0xFF) << S_STM_CTXT_H2C_TDEST_L) |
-		  (pipe_flow_id << S_STM_CTXT_H2C_FID) |
-		  (pkt_lim << S_STM_CTXT_PKT_LIM) |
-		  (max_ask << S_STM_CTXT_MAX_ASK);
-
-	/* 32..63 */
-	data[1] = (dppkt << S_STM_CTXT_DPPKT) |
-		  (log2_dppkt << S_STM_CTXT_LOG2_DPPKT);
-
-	/* 0..31 */
-	/** explicitly init to 8 to workaround hw issue due to which the value
-	 * is getting initialized to zero instead of its reset value of 8
-	 */
-	data[0] = 8;
-
-	pr_debug("%s, STM 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x.\n",
-		 descq->conf.name, data[0], data[1], data[2], data[3], data[4],
-		 data[5]);
-	return 0;
-}
-
 static int make_sw_context(struct qdma_descq *descq,
 			   struct qdma_descq_sw_ctxt *sw_ctxt)
 {
@@ -160,14 +96,8 @@ static int make_sw_context(struct qdma_descq *descq,
 		} else if (descq->conf.c2h) {  /* st c2h */
 			sw_ctxt->frcd_en = descq->conf.fetch_credit;
 			sw_ctxt->desc_sz = DESC_SZ_8B;
-		} else { /* st h2c */
+		} else /* st h2c */
 			sw_ctxt->desc_sz = DESC_SZ_16B;
-
-			/* For STM & TM mode, set fcrd_en for ST H2C */
-			if (descq->xdev->stm_en || descq->xdev->conf.tm_mode_en)
-				sw_ctxt->fetch_max =
-						descq->conf.fetch_credit;
-		}
 	}
 
 	/* pidx = 0; irq_ack = 0 */
@@ -180,6 +110,11 @@ static int make_sw_context(struct qdma_descq *descq,
 		sw_ctxt->wbk_en = 0;
 		sw_ctxt->wbi_chk = 0;
 	}
+
+	/* Disable the marker response. Not applicable for ST C2H */
+	if ((!descq->conf.desc_bypass) &&
+		((!descq->conf.st) || (descq->conf.st && !descq->conf.c2h)))
+		sw_ctxt->mrkr_dis = 1;
 
 #ifdef ERR_DEBUG
 	if (descq->induce_err & (1 << param)) {
@@ -271,17 +206,21 @@ int qdma_intr_context_setup(struct xlnx_dma_dev *xdev)
 	}
 
 	rv = make_intr_context(xdev, ictxt.ictxt);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		goto free_msg;
 
 	qdma_mbox_compose_vf_intr_ctxt_write(xdev->func_id, &ictxt, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("%s, mbox failed for interrupt context %d.\n",
 				xdev->conf.name, rv);
 		goto free_msg;
 	}
 	rv = qdma_mbox_vf_response_status(m->raw);
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_response_status failed with error = %d", rv);
+		rv = -EINVAL;
+	}
 
 free_msg:
 	qdma_mbox_msg_free(m);
@@ -306,12 +245,15 @@ int qdma_intr_context_read(struct xlnx_dma_dev *xdev,
 	qdma_mbox_compose_vf_intr_ctxt_read(xdev->func_id,
 			&ictxt, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("%s invalidate interrupt context failed %d.\n",
 			xdev->conf.name, rv);
 	}
 	rv = qdma_mbox_vf_intr_context_get(m->raw, &ictxt);
-	if (rv == 0)
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_intr_context_get failed with error = %d", rv);
+		rv = -EINVAL;
+	} else
 		memcpy(ctxt, &ictxt.ictxt[0],
 		       sizeof(struct qdma_indirect_intr_ctxt));
 
@@ -348,7 +290,7 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 				qid_hw, st, c2h, cmpt_ctxt_type, m->raw);
 
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		if (rv != -ENODEV)
 			pr_info("%s, qid_hw 0x%x mbox failed %d.\n",
 				xdev->conf.name, qid_hw, rv);
@@ -356,6 +298,10 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 	}
 
 	rv = qdma_mbox_vf_response_status(m->raw);
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_response_status failed with error = %d", rv);
+		rv = -EINVAL;
+	}
 
 err_out:
 	qdma_mbox_msg_free(m);
@@ -387,7 +333,7 @@ int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 				qid_hw, st, c2h, cmpt_ctxt_type, m->raw);
 
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		if (rv != -ENODEV)
 			pr_info("%s, qid_hw 0x%x mbox failed %d.\n",
 				xdev->conf.name, qid_hw, rv);
@@ -395,6 +341,10 @@ int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 	}
 
 	rv = qdma_mbox_vf_context_get(m->raw, context);
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_context_get faled with error = %d", rv);
+		rv = -EINVAL;
+	}
 
 err_out:
 	qdma_mbox_msg_free(m);
@@ -475,7 +425,7 @@ int qdma_descq_context_setup(struct qdma_descq *descq)
 				cmpt_ctxt_type, &descq_conf, m->raw);
 
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		if (rv != -ENODEV)
 			pr_info("%s, qid_hw 0x%x, %s mbox failed %d.\n",
 				xdev->conf.name, descq->qidx_hw,
@@ -484,6 +434,10 @@ int qdma_descq_context_setup(struct qdma_descq *descq)
 	}
 
 	rv = qdma_mbox_vf_response_status(m->raw);
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_response_status failed with error = %d", rv);
+		rv = -EINVAL;
+	}
 
 err_out:
 	qdma_mbox_msg_free(m);
@@ -505,8 +459,10 @@ int qdma_prog_intr_context(struct xlnx_dma_dev *xdev,
 
 		ctxt = &ictxt->ictxt[i];
 		rv = qdma_indirect_intr_context_write(xdev, ring_index, ctxt);
-		if (rv < 0)
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Intr ctxt write failed with error = %d\n", rv);
+			return qdma_get_error_code(rv);
+		}
 	}
 
 	return 0;
@@ -529,19 +485,24 @@ int qdma_intr_context_setup(struct xlnx_dma_dev *xdev)
 	 *  each vector's context width is QDMA_REG_IND_CTXT_WCNT_3(3)
 	 */
 	rv = make_intr_context(xdev, ctxt);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		return rv;
 
 	for (i = 0; i <  QDMA_NUM_DATA_VEC_FOR_INTR_CXT; i++) {
 		ring_index = get_intr_ring_index(xdev,
 				(i + xdev->dvec_start_idx));
 		rv = qdma_indirect_intr_context_clear(xdev, ring_index);
-		if (rv < 0)
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Intr ctxt clear failed with error = %d\n", rv);
+			return qdma_get_error_code(rv);
+		}
+
 		rv = qdma_indirect_intr_context_write(xdev,
 				ring_index, &ctxt[i]);
-		if (rv < 0)
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Intr ctxt write failed with error = %d\n", rv);
+			return qdma_get_error_code(rv);
+		}
 	}
 
 	return 0;
@@ -554,21 +515,22 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 
 	if (clr) {
 		rv = qdma_sw_context_clear(xdev, c2h, qid_hw);
-		if (rv < 0) {
-			pr_err("Fail to clear sw context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Fail to clear sw context with error = %d", rv);
+			return qdma_get_error_code(rv);
 		}
 
 		rv = qdma_hw_context_clear(xdev, c2h, qid_hw);
-		if (rv < 0) {
-			pr_err("Fail to clear hw context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Fail to clear hw context with error = %d", rv);
+			return qdma_get_error_code(rv);
 		}
 
 		rv = qdma_credit_context_clear(xdev, c2h, qid_hw);
-		if (rv < 0) {
-			pr_err("Fail to clear credit context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Fail to clear credit context with error = %d",
+							rv);
+			return qdma_get_error_code(rv);
 		}
 
 		/* Only clear prefetch and writeback contexts if this queue is
@@ -576,42 +538,44 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 		 */
 		if (st && c2h) {
 			rv = qdma_pfetch_context_clear(xdev, qid_hw);
-			if (rv < 0) {
-				pr_err("Fail to clear pfetch context, rv = %d",
+			if (unlikely(rv < 0)) {
+				pr_err("Fail to clear pfetch context with error = %d",
 				       rv);
-				return rv;
+				return qdma_get_error_code(rv);
 			}
 		}
 
 		/* Only clear cmpt context if this queue is ST C2H or MM cmpt*/
 		if ((st && c2h) || (!st && mm_cmpt_en)) {
 			rv = qdma_cmpt_context_clear(xdev, qid_hw);
-			if (rv < 0) {
-				pr_err("Fail to clear cmpt context, rv = %d",
+			if (unlikely(rv < 0)) {
+				pr_err("Fail to clear cmpt context with error = %d",
 				       rv);
-				return rv;
+				return qdma_get_error_code(rv);
 			}
 		}
 
 	} else {
 
 		rv = qdma_sw_context_invalidate(xdev, c2h, qid_hw);
-		if (rv < 0) {
-			pr_err("Fail to invalidate sw context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Fail to invalidate sw context with error = %d",
+							rv);
+			return qdma_get_error_code(rv);
 		}
 
 		rv = qdma_hw_context_invalidate(xdev, c2h, qid_hw);
-		if (rv < 0) {
-			pr_err("Fail to invalidate hw context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Fail to invalidate hw context with error = %d",
+							rv);
+			return qdma_get_error_code(rv);
 		}
 
 		rv = qdma_credit_context_invalidate(xdev, c2h, qid_hw);
-		if (rv < 0) {
-			pr_err("Fail to invalidate credit context, rv = %d",
+		if (unlikely(rv < 0)) {
+			pr_err("Fail to invalidate credit context with error = %d",
 			       rv);
-			return rv;
+			return qdma_get_error_code(rv);
 		}
 
 		/* Only clear prefetch and writeback contexts if this queue is
@@ -620,20 +584,20 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 		if (st && c2h) {
 
 			rv = qdma_pfetch_context_invalidate(xdev, qid_hw);
-			if (rv < 0) {
-				pr_err("Fail to invalidate pfetch context, rv = %d",
+			if (unlikely(rv < 0)) {
+				pr_err("Fail to invalidate pfetch context with error = %d",
 				       rv);
-				return rv;
+				return qdma_get_error_code(rv);
 			}
 		}
 
 		/* Only clear cmpt context if this queue is ST C2H MM cmpt*/
 		if ((st && c2h) || (!st && mm_cmpt_en)) {
 			rv = qdma_cmpt_context_invalidate(xdev, qid_hw);
-			if (rv < 0) {
-				pr_err("Fail to invalidate cmpt context, rv = %d",
+			if (unlikely(rv < 0)) {
+				pr_err("Fail to invalidate cmpt context with error = %d",
 				       rv);
-				return rv;
+				return qdma_get_err_code(rv);
 			}
 		}
 	}
@@ -663,33 +627,6 @@ int qdma_descq_context_setup(struct qdma_descq *descq)
 				descq->mm_cmpt_ring_crtd, &context);
 }
 
-int qdma_descq_stm_setup(struct qdma_descq *descq)
-{
-	struct stm_descq_context context;
-
-	memset(&context, 0, sizeof(context));
-	if (descq->conf.c2h)
-		make_stm_c2h_context(descq, context.stm);
-	else
-		make_stm_h2c_context(descq, context.stm);
-
-	return qdma_descq_stm_program(descq->xdev, descq->qidx_hw,
-				      descq->conf.pipe_flow_id,
-				      descq->conf.c2h, false,
-				      &context);
-}
-
-int qdma_descq_stm_clear(struct qdma_descq *descq)
-{
-	struct stm_descq_context context;
-
-	memset(&context, 0, sizeof(context));
-	return qdma_descq_stm_program(descq->xdev, descq->qidx_hw,
-					descq->conf.pipe_flow_id,
-					descq->conf.c2h, true,
-					&context);
-}
-
 int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 				bool st, bool c2h, bool mm_cmpt_en,
 				struct qdma_descq_context *context)
@@ -699,37 +636,39 @@ int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 	memset(context, 0, sizeof(struct qdma_descq_context));
 
 	rv = qdma_sw_context_read(xdev, c2h, qid_hw, &context->sw_ctxt);
-	if (rv < 0) {
-		pr_err("Failed to read sw context, rv = %d", rv);
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to read sw context with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
 	rv = qdma_hw_context_read(xdev, c2h, qid_hw, &context->hw_ctxt);
-	if (rv < 0) {
-		pr_err("Failed to read hw context, rv = %d", rv);
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to read hw context with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
 	rv = qdma_credit_context_read(xdev, c2h, qid_hw, &context->cr_ctxt);
-	if (rv < 0) {
-		pr_err("Failed to read hw context, rv = %d", rv);
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to read hw context with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
 	if (st && c2h) {
 		rv = qdma_pfetch_context_read(xdev, qid_hw,
 					      &context->pfetch_ctxt);
-		if (rv < 0) {
-			pr_err("Failed to read pftch context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Failed to read pftch context with error = %d",
+						rv);
+			return qdma_get_error_code(rv);
 		}
 	}
 
 	if ((st && c2h) || (!st && mm_cmpt_en)) {
 		rv = qdma_cmpt_context_read(xdev, qid_hw, &context->cmpt_ctxt);
-		if (rv < 0) {
-			pr_err("Failed to read cmpt context, rv = %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("Failed to read cmpt context with error = %d",
+							rv);
+			return qdma_get_error_code(rv);
 		}
 
 	}
@@ -744,9 +683,9 @@ int qdma_intr_context_read(struct xlnx_dma_dev *xdev,
 
 	memset(ctxt, 0, sizeof(struct qdma_indirect_intr_ctxt));
 	rv = qdma_indirect_intr_context_read(xdev, ring_index, ctxt);
-	if (rv < 0) {
-		pr_err("Failed to read intr context, rv = %d", rv);
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to read intr context with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
 	return 0;
@@ -755,31 +694,30 @@ int qdma_intr_context_read(struct xlnx_dma_dev *xdev,
 int qdma_descq_context_program(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 				bool st, bool c2h, bool mm_cmpt_en,
 				struct qdma_descq_context *context)
-
 {
 	int rv;
 
 	/* always clear first */
 	rv = qdma_descq_context_clear(xdev, qid_hw, st, c2h, mm_cmpt_en, 1);
-	if (rv < 0) {
-		pr_err("failed to clear the context, rv= %d", rv);
+	if (unlikely(rv < 0)) {
+		pr_err("failed to clear the context with error = %d", rv);
 		return rv;
 	}
 
 	rv = qdma_sw_context_write(xdev, c2h, qid_hw, &context->sw_ctxt);
-	if (rv < 0) {
-		pr_err("failed to program sw context, rv= %d", rv);
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("failed to program sw context with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
 	if (st && c2h) {
 		/* prefetch context */
 		rv = qdma_pfetch_context_write(xdev, qid_hw,
 							&context->pfetch_ctxt);
-		if (rv < 0) {
-			pr_err("failed to program pfetch context, rv= %d",
+		if (unlikely(rv < 0)) {
+			pr_err("failed to program pfetch context with error = %d",
 			       rv);
-			return rv;
+			return qdma_get_error_code(rv);
 		}
 	}
 
@@ -787,77 +725,12 @@ int qdma_descq_context_program(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
 	if ((st && c2h) || (!st && mm_cmpt_en)) {
 		/* cmpt context */
 		rv = qdma_cmpt_context_write(xdev, qid_hw, &context->cmpt_ctxt);
-		if (rv < 0) {
-			pr_err("failed to program cmpt context, rv= %d", rv);
-			return rv;
+		if (unlikely(rv < 0)) {
+			pr_err("failed to program cmpt context with error = %d",
+							rv);
+			return qdma_get_error_code(rv);
 		}
 	}
-
-	return 0;
-}
-
-
-int qdma_descq_stm_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-			u8 pipe_flow_id, bool c2h, bool map, bool ctxt,
-			struct stm_descq_context *context)
-{
-	int rv = 0;
-
-	if (!map) {
-		rv = hw_indirect_stm_prog(xdev, qid_hw, pipe_flow_id,
-					  STM_CSR_CMD_RD,
-					  ctxt ? STM_IND_ADDR_Q_CTX_H2C :
-					  STM_IND_ADDR_FORCED_CAN,
-					  context->stm, 5, false);
-	} else {
-		rv = hw_indirect_stm_prog(xdev, qid_hw, pipe_flow_id,
-					  STM_CSR_CMD_RD,
-					  c2h ? STM_IND_ADDR_C2H_MAP :
-					  STM_IND_ADDR_H2C_MAP,
-					  context->stm, c2h ? 1 : 5,
-					  false);
-	}
-	return rv;
-}
-
-int qdma_descq_stm_program(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-			   u8 pipe_flow_id, bool c2h, bool clear,
-			   struct stm_descq_context *context)
-{
-	int rv;
-
-	if (!c2h) {
-		/* need to program stm context */
-		rv = hw_indirect_stm_prog(xdev, qid_hw, pipe_flow_id,
-					  STM_CSR_CMD_WR,
-					  STM_IND_ADDR_Q_CTX_H2C,
-					  context->stm, 5, clear);
-		if (rv < 0)
-			return rv;
-		rv = hw_indirect_stm_prog(xdev, qid_hw, pipe_flow_id,
-					  STM_CSR_CMD_WR,
-					  STM_IND_ADDR_H2C_MAP,
-					  context->stm, 1, clear);
-		if (rv < 0)
-			return rv;
-	}
-
-	/* Only c2h st specific setup done below*/
-	if (!c2h)
-		return 0;
-
-	rv = hw_indirect_stm_prog(xdev, qid_hw, pipe_flow_id,
-				  STM_CSR_CMD_WR,
-				  STM_IND_ADDR_Q_CTX_C2H,
-				  context->stm, 2, clear);
-	if (rv < 0)
-		return rv;
-
-	rv = hw_indirect_stm_prog(xdev, qid_hw, pipe_flow_id,
-				  STM_CSR_CMD_WR, STM_IND_ADDR_C2H_MAP,
-				  context->stm, 1, clear);
-	if (rv < 0)
-		return rv;
 
 	return 0;
 }

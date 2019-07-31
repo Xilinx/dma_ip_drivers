@@ -1,17 +1,5 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #ifndef LIBQDMA_QDMA_PLATFORM_H_
@@ -144,6 +132,17 @@ void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx);
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
 void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap);
+
+
+/*****************************************************************************/
+/**
+ * qdma_get_err_code() - function to get the qdma access mapped error code
+ *
+ * @acc_err_code: qdma access error code
+ *
+ * Return:   returns the platform specific error code
+ *****************************************************************************/
+int qdma_get_err_code(int acc_err_code);
 
 #ifdef __cplusplus
 }

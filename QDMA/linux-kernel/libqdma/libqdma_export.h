@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -38,69 +38,23 @@
 #define QDMA_FUNC_ID_INVALID	(QDMA_PF_MAX + QDMA_VF_MAX)
 
 /**
- * enum qdma_error_codes - List of QDMA error codes
- *
- * When libqdma APIs are invoked by application, if any error occured,
- * the corresponding error code would be returned.
- *
+ * enum qdma_q_mode - mode in which Q is initialized
  */
-enum qdma_error_codes {
-	/** @QDMA_OPERATION_SUCCESSFUL: QDMA driver API operation successful */
-	QDMA_OPERATION_SUCCESSFUL                   = 0,
-	/** @QDMA_ERR_PCI_DEVICE_NOT_FOUND: not found on the PCIe bus */
-	QDMA_ERR_PCI_DEVICE_NOT_FOUND               = -1,
-	/** @QDMA_ERR_PCI_DEVICE_ALREADY_ATTACHED: device already attached */
-	QDMA_ERR_PCI_DEVICE_ALREADY_ATTACHED        = -2,
-	/**
-	 * @QDMA_ERR_PCI_DEVICE_ENABLE_FAILED: Failed to enable the PCIe device
-	 */
-	QDMA_ERR_PCI_DEVICE_ENABLE_FAILED           = -3,
-	/** @QDMA_ERR_PCI_DEVICE_INIT_FAILED: Failed to initialize the device */
-	QDMA_ERR_PCI_DEVICE_INIT_FAILED             = -4,
-	/** @QDMA_ERR_INVALID_INPUT_PARAM: Invalid input parameter received */
-	QDMA_ERR_INVALID_INPUT_PARAM                = -5,
-	/** @QDMA_ERR_INVALID_PCI_DEV: Invalid PCIe device */
-	QDMA_ERR_INVALID_PCI_DEV                    = -6,
-	/** @QDMA_ERR_INVALID_QIDX: Invalid Queue ID provided as input */
-	QDMA_ERR_INVALID_QIDX                       = -7,
-	/**
-	 * @QDMA_ERR_INVALID_DESCQ_STATE: Invalid descriptor queue state
-	 */
-	QDMA_ERR_INVALID_DESCQ_STATE                = -8,
-	/**
-	 * @QDMA_ERR_INVALID_DIRECTION: Invalid descriptor direction provided
-	 */
-	QDMA_ERR_INVALID_DIRECTION                  = -9,
-	/**
-	 * @QDMA_ERR_DESCQ_SETUP_FAILED: Failed to setup the descriptor queue
-	 */
-	QDMA_ERR_DESCQ_SETUP_FAILED                 = -10,
-	/** @QDMA_ERR_DESCQ_FULL: Descriptor queue is full */
-	QDMA_ERR_DESCQ_FULL                         = -11,
-	/**
-	 * @QDMA_ERR_DESCQ_IDX_ALREADY_ADDED: Descriptor queue
-	 * index is already added
-	 */
-	QDMA_ERR_DESCQ_IDX_ALREADY_ADDED            = -12,
-	/** @QDMA_ERR_QUEUE_ALREADY_CONFIGURED: Queue is already configured */
-	QDMA_ERR_QUEUE_ALREADY_CONFIGURED           = -13,
-	/** @QDMA_ERR_OUT_OF_MEMORY: Out of memory */
-	QDMA_ERR_OUT_OF_MEMORY                      = -14,
-	/**
-	 *  @QDMA_ERR_INVALID_QDMA_DEVICE: Invalid QDMA device, QDMA device
-	 *  is not yet created
-	 */
-	QDMA_ERR_INVALID_QDMA_DEVICE                = -15,
-	/**
-	 *  @QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE : The ST or MM or Both
-	 *  interface not enabled in the device
-	 */
-	QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE    = -16,
-	/**
-	 *  @QDMA_ERR_MISSING_DEVICE_CAPABILITY : Device capability is
-	 *  missing
-	 */
-	QDMA_ERR_MISSING_DEVICE_CAPABILITY          = -17,
+enum qdma_q_mode {
+	/** @QDMA_Q_MODE_MM: MM mode */
+	QDMA_Q_MODE_MM,
+	/** @QDMA_Q_MODE_ST: ST mode */
+	QDMA_Q_MODE_ST
+};
+
+/**
+ * enum qdma_q_dir - direction in which Q is initialized
+ */
+enum qdma_q_dir {
+	/** @QDMA_Q_DIR_H2C: host to card */
+	QDMA_Q_DIR_H2C,
+	/** @QDMA_Q_DIR_C2H: card to host */
+	QDMA_Q_DIR_C2H
 };
 
 /**
@@ -144,6 +98,26 @@ struct drv_mode_name {
 	char name[20];
 };
 
+struct qdma_ul_cmpt_info {
+	/* cmpl entry stat bits */
+	union {
+		u8 fbits;
+		struct cmpl_flag {
+			u8 format:1;
+			u8 color:1;
+			u8 err:1;
+			u8 desc_used:1;
+			u8 eot:1;
+			u8 filler:3;
+		} f;
+	};
+	u8 rsvd;
+	u16 len;
+	/* for tracking */
+	unsigned int pidx;
+	__be64 *entry;
+};
+
 extern struct drv_mode_name mode_name_list[];
 
 struct pci_dev;
@@ -155,10 +129,12 @@ struct pci_dev;
  * @num_threads: number of threads to be created each for request
  *  processing and writeback processing
  *
+ * @debugfs_root: root path for debugfs
+ *
  * Return: 0:	success <0:	error
  *
  *****************************************************************************/
-int libqdma_init(unsigned int num_threads);
+int libqdma_init(unsigned int num_threads, void *debugfs_root);
 
 /*****************************************************************************/
 /**
@@ -250,11 +226,6 @@ struct qdma_dev_conf {
 	 *  is master_pf or not
 	 */
 	u8 master_pf:1;
-	/**
-	 *  @isr_top_q_en: extra handling of per descq handling in top half
-	 *  (i.e., qdma_descq.fp_descq_isr_top will be set)
-	 */
-	u8 isr_top_q_en:1;
 	/**	@rsvd1: Reserved1 */
 	u8 rsvd1:5;
 	/**
@@ -304,19 +275,12 @@ struct qdma_dev_conf {
 	char bar_num_user;
 	/**	@bar_num_bypass: bypass bar */
 	char bar_num_bypass;
-	/** @bar_num_stm: STM bar, PF only */
-	char bar_num_stm;
 	/** @qsets_base: queue base for this funciton */
 	int qsets_base;
 	/** @bdf: device index */
 	u32 bdf;
 	/** @idx: index of device in device list */
 	u32 idx;
-	/** @tm_mode_en: xmit in traffic manager mode */
-	u8 tm_mode_en;
-	/** @tm_one_cdh_en: enable 1 CDH for Traffic Manager */
-	u8 tm_one_cdh_en;
-
 	/**
 	 *  @fp_user_isr_handler: user interrupt, if null,
 	 *  default libqdma handler is used
@@ -328,6 +292,10 @@ struct qdma_dev_conf {
 	 *  per-device addtional handling code
 	 */
 	void (*fp_q_isr_top_dev)(unsigned long dev_hndl, unsigned long uld);
+	/**
+	 * @debugfs_dev_root: root path for debugfs
+	 */
+	void *debugfs_dev_root;
 };
 
 /*****************************************************************************/
@@ -713,6 +681,9 @@ struct qdma_sw_sg {
 /** invalid MSI-x vector index */
 #define QDMA_QUEUE_VEC_INVALID	0xFF
 
+/** struct qdma_request forward declaration*/
+struct qdma_request;
+
 /**
  * struct qdma_queue_conf - qdma configuration parameters
  *
@@ -760,8 +731,6 @@ struct qdma_queue_conf {
 	 *  (i.e., with TLAST to identify the packet boundary)
 	 */
 	u8 st_pkt_mode:1;
-	/** @c2h_use_fl: c2h use pre-alloc free list */
-	u8 c2h_use_fl:1;
 
 	/** config flags: byte #3 */
 	/** @c2h_buf_sz_idx: global_csr_conf.c2h_buf_sz[N] */
@@ -800,6 +769,8 @@ struct qdma_queue_conf {
 	u8 port_id:3;
 	/** @at: Address Translation */
 	u8 at:1;
+	/** @init_pidx_dis : Disable pidx initialiaztion for ST C2H */
+	u8 init_pidx_dis:1;
 
 	/** @en_mm_cmpt: MM Completions enabled? */
 	u8 en_mm_cmpt;
@@ -855,6 +826,34 @@ struct qdma_queue_conf {
 	int (*fp_descq_c2h_packet)(unsigned long qhndl, unsigned long quld,
 				unsigned int len, unsigned int sgcnt,
 				struct qdma_sw_sg *sgl, void *udd);
+	/**
+	 * @fp_bypass_desc_fill: fill the all the descriptors required for
+	 *                        transfer
+	 *
+	 * q_hndl: handle with which bypass module can request back info from libqdma
+	 * q_mode: mode in which q is initialized
+	 * q_dir: diretion in which q is intialized
+	 * sgcnt: number of sctter gather entries for this request
+	 * sgl: lsit of scatter gather entries
+	 *
+	 *
+	 *  On calling this API, bypass module can request for descriptor using
+	 *  qdma_q_desc_get and set up as many descriptors as required for each
+	 *  scatter gather entry. If descriptors required are not available,
+	 *  it can return the number of sgcnt addressed till now and return <0
+	 *  in case of any failure
+	 */
+	int (*fp_bypass_desc_fill)(void *q_hndl, enum qdma_q_mode q_mode,
+			enum qdma_q_dir, struct qdma_request *req);
+	/**
+	 * @fp_proc_ul_cmpt_entry: parse cmpt entry in bypass mode
+	 * q_mode: mode in which q is initialized
+	 * cmpt_entry: cmpt entry descriptor
+	 * cmpt_info: parsed bypass releated info from cmpt_entry
+	 *
+	 */
+	int (*fp_proc_ul_cmpt_entry)(void *cmpt_entry,
+			struct qdma_ul_cmpt_info *cmpt_info);
 
 	/** fill in by libqdma */
 	/** @name: name of the qdma device */
@@ -951,21 +950,6 @@ struct qdma_q_state {
 
 int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
 		struct qdma_q_state *qstate, char *buf, int buflen);
-
-/*****************************************************************************/
-/**
- * qdma_queue_prog_stm() - Program STM for queue (context, map, etc)
- *
- * @dev_hndl:       dev_hndl returned from qdma_device_open()
- * @id:             queue index
- * @buflen:         length of the input buffer
- * @buf:            message buffer
- *
- * Return:	0 for success and <0 for error
- *
- *****************************************************************************/
-int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id, char *buf,
-			int buflen);
 
 /*****************************************************************************/
 /**
@@ -1090,7 +1074,7 @@ int qdma_queue_set_err_induction(unsigned long dev_hndl, unsigned long id,
 
 
 /** maximum request length */
-#define QDMA_REQ_OPAQUE_SIZE	72
+#define QDMA_REQ_OPAQUE_SIZE	80
 
 /** Max length of the user defined data */
 #define QDMA_UDD_MAXLEN		32

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under both the BSD-style license (found in the
@@ -18,7 +18,7 @@
 
 #define LIBQDMA_VERSION_MAJOR	2019
 #define LIBQDMA_VERSION_MINOR	1
-#define LIBQDMA_VERSION_PATCH	207
+#define LIBQDMA_VERSION_PATCH	211
 
 #define LIBQDMA_VERSION_STR	\
 	__stringify(LIBQDMA_VERSION_MAJOR) "." \

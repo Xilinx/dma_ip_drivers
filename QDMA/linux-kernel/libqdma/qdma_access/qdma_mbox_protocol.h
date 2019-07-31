@@ -1,17 +1,5 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #ifndef QDMA_MBOX_PROTOCOL_H_
@@ -27,33 +15,11 @@
 #include "qdma_platform_env.h"
 #include "qdma_access.h"
 
-/**
- * Error codes
- */
-#define QDMA_MBOX_SUCCESS               (0)
-#define QDMA_MBOX_ERR_FMAP              (1)
-#define QDMA_MBOX_ERR_NUM_QUEUES   (2)
-#define QDMA_MBOX_ERR_QID              (3)
-#define QDMA_MBOX_ERR_RINGSZ       (4)
-#define QDMA_MBOX_ERR_CMPT_RINGSZ  (5)
-#define QDMA_MBOX_ERR_BUFSZ        (6)
-#define QDMA_MBOX_ERR_CNTR_TH        (7)
-#define QDMA_MBOX_ERR_TMR_TH        (8)
-#define QDMA_MBOX_ERR_FMAP_RING_ADDR    (9)
-#define QDMA_MBOX_ERR_FMAP_CMPT_RING_ADDR (10)
-#define QDMA_MBOX_ERR_INVALID_PARAM     (11)
-#define QDMA_MBOX_ERR_CONTEXT_BUSY      (12)
-#define QDMA_MBOX_ERR_INVALID_MSG       (13)
-#define QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC       (14)
-#define QDMA_MBOX_ERR_CSR_READ           (15)
-#define QDMA_MBOX_SEND_BUSY                    (16)
-#define QDMA_MOBX_NO_MSG_IN                    (17)
-#define QDMA_MBOX_ALL_ZERO_MSG                 (18)
-#define QDMA_MBOX_VF_ONLINE                  (19)
-#define QDMA_MBOX_VF_OFFLINE                   (20)
-
 /** mailbox register max */
 #define MBOX_MSG_REG_MAX		32
+
+#define QDMA_MBOX_VF_ONLINE                  (19)
+#define QDMA_MBOX_VF_OFFLINE                   (20)
 
 #define mbox_invalidate_msg(m)	{ (m)->hdr.op = MBOX_OP_NOOP; }
 

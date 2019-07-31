@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -63,23 +63,30 @@ int qdma_set_qmax(unsigned long dev_hndl, int qbase, u32 qsets_max)
 	/* update the device with requested qmax and qbase */
 	rv = qdma_dev_update(xdev->conf.pdev->bus->number,
 			     xdev->func_id, qsets_max, &qbase);
-	if (rv < 0)
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to update dev entry with error = %d", rv);
 		return -EINVAL;
+	}
+
 	qdma_device_cleanup(xdev);
 
 	rv = qdma_dev_qinfo_get(xdev->conf.pdev->bus->number,
 			     xdev->func_id, &qbase, &qsets_max);
-	if (rv < 0)
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to get qinfo with error = %d", rv);
 		return -EINVAL;
+	}
+
 	xdev->conf.qsets_max = qsets_max;
 	xdev->conf.qsets_base = qbase;
 	rv = qdma_device_init(xdev);
-	if (rv < 0) {
-		pr_warn("qdma_init failed %d.\n", rv);
+	if (unlikely(rv < 0)) {
+		pr_warn("qdma_init failed with error = %d.\n", rv);
 		qdma_device_cleanup(xdev);
+		return -EINVAL;
 	}
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 /*****************************************************************************/
 /**
@@ -171,7 +178,7 @@ int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz)
 	xdev->conf.intr_rngsz = intr_rngsz;
 	qdma_device_interrupt_setup(xdev);
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 /*****************************************************************************/
@@ -249,14 +256,16 @@ int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	 */
 	rv = qdma_set_global_buffer_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
 			buf_sz);
-	if (rv < 0)
-		return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("set global buffer size failed with error = %d", rv);
+		return qdma_get_error_code(rv);
+	}
 
-	qdma_csr_read(xdev, &xdev->csr_info);
+	rv = qdma_csr_read(xdev, &xdev->csr_info);
+	if (unlikely(rv < 0))
+		return rv;
 
-
-
-	return rv;
+	return 0;
 }
 #endif
 
@@ -284,7 +293,7 @@ unsigned int qdma_get_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 			buf_sz))
 		return -EINVAL;
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 #ifdef QDMA_CSR_REG_UPDATE
@@ -324,12 +333,14 @@ int qdma_set_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 	 */
 	rv = qdma_set_ring_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
 			glbl_rng_sz);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		return -EINVAL;
 
-	qdma_csr_read(xdev, &xdev->csr_info);
+	rv = qdma_csr_read(xdev, &xdev->csr_info);
+	if (unlikely(rv < 0))
+		return rv;
 
-	return rv;
+	return 0;
 }
 #endif
 
@@ -357,7 +368,7 @@ unsigned int qdma_get_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 			glbl_rng_sz))
 		return -EINVAL;
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 #ifdef QDMA_CSR_REG_UPDATE
@@ -391,15 +402,16 @@ int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 
 	rv = qdma_set_global_timer_count(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
 			tmr_cnt);
-	if (rv < 0) {
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			return -EPERM;
-		else
-			return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("global timer set failed with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
-	qdma_csr_read(xdev, &xdev->csr_info);
 
-	return rv;
+	rv = qdma_csr_read(xdev, &xdev->csr_info);
+	if (unlikely(rv < 0))
+		return rv;
+
+	return 0;
 }
 #endif
 
@@ -426,14 +438,12 @@ unsigned int qdma_get_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 
 	rv = qdma_get_global_timer_count(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
 			tmr_cnt);
-	if (rv < 0) {
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			return -EPERM;
-		else
-			return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("get global timer failed with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 #ifdef QDMA_CSR_REG_UPDATE
@@ -466,15 +476,16 @@ int qdma_set_cnt_thresh(unsigned long dev_hndl, unsigned int *cnt_th)
 
 	rv = qdma_set_global_counter_threshold(xdev, 0,
 			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th);
-	if (rv < 0) {
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			return -EPERM;
-		else
-			return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("set global counter failed with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
-	qdma_csr_read(xdev, &xdev->csr_info);
 
-	return rv;
+	rv = qdma_csr_read(xdev, &xdev->csr_info);
+	if (unlikely(rv < 0))
+		return rv;
+
+	return 0;
 }
 #endif
 
@@ -501,14 +512,12 @@ unsigned int qdma_get_cnt_thresh(unsigned long dev_hndl, u32 *cnt_th)
 
 	rv = qdma_get_global_counter_threshold(xdev, 0,
 			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th);
-	if (rv < 0) {
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			return -EPERM;
-		else
-			return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("get global counter failed with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 #ifdef QDMA_CSR_REG_UPDATE
@@ -546,15 +555,16 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 	 * Write the given cmpl_status_acc value to the register
 	 */
 	rv = qdma_set_global_writeback_interval(xdev, cmpl_status_acc);
-	if (rv < 0) {
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			return -EPERM;
-		else
-			return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("set global writeback intvl failed with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
-	qdma_csr_read(xdev, &xdev->csr_info);
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	rv = qdma_csr_read(xdev, &xdev->csr_info);
+	if (unlikely(rv < 0))
+		return rv;
+
+	return 0;
 }
 #endif
 
@@ -587,11 +597,9 @@ unsigned int qdma_get_wb_intvl(unsigned long dev_hndl)
 	 * Read the current cmpl_status_acc value from the register and return
 	 */
 	rv = qdma_get_global_writeback_interval(xdev, &wb_intvl);
-	if (rv < 0) {
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			return -EPERM;
-		else
-			return -EINVAL;
+	if (unlikely(rv < 0)) {
+		pr_err("get global writeback intvl failed with error = %d", rv);
+		return qdma_get_error_code(rv);
 	}
 
 	return wb_intvl;

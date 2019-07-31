@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -95,16 +95,6 @@ struct mbox_msg *qdma_mbox_msg_alloc(void)
 	qdma_waitq_init(&m->waitq);
 
 	return m;
-}
-
-void qdma_mbox_msg_cancel(struct xlnx_dma_dev *xdev, struct mbox_msg *m)
-{
-	struct qdma_mbox *mbox = &xdev->mbox;
-
-	/* delete from mbox list */
-	spin_lock_bh(&mbox->list_lock);
-	list_del(&m->list);
-	spin_unlock_bh(&mbox->list_lock);
 }
 
 int qdma_mbox_msg_send(struct xlnx_dma_dev *xdev, struct mbox_msg *m,
@@ -307,7 +297,7 @@ static void mbox_rx_work(struct work_struct *work)
 		rv = mbox_hw_rcv(mbox, m);
 	}
 
-	if (rv == -QDMA_MBOX_ALL_ZERO_MSG) {
+	if (rv == -QDMA_ERR_MBOX_ALL_ZERO_MSG) {
 		mbox_stop = 1;
 
 		pr_info("%s: rcv'ed all zero mbox msg, disable mbox processing.\n",

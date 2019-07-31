@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -33,8 +33,8 @@
 #include "qdma_compat.h"
 #include "qdma_st_c2h.h"
 #include "qdma_access.h"
+#include "qdma_ul_ext.h"
 #include "version.h"
-
 
 /*
  * ST C2H descq (i.e., freelist) RX buffers
@@ -156,14 +156,13 @@ int descq_flq_alloc_resource(struct qdma_descq *descq)
 	for (sdesc = flq->sdesc, i = 0; i < flq->size; i++, sdesc++, desc++) {
 		rv = flq_fill_one(sdesc, desc, dev, node, descq->conf.c2h_bufsz,
 				  flq->pg_order, GFP_KERNEL);
-		if (rv < 0) {
+		if (unlikely(rv < 0)) {
 			descq_flq_free_resource(descq);
 			return rv;
 		}
 	}
 
-	descq->cidx_cmpt_pend = 0;
-return 0;
+	return 0;
 }
 
 static int qdma_flq_refill(struct qdma_descq *descq, int idx, int count,
@@ -280,13 +279,7 @@ int descq_st_c2h_read(struct qdma_descq *descq, struct qdma_request *req,
 		}
 
 		if (foff == fsg->len) {
-			struct qdma_sdesc_info *sinfo = flq->sdesc_info + pidx;
-
-			if (sinfo->f.eop)
-				descq->cidx_cmpt_pend = sinfo->cidx;
-
 			pidx = ring_idx_incr(pidx, 1, descq->conf.rngsz);
-
 			i++;
 			foff = 0;
 			fsg = fsg->next;
@@ -309,7 +302,7 @@ int descq_st_c2h_read(struct qdma_descq *descq, struct qdma_request *req,
 		descq->pidx_info.pidx = i;
 		rv = queue_pidx_update(descq->xdev, descq->conf.qidx,
 				descq->conf.c2h, &descq->pidx_info);
-		if (rv < 0) {
+		if (unlikely(rv < 0)) {
 			pr_err("%s: Failed to update pidx\n",
 					descq->conf.name);
 			return -EINVAL;
@@ -342,7 +335,7 @@ static int qdma_c2h_packets_proc_dflt(struct qdma_descq *descq)
 		}
 
 		rv = descq_st_c2h_read(descq, (struct qdma_request *)cb, 0, 0);
-		if (rv < 0) {
+		if (unlikely(rv < 0)) {
 			pr_info("req 0x%p, error %d.\n", cb, rv);
 			qdma_sgt_req_done(descq, cb, rv);
 			continue;
@@ -370,12 +363,12 @@ void cmpt_next(struct qdma_descq *descq)
 }
 
 static inline bool is_new_cmpl_entry(struct qdma_descq *descq,
-					struct cmpl_info *cmpl)
+					struct qdma_ul_cmpt_info *cmpl)
 {
 	return cmpl->f.color == descq->color;
 }
 
-int parse_cmpl_entry(struct qdma_descq *descq, struct cmpl_info *cmpl)
+int parse_cmpl_entry(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl)
 {
 	__be64 *cmpt = (__be64 *)descq->desc_cmpt_cur;
 
@@ -400,39 +393,10 @@ int parse_cmpl_entry(struct qdma_descq *descq, struct cmpl_info *cmpl)
 	} else
 		cmpl->len = 0;
 
-	if (unlikely(cmpl->f.err)) {
-		pr_warn("%s, ERR compl entry %u error set\n",
-				descq->conf.name, descq->cidx_cmpt);
-		goto err_out;
-	}
-
-	/*
-	 * format = 1 does not have length field, so the driver cannot
-	 * figure out how many descriptor is used
-	 */
-	if (unlikely(cmpl->f.format)) {
-		pr_err("%s: ERR cmpl. entry %u format=1.\n",
-			descq->conf.name, descq->cidx_cmpt);
-		goto err_out;
-	}
-
-	if (unlikely(!cmpl->f.desc_used && !descq->conf.cmpl_udd_en)) {
-		pr_warn("%s, ERR cmpl entry %u, desc_used 0, udd_en 0.\n",
-			descq->conf.name, descq->cidx_cmpt);
-		goto err_out;
-	}
-
 	return 0;
-
-err_out:
-	descq->err = 1;
-	print_hex_dump(KERN_INFO, "cmpl entry: ", DUMP_PREFIX_OFFSET,
-			16, 1, (void *)cmpt, descq->cmpt_entry_len,
-			false);
-	return -EINVAL;
 }
 
-static int rcv_pkt(struct qdma_descq *descq, struct cmpl_info *cmpl,
+static int rcv_pkt(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl,
 			unsigned int len)
 {
 	unsigned int pidx = cmpl->pidx;
@@ -457,9 +421,8 @@ static int rcv_pkt(struct qdma_descq *descq, struct cmpl_info *cmpl,
 
 		if (last_len)
 			sdesc->len = last_len;
-	} else {
+	} else
 		sdesc->len = 0;
-	}
 
 	if (descq->conf.fp_descq_c2h_packet) {
 		int rv = descq->conf.fp_descq_c2h_packet(descq->q_hndl,
@@ -467,10 +430,8 @@ static int rcv_pkt(struct qdma_descq *descq, struct cmpl_info *cmpl,
 				descq->conf.cmpl_udd_en ?
 				(unsigned char *)cmpl->entry : NULL);
 
-		if (rv < 0)
+		if (unlikely(rv < 0))
 			return rv;
-
-		descq->cidx_cmpt_pend = cidx_next;
 		flq->pidx_pend = next;
 	} else {
 		int i;
@@ -494,7 +455,7 @@ static int rcv_pkt(struct qdma_descq *descq, struct cmpl_info *cmpl,
 	return 0;
 }
 
-int rcv_udd_only(struct qdma_descq *descq, struct cmpl_info *cmpl)
+int rcv_udd_only(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl)
 {
 #ifdef XMP_DISABLE_ST_C2H_CMPL
 	__be64 cmpt_entry = cmpl->entry[0];
@@ -510,7 +471,6 @@ int rcv_udd_only(struct qdma_descq *descq, struct cmpl_info *cmpl)
 
 	/* udd only: no descriptor used */
 	if (descq->conf.fp_descq_c2h_packet) {
-
 		return descq->conf.fp_descq_c2h_packet(descq->q_hndl,
 				descq->conf.quld, 0, 0, NULL,
 				(unsigned char *)cmpl->entry);
@@ -525,7 +485,7 @@ int rcv_udd_only(struct qdma_descq *descq, struct cmpl_info *cmpl)
 		for (i = 0; i < pkt_cnt; i++) {
 			int rv = rcv_pkt(descq, cmpl, pkt_len);
 
-			if (rv < 0)
+			if (unlikely(rv < 0))
 				break;
 		}
 	}
@@ -535,19 +495,57 @@ int rcv_udd_only(struct qdma_descq *descq, struct cmpl_info *cmpl)
 	return 0;
 }
 
+int descq_cmpl_err_check(struct qdma_descq *descq,
+			 struct qdma_ul_cmpt_info *cmpl)
+{
+	/*
+	 * format = 1 does not have length field, so the driver cannot
+	 * figure out how many descriptor is used
+	 */
+	if (unlikely(cmpl->f.format)) {
+		pr_err("%s: ERR cmpl. entry %u format=1.\n",
+			descq->conf.name, descq->cidx_cmpt);
+		goto err_out;
+	}
+
+	if (unlikely(!cmpl->f.desc_used && !descq->conf.cmpl_udd_en)) {
+		pr_warn("%s, ERR cmpl entry %u, desc_used 0, udd_en 0.\n",
+			descq->conf.name, descq->cidx_cmpt);
+		goto err_out;
+	}
+
+	if (unlikely(cmpl->f.err)) {
+		pr_warn("%s, ERR cmpl entry %u error set\n",
+				descq->conf.name, descq->cidx_cmpt);
+		goto err_out;
+	}
+
+	return 0;
+err_out:
+	descq->err = 1;
+	print_hex_dump(KERN_INFO, "cmpl entry: ", DUMP_PREFIX_OFFSET,
+			16, 1, (void *)cmpl, descq->cmpt_entry_len,
+			false);
+	return -EINVAL;
+
+}
+
 int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 					bool upd_cmpl)
 {
 	struct qdma_c2h_cmpt_cmpl_status *cs =
 			(struct qdma_c2h_cmpt_cmpl_status *)
 			descq->desc_cmpt_cmpl_status;
-	unsigned int rngsz_cmpt = descq->conf.rngsz_cmpt;
+	struct qdma_queue_conf *qconf = &descq->conf;
+	unsigned int rngsz_cmpt = qconf->rngsz_cmpt;
 	unsigned int pidx = descq->pidx;
 	unsigned int cidx_cmpt = descq->cidx_cmpt;
 	unsigned int pidx_cmpt = cs->pidx;
 	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
 	unsigned int pidx_pend = flq->pidx_pend;
 	bool uld_handler = descq->conf.fp_descq_c2h_packet ? true : false;
+	unsigned char is_ul_ext = (qconf->desc_bypass &&
+			qconf->fp_proc_ul_cmpt_entry) ? 1 : 0;
 	int pend, ret = 0;
 	int proc_cnt = 0;
 	int rv = 0;
@@ -566,11 +564,10 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 		 * there are no entries as of now
 		 */
 		if (descq->xdev->conf.qdma_drv_mode != POLL_MODE) {
-			descq->cmpt_cidx_info.wrb_cidx = descq->cidx_cmpt;
 			rv = queue_cmpt_cidx_update(descq->xdev,
 					descq->conf.qidx,
 					&descq->cmpt_cidx_info);
-			if (rv < 0) {
+			if (unlikely(rv < 0)) {
 				pr_err("%s: Failed to update cmpt cidx\n",
 						descq->conf.name);
 				return -EINVAL;
@@ -588,15 +585,26 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 		(cs->color_isr_status >> 1) & 0x3);
 #endif
 
+	flq->pkt_cnt = pend;
+
 	if (!budget || budget > pend)
 		budget = pend;
 
 	while (likely(proc_cnt < budget)) {
-		struct cmpl_info cmpl;
-		int rv = parse_cmpl_entry(descq, &cmpl);
+		struct qdma_ul_cmpt_info cmpl;
+		int rv;
 
+		memset(&cmpl, 0, sizeof(struct qdma_ul_cmpt_info));
+		if (is_ul_ext)
+			rv = qconf->fp_proc_ul_cmpt_entry(descq->desc_cmpt_cur,
+							  &cmpl);
+		else
+			rv = parse_cmpl_entry(descq, &cmpl);
 		/* completion entry error, q is halted */
-		if (rv < 0)
+		if (unlikely(rv < 0))
+			return rv;
+		rv = descq_cmpl_err_check(descq, &cmpl);
+		if (unlikely(rv < 0))
 			return rv;
 
 		if (!is_new_cmpl_entry(descq, &cmpl))
@@ -611,7 +619,7 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 			rv = rcv_udd_only(descq, &cmpl);
 		}
 
-		if (rv < 0) /* cannot process now, stop */
+		if (unlikely(rv < 0)) /* cannot process now, stop */
 			break;
 
 		pidx = cmpl.pidx;
@@ -620,13 +628,15 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 		proc_cnt++;
 	}
 
+	flq->pkt_cnt -= proc_cnt;
+
 	if (proc_cnt) {
 		descq->pidx_cmpt = pidx_cmpt;
 		descq->pidx = pidx;
 		descq->cmpt_cidx_info.wrb_cidx = descq->cidx_cmpt;
 		rv = queue_cmpt_cidx_update(descq->xdev,
 				descq->conf.qidx, &descq->cmpt_cidx_info);
-		if (rv < 0) {
+		if (unlikely(rv < 0)) {
 			pr_err("%s: Failed to update cmpt cidx\n",
 					descq->conf.name);
 			return -EINVAL;
@@ -670,11 +680,11 @@ int qdma_queue_c2h_peek(unsigned long dev_hndl, unsigned long id,
 {
 	struct qdma_descq *descq = qdma_device_get_descq_by_id(
 					(struct xlnx_dma_dev *)dev_hndl,
-					id, NULL, 0, 1);
+					id, NULL, 0, 0);
 	struct qdma_flq *flq;
 
 	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+		return -EINVAL;
 
 	flq = (struct qdma_flq *)descq->flq;
 	*udd_cnt = flq->udd_cnt;
@@ -693,7 +703,7 @@ int qdma_queue_packet_read(unsigned long dev_hndl, unsigned long id,
 	struct qdma_sgt_req_cb *cb = qdma_req_cb_get(req);
 
 	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+		return -EINVAL;
 
 	if (!descq->conf.st || !descq->conf.c2h) {
 		pr_info("%s: st %d, c2h %d.\n",

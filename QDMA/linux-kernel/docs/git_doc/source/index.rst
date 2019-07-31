@@ -4,7 +4,7 @@ Xilinx QDMA Linux Driver
 
 Xilinx QDMA Subsystem for PCIe example design is implemented on a Xilinx FPGA, 
 which is connected to an X86 host system through PCI Express. 
-Xilinx QDMA Linux Driver is implemented as a combination of user space and 
+Xilinx QDMA Linux Driver package consists of user space applications and 
 kernel driver components to control and configure the QDMA subsystem.
 
 QDMA Linux Driver consists of the following four major components:
@@ -21,14 +21,14 @@ QDMA Linux Driver consists of the following four major components:
 	- Transfer Management
 	- DebugFS Support
 	
-- **Driver Interface**: This layer create a simple linux pci_driver interface and a character driver interface to demonstrate the QDMA IP functionalities using the Linux QDMA IP driver. It creates a NL interface to facilitate the user applications to interact with the ``Libqdma`` module. It also creates ``sysfs`` interface to enable users to configure and control various QDMA IP parameters.
+- **Driver Interface**: This layer create a simple linux pci_driver \( struct pci_driver \) interface and a character driver interface \( struct file_operations \) to demonstrate the QDMA IP functionalities using the Linux QDMA IP driver. It creates a netlink \( NL \) interface to facilitate the user applications to interact with the ``Libqdma`` module. It also creates ``sysfs`` interface to enable users to configure and control various QDMA IP parameters.
 
 - **Applications**: QDMA IP Driver provides the following sample applications.
 
-	- Dmactl : This application provides set of commands to configure and control the queues in the system
-	- dma_to_device : This application enables the users to perform Host to Card(H2C) transfer
-	- dma_from_device : This application enables the users to perform Card to Host(C2H) transfer
-	- Dmaperf : This application provides interfaces to extract performance numbers for QDMA IP in MM and ST modes
+	- dmactl : This application provides set of commands to configure and control the queues in the system
+	- dma_to_device : This application enables the users to perform Host to Card (H2C) transfer
+	- dma_from_device : This application enables the users to perform Card to Host (C2H) transfer
+	- dmaperf : This application provides commands to measure performance numbers for QDMA IP in MM and ST modes
 
 
 .. image:: /images/qdma_linux_driver_architecture.PNG

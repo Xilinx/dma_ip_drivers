@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n",
 			dev_name(&xdev->conf.pdev->dev));
-		return QDMA_ERR_INVALID_QDMA_DEVICE;
+		return -EINVAL;
 	}
 
 	m = qdma_mbox_msg_alloc();
@@ -50,7 +50,7 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 				       (int)qdev->qbase,
 					m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		if (rv != -ENODEV)
 			pr_info("%s set q range (fmap) failed %d.\n",
 				xdev->conf.name, rv);
@@ -58,6 +58,10 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 	}
 
 	rv = qdma_mbox_vf_response_status(m->raw);
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_response_status failed with error = %d", rv);
+		rv = -EINVAL;
+	}
 
 	pr_debug("%s, func id %u/%u, Q 0x%x + 0x%x.\n",
 		xdev->conf.name, xdev->func_id, xdev->func_id_parent,
@@ -83,13 +87,17 @@ int device_set_qconf(struct xlnx_dma_dev *xdev, int *qmax, int *qbase)
 	qdma_mbox_compose_vf_qreq(xdev->func_id,
 				  (uint16_t)*qmax & 0xFFFF, *qbase, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_info("%s set q range (qconf) failed %d.\n",
 			xdev->conf.name, rv);
 		goto err_out;
 	}
 
 	rv = qdma_mbox_vf_qinfo_get(m->raw, qbase, (uint16_t *)qmax);
+	if (unlikely(rv < 0)) {
+		pr_err("mbox_vf_qinfo_get  failed with error = %d", rv);
+		rv = -EINVAL;
+	}
 err_out:
 	qdma_mbox_msg_free(m);
 	return rv;
@@ -106,15 +114,17 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n",
 			dev_name(&xdev->conf.pdev->dev));
-		return QDMA_ERR_INVALID_QDMA_DEVICE;
+		return -EINVAL;
 	}
 
 	fmap.qmax = qdev->qmax;
 	fmap.qbase = qdev->qbase;
 
 	rv = qdma_fmap_write(xdev, xdev->func_id, &fmap);
-	if (rv < 0)
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("FMAP write failed with err %d\n", rv);
+		return qdma_get_error_code(rv);
+	}
 
 	qdev->init_qrange = 1;
 
@@ -125,30 +135,6 @@ static int device_set_qrange(struct xlnx_dma_dev *xdev)
 }
 #endif /* ifndef __QDMA_VF__ */
 
-#ifndef __QDMA_VF__
-#ifdef ERR_DEBUG
-static void qdma_err_mon(struct work_struct *work)
-{
-	struct delayed_work *dwork = container_of(work,
-						struct delayed_work, work);
-	struct xlnx_dma_dev *xdev = container_of(dwork,
-					struct xlnx_dma_dev, err_mon);
-
-	if (!xdev) {
-		pr_err("Invalid xdev");
-		return;
-	}
-	spin_lock(&xdev->err_lock);
-
-	if (xdev->err_mon_cancel == 0) {
-		err_stat_handler(xdev);
-		schedule_delayed_work(dwork, msecs_to_jiffies(50)); /* 50msec */
-	}
-	spin_unlock(&xdev->err_lock);
-}
-#endif
-#endif
-
 int qdma_device_interrupt_setup(struct xlnx_dma_dev *xdev)
 {
 	int rv = 0;
@@ -156,8 +142,10 @@ int qdma_device_interrupt_setup(struct xlnx_dma_dev *xdev)
 	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
 			(xdev->conf.qdma_drv_mode == AUTO_MODE)) {
 		rv = intr_ring_setup(xdev);
-		if (rv)
+		if (rv) {
+			pr_err("failed to setup interrupt ring");
 			return -EINVAL;
+		}
 		if (xdev->intr_coal_list != NULL) {
 			rv = qdma_intr_context_setup(xdev);
 			if (rv)
@@ -178,30 +166,25 @@ int qdma_device_interrupt_setup(struct xlnx_dma_dev *xdev)
 			(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) &&
 			xdev->conf.master_pf) {
 		rv = qdma_err_intr_setup(xdev);
-		if (rv < 0)
+		if (unlikely(rv < 0)) {
+			pr_err("failed to setup error interrupt");
 			return -EINVAL;
+		}
 
 		rv = qdma_error_enable(xdev, QDMA_ERRS_ALL);
-		if (rv < 0)
+		if (unlikely(rv < 0)) {
+			pr_err("Failed to enable error interrupt with error = %d",
+						rv);
 			return -EINVAL;
+		}
 
 		rv = qdma_error_interrupt_rearm(xdev);
-		if (rv < 0)
+		if (unlikely(rv < 0)) {
+			pr_err("Failed to rearm error interrupt with error = %d",
+						rv);
 			return -EINVAL;
-	}
-
-#ifdef ERR_DEBUG
-	else {
-		if ((xdev->conf.master_pf) &&
-				(xdev->conf.qdma_drv_mode == POLL_MODE)) {
-			spin_lock_init(&xdev->err_lock);
-			xdev->err_mon_cancel = 0;
-			INIT_DELAYED_WORK(&xdev->err_mon, qdma_err_mon);
-			schedule_delayed_work(&xdev->err_mon,
-					      msecs_to_jiffies(50));
 		}
 	}
-#endif
 #endif
 	return rv;
 }
@@ -223,11 +206,11 @@ int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
 		goto done;
 
 	rv = qdma_csr_read(xdev, &xdev->csr_info);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		goto done;
 
 	rv = device_set_qrange(xdev);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		goto done;
 done:
 	spin_unlock(&qdev->lock);
@@ -265,8 +248,10 @@ int qdma_device_init(struct xlnx_dma_dev *xdev)
 	fmap.qmax = 0;
 	fmap.qbase = 0;
 	rv = qdma_fmap_write(xdev, xdev->func_id, &fmap);
-	if (rv < 0)
-		return rv;
+	if (unlikely(rv < 0)) {
+		pr_err("FMAP write failed with err %d\n", rv);
+		return qdma_get_error_code(rv);
+	}
 #endif
 
 	descq = (struct qdma_descq *)(qdev + 1);
@@ -289,9 +274,6 @@ int qdma_device_init(struct xlnx_dma_dev *xdev)
 		qdma_mm_channel_enable(xdev, i, 0);
 	}
 #endif
-	/** STM specific init */
-	xdev->pipe_stm_max_pkt_size = STM_MAX_PKT_SIZE;
-
 	return 0;
 }
 
@@ -306,19 +288,6 @@ void qdma_device_cleanup(struct xlnx_dma_dev *xdev)
 			dev_name(&xdev->conf.pdev->dev));
 		return;
 	}
-
-#ifndef __QDMA_VF__
-#ifdef ERR_DEBUG
-	if ((xdev->conf.master_pf) &&
-		(xdev->conf.qdma_drv_mode == POLL_MODE)) {
-		pr_info("Cancelling delayed work");
-		spin_lock(&xdev->err_lock);
-		xdev->err_mon_cancel = 1;
-		cancel_delayed_work_sync(&xdev->err_mon);
-		spin_unlock(&xdev->err_lock);
-	}
-#endif
-#endif
 
 	for (i = 0, descq = qdev->h2c_descq; i < qdev->qmax; i++, descq++) {
 		if (descq->q_state == Q_STATE_ONLINE)
@@ -410,13 +379,10 @@ struct qdma_descq *qdma_device_get_descq_by_id(struct xlnx_dma_dev *xdev,
 		if (idx >= qdev->qmax) {
 			pr_info("%s, q idx too big 0x%lx > 0x%x.\n",
 				xdev->conf.name, idx, qdev->qmax);
-			if (buf && buflen)  {
-				int len = snprintf(buf, buflen,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 					"%s, q idx too big 0x%lx > 0x%x.\n",
 					xdev->conf.name, idx, qdev->qmax);
-				buf[len] = '\0';
-				buflen -= (len + 1);
-			}
 			return NULL;
 		}
 		descq = qdev->c2h_descq + idx;
@@ -429,13 +395,10 @@ struct qdma_descq *qdma_device_get_descq_by_id(struct xlnx_dma_dev *xdev,
 		if (descq->q_state == Q_STATE_DISABLED) {
 			pr_info("%s, idx 0x%lx, q 0x%p state invalid.\n",
 				xdev->conf.name, idx, descq);
-			if (buf && buflen) {
-				int len = snprintf(buf, buflen,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 				"%s, idx 0x%lx, q 0x%p state invalid.\n",
 					xdev->conf.name, idx, descq);
-				buf[len] = '\0';
-				buflen -= (len + 1);
-			}
 			unlock_descq(descq);
 			return NULL;
 		}
@@ -470,13 +433,10 @@ struct qdma_descq *qdma_device_get_pair_descq_by_id(struct xlnx_dma_dev *xdev,
 		if (idx >= qdev->qmax) {
 			pr_debug("%s, q idx too big 0x%lx > 0x%x.\n",
 				xdev->conf.name, idx, qdev->qmax);
-			if (buf && buflen)  {
-				int len = snprintf(buf, buflen,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 					"%s, q idx too big 0x%lx > 0x%x.\n",
 					xdev->conf.name, idx, qdev->qmax);
-				buf[len] = '\0';
-				buflen -= len + 1;
-			}
 			return NULL;
 		}
 		pair_descq = qdev->h2c_descq + idx;
@@ -489,13 +449,10 @@ struct qdma_descq *qdma_device_get_pair_descq_by_id(struct xlnx_dma_dev *xdev,
 		if (pair_descq->q_state == Q_STATE_DISABLED) {
 			pr_debug("%s, idx 0x%lx, q 0x%p state invalid.\n",
 				xdev->conf.name, idx, pair_descq);
-			if (buf && buflen) {
-				int len = snprintf(buf, buflen,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 				"%s, idx 0x%lx, q 0x%p state invalid.\n",
 					xdev->conf.name, idx, pair_descq);
-				buf[len] = '\0';
-				buflen -= len + 1;
-			}
 			unlock_descq(pair_descq);
 			return NULL;
 		}

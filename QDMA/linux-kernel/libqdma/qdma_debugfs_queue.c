@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -164,7 +164,7 @@ static ssize_t cmpt_q_dbg_file_read(struct file *fp,
 					&buf, &buf_len, DBGFS_DESC_TYPE_CMPT);
 		}
 
-		if (rv < 0)
+		if (unlikely(rv < 0))
 			goto cmpt_q_dbg_file_read_exit;
 
 		qpriv->datalen = rv;
@@ -315,7 +315,8 @@ static ssize_t cmpt_q_desc_read(struct file *fp, char __user *user_buffer,
  * @return	>0: size read
  * @return	<0: error
  *****************************************************************************/
-int create_cmpt_q_dbg_files(struct qdma_descq *descq, struct dentry *queue_root)
+static int create_cmpt_q_dbg_files(struct qdma_descq *descq,
+		struct dentry *queue_root)
 {
 	struct dentry  *fp[DBGFS_QINFO_END] = { NULL };
 	struct file_operations *fops = NULL;
@@ -397,7 +398,7 @@ static int q_dbg_file_open(struct inode *inode, struct file *fp)
 
 	/* convert this string as integer */
 	rv = kstrtoint((const char *)qid_dir->d_iname, 0, &qidx);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		rv = -ENODEV;
 		return rv;
 	}
@@ -415,7 +416,7 @@ static int q_dbg_file_open(struct inode *inode, struct file *fp)
 
 	/* convert this string as hex integer */
 	rv = kstrtoint((const char *)dev_name, 16, &dev_id);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		rv = -ENODEV;
 		return rv;
 	}
@@ -493,7 +494,7 @@ static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
 	descq = qdma_device_get_descq_by_id(xdev, id, buf, buflen, 0);
 	if (!descq) {
 		kfree(buf);
-		return QDMA_ERR_INVALID_QIDX;
+		return -EINVAL;
 	}
 
 	/** initialize the context */
@@ -502,7 +503,7 @@ static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
 	rv = qdma_descq_context_read(descq->xdev, descq->qidx_hw,
 			descq->conf.st, descq->conf.c2h,
 			descq->mm_cmpt_ring_crtd, &ctxt);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		len += sprintf(buf + len, "%s read context failed %d.\n",
 				descq->conf.name, rv);
 		buf[len] = '\0';
@@ -597,7 +598,7 @@ static int qdbg_info_read(unsigned long dev_hndl, unsigned long id, char **data,
 	descq = qdma_device_get_descq_by_id(xdev, id, buf, buflen, 0);
 	if (!descq) {
 		kfree(buf);
-		return QDMA_ERR_INVALID_QIDX;
+		return -EINVAL;
 	}
 
 	len = qdma_descq_dump_state(descq, buf + len, buflen - len);
@@ -633,7 +634,7 @@ static int qdbg_desc_read(unsigned long dev_hndl, unsigned long id, char **data,
 
 	descq = qdma_device_get_descq_by_id(xdev, id, buf, buflen, 0);
 	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+		return -EINVAL;
 
 	/** get the ring size */
 	if (type != DBGFS_DESC_TYPE_CMPT)
@@ -695,7 +696,7 @@ static ssize_t q_dbg_file_read(struct file *fp, char __user *user_buffer,
 					&buf, &buf_len, DBGFS_DESC_TYPE_C2H);
 		}
 
-		if (rv < 0)
+		if (unlikely(rv < 0))
 			goto q_dbg_file_read_exit;
 
 		qpriv->datalen = rv;
@@ -842,7 +843,8 @@ static ssize_t q_desc_read(struct file *fp, char __user *user_buffer,
  * @return	>0: size read
  * @return	<0: error
  *****************************************************************************/
-int create_q_dbg_files(struct qdma_descq *descq, struct dentry *queue_root)
+static int create_q_dbg_files(struct qdma_descq *descq,
+		struct dentry *queue_root)
 {
 	struct dentry  *fp[DBGFS_QINFO_END] = { NULL };
 	struct file_operations *fops = NULL;
@@ -954,7 +956,7 @@ int dbgfs_queue_init(struct qdma_queue_conf *conf,
 
 	/* intialize fops and create all the files */
 	rv = create_q_dbg_files(descq, dbgfs_queue_root);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("Failed to create qdbg files, removing %s dir\n",
 				qdir);
 		debugfs_remove_recursive(dbgfs_queue_root);
@@ -963,7 +965,7 @@ int dbgfs_queue_init(struct qdma_queue_conf *conf,
 
 	if (dbgfs_cmpt_queue_root) {
 		rv = create_cmpt_q_dbg_files(descq, dbgfs_cmpt_queue_root);
-		if (rv < 0) {
+		if (unlikely(rv < 0)) {
 			pr_err("Failed to create cmptq dbg files,removing cmpt dir\n");
 			debugfs_remove_recursive(dbgfs_cmpt_queue_root);
 			goto dbgfs_queue_init_fail;

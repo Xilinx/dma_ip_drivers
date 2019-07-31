@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -30,15 +30,6 @@
  * @brief This file contains the declarations for qdma mailbox apis
  *
  */
-
-/**
- * @struct - stm_descq_context
- * @brief	queue stm information
- */
-struct stm_descq_context {
-	/** STM data: 6 data words */
-	u32 stm[6];
-};
 
 /**
  * mailbox messages

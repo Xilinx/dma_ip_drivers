@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,6 @@
 #define pr_fmt(fmt)	KBUILD_MODNAME ":%s: " fmt, __func__
 
 #include "libqdma_export.h"
-
 #include "qdma_descq.h"
 #include "qdma_device.h"
 #include "qdma_thread.h"
@@ -44,10 +43,11 @@
 
 /** debugfs root */
 struct dentry *qdma_debugfs_root;
+static bool qdma_debufs_cleanup = true;
 #endif
 
 
-struct qctxt_entry sw_ctxt_entries[] = {
+static struct qctxt_entry sw_ctxt_entries[] = {
 	{"PIDX", 0},
 	{"IRQ Arm", 0},
 	{"Function Id", 0},
@@ -76,7 +76,7 @@ struct qctxt_entry sw_ctxt_entries[] = {
 	{"Interrupt Aggregation", 0},
 };
 
-struct qctxt_entry hw_ctxt_entries[] = {
+static struct qctxt_entry hw_ctxt_entries[] = {
 	{"CIDX", 0},
 	{"Credits Consumed", 0},
 	{"Descriptors Pending", 0},
@@ -85,11 +85,11 @@ struct qctxt_entry hw_ctxt_entries[] = {
 	{"Fetch Pending", 0},
 };
 
-struct qctxt_entry credit_ctxt_entries[] = {
+static struct qctxt_entry credit_ctxt_entries[] = {
 	{"Credit", 0},
 };
 
-struct qctxt_entry cmpt_ctxt_entries[] = {
+static struct qctxt_entry cmpt_ctxt_entries[] = {
 	{"Enable Status Desc Update", 0},
 	{"Enable Interrupt", 0},
 	{"Trigger Mode", 0},
@@ -115,7 +115,7 @@ struct qctxt_entry cmpt_ctxt_entries[] = {
 	{"Interrupt Aggregation", 0},
 };
 
-struct qctxt_entry c2h_pftch_ctxt_entries[] = {
+static struct qctxt_entry c2h_pftch_ctxt_entries[] = {
 	{"Bypass", 0},
 	{"Buffer Size Index", 0},
 	{"Port Id", 0},
@@ -126,7 +126,7 @@ struct qctxt_entry c2h_pftch_ctxt_entries[] = {
 	{"Valid", 0},
 };
 
-struct qctxt_entry ind_intr_ctxt_entries[] = {
+static struct qctxt_entry ind_intr_ctxt_entries[] = {
 	{"valid", 0},
 	{"vec", 0},
 	{"int_st", 0},
@@ -138,12 +138,13 @@ struct qctxt_entry ind_intr_ctxt_entries[] = {
 	{"at", 0},
 };
 
-const int num_entries_sw_ctxt = ARRAY_SIZE(sw_ctxt_entries);
-const int num_entries_hw_ctxt = ARRAY_SIZE(hw_ctxt_entries);
-const int num_entries_credit_ctxt = ARRAY_SIZE(credit_ctxt_entries);
-const int num_entries_cmpt_ctxt = ARRAY_SIZE(cmpt_ctxt_entries);
-const int num_entries_c2h_pftch_ctxt = ARRAY_SIZE(c2h_pftch_ctxt_entries);
-const int num_entries_ind_intr_ctxt = ARRAY_SIZE(ind_intr_ctxt_entries);
+static const int num_entries_sw_ctxt = ARRAY_SIZE(sw_ctxt_entries);
+static const int num_entries_hw_ctxt = ARRAY_SIZE(hw_ctxt_entries);
+static const int num_entries_credit_ctxt = ARRAY_SIZE(credit_ctxt_entries);
+static const int num_entries_cmpt_ctxt = ARRAY_SIZE(cmpt_ctxt_entries);
+static const int num_entries_c2h_pftch_ctxt =
+		ARRAY_SIZE(c2h_pftch_ctxt_entries);
+static const int num_entries_ind_intr_ctxt = ARRAY_SIZE(ind_intr_ctxt_entries);
 
 #define QDMA_Q_PEND_LIST_COMPLETION_TIMEOUT 1000 /* msec */
 
@@ -163,8 +164,10 @@ static int qdma_dev_notify_qadd(struct qdma_descq *descq)
 	struct xlnx_dma_dev *xdev = descq->xdev;
 
 	m = qdma_mbox_msg_alloc();
-	if (!m)
+	if (!m) {
+		pr_err("Failed to allocate mbox msg");
 		return -ENOMEM;
+	}
 
 	qdma_mbox_compose_vf_notify_qadd(xdev->func_id, descq->qidx_hw, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
@@ -180,8 +183,10 @@ static int qdma_dev_notify_qdel(struct qdma_descq *descq)
 	struct xlnx_dma_dev *xdev = descq->xdev;
 
 	m = qdma_mbox_msg_alloc();
-	if (!m)
+	if (!m) {
+		pr_err("Failed to allocate mbox msg");
 		return -ENOMEM;
+	}
 
 	qdma_mbox_compose_vf_notify_qdel(xdev->func_id, descq->qidx_hw, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
@@ -334,19 +339,24 @@ int qdma_parse_ctxt_to_buf(enum qdma_q_cntxt cntxt, char *buf, int buflen)
 		break;
 	}
 
-	if (!entries)
+	if (!entries) {
+		pr_err("Invalid qctxt entries");
 		return -EINVAL;
+	}
 
 	for (i = num_entries - 1; i >= 0; i--) {
-		if (buflen > len)
-			len += snprintf(buf + len, buflen - len,
-					"\t\t%-47s %#-10x %u\n",
-					entries[i].name,
-					entries[i].value,
-					entries[i].value);
+		len += snprintf(buf + len, buflen - len,
+				"\t\t%-47s %#-10x %u\n",
+				entries[i].name,
+				entries[i].value,
+				entries[i].value);
+		if (len >= buflen)
+			return buflen - len;
 	}
-	if (buflen > len)
-		len += snprintf(buf + len, buflen - len, "\n");
+
+	len += snprintf(buf + len, buflen - len, "\n");
+	if (len >= buflen)
+		return buflen - len;
 
 	return len;
 }
@@ -434,7 +444,7 @@ static ssize_t qdma_request_submit_st_c2h(struct xlnx_dma_dev *xdev,
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n",
 			dev_name(&xdev->conf.pdev->dev));
-		return QDMA_ERR_INVALID_QDMA_DEVICE;
+		return -EINVAL;
 	}
 
 	pr_debug("%s: data len %u, sgl 0x%p, sgl cnt %u, tm %u ms.\n",
@@ -467,7 +477,7 @@ static ssize_t qdma_request_submit_st_c2h(struct xlnx_dma_dev *xdev,
 		unlock_descq(descq);
 	} else {
 		unlock_descq(descq);
-		pr_info("%s descq %s NOT online.\n",
+		pr_err("%s descq %s NOT online.\n",
 			xdev->conf.name, descq->conf.name);
 		return -EINVAL;
 	}
@@ -487,7 +497,7 @@ static ssize_t qdma_request_submit_st_c2h(struct xlnx_dma_dev *xdev,
 
 	/** wait for the request completion */
 	rv = qdma_request_wait_for_cmpl(xdev, descq, req);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		if (!req->dma_mapped)
 			sgl_unmap(xdev->conf.pdev, req->sgl, req->sgcnt,
 				DMA_FROM_DEVICE);
@@ -547,8 +557,10 @@ int qdma_device_capabilities_info(unsigned long dev_hndl,
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 	struct qdma_dev_attributes *dev_cap;
 
-	if (!xdev)
+	if (!xdev) {
+		pr_err("Invalid device handle");
 		return -EINVAL;
+	}
 
 	qdma_get_device_attr(xdev, &dev_cap);
 
@@ -577,18 +589,22 @@ int qdma_queue_dump(unsigned long dev_hndl, unsigned long id, char *buf,
 					(struct xlnx_dma_dev *)dev_hndl, id,
 					buf, buflen, 0);
 	struct qdma_descq_context ctxt;
-	int len = 0;
+	int len = 0, slen = 0;
 	int rv;
 	int ring_index = 0;
 	struct qdma_indirect_intr_ctxt intr_ctxt;
 	int i = 0;
 
-	if (!descq)
+	if (!descq) {
+		pr_err("Invalid queue index");
 		return -EINVAL;
+	}
 
 	/** Make sure that buf and buflen is not invalid */
-	if (!buf || !buflen)
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+	if (!buf || !buflen) {
+		pr_err("invalid argument: buf=%p, buflen=%d", buf, buflen);
+		return -EINVAL;
+	}
 
 	/** read the descq data to dump */
 	qdma_descq_dump(descq, buf, buflen, 1);
@@ -598,51 +614,104 @@ int qdma_queue_dump(unsigned long dev_hndl, unsigned long id, char *buf,
 	rv = qdma_descq_context_read(descq->xdev, descq->qidx_hw,
 				descq->conf.st, descq->conf.c2h,
 				descq->mm_cmpt_ring_crtd, &ctxt);
-	if (rv < 0) {
-		len += snprintf(buf + len, buflen - len,
+	if (unlikely(rv < 0)) {
+		snprintf(buf + len, buflen - len,
 				"%s read context failed %d.\n",
 				descq->conf.name, rv);
 		return rv;
 	}
 
 	/** format the output for all contexts */
-	len += snprintf(buf + len, buflen - len, "\tSOFTWARE CTXT:\n");
+	slen = snprintf(buf + len, buflen - len, "\tSOFTWARE CTXT:\n");
+	if (slen >= (buflen - len)) {
+		pr_err("SW CTXT: insufficient buffer provided");
+		return -ENOMEM;
+	}
+	len += slen;
+
 	if (descq->xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE ||
 			descq->xdev->conf.qdma_drv_mode == AUTO_MODE)
 		qdma_fill_sw_ctxt(&ctxt.sw_ctxt, 1);
 	else
 		qdma_fill_sw_ctxt(&ctxt.sw_ctxt, 0);
-	len += qdma_parse_ctxt_to_buf(QDMA_SW_CNTXT, buf + len, buflen - len);
+	slen = qdma_parse_ctxt_to_buf(QDMA_SW_CNTXT, buf + len, buflen - len);
+	if (slen < 0) {
+		pr_err("SW ctxt_data: insufficient buffer provided");
+		return -ENOMEM;
+	}
+	len += slen;
 
-	len += snprintf(buf + len, buflen - len, "\tHARDWARE CTXT:\n");
+	slen = snprintf(buf + len, buflen - len, "\tHARDWARE CTXT:\n");
+	if (slen >= (buflen - len)) {
+		pr_err("HW CTXT: insufficient buffer provided");
+		return -ENOMEM;
+	}
+	len += slen;
+
 	qdma_fill_hw_ctxt(&ctxt.hw_ctxt);
-	len += qdma_parse_ctxt_to_buf(QDMA_HW_CNTXT, buf + len, buflen - len);
+	slen = qdma_parse_ctxt_to_buf(QDMA_HW_CNTXT, buf + len, buflen - len);
+	if (slen < 0) {
+		pr_err("HW ctxt_data: insufficient buffer provided");
+		return -ENOMEM;
+	}
+	len += slen;
 
-	len += snprintf(buf + len, buflen - len, "\tCREDIT CTXT:\n");
+	slen = snprintf(buf + len, buflen - len, "\tCREDIT CTXT:\n");
+	if (slen >= (buflen - len)) {
+		pr_err("CT CTXT: insufficient buffer provided");
+		return -ENOMEM;
+	}
+	len += slen;
+
 	qdma_fill_credit_ctxt(&ctxt.cr_ctxt);
-	len += qdma_parse_ctxt_to_buf(QDMA_CR_CNTXT, buf + len, buflen - len);
+	slen = qdma_parse_ctxt_to_buf(QDMA_CR_CNTXT, buf + len, buflen - len);
+	if (slen < 0) {
+		pr_err("CR ctxt_data: insufficient buffer provided");
+		return -ENOMEM;
+	}
+	len += slen;
 
 	/** incase of ST C2H or MM CMPT enabled,
 	 *  add completion and prefetch context to the output
 	 */
 	if ((descq->conf.c2h && descq->conf.st) ||
 	    (!descq->conf.st && descq->mm_cmpt_ring_crtd)) {
-		len += snprintf(buf + len, buflen - len, "\tCMPT CTXT:\n");
+		slen = snprintf(buf + len, buflen - len, "\tCMPT CTXT:\n");
+		if (slen >= (buflen - len)) {
+			pr_err("CMPT CTXT: insufficient buffer provided");
+			return -ENOMEM;
+		}
+		len += slen;
 		if (descq->xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE ||
 				descq->xdev->conf.qdma_drv_mode == AUTO_MODE)
 			qdma_fill_cmpt_ctxt(&ctxt.cmpt_ctxt, 1);
 		else
 			qdma_fill_cmpt_ctxt(&ctxt.cmpt_ctxt, 0);
-		len += qdma_parse_ctxt_to_buf(QDMA_CMPT_CNTXT,
+		slen = qdma_parse_ctxt_to_buf(QDMA_CMPT_CNTXT,
 				buf + len, buflen - len);
+		if (slen < 0) {
+			pr_err("CMPT ctxt_data: insufficient buffer provided");
+			return -ENOMEM;
+		}
+		len += slen;
 	}
 
 	if (descq->conf.c2h && descq->conf.st) {
-		len += snprintf(buf + len, buflen - len,
+		slen = snprintf(buf + len, buflen - len,
 						"\tPREFETCH CTXT:\n");
+		if (slen >= (buflen - len)) {
+			pr_err("pftch ctxt_data: insufficient buffer provided");
+			return -ENOMEM;
+		}
+		len += slen;
 		qdma_fill_pfetch_ctxt(&ctxt.pfetch_ctxt);
-		len += qdma_parse_ctxt_to_buf(QDMA_PFETCH_CNTXT,
+		slen = qdma_parse_ctxt_to_buf(QDMA_PFETCH_CNTXT,
 				buf + len, buflen - len);
+		if (slen < 0) {
+			pr_err("PFTCH CTXT: insufficient buffer provided");
+			return -ENOMEM;
+		}
+		len += slen;
 	}
 
 	/** if interrupt aggregation is enabled
@@ -657,88 +726,31 @@ int qdma_queue_dump(unsigned long dev_hndl, unsigned long id, char *buf,
 			rv = qdma_intr_context_read(descq->xdev,
 						ring_index,
 						&intr_ctxt);
-			if (rv < 0) {
-				len += sprintf(buf + len,
+			if (unlikely(rv < 0)) {
+				sprintf(buf + len,
 					"%s read intr context failed %d.\n",
 					descq->conf.name, rv);
 				return rv;
 			}
-			len += snprintf(buf + len, buflen - len,
+			slen = snprintf(buf + len, buflen - len,
 							"\tINTR CTXT:\n");
+			if (slen >= (buflen - len)) {
+				pr_err("INTR CTXT: insufficient buffer provided");
+				return -ENOMEM;
+			}
+			len += slen;
+
 			qdma_fill_intr_ctxt(&intr_ctxt);
-			len += qdma_parse_ctxt_to_buf(QDMA_INTR_CNTXT,
+			slen = qdma_parse_ctxt_to_buf(QDMA_INTR_CNTXT,
 					buf + len, buflen - len);
+			if (slen < 0) {
+				pr_err("INTR ctxt_data: insufficient buffer provided");
+				return -ENOMEM;
+			}
+			len += slen;
 		}
 	}
 
-#ifndef __QDMA_VF__
-	if (descq->xdev->stm_en) {
-		if (descq->conf.st &&
-		    (descq->conf.c2h || descq->conf.desc_bypass)) {
-			struct stm_descq_context stm_hw;
-
-			memset(&stm_hw, 0, sizeof(stm_hw));
-			/** read stm context */
-			rv = qdma_descq_stm_read(descq->xdev, descq->qidx_hw,
-						 descq->conf.pipe_flow_id,
-						 descq->conf.c2h, false, true,
-						 &stm_hw);
-			if (rv < 0) {
-				len += sprintf(buf + len,
-						"%s read stm-context failed %d.\n",
-					       descq->conf.name, rv);
-				return rv;
-			}
-
-			len += sprintf(buf + len,
-				       "\tSTM CTXT:    [5]:0x%08x [4]:0x%08x [3]:0x%08x [2]:0x%08x [1]:0x%08x [0]:0x%08x\n",
-				       stm_hw.stm[5], stm_hw.stm[4],
-				       stm_hw.stm[3], stm_hw.stm[2],
-				       stm_hw.stm[1], stm_hw.stm[0]);
-
-			/** read stm can */
-			rv = qdma_descq_stm_read(descq->xdev, descq->qidx_hw,
-						 descq->conf.pipe_flow_id,
-						 descq->conf.c2h, false, false,
-						 &stm_hw);
-			if (rv < 0) {
-				len += sprintf(buf + len,
-						"%s read stm-can failed %d.\n",
-					    descq->conf.name, rv);
-				return rv;
-			}
-
-			len += sprintf(buf + len,
-				       "\tSTM CAN:     [4]:0x%08x [3]:0x%08x [2]:0x%08x [1]:0x%08x [0]:0x%08x\n",
-				       stm_hw.stm[4], stm_hw.stm[3],
-				       stm_hw.stm[2], stm_hw.stm[1],
-				       stm_hw.stm[0]);
-
-			/** read stm c2h map or h2c map */
-			rv = qdma_descq_stm_read(descq->xdev, descq->qidx_hw,
-						 descq->conf.pipe_flow_id,
-						 descq->conf.c2h, true, false,
-						 &stm_hw);
-			if (rv < 0) {
-				len += sprintf(buf + len,
-						"%s read stm-map failed %d.\n",
-					    descq->conf.name, rv);
-				return rv;
-			}
-
-			if (descq->conf.c2h)
-				len += sprintf(buf + len,
-					       "\tSTM C2H MAP: [0]:0x%08x\n",
-					       stm_hw.stm[0]);
-			else
-				len += sprintf(buf + len,
-					       "\tSTM H2C MAP: [4]:0x%08x [3]:0x%08x [2]:0x%08x [1]:0x%08x [0]:0x%08x\n",
-					       stm_hw.stm[4], stm_hw.stm[3],
-					       stm_hw.stm[2], stm_hw.stm[1],
-					       stm_hw.stm[0]);
-		}
-	}
-#endif
 	len += sprintf(buf + len,
 			"\ttotal descriptor processed:    %llu\n",
 			descq->total_cmpl_descs);
@@ -746,7 +758,6 @@ int qdma_queue_dump(unsigned long dev_hndl, unsigned long id, char *buf,
 	/** set the buffer end with \0 and return the buffer length */
 	return len;
 }
-
 /*****************************************************************************/
 /**
  * qdma_queue_dump_desc() - display a queue's descriptor ring from index start
@@ -774,13 +785,18 @@ int qdma_queue_dump_desc(unsigned long dev_hndl, unsigned long id,
 	/** Assume that sufficient buflen is provided
 	 *  make sure that device handle provided is valid
 	 */
-	if (!xdev || !buf || !buflen)
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+	if (!xdev || !buf || !buflen) {
+		pr_err("invalid argument: xdev=%p, buf=%p, buflen=%d",
+				xdev, buf, buflen);
+		return -EINVAL;
+	}
 
 	/** get the descq details based on the qid provided */
 	descq = qdma_device_get_descq_by_id(xdev, id, buf, buflen, 1);
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+	if (!descq) {
+		pr_err("Invalid qid ");
+		return -EINVAL;
+	}
 
 	/** dump the queue state */
 	len = qdma_descq_dump_state(descq, buf, buflen);
@@ -818,8 +834,10 @@ int qdma_queue_dump_cmpt(unsigned long dev_hndl, unsigned long id,
 	int len = 0;
 
 	/** make sure that descq is not NULL, else return error */
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+	if (!descq) {
+		pr_err("Invalid queue id");
+		return -EINVAL;
+	}
 
 	/** dump the descriptor state */
 	len = qdma_descq_dump_state(descq, buf, buflen);
@@ -861,23 +879,22 @@ int qdma_queue_remove(unsigned long dev_hndl, unsigned long id, char *buf,
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n",
 			dev_name(&xdev->conf.pdev->dev));
-		return QDMA_ERR_INVALID_QDMA_DEVICE;
+		return -EINVAL;
 	}
 
 	/** make sure that descq is not NULL, else return error */
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+	if (!descq) {
+		pr_err("Invalid queue id");
+		return -EINVAL;
+	}
 
 	if (descq->q_state != Q_STATE_ENABLED) {
-		if (buf && buflen) {
-			int len = snprintf(buf, buflen,
-					"queue %s, id %u cannot be deleted. Invalid q state\n",
-					descq->conf.name, descq->conf.qidx);
-
-			buf[len] = '\0';
-		}
-		return QDMA_ERR_INVALID_DESCQ_STATE;
-
+		if (buf && buflen)
+			snprintf(buf, buflen,
+				"queue %s, id %u cannot be deleted. Invalid q state\n",
+				descq->conf.name, descq->conf.qidx);
+		pr_err("Invalid queue state: %d", descq->q_state);
+		return -EINVAL;
 	}
 
 #ifdef DEBUGFS
@@ -910,15 +927,14 @@ int qdma_queue_remove(unsigned long dev_hndl, unsigned long id, char *buf,
 	if (xdev->conf.qdma_drv_mode == LEGACY_INTR_MODE)
 		intr_legacy_clear(descq);
 #endif
-	if (buf && buflen) {
-		int len = snprintf(buf, buflen, "queue %s, id %u deleted.\n",
-				descq->conf.name, descq->conf.qidx);
-		buf[len] = '\0';
-	}
+	if (buf && buflen)
+		snprintf(buf, buflen, "queue %s, id %u deleted.\n",
+			descq->conf.name, descq->conf.qidx);
+
 	pr_debug("queue %s, id %u deleted.\n",
 				descq->conf.name, descq->conf.qidx);
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 /*****************************************************************************/
@@ -945,14 +961,14 @@ int qdma_queue_config(unsigned long dev_hndl, unsigned long qid,
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n",
 			dev_name(&xdev->conf.pdev->dev));
-		return QDMA_ERR_INVALID_QDMA_DEVICE;
+		return -EINVAL;
 	}
 
 	/** get the descq for the given qid */
 	descq = qdma_device_get_descq_by_id(xdev, qid, NULL, 0, 0);
 	if (!descq) {
 		pr_err("Invalid queue ID! qid=%lu, max=%u\n", qid, qdev->qmax);
-		return QDMA_ERR_INVALID_QIDX;
+		return -EINVAL;
 	}
 
 	lock_descq(descq);
@@ -968,7 +984,7 @@ int qdma_queue_config(unsigned long dev_hndl, unsigned long qid,
 	/** configure descriptor queue */
 	qdma_descq_config(descq, qconf, 1);
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 /*****************************************************************************/
@@ -995,13 +1011,13 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 	/** make sure that qdev is not NULL, else return error */
 	if  (!qdev) {
 		pr_err("dev %s, qdev null.\n", dev_name(&xdev->conf.pdev->dev));
-		return QDMA_ERR_INVALID_QDMA_DEVICE;
+		return -EINVAL;
 	}
 
 	/** make sure that input buffer is not empty, else return error */
 	if (!buf || !buflen) {
-		pr_warn("invalid argument: buf=%p, buflen=%d", buf, buflen);
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+		pr_err("invalid argument: buf=%p, buflen=%d", buf, buflen);
+		return -EINVAL;
 	}
 
 	cur += snprintf(cur, end - cur, "H2C Q: %u, C2H Q: %u.\n",
@@ -1014,7 +1030,7 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 	 */
 	if (qdev->h2c_qcnt) {
 		descq = qdev->h2c_descq;
-		for (i = 0; i < qdev->qmax; i++, descq++) {
+		for (i = 0; i < qdev->h2c_qcnt; i++, descq++) {
 			lock_descq(descq);
 			if (descq->q_state != Q_STATE_DISABLED)
 				cur +=
@@ -1028,7 +1044,7 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 
 	if (qdev->c2h_qcnt) {
 		descq = qdev->c2h_descq;
-		for (i = 0; i < qdev->qmax; i++, descq++) {
+		for (i = 0; i < qdev->c2h_qcnt; i++, descq++) {
 			lock_descq(descq);
 			if (descq->q_state != Q_STATE_DISABLED)
 				cur +=
@@ -1039,12 +1055,11 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 				goto handle_truncation;
 		}
 	}
-
 	return cur - buf;
 
 handle_truncation:
-
-	return cur - buf;
+	*buf = '\0';
+	return buf - cur;
 }
 
 /*****************************************************************************/
@@ -1068,26 +1083,22 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	struct qdma_descq *descq;
 	struct qdma_descq *pairq;
 	unsigned int qcnt;
-	char *cur = buf;
-	char * const end = buf + buflen;
-	int rv = QDMA_OPERATION_SUCCESSFUL;
+	int rv = 0;
 
 	/** If qconf is NULL, return error*/
-	if (!qconf)
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+	if (!qconf) {
+		pr_err("Invalid qconf %p", qconf);
+		return -EINVAL;
+	}
 
 	/** If qhndl is NULL, return error*/
 	if (!qhndl) {
 		pr_warn("qhndl NULL.\n");
-		rv = QDMA_ERR_INVALID_QIDX;
-		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
-					"%s, add, qhndl NULL.\n",
-					xdev->conf.name);
-			if (cur >= end)
-				goto handle_truncation;
-		}
-		return rv;
+		if (buf && buflen)
+			snprintf(buf, buflen,
+				"%s, add, qhndl NULL.\n",
+				xdev->conf.name);
+		return -EINVAL;
 	}
 
 	/** reset qhandle to an invalid value
@@ -1104,15 +1115,11 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	    (!qconf->st && !xdev->dev_cap.mm_en)) {
 		pr_warn("%s, %s mode not enabled.\n",
 			xdev->conf.name, qconf->st ? "ST" : "MM");
-		rv = QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE;
-		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
+		if (buf && buflen)
+			snprintf(buf, buflen,
 				"qdma%05x %s mode not enabled.\n",
 				xdev->conf.bdf, qconf->st ? "ST" : "MM");
-			if (cur >= end)
-				goto handle_truncation;
-		}
-		return rv;
+		return -EINVAL;
 	}
 
 	spin_lock(&qdev->lock);
@@ -1123,15 +1130,13 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	if ((qconf->qidx != QDMA_QUEUE_IDX_INVALID) &&
 	    (qconf->qidx >= qdev->qmax)) {
 		spin_unlock(&qdev->lock);
-		rv = QDMA_ERR_INVALID_QIDX;
-		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
+		if (buf && buflen)
+			snprintf(buf, buflen,
 				"qdma%05x invalid idx %u >= %u.\n",
 				xdev->conf.bdf, qconf->qidx, qdev->qmax);
-			if (cur >= end)
-				goto handle_truncation;
-		}
-		return rv;
+		pr_err("Invalid queue index, qid = %d, qmax = %d",
+					qconf->qidx, qdev->qmax);
+		return -EINVAL;
 	}
 
 	/** check if any free qidx available
@@ -1142,15 +1147,11 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	if (qcnt >= qdev->qmax) {
 		spin_unlock(&qdev->lock);
 		pr_warn("No free queues %u/%u.\n", qcnt, qdev->qmax);
-		rv = QDMA_ERR_DESCQ_FULL;
-		if (buf && buflen) {
-			cur += snprintf(cur, end - cur,
-					"qdma%05x No free queues %u/%u.\n",
-					xdev->conf.bdf, qcnt, qdev->qmax);
-			if (cur >= end)
-				goto handle_truncation;
-		}
-		return rv;
+		if (buf && buflen)
+			snprintf(buf, buflen,
+				"qdma%05x No free queues %u/%u.\n",
+				xdev->conf.bdf, qcnt, qdev->qmax);
+		return -EIO;
 	}
 
 	/** add to the count first, need to rewind if failed later*/
@@ -1204,15 +1205,12 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 		if (i == qdev->qmax) {
 			pr_warn("no free %s qp found, %u.\n",
 				qconf->st ? "ST" : "MM", qdev->qmax);
-			rv = QDMA_ERR_DESCQ_FULL;
-			if (buf && buflen) {
-				cur += snprintf(cur, end - cur,
+			rv = -EPERM;
+			if (buf && buflen)
+				snprintf(buf, buflen,
 					"qdma%05x no %s QP, %u.\n",
 					xdev->conf.bdf,
 					qconf->st ? "ST" : "MM", qdev->qmax);
-				if (cur >= end)
-					goto handle_truncation;
-			}
 			goto rewind_qcnt;
 		}
 	} else { /** qidx specified in the given add request*/
@@ -1225,13 +1223,11 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 		if ((pairq->q_state != Q_STATE_DISABLED)
 				&& (qconf->st != pairq->conf.st)) {
 			unlock_descq(pairq);
+			pr_warn("Invalid queue state:%d", pairq->q_state);
 			rv = -EINVAL;
-			if (buf && buflen) {
-				cur += snprintf(cur, end - cur,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 					"Need to have same mode for Q pair.\n");
-				if (cur >= end)
-					goto handle_truncation;
-			}
 			goto rewind_qcnt;
 		}
 		unlock_descq(pairq);
@@ -1242,13 +1238,12 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 		 */
 		if (descq->q_state != Q_STATE_DISABLED) {
 			unlock_descq(descq);
-			pr_info("descq idx %u already added.\n", qconf->qidx);
-			rv = QDMA_ERR_DESCQ_IDX_ALREADY_ADDED;
-			if (buf && buflen) {
-				cur += snprintf(cur, end - cur,
-						"q idx %u already added.\n",
-						qconf->qidx);
-			}
+			pr_err("descq idx %u already added.\n", qconf->qidx);
+			rv = -EPERM;
+			if (buf && buflen)
+				snprintf(buf, buflen,
+					"q idx %u already added.\n",
+					qconf->qidx);
 			goto rewind_qcnt;
 		}
 		descq->q_state = Q_STATE_ENABLED;
@@ -1257,7 +1252,7 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 
 	/** prepare the queue resources*/
 	rv = qdma_device_prep_q_resource(xdev);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 #ifdef __QDMA_VF__
 		lock_descq(descq);
 		descq->q_state = Q_STATE_DISABLED;
@@ -1268,24 +1263,26 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 #ifndef __QDMA_VF__
 	if (xdev->conf.qdma_drv_mode == LEGACY_INTR_MODE) {
 		rv = intr_legacy_setup(descq);
-		if ((rv > 0) && buf && buflen) {
+		if (rv > 0) {
 			/** support only 1 queue in legacy interrupt mode */
 			intr_legacy_clear(descq);
 			descq->q_state = Q_STATE_DISABLED;
 			pr_debug("qdma%05x - Q%u - No free queues %u/%u.\n",
-					xdev->conf.bdf, descq->conf.qidx,
-					rv, 1);
+				xdev->conf.bdf, descq->conf.qidx,
+				rv, 1);
 			rv = -EINVAL;
-			cur += snprintf(cur, end - cur,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 					"qdma%05x No free queues %u/%u.\n",
 					xdev->conf.bdf, qcnt, 1);
 			goto rewind_qcnt;
-		} else if ((rv < 0) && buf && buflen) {
+		} else if (unlikely(rv < 0)) {
 			rv = -EINVAL;
 			descq->q_state = Q_STATE_DISABLED;
-			pr_debug("qdma%05x Legacy interrupt setup failed.\n",
+			pr_warn("qdma%05x Legacy interrupt setup failed.\n",
 					xdev->conf.bdf);
-			cur += snprintf(cur, end - cur,
+			if (buf && buflen)
+				snprintf(buf, buflen,
 					"qdma%05x Legacy interrupt setup failed.\n",
 					xdev->conf.bdf);
 			goto rewind_qcnt;
@@ -1310,7 +1307,7 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 
 #ifdef DEBUGFS
 	rv = dbgfs_queue_init(&descq->conf, pairq, xdev->dbgfs_queues_root);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("failed to create queue debug files for the queueu %d\n",
 				descq->conf.qidx);
 	}
@@ -1318,14 +1315,11 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 
 	pr_debug("added %s, %s, qidx %u.\n",
 		descq->conf.name, qconf->c2h ? "C2H" : "H2C", qconf->qidx);
-	if (buf && buflen) {
-		cur += snprintf(cur, end - cur, "%s %s added.\n",
+	if (buf && buflen)
+		snprintf(buf, buflen, "%s %s added.\n",
 			descq->conf.name, qconf->c2h ? "C2H" : "H2C");
-		if (cur >= end)
-			goto handle_truncation;
-	}
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 
 rewind_qcnt:
 	spin_lock(&qdev->lock);
@@ -1335,10 +1329,6 @@ rewind_qcnt:
 		qdev->h2c_qcnt--;
 	spin_unlock(&qdev->lock);
 
-	return rv;
-
-handle_truncation:
-	*buf = '\0';
 	return rv;
 }
 
@@ -1363,8 +1353,10 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 	int rv;
 
 	/** make sure that descq is not NULL, else return error*/
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+	if (!descq) {
+		pr_err("Invalid qid");
+		return -EINVAL;
+	}
 
 
 	lock_descq(descq);
@@ -1372,60 +1364,46 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 	 *  it is in invalid state, return error
 	 */
 	if (descq->q_state != Q_STATE_ENABLED) {
-		pr_info("%s invalid state, q_status%d.\n",
+		pr_err("%s invalid state, q_status%d.\n",
 			descq->conf.name, descq->q_state);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+		if (buf && buflen)
+			snprintf(buf, buflen,
 				"%s invalid state, q_state %d.\n",
 				descq->conf.name, descq->q_state);
-		}
 		unlock_descq(descq);
-		return QDMA_ERR_INVALID_DESCQ_STATE;
+		return -EINVAL;
 	}
 	unlock_descq(descq);
 	/** complete the queue configuration*/
 	rv = qdma_descq_config_complete(descq);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("%s 0x%x setup failed.\n",
 			descq->conf.name, descq->qidx_hw);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+		if (buf && buflen)
+			snprintf(buf, buflen,
 				"%s config failed.\n", descq->conf.name);
-			buf[l] = '\0';
-		}
-		goto free_resource;
+		return -EIO;
 	}
+
 	/** allocate the queue resources*/
 	rv = qdma_descq_alloc_resource(descq);
-	if (rv < 0) {
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+	if (unlikely(rv < 0)) {
+		if (buf && buflen)
+			snprintf(buf, buflen,
 				"%s alloc resource failed.\n",
 				descq->conf.name);
-				buf[l] = '\0';
-		}
-		goto free_resource;
+		return rv;
 	}
 
 	/** program the hw contexts*/
 	rv = qdma_descq_prog_hw(descq);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("%s 0x%x setup failed.\n",
 			descq->conf.name, descq->qidx_hw);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
+		if (buf && buflen)
+			snprintf(buf, buflen,
 				"%s prog. context failed.\n",
 				descq->conf.name);
-			buf[l] = '\0';
-		}
 		goto clear_context;
 	}
 
@@ -1444,120 +1422,24 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 
 	qdma_thread_add_work(descq);
 
-	if (buf && buflen) {
-		rv = snprintf(buf, buflen, "%s started\n", descq->conf.name);
-		if (rv <= 0 || rv >= buflen)
-			goto clear_context;
-	}
+	if (buf && buflen)
+		snprintf(buf, buflen, "%s started\n", descq->conf.name);
+
 	/** set the descq to online state*/
 	lock_descq(descq);
 	descq->q_state = Q_STATE_ONLINE;
 	unlock_descq(descq);
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 
 clear_context:
 	qdma_descq_context_clear(descq->xdev, descq->qidx_hw,
 					descq->conf.st, descq->conf.c2h,
 					descq->mm_cmpt_ring_crtd, 1);
-free_resource:
 	qdma_descq_free_resource(descq);
 
 	return rv;
 }
-
-#ifndef __QDMA_VF__
-/*****************************************************************************/
-/**
- * qdma_queue_prog_stm() - Program STM for queue (context, map, etc)
- *
- * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
- * @param[in]	id:		queue index
- * @param[in]	buflen:		length of the input buffer
- * @param[out]	buf:		message buffer
- *
- * @return	0: success
- * @return	<0: error
- *****************************************************************************/
-int qdma_queue_prog_stm(unsigned long dev_hndl, unsigned long id,
-			char *buf, int buflen)
-{
-	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_descq *descq =
-		qdma_device_get_descq_by_id((struct xlnx_dma_dev *)dev_hndl,
-					    id, buf, buflen, 1);
-	int rv;
-	/** make sure that descq is not NULL, else return error*/
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
-
-	if (!descq->conf.st) {
-		pr_info("%s Skipping STM prog for MM queue.\n",
-			descq->conf.name);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
-				      "%s Skipping STM prog for MM queue.\n",
-				      descq->conf.name);
-		}
-		return QDMA_OPERATION_SUCCESSFUL;
-	}
-
-	if (!xdev->stm_en) {
-		pr_info("%s No STM present; stm_rev %d.\n",
-			descq->conf.name, xdev->stm_rev);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
-				      "%s No STM present; stm_rev %d.\n",
-				      descq->conf.name, xdev->stm_rev);
-		}
-		return QDMA_ERR_INVALID_PCI_DEV;
-	}
-
-	lock_descq(descq);
-	/** if the descq is not online,
-	 *  it is in invalid state, return error
-	 */
-	if (descq->q_state != Q_STATE_ONLINE) {
-		pr_info("%s invalid state, q_status%d.\n",
-			descq->conf.name, descq->q_state);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
-				      "%s invalid state, q_state %d.\n",
-				      descq->conf.name, descq->q_state);
-		}
-		unlock_descq(descq);
-		return QDMA_ERR_INVALID_DESCQ_STATE;
-	}
-
-	unlock_descq(descq);
-
-	/** program the stm */
-	rv = qdma_descq_prog_stm(descq, false);
-	if (rv < 0) {
-		pr_err("%s 0x%x STM setup failed.\n",
-		       descq->conf.name, descq->qidx_hw);
-		if (buf && buflen) {
-			int l = strlen(buf);
-
-			l += snprintf(buf + l, buflen,
-				      "%s prog. STM failed.\n",
-				      descq->conf.name);
-			buf[l] = '\0';
-		}
-		return rv;
-	}
-	return QDMA_OPERATION_SUCCESSFUL;
-}
-#endif
-
-
-
 
 int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
 		struct qdma_q_state *q_state, char *buf, int buflen)
@@ -1568,11 +1450,15 @@ int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
 					id, buf, buflen, 1);
 
 	/** make sure that descq is not NULL, else return error */
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+	if (!descq) {
+		pr_err("Invalid qid");
+		return -EINVAL;
+	}
 
-	if (q_state == NULL)
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+	if (q_state == NULL) {
+		pr_err("Invalid q_state:%p", q_state);
+		return -EINVAL;
+	}
 
 
 	lock_descq(descq);
@@ -1587,7 +1473,7 @@ int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
 
 	unlock_descq(descq);
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 }
 
 
@@ -1615,23 +1501,22 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 	unsigned int pend_list_empty = 0;
 
 	/** make sure that descq is not NULL, else return error */
-	if (!descq)
-		return QDMA_ERR_INVALID_QIDX;
+	if (!descq) {
+		pr_err("Invalid queue id");
+		return -EINVAL;
+	}
 
 	lock_descq(descq);
 		/** if the descq not online donot proceed */
 	if (descq->q_state != Q_STATE_ONLINE) {
 		unlock_descq(descq);
-		pr_info("%s invalid state, q_state %d.\n",
+		pr_err("%s invalid state, q_state %d.\n",
 		descq->conf.name, descq->q_state);
-		if (buf && buflen) {
-			int l = snprintf(buf, buflen,
-					 "queue %s, idx %u stop failed.\n",
-					 descq->conf.name, descq->conf.qidx);
-			if (l <= 0 || l >= buflen)
-				return QDMA_ERR_INVALID_INPUT_PARAM;
-		}
-		return QDMA_ERR_INVALID_DESCQ_STATE;
+		if (buf && buflen)
+			snprintf(buf, buflen,
+				"queue %s, idx %u stop failed.\n",
+				 descq->conf.name, descq->conf.qidx);
+		return -EINVAL;
 	}
 	pend_list_empty = descq->pend_list_empty;
 
@@ -1648,7 +1533,6 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 	descq->q_stop_wait = 0;
 	list_for_each_entry_safe(cb, tmp, &descq->pend_list, list) {
 		req = (struct qdma_request *)cb;
-		cb->req_state = QDMA_REQ_COMPLETE;
 		cb->done = 1;
 		cb->status = -ENXIO;
 		if (req->fp_done) {
@@ -1659,7 +1543,6 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 	}
 	list_for_each_entry_safe(cb, tmp, &descq->work_list, list) {
 		req = (struct qdma_request *)cb;
-		cb->req_state = QDMA_REQ_COMPLETE;
 		cb->done = 1;
 		cb->status = -ENXIO;
 		if (req->fp_done) {
@@ -1692,11 +1575,6 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 		dev_intr_info_list->intr_list_cnt--;
 		spin_unlock_irqrestore(&dev_intr_info_list->vec_q_list, flags);
 	}
-#ifndef __QDMA_VF__
-	/** clear stm context/maps */
-	if (descq->xdev->stm_en)
-		qdma_descq_prog_stm(descq, true);
-#endif
 
 	/** free the queue resources */
 	qdma_descq_free_resource(descq);
@@ -1704,13 +1582,11 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 	descq->total_cmpl_descs = 0;
 
 	/** fill the return buffer indicating that queue is stopped */
-	if (buf && buflen) {
-		int len = snprintf(buf, buflen, "queue %s, idx %u stopped.\n",
-				descq->conf.name, descq->conf.qidx);
-		if (len <= 0 || len >= buflen)
-			return QDMA_ERR_INVALID_INPUT_PARAM;
-	}
-	return QDMA_OPERATION_SUCCESSFUL;
+	if (buf && buflen)
+		snprintf(buf, buflen, "queue %s, idx %u stopped.\n",
+			descq->conf.name, descq->conf.qidx);
+
+	return 0;
 }
 
 /*****************************************************************************/
@@ -1742,7 +1618,8 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
 	 */
 	if ((xdev->conf.qdma_drv_mode != INDIRECT_INTR_MODE) &&
 			(xdev->conf.qdma_drv_mode != AUTO_MODE)) {
-		pr_info("Interrupt aggregation not enabled\n");
+		pr_info("Interrupt aggregation not enabled, mode = %d\n",
+				xdev->conf.qdma_drv_mode);
 		if (buf)  {
 			len += sprintf(buf + len,
 					"Interrupt aggregation not enabled\n");
@@ -1757,7 +1634,7 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
 	if ((vector_idx < xdev->dvec_start_idx) ||
 		(vector_idx >=
 		(xdev->dvec_start_idx + QDMA_NUM_DATA_VEC_FOR_INTR_CXT))) {
-		pr_info("Vector idx %d is invalid. Shall be in range: %d -  %d.\n",
+		pr_err("Vector idx %d is invalid. Shall be in range: %d -  %d.\n",
 				vector_idx,
 				xdev->dvec_start_idx,
 				(xdev->dvec_start_idx +
@@ -1781,7 +1658,7 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
 	 *  given are with in the range
 	 */
 	if (start_idx > coal_entry->intr_rng_num_entries) {
-		pr_info("start_idx %d is invalid. Shall be less than: %d\n",
+		pr_err("start_idx %d is invalid. Shall be less than: %d\n",
 					start_idx,
 					coal_entry->intr_rng_num_entries);
 		if (buf)  {
@@ -1801,7 +1678,7 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
 		start_idx = 0;
 
 	if (start_idx > end_idx) {
-		pr_info("start_idx can't be greater than end_idx\n");
+		pr_err("start_idx can't be greater than end_idx\n");
 		if (buf)  {
 			len += sprintf(buf + len,
 					"start_idx can't be greater than end_idx\n");
@@ -1838,8 +1715,10 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
   *****************************************************************************/
 int qdma_software_version_info(char *software_version)
 {
-	if (!software_version)
+	if (!software_version) {
+		pr_err("Invalid input software_version:%p", software_version);
 		return -EINVAL;
+	}
 
 	sprintf(software_version, "%s", LIBQDMA_VERSION_STR);
 
@@ -1945,7 +1824,7 @@ int sgl_map(struct pci_dev *pdev, struct qdma_sw_sg *sgl, unsigned int sgcnt,
 		/* !! TODO  page size !! */
 		sg->dma_addr = pci_map_page(pdev, sg->pg, 0, PAGE_SIZE, dir);
 		if (unlikely(pci_dma_mapping_error(pdev, sg->dma_addr))) {
-			pr_info("map sgl failed, sg %d, %u.\n", i, sg->len);
+			pr_err("map sgl failed, sg %d, %u.\n", i, sg->len);
 			if (i)
 				sgl_unmap(pdev, sgl, i, dir);
 			return -EIO;
@@ -1981,8 +1860,10 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	int wait = req->fp_done ? 0 : 1;
 	int rv = 0;
 
-	if (!descq)
+	if (!descq) {
+		pr_err("Invalid qid");
 		return -EINVAL;
+	}
 
 	pr_debug("%s %s-%s, data len %u, sg cnt %u.\n",
 		descq->conf.name, descq->conf.st ? "ST" : "MM",
@@ -1997,7 +1878,7 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	 */
 	if ((req->write && descq->conf.c2h) ||
 	    (!req->write && !descq->conf.c2h)) {
-		pr_info("%s: bad direction, %c.\n",
+		pr_err("%s: bad direction, %c.\n",
 			descq->conf.name, req->write ? 'W' : 'R');
 		return -EINVAL;
 	}
@@ -2019,8 +1900,8 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 
 	if (!req->dma_mapped) {
 		rv = sgl_map(xdev->conf.pdev,  req->sgl, req->sgcnt, dir);
-		if (rv < 0) {
-			pr_info("%s map sgl %u failed, %u.\n",
+		if (unlikely(rv < 0)) {
+			pr_err("%s map sgl %u failed, %u.\n",
 				descq->conf.name, req->sgcnt, req->count);
 			goto unmap_sgl;
 		}
@@ -2031,7 +1912,7 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	/**  if the descq is already in online state*/
 	if (descq->q_state != Q_STATE_ONLINE) {
 		unlock_descq(descq);
-		pr_info("%s descq %s NOT online.\n",
+		pr_err("%s descq %s NOT online.\n",
 			xdev->conf.name, descq->conf.name);
 		rv = -EINVAL;
 		goto unmap_sgl;
@@ -2048,7 +1929,7 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 		return 0;
 
 	rv = qdma_request_wait_for_cmpl(xdev, descq, req);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		goto unmap_sgl;
 
 	return cb->offset;
@@ -2088,8 +1969,10 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	struct qdma_request *req;
 	int st_c2h = 0;
 
-	if (!descq)
+	if (!descq) {
+		pr_err("Invalid qid");
 		return -EINVAL;
+	}
 
 	st_c2h = (descq->conf.st && descq->conf.c2h) ? 1 : 0;
 
@@ -2103,12 +1986,12 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	 */
 	if ((req->write && descq->conf.c2h)
 			|| (!req->write && !descq->conf.c2h)) {
-		pr_info("%s: bad direction, %c.\n", descq->conf.name,
+		pr_err("%s: bad direction, %c.\n", descq->conf.name,
 				req->write ? 'W' : 'R');
 		return -EINVAL;
 	}
 	if (!req->fp_done) {
-		pr_info("%s: missing fp_done.\n", descq->conf.name);
+		pr_err("%s: missing fp_done.\n", descq->conf.name);
 		return -EINVAL;
 	}
 
@@ -2153,7 +2036,7 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	/**  if the descq is already in online state*/
 	if (unlikely(descq->q_state != Q_STATE_ONLINE)) {
 		unlock_descq(descq);
-		pr_info("%s descq %s NOT online.\n", xdev->conf.name,
+		pr_err("%s descq %s NOT online.\n", xdev->conf.name,
 				descq->conf.name);
 		return -EINVAL;
 	}
@@ -2181,9 +2064,10 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
  * @return	0:	success
  * @return	<0:	error
  *****************************************************************************/
-int libqdma_init(unsigned int num_threads)
+int libqdma_init(unsigned int num_threads, void *debugfs_root)
 {
 
+	int ret;
 	/** Make sure that the size of qdma scatter gather request size
 	 *  is less than the QDMA_REQ_OPAQUE_SIZE
 	 *  If not, return error
@@ -2200,12 +2084,28 @@ int libqdma_init(unsigned int num_threads)
 	}
 
 	/** Create the qdma threads */
-	qdma_threads_create(num_threads);
+	ret = qdma_threads_create(num_threads);
+	if (ret < 0) {
+		pr_err("qdma_threads_create failed for num_thread=%d",
+			       num_threads);
+		return ret;
+	}
 #ifdef DEBUGFS
-	return qdma_debugfs_init(&qdma_debugfs_root);
-#else
-	return 0;
+
+	if (debugfs_root) {
+		qdma_debugfs_root = debugfs_root;
+		qdma_debufs_cleanup = false;
+		return 0;
+	}
+
+	ret =  qdma_debugfs_init(&qdma_debugfs_root);
+	if (ret < 0) {
+		pr_err("qdma_debugfs_init failed for num_thread=%d",
+				num_threads);
+		return ret;
+	}
 #endif
+	return 0;
 }
 
 /*****************************************************************************/
@@ -2217,7 +2117,8 @@ int libqdma_init(unsigned int num_threads)
 void libqdma_exit(void)
 {
 #ifdef DEBUGFS
-	qdma_debugfs_exit(qdma_debugfs_root);
+	if (qdma_debufs_cleanup)
+		qdma_debugfs_exit(qdma_debugfs_root);
 #endif
 	/** Destroy the qdma threads */
 	qdma_threads_destroy();

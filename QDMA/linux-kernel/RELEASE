@@ -1,14 +1,8 @@
-Release: 2019.1
-===============
+Release: 2019.1 Patch
+=====================
 
 NOTE:
-	This release is based on the 2019.1 QDMA design
-
-	Performance benchmark numbers are captured in performance report
-	for this version of driver and released along with the driver package
-
-	QDMA Linux driver is supported in auto mode by default
-
+	This release is based on the 2019.1 QDMA IP
 
 SUPPORTED FEATURES:
 ===================
@@ -64,9 +58,17 @@ SUPPORTED FEATURES:
 - Interoperability between Linux driver (as PF/VF) and DPDK driver (as PF/VF)
 - Driver restructuring to partition QDMA access code such that it can be used across different drivers
 
+2019.1 Patch Updates
+--------------------
+- Addressed the issues observed in static analysis of the code base
+- Added the User Logic pluggability
+- Supported HW Error detection in poll mode
+
+
 KNOWN ISSUES:
 =============
 - Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+- FLR Reset on a PF while any VFs are attached to PF is not working
 
 DRIVER LIMITATIONS:
 ===================

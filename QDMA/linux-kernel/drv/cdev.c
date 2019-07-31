@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -72,7 +72,7 @@ enum qdma_cdev_ioctl_cmd {
 	QDMA_CDEV_IOCTL_CMDS
 };
 
-struct class *qdma_class;
+static struct class *qdma_class;
 static struct kmem_cache *cdev_cache;
 
 static ssize_t cdev_gen_read_write(struct file *file, char __user *buf,

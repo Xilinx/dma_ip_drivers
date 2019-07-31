@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ int xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id)
 	qdma_mbox_compose_vf_offline(xdev->func_id, m->raw);
 
 	rv = qdma_mbox_msg_send(xdev, m, 0, 0);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		pr_info("%s, send bye failed %d.\n", xdev->conf.name, rv);
 
 	return rv;
@@ -58,14 +58,15 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
 	qmda_mbox_compose_vf_online(xdev->func_id, 0, &qbase, m->raw);
 
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		pr_info("%s, send hello failed %d.\n",  xdev->conf.name, rv);
 
 	rv = qdma_mbox_vf_dev_info_get(m->raw, &dev_cap);
-	if (rv < 0)
+	if (unlikely(rv < 0)) {
 		pr_info("%s, failed to get dev info %d.\n",
 			xdev->conf.name, rv);
-	else {
+		rv = -EINVAL;
+	} else {
 		xdev->dev_cap.num_pfs = dev_cap.num_pfs;
 		xdev->dev_cap.num_qs = dev_cap.num_qs;
 		xdev->dev_cap.flr_present = dev_cap.flr_present;
@@ -177,7 +178,7 @@ int qdma_device_sriov_config(struct pci_dev *pdev, unsigned long dev_hndl,
 		return -EINVAL;
 
 	rv = xdev_check_hndl(__func__, pdev, dev_hndl);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		return rv;
 
 	/* if zero disable sriov */
@@ -188,11 +189,11 @@ int qdma_device_sriov_config(struct pci_dev *pdev, unsigned long dev_hndl,
 
 	if (!xdev->dev_cap.mailbox_en) {
 		dev_err(&pdev->dev, "Mailbox not enabled in this device");
-		return -(QDMA_ERR_MISSING_DEVICE_CAPABILITY);
+		return -EPERM;
 	}
 
 	rv = xdev_sriov_enable(xdev, num_vfs);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		return rv;
 
 	return xdev->vf_count;

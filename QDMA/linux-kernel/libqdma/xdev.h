@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -30,6 +30,7 @@
 #include <linux/pci.h>
 
 #include "libqdma_export.h"
+#include "qdma_access_errors.h"
 #include "qdma_mbox.h"
 #ifdef DEBUGFS
 #include "qdma_debugfs.h"
@@ -200,10 +201,8 @@ struct xlnx_dma_dev {
 	spinlock_t hw_prg_lock;
 	/**< device flags */
 	unsigned int flags;
-	u8 stm_en:1;
-	/**< flag to indicate the presence of STM */
-	struct qdma_dev_attributes dev_cap;
 	/**< device capabilities */
+	struct qdma_dev_attributes dev_cap;
 	/**< sriov info */
 	void *vf_info;
 	/**< number of virtual functions */
@@ -219,11 +218,8 @@ struct xlnx_dma_dev {
 	/**< number of physical functions */
 	u8 pf_count;
 #endif
-	u8 stm_rev;
 	/**< PCIe config. bar */
 	void __iomem *regs;
-	/** PCIe Bar for STM config */
-	void __iomem *stm_regs;
 	/**< number of MSI-X interrupt vectors per device */
 	int num_vecs;
 	/**< msix_entry list for all MSIx vectors associated for device */
@@ -234,21 +230,16 @@ struct xlnx_dma_dev {
 	int dvec_start_idx;
 	/**< DMA private device to hold the qdma que details */
 	void *dev_priv;
-	/**< dsa configured max pkt size that STM can support */
-	u32 pipe_stm_max_pkt_size;
 	/**< list of interrupt coalescing configuration for each vector */
 	struct intr_coal_conf  *intr_coal_list;
 	/**< legacy interrupt vector */
 	int vector_legacy;
-#ifdef ERR_DEBUG
 	/**< error lock */
 	spinlock_t err_lock;
 	/**< flag to indicate the error minitor status */
 	u8 err_mon_cancel;
 	/**< error minitor work handler */
 	struct delayed_work err_mon;
-#endif
-
 #ifdef DEBUGFS
 	/** debugfs device root */
 	struct dentry *dbgfs_dev_root;

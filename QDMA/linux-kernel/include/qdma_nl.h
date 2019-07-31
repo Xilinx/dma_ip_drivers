@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -140,6 +140,7 @@ enum xnl_attr_t {
 	XNL_ATTR_CMPT_TIMER_IDX,	/**< completion timer index */
 	XNL_ATTR_CMPT_CNTR_IDX,	/**< completion counter index */
 	XNL_ATTR_CMPT_TRIG_MODE,	/**< completion trigger mode */
+	XNL_ATTR_CMPT_ENTRIES_CNT,      /**< completion entries count */
 
 	XNL_ATTR_RANGE_START,	/**< range start */
 	XNL_ATTR_RANGE_END,		/**< range end */
@@ -155,6 +156,7 @@ enum xnl_attr_t {
 	XNL_ATTR_PIPE_TDEST,            /**< pipe tdest */
 	XNL_ATTR_DEV_STM_BAR,	/**< device STM bar number */
 	XNL_ATTR_Q_STATE,
+	XNL_ATTR_ERROR,
 #ifdef ERR_DEBUG
 	XNL_ATTR_QPARAM_ERR_INFO,		/**< queue param info */
 #endif
@@ -213,6 +215,15 @@ static const char *xnl_attr_str[XNL_ATTR_MAX + 1] = {
 	"DEV_USR_BAR",	        /**< XNL_ATTR_DEV_USER_BAR */
 	"DEV_QSETMAX",	        /**< XNL_ATTR_DEV_QSET_MAX */
 	"DEV_QBASE",	        /**< XNL_ATTR_DEV_QSET_QBASE */
+	"VERSION_INFO",			/**< XNL_ATTR_VERSION_INFO */
+	"DEV_NUMQS",			/**<XNL_ATTR_DEV_NUMQS */
+	"DEV_NUM_PFS",			/**<XNL_ATTR_DEV_NUM_PFS */
+	"DEV_MM_CHANNEL_MAX",	/**<XNL_ATTR_DEV_MM_CHANNEL_MAX */
+	"DEV_MAILBOX_ENABLE",	/**<XNL_ATTR_DEV_MAILBOX_ENABLE */
+	"DEV_FLR_PRESENT",		/**<XNL_ATTR_DEV_FLR_PRESENT */
+	"DEV_ST_ENABLE",		/**<XNL_ATTR_DEV_ST_ENABLE */
+	"DEV_MM_ENABLE",		/**<XNL_ATTR_DEV_MM_ENABLE */
+	"DEV_MM_CMPT_ENABLE",	/**<XNL_ATTR_DEV_MM_CMPT_ENABLE */
 	"REG_BAR",		        /**< XNL_ATTR_REG_BAR_NUM */
 	"REG_ADDR",		        /**< XNL_ATTR_REG_ADDR */
 	"REG_VAL",		        /**< XNL_ATTR_REG_VAL */
@@ -245,6 +256,7 @@ static const char *xnl_attr_str[XNL_ATTR_MAX + 1] = {
 	"QPARAM_ERR_INFO",      /**< queue param info */
 #endif
 	"ATTR_MAX",
+
 };
 
 

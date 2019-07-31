@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2018-present,  Xilinx, Inc.
+ * Copyright (c) 2018-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under both the BSD-style license (found in the

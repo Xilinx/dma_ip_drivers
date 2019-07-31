@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -29,64 +29,12 @@
 #include "version.h"
 #include "qdma_mbox_protocol.h"
 #include "qdma_access.h"
-#ifdef DUMP_ON_ERROR_INTERRUPT
-#include "qdma_reg_dump.h"
-#endif
 
 #ifndef __QDMA_VF__
 static LIST_HEAD(legacy_intr_q_list);
 static spinlock_t legacy_intr_lock;
 static spinlock_t legacy_q_add_lock;
 static unsigned long legacy_intr_flags = IRQF_SHARED;
-#endif
-
-
-#ifndef __QDMA_VF__
-#ifdef DUMP_ON_ERROR_INTERRUPT
-#define REG_BANNER_LEN (81 * 5)
-static int dump_qdma_regs(struct xlnx_dma_dev *xdev)
-{
-	int len = 0, dis_len = 0;
-	int rv;
-	char *buf = NULL, tbuff = NULL;
-	int buflen = qdma_reg_dump_buf_len() + REG_BANNER_LEN;
-	char temp_buf[512];
-
-	if (!xdev) {
-		pr_err("Invalid device\n");
-		return -EINVAL;
-	}
-
-	/** allocate memory */
-	tbuf = (char *) kzalloc(buflen, GFP_KERNEL);
-	if (!tbuf)
-		return -ENOMEM;
-
-	buf = tbuff;
-	rv = qdma_dump_config_regs(xdev, buf + len, buflen - len);
-	if (rv < 0) {
-		pr_warn("Failed to dump Config Bar register values\n");
-		goto free_buf;
-	}
-	len += rv;
-
-	*data = buf;
-	*data_len = buflen;
-
-	buf[++len] = '\0';
-	memset(temp_buf, '\0', 512);
-	for (dis_len = 0; dis_len < len; dis_len += 512) {
-		memcpy(temp_buf, buf, 512);
-		pr_info("\n%s", temp_buf);
-		memset(temp_buf, '\0', 512);
-		buf += 512;
-	}
-
-free_buf:
-	kfree(tbuf);
-	return 0;
-}
-#endif
 #endif
 
 #ifndef MAILBOX_INTERRUPT_DISABLE
@@ -131,11 +79,6 @@ static irqreturn_t error_intr_handler(int irq_index, int irq, void *dev_id)
 	qdma_error_process(xdev);
 
 	qdma_error_interrupt_rearm(xdev);
-
-
-#ifdef DUMP_ON_ERROR_INTERRUPT
-	dump_qdma_regs(xdev);
-#endif
 
 	return IRQ_HANDLED;
 }
@@ -217,10 +160,9 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq)
 		ring_entry = (coal_entry->intr_ring_base + counter);
 	}
 
-	if (descq) {
+	if (descq)
 		queue_intr_cidx_update(descq->xdev,
 				descq->conf.qidx, &coal_entry->intr_cidx_info);
-	}
 }
 
 static void data_intr_direct(struct xlnx_dma_dev *xdev, int vidx, int irq)
@@ -238,10 +180,7 @@ static void data_intr_direct(struct xlnx_dma_dev *xdev, int vidx, int irq)
 		if (!descq)
 			continue;
 		if (descq->conf.fp_descq_isr_top) {
-			struct qdma_dev *qdev = xdev_2_qdev(xdev);
-
-			descq->conf.fp_descq_isr_top(descq->conf.qidx +
-					(descq->conf.c2h ? qdev->qmax : 0),
+			descq->conf.fp_descq_isr_top(descq->q_hndl,
 					descq->conf.quld);
 		} else {
 			if (descq->cpu_assigned)
@@ -253,7 +192,6 @@ static void data_intr_direct(struct xlnx_dma_dev *xdev, int vidx, int irq)
 	}
 	spin_unlock_irqrestore(&xdev->dev_intr_info_list[vidx].vec_q_list,
 			    flags);
-
 }
 
 static irqreturn_t data_intr_handler(int vector_index, int irq, void *dev_id)
@@ -326,7 +264,7 @@ static void intr_context_invalidate(struct xlnx_dma_dev *xdev)
 	qdma_mbox_compose_vf_intr_ctxt_invalidate(xdev->func_id,
 			&ictxt, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("%s invalidate interrupt context failed %d.\n",
 			xdev->conf.name, rv);
 	}
@@ -357,8 +295,12 @@ static void intr_context_invalidate(struct xlnx_dma_dev *xdev)
 		ring_index = get_intr_ring_index(xdev,
 				(i + xdev->dvec_start_idx));
 		rv = qdma_indirect_intr_context_invalidate(xdev, ring_index);
-		if (rv < 0)
+		if (unlikely(rv < 0)) {
+			pr_err("Intr ctxt invalidate failed with error = %d",
+						rv);
 			return;
+		}
+
 		ring_entry = (xdev->intr_coal_list + i);
 		if (ring_entry) {
 			intr_ring_free(xdev,
@@ -546,7 +488,7 @@ int intr_setup(struct xlnx_dma_dev *xdev)
 #else
 	rv = pci_enable_msix(xdev->conf.pdev, xdev->msix, xdev->num_vecs);
 #endif
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_err("Error enabling MSI-X (%d)\n", rv);
 		goto free_intr_info;
 	}
@@ -684,23 +626,27 @@ int intr_legacy_setup(struct qdma_descq *descq)
 		pr_debug("registering legacy interrupt for irq-%d from qdma%05x\n",
 			descq->xdev->conf.pdev->irq, descq->xdev->conf.bdf);
 
-		if (qdma_disable_legacy_interrupt(descq->xdev))
+		if (qdma_disable_legacy_interrupt(descq->xdev)) {
+			spin_unlock(&legacy_q_add_lock);
 			return -EINVAL;
+		}
 
 		rv = request_threaded_irq(descq->xdev->conf.pdev->irq, irq_top,
 					  irq_legacy, legacy_intr_flags,
 					  "qdma legacy intr",
 					  descq->xdev);
 
-		if (rv < 0)
+		if (unlikely(rv < 0))
 			goto exit_intr_setup;
 		else {
 			list_add_tail(&descq->legacy_intr_q_list,
 				      &legacy_intr_q_list);
 			rv = 0;
 		}
-		if (qdma_enable_legacy_interrupt(descq->xdev))
+		if (qdma_enable_legacy_interrupt(descq->xdev)) {
+			spin_unlock(&legacy_q_add_lock);
 			return -EINVAL;
+		}
 	} else
 		list_add_tail(&descq->legacy_intr_q_list,
 			      &legacy_intr_q_list);
@@ -867,8 +813,10 @@ int qdma_err_intr_setup(struct xlnx_dma_dev *xdev)
 	err_intr_index = get_intr_vec_index(xdev, INTR_TYPE_ERROR);
 
 	rv = qdma_error_interrupt_setup(xdev, xdev->func_id, err_intr_index);
-	if (rv < 0)
+	if (unlikely(rv < 0)) {
+		pr_err("Failed to setup error interrupt with error = %d", rv);
 		return -EINVAL;
+	}
 
 	return 0;
 }

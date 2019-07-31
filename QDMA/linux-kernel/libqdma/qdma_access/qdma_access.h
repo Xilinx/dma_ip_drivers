@@ -1,22 +1,11 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #ifndef QDMA_ACCESS_H_
 #define QDMA_ACCESS_H_
 
+#include "qdma_access_errors.h"
 #include "qdma_access_export.h"
 #include "qdma_platform_env.h"
 #ifdef __cplusplus
@@ -38,18 +27,6 @@ extern "C" {
 #define QDMA_HW_CONTEXT_NUM_WORDS              2
 #define QDMA_CR_CONTEXT_NUM_WORDS              1
 #define QDMA_IND_INTR_CONTEXT_NUM_WORDS        3
-
-/** Error codes */
-#define QDMA_SUCCESS                           0
-#define QDMA_CONTEXT_BUSY_TIMEOUT_ERR          1
-#define QDMA_INVALID_PARAM_ERR                 2
-#define QDMA_INVALID_CONFIG_BAR                3
-#define QDMA_BUSY_TIMEOUT_ERR                  4
-#define QDMA_NO_PENDING_LEGACY_INTERRUPT       5
-#define QDMA_BAR_NOT_FOUND                     6
-#define QDMA_FEATURE_NOT_SUPPORTED             7
-#define QDMA_HW_ERR_NOT_DETECTED               1
-
 
 #define QDMA_DEV_PF     0
 #define QDMA_DEV_VF     1
@@ -81,7 +58,6 @@ struct qdma_fmap_cfg {
  * struct qdma_descq_sw_ctxt - descq SW context config data structure
  */
 struct qdma_descq_sw_ctxt {
-
 	/** @pidx - initial producer index */
 	uint32_t pidx:16;
 	/** @irq_arm - Interrupt Arm */
@@ -1064,13 +1040,13 @@ int qdma_error_enable(void *dev_hndl, enum qdma_error_idx err_idx);
 
 /*****************************************************************************/
 /**
- * qdma_get_error_name() - Function to get the error in string format
+ * qdma_get_hw_error_name() - Function to get the error in string format
  *
  * @err_idx: error index
  *
  * Return: string - success and NULL on failure
  *****************************************************************************/
-const char *qdma_get_error_name(enum qdma_error_idx err_idx);
+const char *qdma_get_hw_error_name(enum qdma_error_idx err_idx);
 
 /*****************************************************************************/
 /**
@@ -1161,6 +1137,16 @@ int qdma_initiate_flr(void *dev_hndl, uint8_t is_vf);
  * Return:   0   - success and < 0 - failure
  *****************************************************************************/
 int qdma_is_flr_done(void *dev_hndl, uint8_t is_vf, uint8_t *done);
+
+/*****************************************************************************/
+/**
+ * qdma_get_error_code() - function to get the qdma access mapped error code
+ *
+ * @acc_err_code: qdma access error code
+ *
+ * Return:   returns the platform specific error code
+ *****************************************************************************/
+int qdma_get_error_code(int acc_err_code);
 
 #ifdef __cplusplus
 }

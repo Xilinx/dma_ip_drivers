@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -40,7 +40,8 @@
  * @return	0: success
  * @return	<0: failure
  *****************************************************************************/
-int xnl_respond_buffer(struct genl_info *info, char *buf, int buflen);
+int xnl_respond_buffer(struct genl_info *info, char *buf, int buflen,
+		int error);
 
 int xlnx_nl_init(void);
 void  xlnx_nl_exit(void);

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under both the BSD-style license (found in the
@@ -22,11 +22,11 @@
 #define DRV_MODULE_NAME		"qdma_pf"
 #define DRV_MODULE_DESC		"Xilinx QDMA PF Reference Driver"
 #endif /* #ifdef __QDMA_VF__ */
-#define DRV_MODULE_RELDATE	"Jun. 2019"
+#define DRV_MODULE_RELDATE	"July 2019"
 
 #define DRV_MOD_MAJOR		2019
 #define DRV_MOD_MINOR		1
-#define DRV_MOD_PATCHLEVEL	121
+#define DRV_MOD_PATCHLEVEL	125
 
 #define DRV_MODULE_VERSION      \
 	__stringify(DRV_MOD_MAJOR) "." \
@@ -35,6 +35,6 @@
 	__stringify(LIBQDMA_VERSION_PATCH) "." \
 
 #define DRV_MOD_VERSION_NUMBER  \
-	((DRV_MOD_MAJOR)*1000 + (DRV_MOD_MINOR)*100 + DRV_MOD_PATCHLEVEL)
+	((DRV_MOD_MAJOR)*10000 + (DRV_MOD_MINOR)*1000 + DRV_MOD_PATCHLEVEL)
 
 #endif /* ifndef __QDMA_VERSION_H__ */

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -159,61 +159,6 @@ struct qdma_c2h_cmpt_cmpl_status {
 #define S_C2H_CMPT_INT_STATE	1
 #define M_C2H_CMPT_INT_STATE	0x3U
 
-#define STM_REG_BASE			0x02000000
-#define STM_REG_IND_CTXT_DATA_BASE	0x0
-#define STM_REG_IND_CTXT_DATA3		0xC
-#define STM_REG_IND_CTXT_CMD		0x14
-#define STM_REG_REV			0x18
-#define STM_REG_C2H_DATA8		0x20
-#define STM_REG_IND_CTXT_DATA5		0x24
-#define STM_REG_H2C_MODE		0x30
-#define STM_REG_IND_CTXT_REG_COUNT	5
-#define STM_SUPPORTED_REV		0x4
-#define STM_ENABLED_DEVICE		0x6aa0
-#define	STM_MAX_SUPPORTED_QID		64
-#define STM_MAX_PKT_SIZE		4096
-#define STM_PORT_MAP			0xE1E1
-
-#define S_STM_H2C_CTXT_ENTRY_VALID	0
-#define F_STM_H2C_CTXT_ENTRY_VALID	(1 << S_STM_H2C_CTXT_ENTRY_VALID)
-#define S_STM_C2H_CTXT_ENTRY_VALID	16
-#define F_STM_C2H_CTXT_ENTRY_VALID	(1 << S_STM_C2H_CTXT_ENTRY_VALID)
-#define S_STM_EN_STMA_BKCHAN		15
-#define F_STM_EN_STMA_BKCHAN		(1 << S_STM_EN_STMA_BKCHAN)
-#define S_STM_PORT_MAP			16
-
-enum ind_stm_addr {
-	STM_IND_ADDR_C2H_MAP = 0x2,
-	STM_IND_ADDR_FORCED_CAN = 0x8,
-	STM_IND_ADDR_Q_CTX_H2C,
-	STM_IND_ADDR_H2C_MAP,
-	STM_IND_ADDR_Q_CTX_C2H,
-};
-
-enum ind_stm_cmd_op {
-	STM_CSR_CMD_WR = 4,
-	STM_CSR_CMD_RD = 8,
-};
-
-#define S_STM_CTXT_QID		16
-#define S_STM_CTXT_C2H_SLR	8
-#define S_STM_CTXT_C2H_TDEST_H	0
-#define S_STM_CTXT_C2H_TDEST_L	24
-#define S_STM_CTXT_C2H_FID	16
-#define S_STM_CTXT_H2C_SLR	8
-#define S_STM_CTXT_H2C_TDEST_H	0
-#define S_STM_CTXT_H2C_TDEST_L	24
-#define S_STM_CTXT_H2C_FID	16
-#define S_STM_CTXT_PKT_LIM	8
-#define S_STM_CTXT_MAX_ASK	0
-#define S_STM_CTXT_DPPKT	24
-#define S_STM_CTXT_LOG2_DPPKT	18
-
-#define S_STM_CMD_QID		0
-#define S_STM_CMD_FID		12
-#define S_STM_CMD_ADDR		24
-#define S_STM_CMD_OP		28
-
 /*
  * HW API
  */
@@ -233,11 +178,6 @@ enum ind_stm_cmd_op {
 #endif /* #ifdef DEBUG__ */
 
 #ifndef __QDMA_VF__
-int hw_indirect_stm_prog(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-		u8 fid, enum ind_stm_cmd_op op,
-		enum ind_stm_addr addr, u32 *data, unsigned int cnt,
-		bool clear);
-
 void qdma_device_attributes_get(struct xlnx_dma_dev *xdev);
 
 #endif /* #ifndef __QDMA_VF__ */

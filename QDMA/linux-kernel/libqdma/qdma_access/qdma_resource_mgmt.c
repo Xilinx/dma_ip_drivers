@@ -1,19 +1,8 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
+#include "qdma_access_errors.h"
 #include "qdma_resource_mgmt.h"
 #include "qdma_platform.h"
 #include "qdma_list.h"
@@ -298,7 +287,7 @@ static int qdma_request_q_resource(struct qdma_dev_entry *dev_entry,
 	uint32_t qmax = dev_entry->entry.total_q;
 	int qbase = dev_entry->entry.qbase;
 	struct qdma_resource_entry *free_entry_node = NULL;
-	int rv = 0;
+	int rv = QDMA_SUCCESS;
 
 	/* submit already allocated queues back to free list before requesting
 	 * new resource
@@ -306,7 +295,7 @@ static int qdma_request_q_resource(struct qdma_dev_entry *dev_entry,
 	qdma_submit_to_free_list(dev_entry, free_list_head);
 
 	if (!new_qmax)
-		return 0;
+		return QDMA_SUCCESS;
 	/* check if the request can be accomodated */
 	free_entry_node = qdma_get_resource_node(new_qmax, new_qbase,
 						 free_list_head);
@@ -314,7 +303,7 @@ static int qdma_request_q_resource(struct qdma_dev_entry *dev_entry,
 		/* request cannot be accommodated. Restore the dev_entry */
 		free_entry_node = qdma_get_resource_node(qmax, qbase,
 							 free_list_head);
-		rv = -QDMA_RESOURCE_NOT_ENOUGH_QUEUE;
+		rv = -QDMA_ERR_RM_NO_QUEUES_LEFT;
 		if (free_entry_node == NULL) {
 			dev_entry->entry.qbase = -1;
 			dev_entry->entry.total_q = 0;
@@ -343,16 +332,16 @@ int qdma_master_resource_create(uint32_t pci_bus_num, int qbase,
 		q_resource = qdma_calloc(1,
 					 sizeof(struct qdma_resource_master));
 	else
-		return -QDMA_MASTER_RESOURCE_ALREADY_EXISTS;
+		return -QDMA_ERR_RM_RES_EXISTS;
 
 	if (!q_resource)
-		return -QDMA_RESOURCE_MGMT_MEMALLOC_FAIL;
+		return -QDMA_ERR_NO_MEM;
 
 	qdma_resource_lock_take();
 	free_entry = qdma_calloc(1, sizeof(struct qdma_resource_entry));
 	if (!free_entry) {
 		qdma_memfree(q_resource);
-		return -QDMA_RESOURCE_MGMT_MEMALLOC_FAIL;
+		return -QDMA_ERR_NO_MEM;
 	}
 
 	q_resource->pci_bus_num = pci_bus_num;
@@ -371,7 +360,7 @@ int qdma_master_resource_create(uint32_t pci_bus_num, int qbase,
 	qdma_list_add_tail(&free_entry->node, &q_resource->free_list);
 	qdma_resource_lock_give();
 
-	return QDMA_RESOURCE_MGMT_SUCCESS;
+	return QDMA_SUCCESS;
 }
 
 void qdma_master_resource_destroy(uint32_t pci_bus_num)
@@ -407,7 +396,7 @@ int qdma_dev_entry_create(uint32_t pci_bus_num, uint16_t func_id)
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource)
-		return -QDMA_MASTER_RESOURCE_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 
 	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
 	if (!dev_entry) {
@@ -415,7 +404,7 @@ int qdma_dev_entry_create(uint32_t pci_bus_num, uint16_t func_id)
 		dev_entry = qdma_calloc(1, sizeof(struct qdma_dev_entry));
 		if (dev_entry == NULL) {
 			qdma_resource_lock_give();
-			return QDMA_RESOURCE_MGMT_MEMALLOC_FAIL;
+			return -QDMA_ERR_NO_MEM;
 		}
 		dev_entry->func_id = func_id;
 		dev_entry->entry.qbase = -1;
@@ -425,9 +414,9 @@ int qdma_dev_entry_create(uint32_t pci_bus_num, uint16_t func_id)
 				   &q_resource->dev_list);
 		qdma_resource_lock_give();
 	} else
-		return -QDMA_DEV_ALREADY_EXISTS;
+		return -QDMA_ERR_RM_DEV_EXISTS;
 
-	return QDMA_RESOURCE_MGMT_SUCCESS;
+	return QDMA_SUCCESS;
 }
 
 void qdma_dev_entry_destroy(uint32_t pci_bus_num, uint32_t func_id)
@@ -459,12 +448,12 @@ int qdma_dev_update(uint32_t pci_bus_num, uint32_t func_id,
 	int rv;
 
 	if (!q_resource)
-		return -QDMA_MASTER_RESOURCE_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 
 	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
 
 	if (!dev_entry)
-		return -QDMA_DEV_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_DEV_NOT_EXISTS;
 
 	qdma_resource_lock_take();
 
@@ -473,7 +462,7 @@ int qdma_dev_update(uint32_t pci_bus_num, uint32_t func_id,
 	 */
 	if (dev_entry->active_qcnt) {
 		qdma_resource_lock_give();
-		return -QDMA_QMAX_PROG_FREEZE;
+		return -QDMA_ERR_RM_QMAX_CONF_REJECTED;
 	}
 
 	rv = qdma_request_q_resource(dev_entry, qmax, *qbase,
@@ -494,19 +483,19 @@ int qdma_dev_qinfo_get(uint32_t pci_bus_num, uint32_t func_id,
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource)
-		return -QDMA_MASTER_RESOURCE_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 
 	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
 
 	if (!dev_entry)
-		return -QDMA_DEV_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_DEV_NOT_EXISTS;
 
 	qdma_resource_lock_take();
 	*qbase = dev_entry->entry.qbase;
 	*qmax = dev_entry->entry.total_q;
 	qdma_resource_lock_give();
 
-	return QDMA_RESOURCE_MGMT_SUCCESS;
+	return QDMA_SUCCESS;
 }
 
 enum qdma_dev_q_range qdma_dev_is_queue_in_range(uint32_t pci_bus_num,
@@ -545,19 +534,19 @@ int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id)
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource)
-		return -QDMA_MASTER_RESOURCE_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 
 	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
 
 	if (!dev_entry)
-		return -QDMA_DEV_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_DEV_NOT_EXISTS;
 
 	qdma_resource_lock_take();
 	dev_entry->active_qcnt++;
 	q_resource->active_qcnt++;
 	qdma_resource_lock_give();
 
-	return QDMA_RESOURCE_MGMT_SUCCESS;
+	return QDMA_SUCCESS;
 }
 
 
@@ -568,12 +557,12 @@ int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id)
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource)
-		return -QDMA_MASTER_RESOURCE_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 
 	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
 
 	if (!dev_entry)
-		return -QDMA_DEV_DOES_NOT_EXIST;
+		return -QDMA_ERR_RM_DEV_NOT_EXISTS;
 
 	qdma_resource_lock_take();
 	if (dev_entry->active_qcnt) {
@@ -582,7 +571,7 @@ int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id)
 	}
 	qdma_resource_lock_give();
 
-	return QDMA_RESOURCE_MGMT_SUCCESS;
+	return QDMA_SUCCESS;
 }
 
 uint32_t qdma_get_active_queue_count(uint32_t pci_bus_num)

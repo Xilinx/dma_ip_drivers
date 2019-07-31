@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2019,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -319,11 +319,6 @@ static void xdev_unmap_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 		/* mark as unmapped */
 		xdev->regs = NULL;
 	}
-
-	if (xdev->stm_regs) {
-		pci_iounmap(pdev, xdev->stm_regs);
-		xdev->stm_regs = NULL;
-	}
 }
 
 /*****************************************************************************/
@@ -355,32 +350,6 @@ static int xdev_map_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 		return -EINVAL;
 	}
 
-	if (pdev->device == STM_ENABLED_DEVICE) {
-		u32 rev;
-
-		map_len = pci_resource_len(pdev, STM_BAR);
-		xdev->stm_regs = pci_iomap(pdev, STM_BAR, map_len);
-		if (!xdev->stm_regs) {
-			pr_warn("%s unable to map bar %d.\n",
-				xdev->conf.name, STM_BAR);
-			return -EINVAL;
-		}
-
-		rev = readl(xdev->stm_regs + STM_REG_BASE + STM_REG_REV);
-		if (!(((rev >> 24) == 'S') && (((rev >> 16) & 0xFF) == 'T') &&
-		      (((rev >> 8) & 0xFF) == 'M') &&
-		      ((rev & 0xFF) == STM_SUPPORTED_REV))) {
-			pr_err("%s: Unsupported STM Rev found, rev 0x%x\n",
-			       xdev->conf.name, rev);
-			xdev_unmap_bars(xdev, pdev);
-			return -EINVAL;
-		}
-		xdev->stm_en = 1;
-		xdev->stm_rev = rev & 0xFF;
-	} else {
-		xdev->stm_en = 0;
-	}
-
 	return 0;
 }
 
@@ -410,8 +379,9 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 #else
 	rv = qdma_is_config_bar(xdev, 1);
 #endif
-	if (rv < 0) {
-		pr_info("QDMA Config BAR passed by the user is wrong\n");
+	if (unlikely(rv < 0)) {
+		pr_info("QDMA Config BAR passed by the user is wrong with error = %d\n",
+								rv);
 		return -EINVAL;
 	}
 
@@ -431,13 +401,16 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 	if (num_bars_present > 1) {
 		/* USER BAR IDENTIFICATION */
 #ifndef __QDMA_VF__
-		rv = qdma_get_user_bar(xdev, 0, &xdev->conf.bar_num_user);
+		rv = qdma_get_user_bar(xdev, 0,
+				(uint8_t *)&xdev->conf.bar_num_user);
 #else
-		rv = qdma_get_user_bar(xdev, 1, &xdev->conf.bar_num_user);
+		rv = qdma_get_user_bar(xdev, 1,
+				(uint8_t *)&xdev->conf.bar_num_user);
 #endif
-		if (rv < 0)
-			return rv;
-
+		if (unlikely(rv < 0)) {
+			pr_err("get user bar failed with error = %d", rv);
+			return qdma_get_error_code(rv);
+		}
 		pr_info("User BAR %d.\n", xdev->conf.bar_num_user);
 
 		/* BYPASS BAR IDENTIFICATION */
@@ -524,6 +497,28 @@ static int pci_dma_mask_set(struct pci_dev *pdev)
 	return 0;
 }
 
+#ifndef __QDMA_VF__
+static void qdma_err_mon(struct work_struct *work)
+{
+	struct delayed_work *dwork = container_of(work,
+						struct delayed_work, work);
+	struct xlnx_dma_dev *xdev = container_of(dwork,
+					struct xlnx_dma_dev, err_mon);
+
+	if (!xdev) {
+		pr_err("Invalid xdev");
+		return;
+	}
+	spin_lock(&xdev->err_lock);
+
+	if (xdev->err_mon_cancel == 0) {
+		qdma_error_process(xdev);
+		schedule_delayed_work(dwork, msecs_to_jiffies(1000));/* 1 sec */
+	}
+	spin_unlock(&xdev->err_lock);
+}
+#endif
+
 #if KERNEL_VERSION(3, 5, 0) <= LINUX_VERSION_CODE
 static void pci_enable_relaxed_ordering(struct pci_dev *pdev)
 {
@@ -590,6 +585,19 @@ void qdma_device_offline(struct pci_dev *pdev, unsigned long dev_hndl)
 	if (xlnx_dma_device_flag_check(xdev, XDEV_FLAG_OFFLINE))
 		return;
 
+	/* Canceling the error poll thread which was started
+	 * in the poll mode
+	 */
+#ifndef __QDMA_VF__
+	if ((xdev->conf.master_pf) &&
+		(xdev->conf.qdma_drv_mode == POLL_MODE)) {
+		pr_debug("Cancelling delayed work");
+		spin_lock(&xdev->err_lock);
+		xdev->err_mon_cancel = 1;
+		cancel_delayed_work_sync(&xdev->err_mon);
+		spin_unlock(&xdev->err_lock);
+	}
+#endif
 	qdma_device_cleanup(xdev);
 	qdma_device_interrupt_cleanup(xdev);
 
@@ -650,7 +658,7 @@ int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl)
 	qdma_mbox_init(xdev);
 #endif
 	rv = qdma_device_init(xdev);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		pr_warn("qdma_init failed %d.\n", rv);
 		return rv;
 	}
@@ -659,12 +667,32 @@ int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl)
 	qdma_mbox_start(xdev);
 	/* PF mbox will start when vf > 0 */
 	rv = xdev_sriov_vf_online(xdev, 0);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		return rv;
 #endif
 	rv = qdma_device_interrupt_setup(xdev);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		return rv;
+
+	/* Starting a error poll thread in Poll mode */
+#ifndef __QDMA_VF__
+	if ((xdev->conf.master_pf) &&
+			(xdev->conf.qdma_drv_mode == POLL_MODE)) {
+
+		rv = qdma_error_enable(xdev, QDMA_ERRS_ALL);
+		if (unlikely(rv < 0)) {
+			pr_err("Failed to enable error interrupt with error = %d",
+						rv);
+			return -EINVAL;
+		}
+
+		spin_lock_init(&xdev->err_lock);
+		xdev->err_mon_cancel = 0;
+		INIT_DELAYED_WORK(&xdev->err_mon, qdma_err_mon);
+		schedule_delayed_work(&xdev->err_mon,
+				      msecs_to_jiffies(1000));
+	}
+#endif
 
 	return 0;
 }
@@ -692,22 +720,20 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	if (!mod_name) {
 		pr_info("%s: mod_name is NULL.\n", __func__);
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+		return -EINVAL;
 	}
 
 	if (!conf) {
 		pr_info("%s: queue_conf is NULL.\n", mod_name);
-		return QDMA_ERR_INVALID_INPUT_PARAM;
+		return -EINVAL;
 	}
 
 	pdev = conf->pdev;
 
 	if (!pdev) {
 		pr_info("%s: pci device NULL.\n", mod_name);
-		return QDMA_ERR_INVALID_PCI_DEV;
+		return -EINVAL;
 	}
-	conf->bar_num_stm = -1;
-
 	pr_info("%s, %02x:%02x.%02x, pdev 0x%p, 0x%x:0x%x.\n",
 		mod_name, pdev->bus->number, PCI_SLOT(pdev->devfn),
 		PCI_FUNC(pdev->devfn), pdev, pdev->vendor, pdev->device);
@@ -716,7 +742,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 	if (xdev) {
 		pr_warn("%s, device %s already attached!\n",
 			mod_name, dev_name(&pdev->dev));
-		return QDMA_ERR_PCI_DEVICE_ALREADY_ATTACHED;
+		return -EINVAL;
 	}
 
 	rv = pci_request_regions(pdev, mod_name);
@@ -750,8 +776,10 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 #ifndef __QDMA_VF__
 	rv = qdma_master_resource_create(pdev->bus->number, QDMA_QBASE,
 				    QDMA_TOTAL_Q);
-	if (rv == -QDMA_RESOURCE_MGMT_MEMALLOC_FAIL)
+	if (rv == -QDMA_ERR_NO_MEM) {
+		pr_err("master_resource_create failed with error = %d", rv);
 		return -ENOMEM;
+	}
 #endif
 
 	/* allocate zeroed device book keeping structure */
@@ -780,28 +808,25 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 #ifndef __QDMA_VF__
 	rv = qdma_get_function_number(xdev, &xdev->func_id);
-	if (rv < 0)
+	if (unlikely(rv < 0)) {
+		pr_err("get function number failed with error = %d", rv);
+		rv = -EINVAL;
 		goto unmap_bars;
+	}
 
 	rv = qdma_dev_qinfo_get(pdev->bus->number, xdev->func_id,
 				&xdev->conf.qsets_base,
 				(uint32_t *) &xdev->conf.qsets_max);
-	if (rv < 0) {
+	if (unlikely(rv < 0)) {
 		rv = qdma_dev_entry_create(pdev->bus->number, xdev->func_id);
-		if (rv < 0)
+		if (unlikely(rv < 0)) {
+			pr_err("Failed to create device entry with error = %d",
+						rv);
+			rv = -ENODEV;
 			goto disable_device;
+		}
 	}
 #endif
-
-	/* program STM port map */
-	if (xdev->stm_en) {
-		u32 v = readl(xdev->stm_regs + STM_REG_BASE +
-			      STM_REG_H2C_MODE);
-		v &= 0x0000FFFF;
-		v |= (STM_PORT_MAP << S_STM_PORT_MAP);
-		v |= F_STM_EN_STMA_BKCHAN;
-		writel(v, xdev->stm_regs + STM_REG_BASE + STM_REG_H2C_MODE);
-	}
 
 #ifndef __QDMA_VF__
 	/* get the device attributes */
@@ -809,7 +834,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	if (!xdev->dev_cap.mm_en && !xdev->dev_cap.st_en) {
 		pr_info("None of the modes ( ST or MM) are enabled\n");
-		rv = QDMA_ERR_INTERFACE_NOT_ENABLED_IN_DEVICE;
+		rv = -EINVAL;
 		goto unmap_bars;
 	}
 #endif
@@ -818,7 +843,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 
 	rv = qdma_device_online(pdev, (unsigned long)xdev);
-	if (rv < 0)
+	if (unlikely(rv < 0))
 		goto cleanup_qdma;
 
 	pr_info("%s, %05x, pdev 0x%p, xdev 0x%p, ch %u, q %u, vf %u.\n",
@@ -832,7 +857,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	*dev_hndl = (unsigned long)xdev;
 
-	return QDMA_OPERATION_SUCCESSFUL;
+	return 0;
 
 cleanup_qdma:
 	qdma_device_offline(pdev, (unsigned long)xdev);
