@@ -554,11 +554,10 @@ static void engine_start_mode_config(struct xdma_engine *engine)
 		if ((engine->streaming && (engine->dir == DMA_FROM_DEVICE)) ||
 		    (engine->xdma_perf))
 			w |= (u32)XDMA_CTRL_IE_IDLE_STOPPED;
-
-		/* set non-incremental addressing mode */
-		if (engine->non_incr_addr)
-			w |= (u32)XDMA_CTRL_NON_INCR_ADDR;
 	}
+	/* set non-incremental addressing mode */
+	if (engine->non_incr_addr)
+		w |= (u32)XDMA_CTRL_NON_INCR_ADDR;
 
 	dbg_tfr("iowrite32(0x%08x to 0x%p) (control)\n", w,
 			(void *)&engine->regs->control);
