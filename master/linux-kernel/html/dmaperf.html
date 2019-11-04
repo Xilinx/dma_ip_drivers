@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DMA Performance Tool &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+        <link rel="up" title="User Applications" href="user-app.html"/>
+        <link rel="next" title="Developers Guide" href="devguide.html"/>
+        <link rel="prev" title="dma_from_device" href="dma_from_device.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QDMA Linux Driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2019.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmactl.html">DMA Control Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">dma_to_device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">dma_from_device</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Performance Tool</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">QDMA Linux Driver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="user-app.html">User Applications</a> &raquo;</li>
+      
+    <li>DMA Performance Tool</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/dmaperf.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dma-performance-tool">
+<h1>DMA Performance Tool<a class="headerlink" href="#dma-performance-tool" title="Permalink to this headline">¶</a></h1>
+<p>Xilinx-developed custom tool``dmaperf`` is used to collect the performance metrics for unidirectional and bidirectional traffic.</p>
+<p>The QDMA Linux kernel reference driver is a PCIe device driver, it manages the QDMA queues in the HW. The driver creates a character device for each queue pair configured.</p>
+<p>Standard IO tools such as <code class="docutils literal notranslate"><span class="pre">fio</span></code> can be used for performing IO operations using the char device interface.</p>
+<p>However, most of the tools are limited to sending / receiving 1 packet at a time and wait for the processing of the packet to complete, so they are not able to keep the driver/ HW busy enough for performance measurement. Although fio also supports asynchronous interfaces, it does not continuously submit IO requests while polling for the completion in parallel.</p>
+<p>To overcome this limitation, Xilinx developed dmaperf tool. It leverages the asynchronous functionality provided by libaio library. Using libaio, an application can submit IO request to the driver and the driver returns the control to the caller immediately (i.e., non-blocking). The completion notification is sent separately, so the application can then poll for the completion and free the buffer upon receiving the completion.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>usage: dmaperf [OPTIONS]
+
+  -c (--config) config file that has configuration for IO
+</pre></div>
+</div>
+<p>dmaperf tool takes a configuration file as input. The configuration file format is as below.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>name=mm_1_1
+mode=mm #mode
+dir=bi #dir
+pf_range=0:0 #no spaces
+q_range=0:0 #no spaces
+flags= #no spaces
+wb_acc=5
+tmr_idx=9
+cntr_idx=0
+trig_mode=cntr_tmr
+rngidx=9
+ram_width=15 #31 bits - 2^31 = 2GB
+runtime=30 #secs
+num_threads=8
+bidir_en=1
+num_pkt=64
+pkt_sz=64
+</pre></div>
+</div>
+<p><strong>Parameters</strong></p>
+<ul class="simple">
+<li>name : name of the configuration</li>
+<li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
+<li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi).</li>
+<li>pf_range : Range of the PFs from 0-3 on which the performance metrics to be collected.</li>
+<li>q_range : Range of the Queues from 0-2047 on which the performance metrics to be collected.</li>
+<li>flags : queue flags</li>
+<li>wb_acc : write back accumulation index from CSR register</li>
+<li>tmr_idx : timer index from CSR register</li>
+<li>cntr_idx : Counter index from CSR register</li>
+<li>trig_mode : trigger mode</li>
+<li>rngidx : Ring index from CSR register</li>
+<li>runtime : Duration of the performance runs, time in seconds.</li>
+<li>num_threads : number of threads to be used in dmaperf application to pump the traffic to queues</li>
+<li>bidir_en : Enable the bi-direction or not</li>
+<li>num_pkt : number of packets</li>
+<li>pkt_sz : Packet size</li>
+</ul>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="devguide.html" class="btn btn-neutral float-right" title="Developers Guide" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dma_from_device.html" class="btn btn-neutral" title="dma_from_device" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018-2019, Xilinx, Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2019.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

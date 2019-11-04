@@ -1,0 +1,503 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Building and Installing Software Stack &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+        <link rel="next" title="User Guide" href="userguide.html"/>
+        <link rel="prev" title="System Requirements" href="system-requirements.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QDMA Linux Driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2019.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building and Installing Software Stack</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#update-the-pcie-device-id">Update the PCIe device ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-the-qdma-driver-software">Building the QDMA Driver Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#qdma-driver-module-parameters">QDMA Driver Module Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mode">1. <strong>Mode</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#master-pf">2. <strong>Master PF</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-config-bar">3. <strong>Dynamic Config Bar</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-traffic-manager">4. <strong>Enable Traffic Manager</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-defined-header">5. <strong>Custom Defined Header</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">QDMA Linux Driver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Building and Installing Software Stack</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/build.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="building-and-installing-software-stack">
+<h1>Building and Installing Software Stack<a class="headerlink" href="#building-and-installing-software-stack" title="Permalink to this headline">¶</a></h1>
+<p>For building the Linux QDMA Driver, make sure the system requirements mentioned in <a class="reference internal" href="system-requirements.html#sys-req"><span class="std std-ref">System Requirements</span></a> are satisfied.</p>
+<div class="section" id="update-the-pcie-device-id">
+<h2>Update the PCIe device ID<a class="headerlink" href="#update-the-pcie-device-id" title="Permalink to this headline">¶</a></h2>
+<p>During the PCIe DMA IP customization in Vivado you can specify a PCIe Device ID.
+This Device ID must be recognized by the driver in order to properly recognize the PCIe QDMA device.
+The current driver is designed to recognize the PCIe Device IDs that get generated with the PCIe example design when this value has not been modified.
+If the PCIe Device ID is modified during IP customization,
+one needs to modify QDMA PMD to recognize this new ID.</p>
+<p>User can also remove PCIe Device IDs that will not be used by the end solution.</p>
+<p>To modify the PCIe Device ID in the driver you should open the <code class="docutils literal notranslate"><span class="pre">drv/pci_ids.h</span></code> file from the driver source and search for the pcie_device_id struct.
+This struct identifies the PCIe Device IDs that are recognized by the driver in the following format:</p>
+<p>{PCI_DEVICE (0x10ee, 0x9034),},</p>
+<p>Add, remove, or modify the PCIe Device IDs in this struct as desired for your application.
+The PCIe DMA driver will only recognize device IDs identified in this struct as PCIe QDMA devices.
+Once modified, the driver must be un installed and recompiled.</p>
+</div>
+<div class="section" id="building-the-qdma-driver-software">
+<h2>Building the QDMA Driver Software<a class="headerlink" href="#building-the-qdma-driver-software" title="Permalink to this headline">¶</a></h2>
+<p>This driver software supports both Physical Functions (PF) and Virtual Functions (VF).</p>
+<p>In order to compile the Xilinx QDMA software, configured and compiled Linux kernel source tree is required.
+Linux QDMA driver is dependent on <code class="docutils literal notranslate"><span class="pre">libaio</span></code>. Hence, make sure to install <code class="docutils literal notranslate"><span class="pre">libaio</span></code> before compiling the QDMA driver.
+Example command is provided on Ubuntu. Follow the similar procedure for other OS flavors.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# sudo apt-get install libaio libaio-devel
+</pre></div>
+</div>
+<p>The source tree may contain only header files, or a complete tree. The source tree needs to be configured and the header files need to be compiled.
+The Linux kernel must be configured to use modules.</p>
+<p>Linux QDMA Driver software database structure and its contents can be found on the Xilinx github <a class="reference external" href="https://github.com/Xilinx/dma_ip_drivers/tree/master/QDMA/linux-kernel">https://github.com/Xilinx/dma_ip_drivers/tree/master/QDMA/linux-kernel</a></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><strong>Directory</strong></th>
+<th class="head"><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>docs/</td>
+<td>Documentation for the Xilinx QDMA Linux Driver</td>
+</tr>
+<tr class="row-odd"><td>drv/</td>
+<td>Provides the interfaces to manage the PCIe device and
+exposes character driver interface to perform QDMA transfers</td>
+</tr>
+<tr class="row-even"><td>libqdma/</td>
+<td>QDMA library to configure and control the QDMA IP</td>
+</tr>
+<tr class="row-odd"><td>scripts/</td>
+<td>Sample scripts for perform DMA operations</td>
+</tr>
+<tr class="row-even"><td>user/</td>
+<td>User space application to configure and control QDMA</td>
+</tr>
+<tr class="row-odd"><td>tools/</td>
+<td>Tools to perform DMA operations</td>
+</tr>
+<tr class="row-even"><td>Makefile</td>
+<td>Make file to compile the driver</td>
+</tr>
+<tr class="row-odd"><td>RELEASE.txt</td>
+<td>Release Notes</td>
+</tr>
+</tbody>
+</table>
+<p>Once driver sources are downloaded, compile the QDMA Driver software</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# make clean &amp;&amp; make
+</pre></div>
+</div>
+<p>Upon executing make, A sub-directory build/ will be created in <code class="docutils literal notranslate"><span class="pre">linux-kernel</span></code> with the list of executable listed in below tables.
+Individual executables can also be built with commands listed against each component in below tables.</p>
+<p><strong>Kernel modules:</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="37%" />
+<col width="28%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Executable</th>
+<th class="head">Description</th>
+<th class="head">Command</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>qdma.ko</td>
+<td>PF Driver</td>
+<td>make pf</td>
+</tr>
+<tr class="row-odd"><td>qdma_vf.ko</td>
+<td>VF Driver</td>
+<td>make vf</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Applications:</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="60%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Executable</th>
+<th class="head">Description</th>
+<th class="head">Command</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>dmactl</td>
+<td>QDMA control and configuration application</td>
+<td>make user</td>
+</tr>
+<tr class="row-odd"><td>dma_to_device</td>
+<td>Performs a host-to-card transaction for MM or ST</td>
+<td>make tools</td>
+</tr>
+<tr class="row-even"><td>dma_from_device</td>
+<td>Performs a card-to-host transaction for MM or ST</td>
+<td>make tools</td>
+</tr>
+<tr class="row-odd"><td>dmaperf</td>
+<td>Measures the performance of QDMA IP</td>
+<td>make tools</td>
+</tr>
+</tbody>
+</table>
+<p>Install the executable by running “make install”</p>
+<ul class="simple">
+<li>The QDMA module will be installed in <code class="docutils literal notranslate"><span class="pre">/lib/modules/&lt;linux_kernel_version&gt;/updates/kernel/drivers/qdma</span></code> directory.</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">dmactl</span></code>, <code class="docutils literal notranslate"><span class="pre">dma_from_device</span></code> and <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> tools will be installed in <code class="docutils literal notranslate"><span class="pre">/user/local/sbin</span></code>.</li>
+<li>Individual components can be installed by using the appropriate install target. Ex: “make install-user” will install all user applications</li>
+<li>PF/VF kernel modules are generated in <code class="docutils literal notranslate"><span class="pre">build</span></code> and can be individually loaded as below</li>
+</ul>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# insmod build/qdma.ko
+[xilinx@]# insmod build/qdma_vf.ko
+</pre></div>
+</div>
+</div>
+<div class="section" id="qdma-driver-module-parameters">
+<h2>QDMA Driver Module Parameters<a class="headerlink" href="#qdma-driver-module-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Before loading the QDMA driver, make sure that an intended board is connected to the Host System and required bit stream is loaded on to the board.</p>
+<p>QDMA driver supports the following list of module parameters.</p>
+<div class="section" id="mode">
+<h3>1. <strong>Mode</strong><a class="headerlink" href="#mode" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">mode</span></code> module parameter is used to enable the qdma driver functionality in different modes.
+Kernel module cane be loaded in following different modes</p>
+<ol class="arabic" start="0">
+<li><p class="first"><em>Auto Mode</em></p>
+<blockquote>
+<div><p>Driver decides to process the request in poll or interrupt mode</p>
+</div></blockquote>
+</li>
+<li><p class="first"><em>Poll Mode</em></p>
+<blockquote>
+<div><p>Driver process the requests using timer</p>
+</div></blockquote>
+</li>
+<li><p class="first"><em>Direct Interrupt Mode</em></p>
+<blockquote>
+<div><p>Driver processes the requests using interrupts where each queue is assigned to a single vector</p>
+</div></blockquote>
+</li>
+<li><p class="first"><em>Interrupt Aggregation Mode</em> or <em>Indirect Interrupt Mode</em></p>
+<blockquote>
+<div><p>Driver processes the requests using interrupts where all the queues corresponds to a function are assigned to a single vector. This vector is associated with a ring which holds the queue requests and upon receiving the interrupts, driver processes all the pending requests in the ring.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><em>Legacy Interrupt Mode</em></p>
+<blockquote>
+<div><p>Driver processes the requests using legacy interrupts</p>
+</div></blockquote>
+</li>
+</ol>
+<p>By default, drivers are loaded in auto mode. To load the driver is other modes, use the <code class="docutils literal notranslate"><span class="pre">mode</span></code> module parameter in the following format.</p>
+<p>mode takes the input as an array of 32 bit numbers and enables the user to mention the mode for multiple devices connected to the host system.
+ex: 0x000Aabcd, 0x000Aabcd, 0x000Aabcd</p>
+<p>Each 32bit number is divided as below for PF driver.</p>
+<img alt="_images/pf_modes.PNG" class="align-center" src="_images/pf_modes.PNG" />
+<p>Use the below command to load the PF driver in required mode.</p>
+<p>[xilinx&#64;]# insmod qdma.ko mode=0x&lt;device_bus_number&gt;&lt;PF0_mode&gt;&lt;PF1_mode&gt;&lt;PF2_mode&gt;&lt;PF3_mode&gt;</p>
+<p>Each 32bit number is divided as below for VF driver where all VFs corresponding to PF0 are named as VFG0, all VFs corresponding to PF1 are named as VFG1 and so on…</p>
+<img alt="_images/vf_modes.PNG" class="align-center" src="_images/vf_modes.PNG" />
+<p>Use the below command to load the VF driver in required mode.</p>
+<p>[xilinx&#64;]# insmod qdma_vf.ko mode=0x&lt;device_bus_number&gt;&lt;VFG0_mode&gt;&lt;VFG1_mode&gt;&lt;VFG2_mode&gt;&lt;VFG3_mode&gt;</p>
+<p>Refer to the example below:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>To load the PF driver with all PFs are in poll mode, use the below command.</p>
+<p>Ex: insmod qdma.ko mode=0x011111</p>
+<p>To load the PF driver with all PFs are in Interrupt Aggregation Mode, use the below command.</p>
+<p>Ex: insmod qdma.ko mode=0x013333</p>
+<p>To load the PF driver with PF0 in Auto mode, PF1 in poll mode, PF2 in Direct Interrupt mode and PF3 in Interrupt Aggregation Mode, use the below command.</p>
+<p>Ex: insmod qdma.ko mode=0x010123</p>
+<p>When multiple devices are inserted in the same host system and mode needs to be updated for each device, use the command as below.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+02:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: insmod qdma.ko mode=0x011111,0x023333</p>
+<p>Follow the same for VF driver by appropriately choosing each VFG mode.</p>
+</div>
+<div class="section" id="master-pf">
+<h3>2. <strong>Master PF</strong><a class="headerlink" href="#master-pf" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">master_pf</span></code> module parameter is used to set the master pf for qdma driver
+By default, <code class="docutils literal notranslate"><span class="pre">master_pf</span></code> is set to PF0(First device in the PF list)</p>
+<p>master_pf takes the input as an array of 32 bit numbers and enables the user to mention the master_pf for multiple devices connected to the host system.
+ex: 0x000Aabcd, 0x000A000B, 0x000A000B</p>
+<p>Each 32bit number is divided as below for PF driver.</p>
+<img alt="_images/master_pf.PNG" class="align-center" src="_images/master_pf.PNG" />
+<p>[xilinx&#64;]# insmod qdma.ko master_pf=&lt;device_bus_number&gt;&lt;device_master_pf_number&gt;</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: insmod qdma.ko master_pf=0x010001</p>
+<p>To set any other PF as master_pf, use the module parameter as below</p>
+<p>Ex: insmod qdma.ko master_pf=0x010003</p>
+<p>When multiple devices are inserted in the same host system and master_pf needs to be updated for each device, use the command as below.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+02:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: insmod qdma.ko master_pf=0x010001, 0x020001</p>
+</div>
+<div class="section" id="dynamic-config-bar">
+<h3>3. <strong>Dynamic Config Bar</strong><a class="headerlink" href="#dynamic-config-bar" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">config_bar</span></code> module parameter is used to set the DMA bar of the QDMA device.
+QDMA IP supports to dynamically change the DMA bar while creating the bit stream.</p>
+<p>For 64-bit bars, DMA bar can resides in 0|2|4 bars.
+By default the DMA bar is configured in bar#0 and QDMA driver also assumes the default DMA bar number as 0.</p>
+<p>If the DMA bar is configured to be in bar#2 or bar#4, pass the config_bar as a module number by mentioning the updated bar number</p>
+<p>config_bar takes the input as an array of 32 bit numbers and enables the user to mention the config_bar for multiple devices connected to the host system.
+ex: 0x000Aabcd, 0x000Aabcd, 0x000Aabcd</p>
+<p>Each 32bit number is divided as below for PF driver.</p>
+<img alt="_images/pf_configbar.PNG" class="align-center" src="_images/pf_configbar.PNG" />
+<p>Each 32bit number is divided as below for VF driver.</p>
+<img alt="_images/vf_configbar.PNG" class="align-center" src="_images/vf_configbar.PNG" />
+<p>Ex: Lets assume the host system has a single device connected and PF0 has config_bar in bar#2, PF1 has the config_bar in bar#0, PF2 has the config_bar in bar#4 and PF3 has the config_bar in bar#0</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>[xilinx&#64;]# insmod qdma.ko config_bar=0x00012040</p>
+<p>When multiple devices are inserted in the same host system and config_bar needs to be updated for each device, use the command as below.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+02:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: Lets assume the host system has two devices connected</p>
+<ul class="simple">
+<li>device#1 : PF0 has config_bar in bar#2, PF1 has the config_bar in bar#0, PF2 has the config_bar in bar#4 and PF3 has the config_bar in bar#0</li>
+<li>device#2 : PF0 has config_bar in bar#4, PF1 has the config_bar in bar#2, PF2 has the config_bar in bar#0 and PF3 has the config_bar in bar#2</li>
+</ul>
+<p>Ex: insmod qdma.ko config_bar=0x00012040,0x00024202</p>
+</div>
+<div class="section" id="enable-traffic-manager">
+<h3>4. <strong>Enable Traffic Manager</strong><a class="headerlink" href="#enable-traffic-manager" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">tm_mode_en</span></code> parameter is used to enable Traffic Manager mode in driver to test descriptor bypass functionality with Traffic Manager example design for ST H2C queue.</p>
+<p>By default, tm_mode_en is set to 0.</p>
+<p>To load driver with Traffic Manager mode enabled, use below command:</p>
+<p>Ex. insmod qdma,ko tm_mode_en=1</p>
+<p>NOTE: This parameter is experimental and should only be used only with Traffic Manager example design.</p>
+</div>
+<div class="section" id="custom-defined-header">
+<h3>5. <strong>Custom Defined Header</strong><a class="headerlink" href="#custom-defined-header" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">tm_one_cdh_en</span></code> is used to test 1 CDH (Custom Defined Header) functionality with Traffic Manager example design when driver is loaded with tm_mode_en set to 1.</p>
+<p>By default, tm_one_cdh_en is set to 0 indicating that driver will send packets with Zero CDH.</p>
+<p>To load driver with 1 CDH enabled, use below command:</p>
+<p>Ex. insmod qdma.ko tm_mode_en=1 tm_one_cdh_en=1</p>
+<p>NOTE: This parameter is experimental and should only be used only with Traffic Manager example design.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="userguide.html" class="btn btn-neutral float-right" title="User Guide" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="system-requirements.html" class="btn btn-neutral" title="System Requirements" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018-2019, Xilinx, Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2019.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

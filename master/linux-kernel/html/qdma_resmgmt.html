@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>QDMA Queue Resource Management &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+        <link rel="up" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/>
+        <link rel="next" title="QDMA Mailbox" href="qdma_mailbox.html"/>
+        <link rel="prev" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QDMA Linux Driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2019.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export.html">QDMA Linux Driver Exported APIs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="qdma_design.html">QDMA Linux Driver Design Flow</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#driver-initialization">Driver Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#driver-de-initialization">Driver De-Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#qdma-driver-data-structures">QDMA Driver Data Structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#device-initialization">Device Initialization</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="qdma_design.html#device-de-initialization">Device De-Initialization</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="qdma_design.html#resource-management">Resource Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qdma_design.html#mailbox-communication">Mailbox Communication</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#configure-the-queues-for-pf-vf">Configure the Queues for PF/VF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#add-a-queue">Add a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#start-a-queue">Start a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#stop-a-queue">Stop a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#delete-a-queue">Delete a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#read-write-from-a-queue">Read/Write from a Queue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">QDMA Linux Driver</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="devguide.html">Developers Guide</a> &raquo;</li>
+      
+          <li><a href="qdma_design.html">QDMA Linux Driver Design Flow</a> &raquo;</li>
+      
+    <li>QDMA Queue Resource Management</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/qdma_resmgmt.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="qdma-queue-resource-management">
+<h1>QDMA Queue Resource Management<a class="headerlink" href="#qdma-queue-resource-management" title="Permalink to this headline">¶</a></h1>
+<p>QDMA IP supports 2K queues. QDMA Resource Manager defines the strategy to allocate the queues across the available PFs and VFs.
+Resource Manager maintains a global resource linked list in the driver. It creates a linked list of nodes for each PCIe device (PCIe bus) it manages.
+Each device (bus) node in the Resource Manager list is initialized with queue base and number of queues to manage on that device.
+Given the request for a number of queues for a PCIe function on a PCIe device, Resource Manager finds the best fit available
+queue base with contiguous requested number of queues on that PCIe device.
+Resource Manager manages queue base allocation for all the PCIe devices and PCIe functions registered with it by the driver.</p>
+<p>Each device node in the global resource linked list maintains a “free list” with all the queues initially assigned to it, and a “device list” initialized to NULL.
+When a PCIe function is initialized and requests the required queues, Resource Manager finds the best fit available queue base
+with contiguous requested number of queues from the “free list” of the requested device node. If found, it creates a PCIe function node in the “device list”
+and assigns the queue base and requested queues to this PCIe function node and removes these queues from the “free list”.</p>
+<p>Driver can request a specific queue base for a PCIe function and if the requested queue base is available,
+Resource Manager honors it, else, allocates the queues at a base determined by the best fit algorithm.</p>
+<p>Host system can have drivers in user space or kernel space to manage the devices connected.
+E.g. Linux QDMA Driver is a kernel mode driver and DPDK PMD is a User Space driver.
+Each driver maintains its own resource manager with queue base and total queues to manage specified for each device it manages.
+Below, we demonstrate few examples on how Resource Manager is used in different combinations of drivers managing QDMA devices</p>
+<div class="section" id="single-device-managed-by-single-driver">
+<h2>Single device managed by Single driver<a class="headerlink" href="#single-device-managed-by-single-driver" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/resmgmt_sdev_sdri.PNG" class="align-center" src="_images/resmgmt_sdev_sdri.PNG" />
+<p>In this scenario, one PCIe QDMA device is connected to the Host System and at any given time either the Linux kernel driver or the user space DPDK driver is
+managing the device. There is a single Resource Manager managing all the queues of the device and assigning the queues to functions based
+on the request from each function.</p>
+</div>
+<div class="section" id="single-device-managed-by-multiple-drivers">
+<h2>Single device managed by multiple drivers<a class="headerlink" href="#single-device-managed-by-multiple-drivers" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/resmgmt_sdev_mdri.PNG" class="align-center" src="_images/resmgmt_sdev_mdri.PNG" />
+<p>In this scenario, one device is connected to the Host System. Linux kernel driver and user space DPDK driver are loaded to manage different PCIe functions of the device.
+Each driver will create its own Resource Manager using a queue base and total queues to manage the functions binded to them.
+Each Resource Manager has its own pool of queues and the PCIe functions get their queues resourced from this pool.</p>
+</div>
+<div class="section" id="multiple-devices-on-single-host-managed-by-single-driver">
+<h2>Multiple devices on single Host managed by Single driver<a class="headerlink" href="#multiple-devices-on-single-host-managed-by-single-driver" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/resmgmt_mdev_sdri.PNG" class="align-center" src="_images/resmgmt_mdev_sdri.PNG" />
+<p>In this scenario, more than one devices are connected to the Host System.
+Either user space DPDK driver or Linux kernel driver is loaded to manage these devices.
+Driver will instantiate Resource Manager and create one node per PCIe device conected,
+resourcing each PCIe device (node) with the queue base and total number of queues to manage.
+PCIe functions corresponding to each PCIe device are allocated queues from the respective device nodes.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="qdma_mailbox.html" class="btn btn-neutral float-right" title="QDMA Mailbox" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="qdma_design.html" class="btn btn-neutral" title="QDMA Linux Driver Design Flow" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018-2019, Xilinx, Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2019.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
