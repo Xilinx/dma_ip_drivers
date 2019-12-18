@@ -1,0 +1,10 @@
+Release: 2019.2
+===============
+
+Change list:
+- Updated data rate for performance run. Now it will print data rate based on the size.
+- remove BUG_ON, return proper error code instead
+- Streaming mode: enable credit mechanism by default 
+- Streaming mode: Do not read more than user supplied buffer size on C2H
+- Streaming mode: Added support for Async-IO for both streaming and MM transfers
+- fixed performance appliaction crash

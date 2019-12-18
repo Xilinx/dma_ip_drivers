@@ -60,14 +60,14 @@ struct xdma_ioc_base {
 };
 
 struct xdma_ioc_info {
-        struct xdma_ioc_base	base;
-        unsigned short		vendor;
-        unsigned short		device;
-        unsigned short		subsystem_vendor;
-        unsigned short		subsystem_device;
-        unsigned int		dma_engine_version;
-        unsigned int		driver_version;
-        unsigned long long 	feature_id;
+	struct xdma_ioc_base	base;
+	unsigned short		vendor;
+	unsigned short		device;
+	unsigned short		subsystem_vendor;
+	unsigned short		subsystem_device;
+	unsigned int		dma_engine_version;
+	unsigned int		driver_version;
+	unsigned long long	feature_id;
 	unsigned short		domain;
 	unsigned char		bus;
 	unsigned char		dev;

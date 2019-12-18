@@ -35,7 +35,7 @@ static ssize_t char_events_read(struct file *file, char __user *buf,
 
 	rv = xcdev_check(__func__, xcdev, 0);
 	if (rv < 0)
-		return rv;	
+		return rv;
 	user_irq = xcdev->user_irq;
 	if (!user_irq) {
 		pr_info("xcdev 0x%p, user_irq NULL.\n", xcdev);
@@ -84,7 +84,7 @@ static unsigned int char_events_poll(struct file *file, poll_table *wait)
 
 	rv = xcdev_check(__func__, xcdev, 0);
 	if (rv < 0)
-		return rv;	
+		return rv;
 	user_irq = xcdev->user_irq;
 	if (!user_irq) {
 		pr_info("xcdev 0x%p, user_irq NULL.\n", xcdev);

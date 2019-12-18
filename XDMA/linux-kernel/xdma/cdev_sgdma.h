@@ -46,17 +46,16 @@
  * _IOC_SIZE(nr)	    returns size
  */
 
-struct xdma_performance_ioctl
-{
-        /* IOCTL_XDMA_IOCTL_Vx */
-        uint32_t version;
-        uint32_t transfer_size;
-        /* measurement */
-        uint32_t stopped;
-        uint32_t iterations;
-        uint64_t clock_cycle_count;
-        uint64_t data_cycle_count;
-        uint64_t pending_count;
+struct xdma_performance_ioctl {
+	/* IOCTL_XDMA_IOCTL_Vx */
+	uint32_t version;
+	uint32_t transfer_size;
+	/* measurement */
+	uint32_t stopped;
+	uint32_t iterations;
+	uint64_t clock_cycle_count;
+	uint64_t data_cycle_count;
+	uint64_t pending_count;
 };
 
 

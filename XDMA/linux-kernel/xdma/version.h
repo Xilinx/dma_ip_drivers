@@ -20,9 +20,9 @@
 #ifndef __XDMA_VERSION_H__
 #define __XDMA_VERSION_H__
 
-#define DRV_MOD_MAJOR		2018
-#define DRV_MOD_MINOR		3
-#define DRV_MOD_PATCHLEVEL	50
+#define DRV_MOD_MAJOR		2019
+#define DRV_MOD_MINOR		2
+#define DRV_MOD_PATCHLEVEL	51
 
 #define DRV_MODULE_VERSION      \
 	__stringify(DRV_MOD_MAJOR) "." \
