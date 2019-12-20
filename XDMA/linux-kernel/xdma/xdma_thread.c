@@ -299,11 +299,11 @@ int xdma_threads_create(unsigned int num_threads)
 	for (i = 0; i < thread_cnt; i++, thp++) {
 		thp->cpu = i;
 		thp->timeout = 0;
+		thp->fproc = xdma_thread_cmpl_status_proc;
+		thp->fpending = xdma_thread_cmpl_status_pend;
 		rv = xdma_kthread_start(thp, "cmpl_status_th", i);
 		if (rv < 0)
 			goto cleanup_threads;
-		thp->fproc = xdma_thread_cmpl_status_proc;
-		thp->fpending = xdma_thread_cmpl_status_pend;
 	}
 
 	return 0;
