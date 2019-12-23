@@ -40,51 +40,51 @@ static char version[] =
 MODULE_AUTHOR("Xilinx, Inc.");
 MODULE_DESCRIPTION(DRV_MODULE_DESC);
 MODULE_VERSION(DRV_MODULE_VERSION);
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual BSD/GPL");
 
 /* SECTION: Module global variables */
-static int xpdev_cnt = 0;
+static int xpdev_cnt;
 
 static const struct pci_device_id pci_ids[] = {
 	{ PCI_DEVICE(0x10ee, 0x903f), },
 	{ PCI_DEVICE(0x10ee, 0x9038), },
 	{ PCI_DEVICE(0x10ee, 0x9028), },
-        { PCI_DEVICE(0x10ee, 0x9018), },
+	{ PCI_DEVICE(0x10ee, 0x9018), },
 	{ PCI_DEVICE(0x10ee, 0x9034), },
 	{ PCI_DEVICE(0x10ee, 0x9024), },
-        { PCI_DEVICE(0x10ee, 0x9014), },
+	{ PCI_DEVICE(0x10ee, 0x9014), },
 	{ PCI_DEVICE(0x10ee, 0x9032), },
 	{ PCI_DEVICE(0x10ee, 0x9022), },
-        { PCI_DEVICE(0x10ee, 0x9012), },
+	{ PCI_DEVICE(0x10ee, 0x9012), },
 	{ PCI_DEVICE(0x10ee, 0x9031), },
 	{ PCI_DEVICE(0x10ee, 0x9021), },
-        { PCI_DEVICE(0x10ee, 0x9011), },
+	{ PCI_DEVICE(0x10ee, 0x9011), },
 
 	{ PCI_DEVICE(0x10ee, 0x8011), },
 	{ PCI_DEVICE(0x10ee, 0x8012), },
-        { PCI_DEVICE(0x10ee, 0x8014), },
-        { PCI_DEVICE(0x10ee, 0x8018), },
-        { PCI_DEVICE(0x10ee, 0x8021), },
-        { PCI_DEVICE(0x10ee, 0x8022), },
-        { PCI_DEVICE(0x10ee, 0x8024), },
-        { PCI_DEVICE(0x10ee, 0x8028), },
-        { PCI_DEVICE(0x10ee, 0x8031), },
-        { PCI_DEVICE(0x10ee, 0x8032), },
-        { PCI_DEVICE(0x10ee, 0x8034), },
-        { PCI_DEVICE(0x10ee, 0x8038), },
+	{ PCI_DEVICE(0x10ee, 0x8014), },
+	{ PCI_DEVICE(0x10ee, 0x8018), },
+	{ PCI_DEVICE(0x10ee, 0x8021), },
+	{ PCI_DEVICE(0x10ee, 0x8022), },
+	{ PCI_DEVICE(0x10ee, 0x8024), },
+	{ PCI_DEVICE(0x10ee, 0x8028), },
+	{ PCI_DEVICE(0x10ee, 0x8031), },
+	{ PCI_DEVICE(0x10ee, 0x8032), },
+	{ PCI_DEVICE(0x10ee, 0x8034), },
+	{ PCI_DEVICE(0x10ee, 0x8038), },
 
-        { PCI_DEVICE(0x10ee, 0x7011), },
-        { PCI_DEVICE(0x10ee, 0x7012), },
-        { PCI_DEVICE(0x10ee, 0x7014), },
-        { PCI_DEVICE(0x10ee, 0x7018), },
-        { PCI_DEVICE(0x10ee, 0x7021), },
-        { PCI_DEVICE(0x10ee, 0x7022), },
-        { PCI_DEVICE(0x10ee, 0x7024), },
+	{ PCI_DEVICE(0x10ee, 0x7011), },
+	{ PCI_DEVICE(0x10ee, 0x7012), },
+	{ PCI_DEVICE(0x10ee, 0x7014), },
+	{ PCI_DEVICE(0x10ee, 0x7018), },
+	{ PCI_DEVICE(0x10ee, 0x7021), },
+	{ PCI_DEVICE(0x10ee, 0x7022), },
+	{ PCI_DEVICE(0x10ee, 0x7024), },
 	{ PCI_DEVICE(0x10ee, 0x7028), },
-        { PCI_DEVICE(0x10ee, 0x7031), },
-        { PCI_DEVICE(0x10ee, 0x7032), },
-        { PCI_DEVICE(0x10ee, 0x7034), },
-        { PCI_DEVICE(0x10ee, 0x7038), },
+	{ PCI_DEVICE(0x10ee, 0x7031), },
+	{ PCI_DEVICE(0x10ee, 0x7032), },
+	{ PCI_DEVICE(0x10ee, 0x7034), },
+	{ PCI_DEVICE(0x10ee, 0x7038), },
 
 	{ PCI_DEVICE(0x10ee, 0x6828), },
 	{ PCI_DEVICE(0x10ee, 0x6830), },
@@ -125,7 +125,7 @@ static void xpdev_free(struct xdma_pci_dev *xpdev)
 
 static struct xdma_pci_dev *xpdev_alloc(struct pci_dev *pdev)
 {
-	struct xdma_pci_dev *xpdev = kmalloc(sizeof(*xpdev), GFP_KERNEL);	
+	struct xdma_pci_dev *xpdev = kmalloc(sizeof(*xpdev), GFP_KERNEL);
 
 	if (!xpdev)
 		return NULL;
@@ -154,14 +154,28 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	hndl = xdma_device_open(DRV_MODULE_NAME, pdev, &xpdev->user_max,
 			&xpdev->h2c_channel_max, &xpdev->c2h_channel_max);
-	if (!hndl){
-		rv =  -EINVAL;
+	if (!hndl) {
+		rv = -EINVAL;
 		goto err_out;
 	}
 
-	BUG_ON(xpdev->user_max > MAX_USER_IRQ);
-	BUG_ON(xpdev->h2c_channel_max > XDMA_CHANNEL_NUM_MAX);
-	BUG_ON(xpdev->c2h_channel_max > XDMA_CHANNEL_NUM_MAX);
+	if (xpdev->user_max > MAX_USER_IRQ) {
+		pr_err("Maximum users limit reached\n");
+		rv = -EINVAL;
+		goto err_out;
+	}
+
+	if (xpdev->h2c_channel_max > XDMA_CHANNEL_NUM_MAX) {
+		pr_err("Maximun H2C channel limit reached\n");
+		rv = -EINVAL;
+		goto err_out;
+	}
+
+	if (xpdev->c2h_channel_max > XDMA_CHANNEL_NUM_MAX) {
+		pr_err("Maximun C2H channel limit reached\n");
+		rv = -EINVAL;
+		goto err_out;
+	}
 
 	if (!xpdev->h2c_channel_max && !xpdev->c2h_channel_max)
 		pr_warn("NO engine found!\n");
@@ -181,7 +195,12 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 		rv =  -EINVAL;
 		goto err_out;
 	}
-	BUG_ON(hndl != xdev );
+
+	if (hndl != xdev) {
+		pr_err("xdev handle mismatch\n");
+		rv =  -EINVAL;
+		goto err_out;
+	}
 
 	pr_info("%s xdma%d, pdev 0x%p, xdev 0x%p, 0x%p, usr %d, ch %d,%d.\n",
 		dev_name(&pdev->dev), xdev->idx, pdev, xpdev, xdev,
@@ -198,7 +217,7 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	return 0;
 
-err_out:	
+err_out:
 	pr_err("pdev 0x%p, err %d.\n", pdev, rv);
 	xpdev_free(xpdev);
 	return rv;
@@ -219,7 +238,7 @@ static void remove_one(struct pci_dev *pdev)
 		pdev, xpdev, xpdev->xdev);
 	xpdev_free(xpdev);
 
-        dev_set_drvdata(&pdev->dev, NULL);
+	dev_set_drvdata(&pdev->dev, NULL);
 }
 
 static pci_ers_result_t xdma_error_detected(struct pci_dev *pdev,
@@ -270,7 +289,7 @@ static void xdma_error_resume(struct pci_dev *pdev)
 	pci_cleanup_aer_uncorrect_error_status(pdev);
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+#if KERNEL_VERSION(4, 13, 0) <= LINUX_VERSION_CODE
 static void xdma_reset_prepare(struct pci_dev *pdev)
 {
 	struct xdma_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
@@ -287,7 +306,7 @@ static void xdma_reset_done(struct pci_dev *pdev)
 	xdma_device_online(pdev, xpdev->xdev);
 }
 
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,16,0)
+#elif KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static void xdma_reset_notify(struct pci_dev *pdev, bool prepare)
 {
 	struct xdma_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
@@ -305,10 +324,10 @@ static const struct pci_error_handlers xdma_err_handler = {
 	.error_detected	= xdma_error_detected,
 	.slot_reset	= xdma_slot_reset,
 	.resume		= xdma_error_resume,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+#if KERNEL_VERSION(4, 13, 0) <= LINUX_VERSION_CODE
 	.reset_prepare	= xdma_reset_prepare,
 	.reset_done	= xdma_reset_done,
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3,16,0)
+#elif KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 	.reset_notify	= xdma_reset_notify,
 #endif
 };
@@ -324,8 +343,6 @@ static struct pci_driver pci_driver = {
 static int __init xdma_mod_init(void)
 {
 	int rv;
-	extern unsigned int desc_blen_max;
-	extern unsigned int sgdma_timeout;
 
 	pr_info("%s", version);
 
