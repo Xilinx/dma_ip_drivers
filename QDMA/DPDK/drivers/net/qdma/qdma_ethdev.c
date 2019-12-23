@@ -61,7 +61,9 @@ static void qdma_device_attributes_get(struct rte_eth_dev *dev);
 /* Poll for any QDMA errors */
 static void qdma_check_errors(void *arg)
 {
-	qdma_error_process(arg);
+	struct qdma_pci_dev *qdma_dev;
+	qdma_dev = ((struct rte_eth_dev *)arg)->data->dev_private;
+	qdma_dev->hw_access->qdma_hw_error_process(arg);
 	rte_eal_alarm_set(QDMA_ERROR_POLL_FRQ, qdma_check_errors, arg);
 }
 
@@ -157,26 +159,104 @@ static struct rte_pci_id qdma_pci_id_tbl[] = {
 	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0x9248)	/** PF 2 */
 	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0x9348)	/** PF 3 */
 
+	/** Versal */
+	/** Gen 1 PF */
+	/** PCIe lane width x1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb011)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb111)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb211)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb311)	/** PF 3 */
+	/** PCIe lane width x4 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb014)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb114)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb214)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb314)	/** PF 3 */
+	/** PCIe lane width x8 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb018)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb118)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb218)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb318)	/** PF 3 */
+	/** PCIe lane width x16 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb01f)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb11f)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb21f)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb31f)	/** PF 3 */
+
+	/** Gen 2 PF */
+	/** PCIe lane width x1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb021)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb121)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb221)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb321)	/** PF 3 */
+	/** PCIe lane width x4 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb024)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb124)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb224)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb324)	/** PF 3 */
+	/** PCIe lane width x8 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb028)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb128)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb228)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb328)	/** PF 3 */
+	/** PCIe lane width x16 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb02f)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb12f)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb22f)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb32f)	/** PF 3 */
+
+	/** Gen 3 PF */
+	/** PCIe lane width x1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb031)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb131)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb231)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb331)	/** PF 3 */
+	/** PCIe lane width x4 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb034)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb134)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb234)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb334)	/** PF 3 */
+	/** PCIe lane width x8 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb038)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb138)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb238)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb338)	/** PF 3 */
+	/** PCIe lane width x16 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb03f)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb13f)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb23f)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb33f)	/** PF 3 */
+
+	/** Gen 4 PF */
+	/** PCIe lane width x1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb041)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb141)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb241)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb341)	/** PF 3 */
+	/** PCIe lane width x4 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb044)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb144)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb244)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb344)	/** PF 3 */
+	/** PCIe lane width x8 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb048)	/** PF 0 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb148)	/** PF 1 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb248)	/** PF 2 */
+	RTE_PCI_DEV_ID_DECL_XNIC(PCI_VENDOR_ID_XILINX, 0xb348)	/** PF 3 */
+
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
 static void qdma_device_attributes_get(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev;
-	struct qdma_dev_attributes qdma_attrib;
 
 	qdma_dev = (struct qdma_pci_dev *)dev->data->dev_private;
-	qdma_get_device_attributes(dev, &qdma_attrib);
+	qdma_dev->hw_access->qdma_get_device_attributes(dev,
+			&qdma_dev->dev_cap);
 
-	qdma_dev->dev_cap.num_qs = qdma_attrib.num_qs;
 	/* Check DPDK configured queues per port */
 	if (qdma_dev->dev_cap.num_qs > RTE_MAX_QUEUES_PER_PORT)
 		qdma_dev->dev_cap.num_qs = RTE_MAX_QUEUES_PER_PORT;
-
-	qdma_dev->dev_cap.mm_en = qdma_attrib.mm_en ? 1 : 0;
-	qdma_dev->dev_cap.st_en = qdma_attrib.st_en ? 1 : 0;
-	qdma_dev->dev_cap.mm_cmpt_en = qdma_attrib.mm_cmpt_en;
-	qdma_dev->dev_cap.mailbox_en = qdma_attrib.mailbox_en;
 
 	PMD_DRV_LOG(INFO, "qmax = %d, mm %d, st %d.\n",
 	qdma_dev->dev_cap.num_qs, qdma_dev->dev_cap.mm_en,
@@ -266,8 +346,10 @@ static int eth_qdma_dev_init(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *dma_priv;
 	uint8_t *baseaddr;
-	int i, idx, ret;
+	int i, idx, ret, qbase;
 	struct rte_pci_device *pci_dev;
+	uint32_t total_q;
+	uint16_t num_vfs;
 
 	/* sanity checks */
 	if (dev == NULL)
@@ -289,7 +371,6 @@ static int eth_qdma_dev_init(struct rte_eth_dev *dev)
 		return 0;
 	}
 
-
 	/* allocate space for a single Ethernet MAC address */
 	dev->data->mac_addrs = rte_zmalloc("qdma", ETHER_ADDR_LEN * 1, 0);
 	if (dev->data->mac_addrs == NULL)
@@ -303,13 +384,21 @@ static int eth_qdma_dev_init(struct rte_eth_dev *dev)
 
 	/* Init system & device */
 	dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
-	dma_priv->pf = PCI_DEVFN(pci_dev->addr.devid, pci_dev->addr.function);
 	dma_priv->is_vf = 0;
 	dma_priv->is_master = 0;
+	dma_priv->vf_online_count = 0;
 	dma_priv->timer_count = DEFAULT_TIMER_CNT_TRIG_MODE_TIMER;
 
-	/* Setting default Mode to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT */
-	dma_priv->trigger_mode = RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT;
+	if (dma_priv->dev_cap.cmpt_trig_count_timer) {
+		/* Setting default Mode to
+		 * RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT
+		 */
+		dma_priv->trigger_mode =
+					RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT;
+	} else{
+		/* Setting default Mode to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER */
+		dma_priv->trigger_mode = RTE_PMD_QDMA_TRIG_MODE_USER_TIMER;
+	}
 	if (dma_priv->trigger_mode == RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT)
 		dma_priv->timer_count = DEFAULT_TIMER_CNT_TRIG_MODE_COUNT_TIMER;
 
@@ -334,8 +423,30 @@ static int eth_qdma_dev_init(struct rte_eth_dev *dev)
 			pci_dev->mem_resource[dma_priv->config_bar_idx].addr;
 	dma_priv->bar_addr[dma_priv->config_bar_idx] = baseaddr;
 
+	/*Assigning QDMA access layer function pointers based on the HW design*/
+	dma_priv->hw_access = rte_zmalloc("hwaccess",
+					sizeof(struct qdma_hw_access), 0);
+	if (dma_priv->hw_access == NULL) {
+		rte_free(dev->data->mac_addrs);
+		return -ENOMEM;
+	}
+	idx = qdma_hw_access_init(dev, dma_priv->is_vf, dma_priv->hw_access);
+	if (idx < 0) {
+		rte_free(dma_priv->hw_access);
+		rte_free(dev->data->mac_addrs);
+		return -EINVAL;
+	}
+
+	idx = qdma_get_hw_version(dev);
+	if (idx < 0) {
+		rte_free(dma_priv->hw_access);
+		rte_free(dev->data->mac_addrs);
+		return -EINVAL;
+	}
+
 	idx = qdma_identify_bars(dev);
 	if (idx < 0) {
+		rte_free(dma_priv->hw_access);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
@@ -349,47 +460,55 @@ static int eth_qdma_dev_init(struct rte_eth_dev *dev)
 
 	PMD_DRV_LOG(INFO, "QDMA device driver probe:");
 
-	idx = qdma_get_hw_version(dev);
-	if (idx < 0) {
-		rte_free(dev->data->mac_addrs);
-		return -EINVAL;
-	}
-
 	qdma_dev_ops_init(dev);
 
 	/* Getting the device attributes from the Hardware */
 	qdma_device_attributes_get(dev);
-	if (dma_priv->dev_cap.mm_en) {
-		/* Enable MM C2H Channel */
-		qdma_mm_channel_enable(dev, 0, 1);
-		/* Enable MM H2C Channel */
-		qdma_mm_channel_enable(dev, 0, 0);
-	} else {
-		/* Disable MM C2H Channel */
-		qdma_mm_channel_disable(dev, 0, 1);
-		/* Disable MM H2C Channel */
-		qdma_mm_channel_disable(dev, 0, 0);
-	}
 
 	/* Create master resource node for queue management on the given
 	 * bus number. Node will be created only once per bus number.
 	 */
-	ret = qdma_master_resource_create(pci_dev->addr.bus, DEFAULT_QUEUE_BASE,
-				    QDMA_QUEUES_NUM_MAX);
-	if (ret == -QDMA_RESOURCE_MGMT_MEMALLOC_FAIL) {
+	qbase = DEFAULT_QUEUE_BASE;
+	total_q = QDMA_QUEUES_NUM_MAX;
+
+	ret = qdma_master_resource_create(pci_dev->addr.bus, qbase,
+				    total_q);
+	if (ret == -QDMA_ERR_NO_MEM) {
+		rte_free(dma_priv->hw_access);
 		rte_free(dev->data->mac_addrs);
 		return -ENOMEM;
 	}
 
+	dma_priv->hw_access->qdma_get_function_number(dev,
+			&dma_priv->func_id);
+	PMD_DRV_LOG(INFO, "PF function ID: %d", dma_priv->func_id);
+
 	/* CSR programming is done once per given board or bus number,
 	 * done by the master PF
 	 */
-	if (ret == QDMA_RESOURCE_MGMT_SUCCESS) {
+	if (ret == QDMA_SUCCESS) {
 		RTE_LOG(INFO, PMD, "QDMA PMD VERSION: %s\n", QDMA_PMD_VERSION);
-		qdma_set_default_global_csr(dev);
+		dma_priv->hw_access->qdma_set_default_global_csr(dev);
+		for (i = 0; i < dma_priv->dev_cap.mm_channel_max; i++) {
+			if (dma_priv->dev_cap.mm_en) {
+				/* Enable MM C2H Channel */
+				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+							i, 1, 1);
+				/* Enable MM H2C Channel */
+				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+							i, 0, 1);
+			} else {
+				/* Disable MM C2H Channel */
+				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+							i, 1, 0);
+				/* Disable MM H2C Channel */
+				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+							i, 0, 0);
+			}
+		}
 
-		qdma_error_enable(dev, QDMA_ERRS_ALL);
-
+		dma_priv->hw_access->qdma_init_ctxt_memory(dev);
+		dma_priv->hw_access->qdma_hw_error_enable(dev, QDMA_ERRS_ALL);
 		rte_eal_alarm_set(QDMA_ERROR_POLL_FRQ, qdma_check_errors,
 							(void *)dev);
 		dma_priv->is_master = 1;
@@ -399,19 +518,31 @@ static int eth_qdma_dev_init(struct rte_eth_dev *dev)
 	 * Create an entry for the device in board list if not already
 	 * created
 	 */
-	ret = qdma_dev_entry_create(pci_dev->addr.bus, dma_priv->pf);
-	if ((ret != QDMA_RESOURCE_MGMT_SUCCESS) &&
-		(ret != -QDMA_DEV_ALREADY_EXISTS)) {
+	ret = qdma_dev_entry_create(pci_dev->addr.bus, dma_priv->func_id);
+	if ((ret != QDMA_SUCCESS) &&
+		(ret != -QDMA_ERR_RM_DEV_EXISTS)) {
 		PMD_DRV_LOG(ERR, "PF-%d(DEVFN) qdma_dev_entry_create failed: %d\n",
-			    dma_priv->pf, ret);
+			    dma_priv->func_id, ret);
+		rte_free(dma_priv->hw_access);
+		rte_free(dev->data->mac_addrs);
 		return -ENOMEM;
 	}
-
 
 	pcie_perf_enable(pci_dev);
 	if (dma_priv->dev_cap.mailbox_en && pci_dev->max_vfs)
 		qdma_mbox_init(dev);
 
+	num_vfs = pci_dev->max_vfs;
+	if (num_vfs) {
+		dma_priv->vfinfo = rte_zmalloc("vfinfo",
+				sizeof(struct qdma_vf_info) * num_vfs, 0);
+		if (dma_priv->vfinfo == NULL)
+			rte_panic("Cannot allocate memory for private VF info\n");
+
+		/* Mark all VFs with invalid function id mapping*/
+		for (i = 0; i < num_vfs; i++)
+			dma_priv->vfinfo[i].func_id = QDMA_FUNC_ID_INVALID;
+	}
 
 	return 0;
 }
@@ -429,30 +560,78 @@ static int eth_qdma_dev_uninit(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct rte_pci_device *pci_dev = RTE_ETH_DEV_TO_PCI(dev);
+	struct qdma_mbox_msg *m = NULL;
+	int i, rv;
 
 	/* only uninitialize in the primary process */
 	if (rte_eal_process_type() != RTE_PROC_PRIMARY)
 		return -EPERM;
 
+	if (qdma_dev->vf_online_count) {
+		for (i = 0; i < pci_dev->max_vfs; i++) {
+			if (qdma_dev->vfinfo[i].func_id == QDMA_FUNC_ID_INVALID)
+				continue;
+
+			m = qdma_mbox_msg_alloc();
+			if (!m)
+				return -ENOMEM;
+
+			qdma_mbox_compose_pf_offline(m->raw_data,
+					qdma_dev->func_id,
+					qdma_dev->vfinfo[i].func_id);
+			rv = qdma_mbox_msg_send(dev, m, 0);
+			if (rv < 0)
+				PMD_DRV_LOG(ERR, "Send bye failed from PF:%d to VF:%d\n",
+					qdma_dev->func_id,
+					qdma_dev->vfinfo[i].func_id);
+		}
+
+		PMD_DRV_LOG(INFO,
+			"%s: Wait till all VFs shutdown for PF-%d(DEVFN)\n",
+			__func__, qdma_dev->func_id);
+
+		i = 0;
+		while (i < SHUTDOWN_TIMEOUT) {
+			if (!qdma_dev->vf_online_count) {
+				PMD_DRV_LOG(INFO,
+					"%s: VFs shutdown completed for PF-%d(DEVFN)\n",
+					__func__, qdma_dev->func_id);
+				break;
+			}
+			rte_delay_ms(1);
+			i++;
+		}
+
+		if (i >= SHUTDOWN_TIMEOUT) {
+			PMD_DRV_LOG(ERR, "%s: Failed VFs shutdown for PF-%d(DEVFN)\n",
+				__func__, qdma_dev->func_id);
+		}
+	}
+
+	if (qdma_dev->dev_configured)
+		qdma_dev_close(dev);
+
 	if (qdma_dev->dev_cap.mailbox_en && pci_dev->max_vfs)
 		qdma_mbox_uninit(dev);
-	/* Remove the device node from the board list */
-	qdma_dev_entry_destroy(pci_dev->addr.bus, qdma_dev->pf);
 
 	/* cancel pending polls*/
 	if (qdma_dev->is_master)
 		rte_eal_alarm_cancel(qdma_check_errors, (void *)dev);
 
-	/* Disable MM C2H Channel */
-	qdma_mm_channel_disable(dev, 0, 1);
-	/* Disable MM H2C Channel */
-	qdma_mm_channel_disable(dev, 0, 0);
+	/* Remove the device node from the board list */
+	qdma_dev_entry_destroy(pci_dev->addr.bus, qdma_dev->func_id);
+	qdma_master_resource_destroy(pci_dev->addr.bus);
 
 	dev->dev_ops = NULL;
 	dev->rx_pkt_burst = NULL;
 	dev->tx_pkt_burst = NULL;
 	dev->data->nb_rx_queues = 0;
 	dev->data->nb_tx_queues = 0;
+
+	if (qdma_dev->vfinfo != NULL) {
+		rte_free(qdma_dev->vfinfo);
+		qdma_dev->vfinfo = NULL;
+	}
 
 	if (dev->data->mac_addrs != NULL) {
 		rte_free(dev->data->mac_addrs);
@@ -462,6 +641,11 @@ static int eth_qdma_dev_uninit(struct rte_eth_dev *dev)
 	if (qdma_dev->q_info != NULL) {
 		rte_free(qdma_dev->q_info);
 		qdma_dev->q_info = NULL;
+	}
+
+	if (qdma_dev->hw_access != NULL) {
+		rte_free(qdma_dev->hw_access);
+		qdma_dev->hw_access = NULL;
 	}
 	return 0;
 }

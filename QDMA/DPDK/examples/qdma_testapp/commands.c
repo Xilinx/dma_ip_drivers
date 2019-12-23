@@ -141,6 +141,12 @@ static void cmd_help_parsed(__attribute__((unused)) void *parsed_result,
 						"    :port-initailization\n"
 			"\tport_close           <port-id> "
 			":port-close\n"
+			"\tport_reset            <port-id> "
+						"<num-queues> <st-queues> "
+						"<ring-depth> <pkt-buff-size> "
+						"    :port-reset\n"
+			"\tport_remove          <port-id> "
+			":port-remove\n"
 			"\treg_read             <port-id> <bar-num> <address> "
 			":Reads Specified Register\n"
 			"\treg_write            <port-id> <bar-num> <address> "
@@ -225,18 +231,17 @@ static void cmd_obj_port_init_parsed(void *parsed_result,
 				"%d\n", port_id);
 		return;
 	}
-	{
-		int result = port_init(port_id, num_queues,
-					st_queues, nb_descs, buff_size);
 
-		if (result < 0)
-			cmdline_printf(cl, "Error: Port initialization on "
-					"port-id:%d failed\n", port_id);
-		else
-			cmdline_printf(cl, "Port initialization done "
-					"successfully on port-id:%d\n",
-					port_id);
-	}
+	int result = port_init(port_id, num_queues,
+				st_queues, nb_descs, buff_size);
+
+	if (result < 0)
+		cmdline_printf(cl, "Error: Port initialization on "
+				"port-id:%d failed\n", port_id);
+	else
+		cmdline_printf(cl, "Port initialization done "
+				"successfully on port-id:%d\n",
+				port_id);
 }
 
 cmdline_parse_token_string_t cmd_obj_action_port_init =
@@ -272,7 +277,6 @@ cmdline_parse_inst_t cmd_obj_port_init = {
 		(void *)&cmd_obj_port_init_buff_size,
 		NULL,
 	},
-
 };
 
 /* Command port-close */
@@ -301,11 +305,10 @@ static void cmd_obj_port_close_parsed(void *parsed_result,
 					"number: %d\n", port_id);
 		return;
 	}
-	{
-		port_close(port_id);
-		pinfo[port_id].num_queues = 0;
-		cmdline_printf(cl, "Port-id:%d closed successfully\n", port_id);
-	}
+
+	port_close(port_id);
+	pinfo[port_id].num_queues = 0;
+	cmdline_printf(cl, "Port-id:%d closed successfully\n", port_id);
 }
 
 cmdline_parse_token_string_t cmd_obj_action_port_close =
@@ -325,6 +328,135 @@ cmdline_parse_inst_t cmd_obj_port_close = {
 		NULL,
 	},
 
+};
+
+/* Command port-reset */
+struct cmd_obj_port_reset_result {
+	cmdline_fixed_string_t action;
+	cmdline_fixed_string_t port_id;
+	cmdline_fixed_string_t num_queues;
+	cmdline_fixed_string_t st_queues;
+	cmdline_fixed_string_t nb_descs;
+	cmdline_fixed_string_t buff_size;
+};
+
+static void cmd_obj_port_reset_parsed(void *parsed_result,
+			       struct cmdline *cl,
+			       __attribute__((unused)) void *data)
+{
+	struct cmd_obj_port_reset_result *res = parsed_result;
+
+	cmdline_printf(cl, "Port-reset Port:%s, num-queues:%s, st-queues: %s\n",
+			res->port_id, res->num_queues, res->st_queues);
+
+	int port_id = atoi(res->port_id);
+	int num_queues   = atoi(res->num_queues);
+	int st_queues   = atoi(res->st_queues);
+	int nb_descs	= atoi(res->nb_descs);
+	int buff_size	= atoi(res->buff_size);
+
+	if ((num_queues < 1) || (num_queues > MAX_NUM_QUEUES)) {
+		cmdline_printf(cl, "Error: please enter valid number of queues,"
+				"entered: %d max allowed: %d\n",
+				num_queues, MAX_NUM_QUEUES);
+		return;
+	}
+
+	if (port_id >= num_ports) {
+		cmdline_printf(cl, "Error: please enter valid port number: "
+				"%d\n", port_id);
+		return;
+	}
+
+	int result = port_reset(port_id, num_queues,
+				st_queues, nb_descs, buff_size);
+
+	if (result < 0)
+		cmdline_printf(cl, "Error: Port reset on "
+				"port-id:%d failed\n", port_id);
+	else
+		cmdline_printf(cl, "Port reset done "
+				"successfully on port-id:%d\n",
+				port_id);
+}
+
+cmdline_parse_token_string_t cmd_obj_action_port_reset =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_reset_result, action,
+					"port_reset");
+cmdline_parse_token_string_t cmd_obj_port_reset_port_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_reset_result, port_id,
+					NULL);
+cmdline_parse_token_string_t cmd_obj_port_reset_num_queues =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_reset_result, num_queues,
+					NULL);
+cmdline_parse_token_string_t cmd_obj_port_reset_st_queues =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_reset_result, st_queues,
+					NULL);
+cmdline_parse_token_string_t cmd_obj_port_reset_nb_descs =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_reset_result, nb_descs,
+					NULL);
+cmdline_parse_token_string_t cmd_obj_port_reset_buff_size =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_reset_result, buff_size,
+					NULL);
+
+cmdline_parse_inst_t cmd_obj_port_reset = {
+	.f = cmd_obj_port_reset_parsed,  /* function to call */
+	.data = NULL,      /* 2nd arg of func */
+	.help_str = "port_reset  port-id num-queues st-queues "
+			"queue-ring-size buffer-size",
+	.tokens = {        /* token list, NULL terminated */
+		(void *)&cmd_obj_action_port_reset,
+		(void *)&cmd_obj_port_reset_port_id,
+		(void *)&cmd_obj_port_reset_num_queues,
+		(void *)&cmd_obj_port_reset_st_queues,
+		(void *)&cmd_obj_port_reset_nb_descs,
+		(void *)&cmd_obj_port_reset_buff_size,
+		NULL,
+	},
+};
+
+/* Command port-remove */
+struct cmd_obj_port_remove_result {
+	cmdline_fixed_string_t action;
+	cmdline_fixed_string_t port_id;
+};
+
+static void cmd_obj_port_remove_parsed(void *parsed_result,
+			       struct cmdline *cl,
+			       __attribute__((unused)) void *data)
+{
+	struct cmd_obj_port_remove_result *res = parsed_result;
+
+	cmdline_printf(cl, "Port-remove on Port-id:%s\n", res->port_id);
+
+	int port_id = atoi(res->port_id);
+	if (port_id >= num_ports) {
+		cmdline_printf(cl, "Error: please enter valid port "
+					"number: %d\n", port_id);
+		return;
+	}
+
+	port_remove(port_id);
+	pinfo[port_id].num_queues = 0;
+	cmdline_printf(cl, "Port-id:%d removed successfully\n", port_id);
+}
+
+cmdline_parse_token_string_t cmd_obj_action_port_remove =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_remove_result, action,
+					"port_remove");
+cmdline_parse_token_string_t cmd_obj_port_remove_port_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_port_remove_result, port_id,
+					NULL);
+
+cmdline_parse_inst_t cmd_obj_port_remove = {
+	.f = cmd_obj_port_remove_parsed,  /* function to call */
+	.data = NULL,      /* 2nd arg of func */
+	.help_str = "port_remove  port-id ",
+	.tokens = {        /* token list, NULL terminated */
+		(void *)&cmd_obj_action_port_remove,
+		(void *)&cmd_obj_port_remove_port_id,
+		NULL,
+	},
 };
 
 /* Command Read addr */
@@ -555,10 +687,24 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 
 		do {
 			total_size = input_size;
+			dst_addr = atoi(res->dst_addr);
+			q_data_size = 0;
 			/* transmit data on the number of Queues configured
 			 * from the input file
 			 */
 			for (i = 0, j = 0; i < num_queues; i++, j++) {
+				dst_addr += q_data_size;
+				dst_addr %= BRAM_SIZE;
+
+				if ((unsigned int)i >= pinfo[port_id].st_queues) {
+					ret =
+					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
+							RTE_PMD_QDMA_TX, dst_addr);
+					if (ret < 0) {
+						close(ifd);
+						return;
+					}
+				}
 
 				if (total_size == 0)
 					q_data_size = pinfo[port_id].buff_size;
@@ -602,21 +748,6 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 							"lseek func failed\n");
 					close(ifd);
 					return;
-				}
-
-#ifdef PERF_BENCHMARK
-				dst_addr = (i * q_data_size) % BRAM_SIZE;
-#else
-				dst_addr = i * q_data_size;
-#endif
-				if ((unsigned int)i >= pinfo[port_id].st_queues) {
-					ret =
-					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
-							RTE_PMD_QDMA_TX, dst_addr);
-					if (ret < 0) {
-						close(ifd);
-						return;
-					}
 				}
 
 				cmdline_printf(cl, "DMA-to-Device: with "
@@ -769,10 +900,24 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 
 		do {
 			total_size = input_size;
+			src_addr = atoi(res->src_addr);
+			q_data_size = 0;
 			/* Transmit data on the number of Queues configured
 			 * from the input file
 			 */
 			for (i = 0, j = 0; i < num_queues; i++, j++) {
+				src_addr += q_data_size;
+				src_addr %= BRAM_SIZE;
+
+				if ((unsigned int)i >= pinfo[port_id].st_queues) {
+					ret =
+					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
+							RTE_PMD_QDMA_RX, src_addr);
+					if (ret < 0) {
+						close(ofd);
+						return;
+					}
+				}
 
 				if (total_size == (r_size + size)) {
 					q_data_size = total_size;
@@ -810,20 +955,6 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 							"lseek func failed\n");
 					close(ofd);
 					return;
-				}
-#ifdef PERF_BENCHMARK
-				src_addr = (i * q_data_size) % BRAM_SIZE;
-#else
-				src_addr = i * q_data_size;
-#endif
-				if ((unsigned int)i >= pinfo[port_id].st_queues) {
-					ret =
-					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
-							RTE_PMD_QDMA_RX, src_addr);
-					if (ret < 0) {
-						close(ofd);
-						return;
-					}
 				}
 
 				cmdline_printf(cl, "DMA-from-Device: with "
@@ -901,122 +1032,6 @@ cmdline_parse_inst_t cmd_obj_dma_from_device = {
 
 };
 
-/* Command reg_dump addr
- * Register Name - Addr Structure & Values
- */
-struct S_NAME_INT_PAIR {
-	cmdline_fixed_string_t name;
-	int                    offset;
-	cmdline_fixed_string_t desc;
-};
-
-struct S_NAME_INT_PAIR C_REG_LIST[] = {
-	// Build/Status Registers
-	{ "FPGA_VER                        ",       0x00000000,
-		"FPGA Version" },
-	/* Global Ring-size registers */
-	{ "QDMA_GLBL_RNG_SZ_A[0]           ",       0x00000204,
-		"Ring size index 0" },
-	{ "QDMA_GLBL_RNG_SZ_A[1]           ",       0x00000208,
-		"Ring size index 1" },
-	{ "QDMA_GLBL_RNG_SZ_A[2]           ",       0x0000020c,
-		"Ring size index 2" },
-	{ "QDMA_GLBL_RNG_SZ_A[3]           ",       0x00000210,
-		"Ring size index 3" },
-	{ "QDMA_GLBL_RNG_SZ_A[4]           ",       0x00000214,
-		"Ring size index 4" },
-	{ "QDMA_GLBL_RNG_SZ_A[5]           ",       0x00000218,
-		"Ring size index 5" },
-	{ "QDMA_GLBL_RNG_SZ_A[6]           ",       0x0000021c,
-		"Ring size index 6" },
-	{ "QDMA_GLBL_RNG_SZ_A[7]           ",       0x00000220,
-		"Ring size index 7" },
-	{ "QDMA_GLBL_RNG_SZ_A[8]           ",       0x00000224,
-		"Ring size index 8" },
-	{ "QDMA_GLBL_RNG_SZ_A[9]           ",       0x00000228,
-		"Ring size index 9" },
-	{ "QDMA_GLBL_RNG_SZ_A[10]          ",       0x0000022c,
-		"Ring size index 10" },
-	{ "QDMA_GLBL_RNG_SZ_A[11]          ",       0x00000230,
-		"Ring size index 11" },
-	{ "QDMA_GLBL_RNG_SZ_A[12]          ",       0x00000234,
-		"Ring size index 12" },
-	{ "QDMA_GLBL_RNG_SZ_A[13]          ",       0x00000238,
-		"Ring size index 13" },
-	{ "QDMA_GLBL_RNG_SZ_A[14]          ",       0x0000023c,
-		"Ring size index 14" },
-	{ "QDMA_GLBL_RNG_SZ_A[15]          ",       0x00000240,
-		"Ring size index 15" },
-	/* Global Error Status register */
-	{ "QDMA_GLBL_ERR_STAT              ",	0x00000248,
-		"Global error status" },
-	/*Global error mask register*/
-	{ "QDMA_GLBL_ERR_MASK              ",	0x0000024c,
-		"Global error mask" },
-	/* Global Write-back accumulation */
-	{ "QDMA_GLBL_WB_ACC                ",	0x00000250,
-		"Global Write-back accumulation" },
-	/* */
-	{ "QDMA_GLBL_DSC_ERR_STS           ",	0x00000254,
-		"Global Descriptor error status" },
-	/**/
-	{ "QDMA_GLBL_DSC_ERR_MSK          ",	0x00000258,
-		"Global Descriptor error mask" },
-	/**/
-	{ "QDMA_GLBL_DSC_ERR_LOG0          ",	0x0000025c,
-		"Global Descriptor error Log0" },
-	/**/
-	{ "QDMA_GLBL_DSC_ERR_LOG1          ",	0x00000260,
-		"Global Descriptor error Log1" },
-	/**/
-	{ "QDMA_GLBL_TRQ_ERR_STS           ",	0x00000264,
-		"Global target error status" },
-	/**/
-	{ "QDMA_GLBL_TRQ_ERR_MSK           ",	0x00000268,
-		"Global target error mask"},
-	/**/
-	{ "QDMA_GLBL_TRQ_ERR_LOG           ",	0x0000026c,
-		"Register access space, functio, address" },
-	/*Function-map registers*/
-	{ "QDMA_TRQ_SEL_FMAP[0]            ",	0x00000400,
-		"FMAP target index-0" },
-	{ "QDMA_TRQ_SEL_FMAP[1]            ",	0x00000404,
-		"FMAP target index-1" },
-	{ "QDMA_C2H_STAT_AXIS_C2H_ACPTD    ",	0x00000a88,
-		"Number of C2H pkts accepted" },
-	{ "QDMA_C2H_STAT_AXIS_CMPT_ACPTD    ",	0x00000a8c,
-		"Number of C2H CMPT pkts accepted" },
-	{ "QDMA_C2H_STAT_DESC_RSP_PKT_ACPTD",	0x00000a90,
-		"Number of desc rsp pkts accepted" },
-	{ "QDMA_C2H_STAT_AXIS_PKG_CMP      ",	0x00000a94,
-		"Number of C2H pkts accepted" },
-	{ "QDMA_C2H_STAT_DESC_RSP_ACPTD    ",	0x00000a98,
-		"Number of dsc rsp pkts accepted" },
-	{ "QDMA_C2H_STAT_DESC_RSP_CMP      ",	0x00000a9c,
-		"Number of dsc rsp pkts completed" },
-	{ "QDMA_C2H_STAT_WRQ_OUT           ",	0x00000aa0,
-		"Number of WRQ" },
-	{ "QDMA_C2H_STAT_WPL_REN_ACPTD     ",	0x00000aa4,
-		"Number of WPL REN accepted" },
-	{ "QDMA_C2H_STAT_TOT_WRQ_LEN       ",	0x00000aa8,
-		"Number of total WRQ len from C2H DMA write engine" },
-	{ "QDMA_C2H_STAT_TOT_WPL_LEN       ",	0x00000aac,
-		"Number of total WPL len from C2H DMA write engine" },
-	{ "QDMA_C2H_ERR_STAT               ",	0x00000af0,
-		"C2H error status" },
-	{ "QDMA_C2H_ERR_MASK               ",	0x00000af4,
-		"C2H error mask" },
-	{ "QDMA_C2H_FATAL_ERR_STAT         ",	0x00000af8,
-		"C2H fatal error status" },
-	{ "QDMA_C2H_FATAL_ERR_MSK          ",	0x00000afc,
-		"C2H fatal error mask" },
-	{ "QDMA_C2H_FATAL_ERR_MSK          ",	0x00000afc,
-		"C2H fatal error mask" },
-	// End Of Register List
-	{ "EndOfList",     -999,        "EndOfList" }
-};
-
-
 struct cmd_obj_reg_dump_result {
 	cmdline_fixed_string_t action;
 	cmdline_fixed_string_t port_id;
@@ -1031,8 +1046,6 @@ static void cmd_obj_reg_dump_parsed(void *parsed_result,
 
 	int bar_id;
 	int port_id = atoi(res->port_id);
-	unsigned int i, reg_val;
-	i     = 0;
 
 	bar_id = pinfo[port_id].config_bar_idx;
 	if (bar_id < 0) {
@@ -1049,18 +1062,7 @@ static void cmd_obj_reg_dump_parsed(void *parsed_result,
 						port_id);
 		return;
 	}
-	cmdline_printf(cl, "FPGA Registers\n--------------\n");
-	cmdline_printf(cl, "\tName:\t Offset:\tDescription:\t "
-				"register-Value:\n--------------\n");
-	do {
-		cmdline_printf(cl, "%18s : 0x%08x : %s:",
-			       C_REG_LIST[i].name,
-			       C_REG_LIST[i].offset,
-			       C_REG_LIST[i].desc);
-		reg_val = PciRead(bar_id, C_REG_LIST[i].offset, port_id);
-		cmdline_printf(cl, "\tValue:0x%08x\n", reg_val);
-		i++;
-	} while (C_REG_LIST[i].offset != -999);
+	rte_pmd_qdma_dbg_regdump(port_id);
 }
 
 cmdline_parse_token_string_t cmd_obj_action_reg_dump =
@@ -1082,252 +1084,6 @@ cmdline_parse_inst_t cmd_obj_reg_dump = {
 };
 
 /*Command queue-context dump*/
-
-#define QDMA_IND_CTXT_CMD_A	0x844
-
-void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl)
-{
-	union h2c_c2h_ctxt q_ctxt;
-	union c2h_cmpt_ctxt c2h_cmpt;
-	union h2c_c2h_hw_ctxt hw_ctxt;
-	union prefetch_ctxt pref_ctxt;
-	uint32_t ctxt_sel, reg_val;
-	uint32_t base_offset, offset;
-	uint16_t i;
-	uint8_t port_id = 0;
-
-	base_offset = (QDMA_TRQ_SEL_IND + QDMA_IND_Q_PRG_OFF);
-
-	/** To read the H2C Queue **/
-	ctxt_sel = (QDMA_CNTXT_SEL_DESC_SW_H2C<<CTXT_SEL_SHIFT_B) |
-				(qid<<QID_SHIFT_B) |
-				(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
-	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
-
-	cmdline_printf(cl, "\nH2C context-data structure on queue-id:%d:\n",
-									qid);
-	for (i = 0; i < 5; i++) {
-		offset = base_offset + (i * 4);
-		reg_val = PciRead(bar_id, offset, port_id);
-		q_ctxt.c_data.data[i] = reg_val;
-	}
-	cmdline_printf(cl, "\t\t interrupt vector:%x\n",
-					q_ctxt.c_fields.int_vec);
-	cmdline_printf(cl, "\t\t interrupt aggregation:%x\n",
-						q_ctxt.c_fields.int_aggr);
-	cmdline_printf(cl, "\t\t Base-addr of Desc ring:%lx\n",
-						q_ctxt.c_fields.dsc_base);
-	cmdline_printf(cl, "\t\t is_mm:%x\n", q_ctxt.c_fields.is_mm);
-	cmdline_printf(cl, "\t\t mrkr_dis:%x\n", q_ctxt.c_fields.mrkr_dis);
-	cmdline_printf(cl, "\t\t irq_req:%x\n", q_ctxt.c_fields.irq_req);
-	cmdline_printf(cl, "\t\t err-wb-sent:%x\n",
-						q_ctxt.c_fields.err_wb_sent);
-	cmdline_printf(cl, "\t\t Error status:%x\n", q_ctxt.c_fields.err);
-	cmdline_printf(cl, "\t\t irq_no_last:%x\n",
-						q_ctxt.c_fields.irq_no_last);
-	cmdline_printf(cl, "\t\t port id:%x\n", q_ctxt.c_fields.port_id);
-	cmdline_printf(cl, "\t\t irq-enable:%x\n", q_ctxt.c_fields.irq_en);
-	cmdline_printf(cl, "\t\t write-back enable:%x\n",
-						q_ctxt.c_fields.wbk_en);
-	cmdline_printf(cl, "\t\t mm-channel-id:%x\n", q_ctxt.c_fields.mm_chn);
-	cmdline_printf(cl, "\t\t bypass:%x\n", q_ctxt.c_fields.byp);
-	cmdline_printf(cl, "\t\t desc-size index:%x\n", q_ctxt.c_fields.dsc_sz);
-	cmdline_printf(cl, "\t\t ring-size index:%x\n", q_ctxt.c_fields.rng_sz);
-	cmdline_printf(cl, "\t\t reserved:%x\n", q_ctxt.c_fields.rsv1);
-	cmdline_printf(cl, "\t\t fetch_max:%x\n", q_ctxt.c_fields.fetch_max);
-	cmdline_printf(cl, "\t\t address type of context :%x\n",
-							q_ctxt.c_fields.at);
-	cmdline_printf(cl, "\t\t wbi_acc_en:%x\n", q_ctxt.c_fields.wbi_acc_en);
-	cmdline_printf(cl, "\t\t wbi_chk:%x\n", q_ctxt.c_fields.wbi_chk);
-	cmdline_printf(cl, "\t\t fetch credits:%x\n", q_ctxt.c_fields.fcrd_en);
-	cmdline_printf(cl, "\t\t queue-enable:%x\n", q_ctxt.c_fields.qen);
-	cmdline_printf(cl, "\t\t reserved:%x\n", q_ctxt.c_fields.rsv0);
-	cmdline_printf(cl, "\t\t function-id:%x\n", q_ctxt.c_fields.fnc_id);
-	cmdline_printf(cl, "\t\t irq_ack:%x\n", q_ctxt.c_fields.irq_ack);
-	cmdline_printf(cl, "\t\t producer-index:0x%x\n", q_ctxt.c_fields.pidx);
-
-	cmdline_printf(cl, "\nH2C Hardware Descriptor context-data structure "
-						"on queue-id:%d:\n", qid);
-
-	ctxt_sel = (QDMA_CNTXT_SEL_DESC_HW_H2C<<CTXT_SEL_SHIFT_B) |
-				(qid<<QID_SHIFT_B) |
-				(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
-	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
-
-	for (i = 0; i < 2; i++) {
-		offset = base_offset + (i * 4);
-		reg_val = PciRead(bar_id, offset, port_id);
-		hw_ctxt.c_data.data[i] = reg_val;
-	}
-	cmdline_printf(cl, "\t\t reserved:0x%x\n", hw_ctxt.c_fields.rsvd1);
-	cmdline_printf(cl, "\t\t descriptor fetch pending:0x%x\n",
-						hw_ctxt.c_fields.fetch_pend);
-	cmdline_printf(cl, "\t\t event pending:0x%x\n",
-						hw_ctxt.c_fields.event_pend);
-	cmdline_printf(cl, "\t\t Queue invalid Or no descriptor pending:0x%x\n",
-						hw_ctxt.c_fields.idl_stp_b);
-	cmdline_printf(cl, "\t\t descriptor pending:0x%x\n",
-						hw_ctxt.c_fields.pnd);
-	cmdline_printf(cl, "\t\t reserved:0x%x\n", hw_ctxt.c_fields.rsvd0);
-	cmdline_printf(cl, "\t\t credit-use:0x%x\n", hw_ctxt.c_fields.crd_use);
-	cmdline_printf(cl, "\t\t consumer-index:0x%x\n", hw_ctxt.c_fields.cidx);
-
-	/** To read the C2H Queue **/
-	cmdline_printf(cl, "\nC2H context-data structure on queue-id:%d:\n",
-									qid);
-
-	ctxt_sel = (QDMA_CNTXT_SEL_DESC_SW_C2H<<CTXT_SEL_SHIFT_B) |
-					(qid<<QID_SHIFT_B) |
-					(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
-	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
-
-	for (i = 0; i < 5; i++) {
-		offset = base_offset + (i * 4);
-		reg_val = PciRead(bar_id, offset, port_id);
-		q_ctxt.c_data.data[i] = reg_val;
-	}
-	cmdline_printf(cl, "\t\t interrupt vector:%x\n",
-						q_ctxt.c_fields.int_vec);
-	cmdline_printf(cl, "\t\t interrupt aggregation:%x\n",
-						q_ctxt.c_fields.int_aggr);
-	cmdline_printf(cl, "\t\t Base-addr of Desc ring:%lx\n",
-						q_ctxt.c_fields.dsc_base);
-	cmdline_printf(cl, "\t\t is_mm:%x\n", q_ctxt.c_fields.is_mm);
-	cmdline_printf(cl, "\t\t mrkr_dis:%x\n", q_ctxt.c_fields.mrkr_dis);
-	cmdline_printf(cl, "\t\t irq_req:%x\n", q_ctxt.c_fields.irq_req);
-	cmdline_printf(cl, "\t\t err-wb-sent:%x\n",
-						q_ctxt.c_fields.err_wb_sent);
-	cmdline_printf(cl, "\t\t Error status:%x\n", q_ctxt.c_fields.err);
-	cmdline_printf(cl, "\t\t irq_no_last:%x\n",
-						q_ctxt.c_fields.irq_no_last);
-	cmdline_printf(cl, "\t\t port id:%x\n", q_ctxt.c_fields.port_id);
-	cmdline_printf(cl, "\t\t irq-enable:%x\n", q_ctxt.c_fields.irq_en);
-	cmdline_printf(cl, "\t\t write-back enable:%x\n",
-						q_ctxt.c_fields.wbk_en);
-	cmdline_printf(cl, "\t\t mm-channel-id:%x\n", q_ctxt.c_fields.mm_chn);
-	cmdline_printf(cl, "\t\t bypass:%x\n", q_ctxt.c_fields.byp);
-	cmdline_printf(cl, "\t\t desc-size index:%x\n",
-						q_ctxt.c_fields.dsc_sz);
-	cmdline_printf(cl, "\t\t ring-size index:%x\n",
-						q_ctxt.c_fields.rng_sz);
-	cmdline_printf(cl, "\t\t reserved:%x\n", q_ctxt.c_fields.rsv1);
-	cmdline_printf(cl, "\t\t fetch_max:%x\n", q_ctxt.c_fields.fetch_max);
-	cmdline_printf(cl, "\t\t address type of context :%x\n",
-						q_ctxt.c_fields.at);
-	cmdline_printf(cl, "\t\t wbi_acc_en:%x\n", q_ctxt.c_fields.wbi_acc_en);
-	cmdline_printf(cl, "\t\t wbi_chk:%x\n", q_ctxt.c_fields.wbi_chk);
-	cmdline_printf(cl, "\t\t fetch credits:%x\n", q_ctxt.c_fields.fcrd_en);
-	cmdline_printf(cl, "\t\t queue-enable:%x\n", q_ctxt.c_fields.qen);
-	cmdline_printf(cl, "\t\t reserved:%x\n", q_ctxt.c_fields.rsv0);
-	cmdline_printf(cl, "\t\t function-id:%x\n", q_ctxt.c_fields.fnc_id);
-	cmdline_printf(cl, "\t\t irq_ack:%x\n", q_ctxt.c_fields.irq_ack);
-	cmdline_printf(cl, "\t\t producer-index:0x%x\n", q_ctxt.c_fields.pidx);
-
-
-	/** C2H Completion context **/
-	cmdline_printf(cl, "\nC2H Completion context-data structure "
-						"on queue-id:%d:\n", qid);
-
-	ctxt_sel = (QDMA_CNTXT_SEL_DESC_CMPT << CTXT_SEL_SHIFT_B) |
-		    (qid<<QID_SHIFT_B) | (QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
-	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
-
-	for (i = 0; i < 5; i++) {
-		offset = base_offset + (i * 4);
-		reg_val = PciRead(bar_id, offset, port_id);
-		c2h_cmpt.c_data.data[i] = reg_val;
-	}
-
-	cmdline_printf(cl, "\t\t at:%x\n", c2h_cmpt.c_fields.at);
-	cmdline_printf(cl, "\t\t ovf_chk_dis:%x\n",
-			c2h_cmpt.c_fields.ovf_chk_dis);
-	cmdline_printf(cl, "\t\t full_upd:%x\n", c2h_cmpt.c_fields.full_upd);
-	cmdline_printf(cl, "\t\t timer_run:%x\n", c2h_cmpt.c_fields.timer_run);
-	cmdline_printf(cl, "\t\t usr_trig_pend:%x\n",
-			c2h_cmpt.c_fields.usr_trig_pend);
-	cmdline_printf(cl, "\t\t err:%x\n", c2h_cmpt.c_fields.err);
-	cmdline_printf(cl, "\t\t valid:%x\n", c2h_cmpt.c_fields.valid);
-	cmdline_printf(cl, "\t\t consumer-index:0x%x\n",
-			c2h_cmpt.c_fields.cidx);
-	cmdline_printf(cl, "\t\t producer-index:0x%x\n",
-			c2h_cmpt.c_fields.pidx);
-	cmdline_printf(cl, "\t\t desc-size:%x\n", c2h_cmpt.c_fields.desc_sz);
-	cmdline_printf(cl, "\t\t cmpt-desc-base_h addr:0x%x\n",
-			(unsigned int)c2h_cmpt.c_fields.cmpt_dsc_base_h);
-	cmdline_printf(cl, "\t\t cmpt-desc-base_l addr:0x%x\n",
-			(unsigned int)c2h_cmpt.c_fields.cmpt_dsc_base_l);
-	cmdline_printf(cl, "\t\t size-index:%x\n", c2h_cmpt.c_fields.size);
-	cmdline_printf(cl, "\t\t color:%x\n", c2h_cmpt.c_fields.color);
-	cmdline_printf(cl, "\t\t interrupt-state:%x\n",
-			c2h_cmpt.c_fields.int_st);
-	cmdline_printf(cl, "\t\t timer-index:0x%x\n",
-			c2h_cmpt.c_fields.timer_idx);
-	cmdline_printf(cl, "\t\t counter-index:0x%x\n",
-			c2h_cmpt.c_fields.count_idx);
-	cmdline_printf(cl, "\t\t function-id:0x%x\n", c2h_cmpt.c_fields.fnc_id);
-	cmdline_printf(cl, "\t\t trigger-mode:0x%x\n",
-			c2h_cmpt.c_fields.trig_mode);
-	cmdline_printf(cl, "\t\t cause interrupt on completion:0x%x\n",
-			c2h_cmpt.c_fields.en_int);
-	cmdline_printf(cl, "\t\t cause status descriptor write on "
-			"completion:0x%x\n", c2h_cmpt.c_fields.en_stat_desc);
-
-	/* Prefetch Context */
-	cmdline_printf(cl, "\nPrefetch context-data structure on "
-			"queue-id:%d:\n", qid);
-
-	ctxt_sel = (QDMA_CNTXT_SEL_PFTCH << CTXT_SEL_SHIFT_B) |
-			(qid << QID_SHIFT_B) |
-			(QDMA_CNTXT_CMD_RD << OP_CODE_SHIFT_B);
-	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
-
-	for (i = 0; i < 2; i++) {
-		offset = base_offset + (i * 4);
-		reg_val = PciRead(bar_id, offset, port_id);
-		pref_ctxt.c_data.data[i] = reg_val;
-	}
-	cmdline_printf(cl, "\t\t valid:0x%x\n", pref_ctxt.c_fields.valid);
-	cmdline_printf(cl, "\t\t software credit:0x%x\n",
-					pref_ctxt.c_fields.sw_crdt);
-	cmdline_printf(cl, "\t\t queue is in prefetch:0x%x\n",
-					pref_ctxt.c_fields.pfch);
-	cmdline_printf(cl, "\t\t enable prefetch:0x%x\n",
-					pref_ctxt.c_fields.pfch_en);
-	cmdline_printf(cl, "\t\t err:0x%x\n", pref_ctxt.c_fields.err);
-	cmdline_printf(cl, "\t\t rsvd:0x%x\n", pref_ctxt.c_fields.rsvd);
-	cmdline_printf(cl, "\t\t port ID:0x%x\n", pref_ctxt.c_fields.port_id);
-	cmdline_printf(cl, "\t\t buffer size index:0x%x\n",
-					pref_ctxt.c_fields.buf_sz_idx);
-	cmdline_printf(cl, "\t\t C2H is in bypass mode:0x%x\n",
-					pref_ctxt.c_fields.bypass);
-
-	/* C2H Hardware descriptor context */
-	cmdline_printf(cl, "\nC2H Hardware Descriptor context-data structure "
-						"on queue-id:%d:\n", qid);
-
-	ctxt_sel = (QDMA_CNTXT_SEL_DESC_HW_C2H<<CTXT_SEL_SHIFT_B) |
-				(qid<<QID_SHIFT_B) |
-				(QDMA_CNTXT_CMD_RD<<OP_CODE_SHIFT_B);
-	PciWrite(bar_id, QDMA_IND_CTXT_CMD_A, ctxt_sel, port_id);
-
-	for (i = 0; i < 2; i++) {
-		offset = base_offset + (i * 4);
-		reg_val = PciRead(bar_id, offset, port_id);
-		hw_ctxt.c_data.data[i] = reg_val;
-	}
-	cmdline_printf(cl, "\t\t reserved:0x%x\n", hw_ctxt.c_fields.rsvd1);
-	cmdline_printf(cl, "\t\t descriptor fetch pending:0x%x\n",
-						hw_ctxt.c_fields.fetch_pend);
-	cmdline_printf(cl, "\t\t event pending:0x%x\n",
-						hw_ctxt.c_fields.event_pend);
-	cmdline_printf(cl, "\t\t Queue invalid Or no descriptor pending:0x%x\n",
-						hw_ctxt.c_fields.idl_stp_b);
-	cmdline_printf(cl, "\t\t descriptor pending:0x%x\n",
-						hw_ctxt.c_fields.pnd);
-	cmdline_printf(cl, "\t\t reserved:0x%x\n", hw_ctxt.c_fields.rsvd0);
-	cmdline_printf(cl, "\t\t credit-use:0x%x\n", hw_ctxt.c_fields.crd_use);
-	cmdline_printf(cl, "\t\t consumer-index:0x%x\n", hw_ctxt.c_fields.cidx);
-}
 
 struct cmd_obj_queue_dump_result {
 	cmdline_fixed_string_t action;
@@ -1369,9 +1125,7 @@ static void cmd_obj_queue_dump_parsed(void *parsed_result,
 					"queue-id\n", qid);
 			return;
 		}
-		qid = qid + pinfo[port_id].queue_base;
-		queue_context_dump(bar_id, qid, cl);
-
+		rte_pmd_qdma_dbg_qinfo(port_id, qid);
 	}
 }
 
@@ -1411,6 +1165,8 @@ static void cmd_obj_desc_dump_parsed(void *parsed_result,
 			       __attribute__((unused)) void *data)
 {
 	struct cmd_obj_desc_dump_result *res = parsed_result;
+	int start;
+	int end;
 
 	cmdline_printf(cl, "Descriptor-dump on Port:%s, queue-id:%s\n\n",
 						res->port_id, res->queue_id);
@@ -1430,7 +1186,19 @@ static void cmd_obj_desc_dump_parsed(void *parsed_result,
 					"queue-id\n", qid);
 			return;
 		}
-		qdma_desc_dump(&rte_eth_devices[port_id], qid);
+
+		start = 0;
+		end = pinfo[port_id].nb_descs - 1;
+		rte_pmd_qdma_dbg_qdesc(port_id, qid, start,
+					end, RTE_PMD_QDMA_XDEBUG_DESC_C2H);
+
+		rte_pmd_qdma_dbg_qdesc(port_id, qid, start,
+					end, RTE_PMD_QDMA_XDEBUG_DESC_H2C);
+
+		if ((unsigned int)qid < pinfo[port_id].st_queues) {
+			rte_pmd_qdma_dbg_qdesc(port_id, qid, start,
+					end, RTE_PMD_QDMA_XDEBUG_DESC_CMPT);
+		}
 	}
 }
 
@@ -1515,6 +1283,8 @@ cmdline_parse_inst_t cmd_obj_load_cmds = {
 cmdline_parse_ctx_t main_ctx[] = {
 	(cmdline_parse_inst_t *)&cmd_obj_port_init,
 	(cmdline_parse_inst_t *)&cmd_obj_port_close,
+	(cmdline_parse_inst_t *)&cmd_obj_port_reset,
+	(cmdline_parse_inst_t *)&cmd_obj_port_remove,
 	(cmdline_parse_inst_t *)&cmd_obj_reg_read,
 	(cmdline_parse_inst_t *)&cmd_obj_reg_write,
 	(cmdline_parse_inst_t *)&cmd_obj_dma_to_device,

@@ -37,8 +37,8 @@
 #define qdma_stringify(x...)	qdma_stringify1(x)
 
 #define QDMA_PMD_MAJOR		2019
-#define QDMA_PMD_MINOR		1
-#define QDMA_PMD_PATCHLEVEL	24
+#define QDMA_PMD_MINOR		2
+#define QDMA_PMD_PATCHLEVEL	44
 
 #define QDMA_PMD_VERSION      \
 	qdma_stringify(QDMA_PMD_MAJOR) "." \

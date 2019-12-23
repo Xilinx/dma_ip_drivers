@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2018 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2018-2019 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,19 +35,20 @@
 /**
  * @file
  * @brief This file contains example design/user logic controlled
- * data structures
+ * data structures and functions
  * The driver is specific to an example design, if the example design
  * changes user controlled parameters, this file needs to be modified
  * appropriately.
  * Structures for Completion entry, Descriptor bypass can be added here.
  */
 
+#include "qdma_rxtx.h"
  /**
   * C2H Completion entry structure
   * This structure is specific for the example design.
   * Processing of this ring happens in qdma_rxtx.c.
   */
-struct __attribute__ ((packed)) c2h_cmpt_ring
+struct __attribute__ ((packed)) qdma_ul_st_cmpt_ring
 {
 	volatile uint32_t	data_frmt:1; /* For 2018.2 IP, this field
 					      * determines the Standard or User
@@ -76,11 +77,12 @@ struct __attribute__ ((packed)) c2h_cmpt_ring
 
 
  /**
-  * MM Completion entry structure
+  * Completion entry structure
   * This structure is specific for the example design.
-  * Processing of this ring happens in rte_pmd_qdma.c.
+  * Currently this structure is used for the processing
+  * of the MM completion ring in rte_pmd_qdma.c.
   */
-struct __attribute__ ((packed)) mm_cmpt_ring
+struct __attribute__ ((packed)) qdma_ul_cmpt_ring
 {
 	volatile uint32_t	data_frmt:1; /* For 2018.2 IP, this field
 					      * determines the Standard or User
@@ -99,4 +101,144 @@ struct __attribute__ ((packed)) mm_cmpt_ring
 						* length
 						*/
 };
+
+/** ST C2H Descriptor **/
+struct __attribute__ ((packed)) qdma_ul_st_c2h_desc
+{
+	volatile uint64_t	dst_addr;
+};
+
+#define S_H2C_DESC_F_SOP		1
+#define S_H2C_DESC_F_EOP		2
+
+/* pld_len and flags members are part of custom descriptor format needed
+ * by example design for ST loopback and desc bypass
+ */
+
+/** ST H2C Descriptor **/
+struct __attribute__ ((packed)) qdma_ul_st_h2c_desc
+{
+	volatile uint16_t	cdh_flags;
+	volatile uint16_t	pld_len;
+	volatile uint16_t	len;
+	volatile uint16_t	flags;
+	volatile uint64_t	src_addr;
+};
+
+/** MM Descriptor **/
+struct __attribute__ ((packed)) qdma_ul_mm_desc
+{
+	volatile uint64_t	src_addr;
+	volatile uint64_t	len:28;
+	volatile uint64_t	dv:1;
+	volatile uint64_t	sop:1;
+	volatile uint64_t	eop:1;
+	volatile uint64_t	rsvd:33;
+	volatile uint64_t	dst_addr;
+	volatile uint64_t	rsvd2;
+
+};
+
+/**
+ * Extract the fields of given completion entry in the completion ring.
+ *
+ * @param ul_cmpt_entry
+ *   Pointer to completion entry to be extracted.
+ * @param cmpt_info
+ *   Pointer to structure to which completion entry details to be extracted.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_extract_st_cmpt_info(void *ul_cmpt_entry,
+		struct c2h_cmpt_info *cmpt_info);
+
+
+/**
+ * Processes the immediate data for the given completion ring entry
+ * and stores the immediate data in a file.
+ *
+ * @param qhndl
+ *   Pointer to RX queue handle.
+ * @param cmpt_desc_len
+ *   Completion descriptor length.
+ * @param cmpt_entry
+ *   Pointer to completion entry to be processed.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_process_immediate_data_st(void *qhndl, void *cmpt_entry,
+			uint16_t cmpt_desc_len);
+
+/**
+ * Updates the ST c2h descriptor.
+ *
+ * @param mb
+ *   Pointer to memory buffer.
+ * @param desc
+ *   Pointer to descriptor entry.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_update_st_c2h_desc(struct rte_mbuf *mb, void *desc);
+
+/**
+ * Updates the ST h2c descriptor.
+ *
+ * @param qhndl
+ *   Pointer to TX queue handle.
+ * @param mb
+ *   Pointer to memory buffer.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_update_st_h2c_desc(void *qhndl, struct rte_mbuf *mb);
+
+/**
+ * Updates the MM c2h descriptor.
+ *
+ * @param qhndl
+ *   Pointer to RX queue handle.
+ * @param mb
+ *   Pointer to memory buffer.
+ * @param desc
+ *   Pointer to descriptor entry.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_update_mm_c2h_desc(void *qhndl, struct rte_mbuf *mb, void *desc);
+
+/**
+ * updates the MM h2c descriptor.
+ *
+ * @param qhndl
+ *   Pointer to TX queue handle.
+ * @param mb
+ *   Pointer to memory buffer.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_update_mm_h2c_desc(void *qhndl, struct rte_mbuf *mb);
+
+/**
+ * Processes the completion data from the given completion entry.
+ *
+ * @param cmpt_entry
+ *   Pointer to completion entry to be processed.
+ * @param cmpt_desc_len
+ *   Completion descriptor length.
+ * @param cmpt_buff
+ *   Pointer to the data buffer to which the data will be extracted.
+ *
+ * @return
+ *   None.
+ */
+int qdma_ul_process_immediate_data(void *cmpt_entry, uint16_t cmpt_desc_len,
+			char *cmpt_buff);
+
 #endif /* ifndef __QDMA_USER_H__ */

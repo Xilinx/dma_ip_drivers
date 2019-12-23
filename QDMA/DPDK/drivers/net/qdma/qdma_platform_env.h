@@ -36,7 +36,24 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <rte_log.h>
 
 #define QDMA_SNPRINTF	snprintf
+
+#ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
+#define qdma_log_info(x_, ...) rte_log(RTE_LOG_INFO,\
+		RTE_LOGTYPE_USER1, x_, ##__VA_ARGS__)
+#define qdma_log_warning(x_, ...) rte_log(RTE_LOG_WARNING,\
+		RTE_LOGTYPE_USER1, x_, ##__VA_ARGS__)
+#define qdma_log_debug(x_, ...) rte_log(RTE_LOG_DEBUG,\
+		RTE_LOGTYPE_USER1, x_, ##__VA_ARGS__)
+#define qdma_log_error(x_, ...) rte_log(RTE_LOG_ERR,\
+		RTE_LOGTYPE_USER1, x_, ##__VA_ARGS__)
+#else
+#define qdma_log_info(x_, ...) do { } while (0)
+#define qdma_log_warning(x_, ...) do { } while (0)
+#define qdma_log_debug(x_, ...) do { } while (0)
+#define qdma_log_error(x_, ...) do { } while (0)
+#endif
 
 #endif /* QDMA_PLATFORM_ENV_H_ */

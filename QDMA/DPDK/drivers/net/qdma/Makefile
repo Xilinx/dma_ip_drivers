@@ -46,7 +46,7 @@ LIB = librte_pmd_qdma.a
 # versioning export map
 EXPORT_MAP := rte_pmd_qdma_version.map
 
-CFLAGS += -O3 -DDMA_BRAM_SIZE=$(BRAM_SIZE) -DMBOX_INTR
+CFLAGS += -O3 -DDMA_BRAM_SIZE=$(BRAM_SIZE)
 #CFLAGS += -g
 CFLAGS += $(WERROR_FLAGS)
 CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/qdma_access/
@@ -56,6 +56,7 @@ ifeq ($(TEST_64B_DESC_BYPASS),1)
 endif
 
 # this lib depends upon:
+LDLIBS += -lpthread
 LDLIBS += -lrte_eal -lrte_mbuf -lrte_mempool -lrte_ring
 LDLIBS += -lrte_ethdev -lrte_net -lrte_kvargs
 LDLIBS += -lrte_bus_pci
@@ -69,10 +70,14 @@ SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_devops.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_common.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_rxtx.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_xdebug.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_user.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_access.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_list.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_resource_mgmt.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_mbox_protocol.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_access_common.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_cpm_access.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_reg_dump.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_mbox.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_platform.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += rte_pmd_qdma.c

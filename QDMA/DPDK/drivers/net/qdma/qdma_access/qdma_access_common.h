@@ -1,7 +1,7 @@
-/*-
- * BSD LICENSE
- *
+/*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ *
+ * BSD LICENSE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,46 +29,52 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef QDMA_DPDK_MBOX_H_
-#define QDMA_DPDK_MBOX_H_
 
-#include "qdma_list.h"
-#include "qdma_mbox_protocol.h"
-#include <rte_ethdev.h>
+#ifndef QDMA_ACCESS_COMMON_H_
+#define QDMA_ACCESS_COMMON_H_
 
-#define MBOX_POLL_FRQ 1000
-#define MBOX_OP_RSP_TIMEOUT (10000 * MBOX_POLL_FRQ) /* 10 sec */
-#define MBOX_SEND_RETRY_COUNT (MBOX_OP_RSP_TIMEOUT/MBOX_POLL_FRQ)
 
-enum qdma_mbox_rsp_state {
-	QDMA_MBOX_RSP_NO_WAIT,
-	QDMA_MBOX_RSP_WAIT
-};
+#include "qdma_platform.h"
 
-struct qdma_dev_mbox {
-	struct qdma_list_head tx_todo_list;
-	struct qdma_list_head rx_pend_list;
-	rte_spinlock_t list_lock;
-	uint32_t rx_data[MBOX_MSG_REG_MAX];
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-struct qdma_mbox_msg {
-	uint8_t rsp_rcvd;
-	uint32_t retry_cnt;
-	enum qdma_mbox_rsp_state rsp_wait;
-	uint32_t raw_data[MBOX_MSG_REG_MAX];
-	struct qdma_list_head node;
-};
+#define ENABLE_INIT_CTXT_MEMORY			1
 
-int qdma_mbox_init(struct rte_eth_dev *dev);
-void qdma_mbox_uninit(struct rte_eth_dev *dev);
-void *qdma_mbox_msg_alloc(void);
-void qdma_mbox_msg_free(void *buffer);
-int qdma_mbox_msg_send(struct rte_eth_dev *dev, struct qdma_mbox_msg *buf,
-		       unsigned int timeout_ms);
-int qdma_dev_notify_qadd(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-int qdma_dev_notify_qdel(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
+/* CSR Default values */
+#define DEFAULT_MAX_DSC_FETCH               6
+#define DEFAULT_WRB_INT                     QDMA_WRB_INTERVAL_128
+#define DEFAULT_PFCH_STOP_THRESH            256
+#define DEFAULT_PFCH_NUM_ENTRIES_PER_Q      8
+#define DEFAULT_PFCH_MAX_Q_CNT              16
+#define DEFAULT_C2H_INTR_TIMER_TICK         25
+#define DEFAULT_CMPT_COAL_TIMER_CNT         5
+#define DEFAULT_CMPT_COAL_TIMER_TICK        25
+#define DEFAULT_CMPT_COAL_MAX_BUF_SZ        32
+#define DEFAULT_H2C_THROT_DATA_THRESH       0x4000
+#define DEFAULT_THROT_EN_DATA               1
+#define DEFAULT_THROT_EN_REQ                0
+#define DEFAULT_H2C_THROT_REQ_THRESH        0x60
 
-#endif /* QDMA_DPDK_MBOX_H_ */
+#define QDMA_BAR_NUM                        6
+
+void qdma_write_csr_values(void *dev_hndl, uint32_t reg_offst,
+		uint32_t idx, uint32_t cnt, const uint32_t *values);
+
+void qdma_read_csr_values(void *dev_hndl, uint32_t reg_offst,
+		uint32_t idx, uint32_t cnt, uint32_t *values);
+
+int dump_reg(char *buf, int buf_sz, unsigned int raddr,
+		const char *rname, unsigned int rval);
+
+int dump_context(char *buf, int buf_sz,
+	char pfetch_valid, char cmpt_valid);
+
+void qdma_memset(void *to, uint8_t val, uint32_t size);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* QDMA_ACCESS_COMMON_H_ */

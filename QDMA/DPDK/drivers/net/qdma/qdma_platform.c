@@ -37,6 +37,35 @@
 #include <rte_spinlock.h>
 
 static rte_spinlock_t resource_lock = RTE_SPINLOCK_INITIALIZER;
+static rte_spinlock_t reg_access_lock = RTE_SPINLOCK_INITIALIZER;
+
+struct err_code_map error_code_map_list[] = {
+	{QDMA_SUCCESS,				0},
+	{QDMA_ERR_INV_PARAM,			EINVAL},
+	{QDMA_ERR_NO_MEM,			ENOMEM},
+	{QDMA_ERR_HWACC_BUSY_TIMEOUT,		EBUSY},
+	{QDMA_ERR_HWACC_INV_CONFIG_BAR,		EINVAL},
+	{QDMA_ERR_HWACC_NO_PEND_LEGCY_INTR,	EINVAL},
+	{QDMA_ERR_HWACC_BAR_NOT_FOUND,		EINVAL},
+	{QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED,	EINVAL},
+	{QDMA_ERR_RM_RES_EXISTS,		EPERM},
+	{QDMA_ERR_RM_RES_NOT_EXISTS,		EINVAL},
+	{QDMA_ERR_RM_DEV_EXISTS,		EPERM},
+	{QDMA_ERR_RM_DEV_NOT_EXISTS,		EINVAL},
+	{QDMA_ERR_RM_NO_QUEUES_LEFT,		EPERM},
+	{QDMA_ERR_RM_QMAX_CONF_REJECTED,	EPERM},
+	{QDMA_ERR_MBOX_FMAP_WR_FAILED,		EIO},
+	{QDMA_ERR_MBOX_NUM_QUEUES,		EINVAL},
+	{QDMA_ERR_MBOX_INV_QID,			EINVAL},
+	{QDMA_ERR_MBOX_INV_RINGSZ,		EINVAL},
+	{QDMA_ERR_MBOX_INV_BUFSZ,		EINVAL},
+	{QDMA_ERR_MBOX_INV_CNTR_TH,		EINVAL},
+	{QDMA_ERR_MBOX_INV_TMR_TH,		EINVAL},
+	{QDMA_ERR_MBOX_INV_MSG,			EINVAL},
+	{QDMA_ERR_MBOX_SEND_BUSY,		EBUSY},
+	{QDMA_ERR_MOBX_NO_MSG_IN,		EINVAL},
+	{QDMA_ERR_MBOX_ALL_ZERO_MSG,		EINVAL},
+};
 
 /*****************************************************************************/
 /**
@@ -141,6 +170,7 @@ uint32_t qdma_reg_read(void *dev_hndl, uint32_t reg_offst)
 int qdma_reg_access_lock(void *dev_hndl)
 {
 	(void) dev_hndl;
+	rte_spinlock_lock(&reg_access_lock);
 	return 0;
 }
 
@@ -155,6 +185,7 @@ int qdma_reg_access_lock(void *dev_hndl)
 int qdma_reg_access_release(void *dev_hndl)
 {
 	(void) dev_hndl;
+	rte_spinlock_unlock(&reg_access_lock);
 	return 0;
 }
 
@@ -182,9 +213,12 @@ void qdma_udelay(uint32_t delay_usec)
  *****************************************************************************/
 void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx)
 {
-	(void) dev_hndl;
+	struct qdma_pci_dev *qdma_dev;
+	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
+
 	rte_log(RTE_LOG_ERR, RTE_LOGTYPE_PMD,
-		"%s(): Detected %s\n", __func__, qdma_get_error_name(err_idx));
+		"%s(): Detected %s\n", __func__,
+		qdma_dev->hw_access->qdma_hw_get_error_name(err_idx));
 }
 /*****************************************************************************/
 /**
@@ -201,4 +235,46 @@ void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap)
 	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
 	*dev_cap = &qdma_dev->dev_cap;
 
+}
+
+/*****************************************************************************/
+/**
+ * qdma_get_hw_access() - function to get the qdma_hw_access
+ *
+ * @dev_hndl:   device handle
+ * @dev_cap: pointer to hold qdma_hw_access structure
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw)
+{
+	struct qdma_pci_dev *qdma_dev;
+	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
+	*hw = qdma_dev->hw_access;
+}
+
+/*****************************************************************************/
+/**
+ * qdma_strncpy(): copy n size string from source to destination buffer
+ *
+ * @memptr:  pointer to the memory block
+ *
+ * Return:	None
+ *****************************************************************************/
+void qdma_strncpy(char *dest, const char *src, size_t n)
+{
+	strncpy(dest, src, n);
+}
+
+/*****************************************************************************/
+/**
+ * qdma_get_err_code() - function to get the qdma access mapped error code
+ *
+ * @acc_err_code: qdma access error code
+ *
+ * Return:   returns the platform specific error code
+ *****************************************************************************/
+int qdma_get_err_code(int acc_err_code)
+{
+	return -(error_code_map_list[acc_err_code].err_code);
 }

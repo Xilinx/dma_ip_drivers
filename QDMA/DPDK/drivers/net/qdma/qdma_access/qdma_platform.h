@@ -161,6 +161,38 @@ void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx);
  *****************************************************************************/
 void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap);
 
+/*****************************************************************************/
+/**
+ * qdma_get_hw_access() - function to get the qdma_hw_access
+ *
+ * @dev_hndl:   device handle
+ * @dev_cap: pointer to hold qdma_hw_access structure
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw);
+
+/*****************************************************************************/
+/**
+ * qdma_strncpy(): copy n size string from source to destination buffer
+ *
+ * @memptr:  pointer to the memory block
+ *
+ * Return:	None
+ *****************************************************************************/
+void qdma_strncpy(char *dest, const char *src, size_t n);
+
+
+/*****************************************************************************/
+/**
+ * qdma_get_err_code() - function to get the qdma access mapped error code
+ *
+ * @acc_err_code: qdma access error code
+ *
+ * Return:   returns the platform specific error code
+ *****************************************************************************/
+int qdma_get_err_code(int acc_err_code);
+
 #ifdef __cplusplus
 }
 #endif

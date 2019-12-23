@@ -30,8 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "qdma_platform.h"
-
 #ifndef QDMA_REG_H__
 #define QDMA_REG_H__
 
@@ -88,33 +86,41 @@ extern "C" {
  * Same as gcc __builtin_ffsll function
  */
 #ifdef GCC_COMPILER
-static inline uint8_t get_trailing_zeros(uint64_t x)
+static inline uint32_t get_trailing_zeros(uint64_t x)
 {
-	return (__builtin_ffsll(x) - 1);
+	uint32_t rv =
+		__builtin_ffsll(x) - 1;
+	return rv;
 }
 #else
-static inline uint8_t get_trailing_zeros(uint64_t x)
+static inline uint32_t get_trailing_zeros(uint64_t value)
 {
-	uint8_t n = 1;
+	uint32_t pos = 0;
 
-	if ((x & 0x0000FFFF) == 0) {
-		n = n + 16;
-		x = x >> 16;
+	if ((value & 0xffffffff) == 0) {
+		pos += 32;
+		value >>= 32;
 	}
-	if ((x & 0x000000FF) == 0) {
-		n = n + 8;
-		x = x >> 8;
+	if ((value & 0xffff) == 0) {
+		pos += 16;
+		value >>= 16;
 	}
-	if ((x & 0x0000000F) == 0) {
-		n = n + 4;
-		x = x >> 4;
+	if ((value & 0xff) == 0) {
+		pos += 8;
+		value >>= 8;
 	}
-	if ((x & 0x00000003) == 0) {
-		n = n + 2;
-		x = x >> 2;
+	if ((value & 0xf) == 0) {
+		pos += 4;
+		value >>= 4;
 	}
+	if ((value & 0x3) == 0) {
+		pos += 2;
+		value >>= 2;
+	}
+	if ((value & 0x1) == 0)
+		pos += 1;
 
-	return n - (x & 1);
+	return pos;
 }
 #endif
 
@@ -469,9 +475,6 @@ enum ind_ctxt_cmd_sel {
 #define QDMA_OFFSET_GLBL2_CHANNEL_FUNC_RET                  0x12C
 #define QDMA_OFFSET_GLBL2_SYSTEM_ID                         0x130
 #define QDMA_OFFSET_GLBL2_MISC_CAP                          0x134
-#define     QDMA_GLBL2_EVEREST_IP_MASK                      BIT(28)
-#define     QDMA_GLBL2_VIVADO_RELEASE_MASK                  GENMASK(27, 24)
-#define     QDMA_GLBL2_RTL_VERSION_MASK                     GENMASK(23, 16)
 #define     QDMA_GLBL2_MM_CMPT_EN_MASK                      BIT(2)
 #define     QDMA_GLBL2_FLR_PRESENT_MASK                     BIT(1)
 #define     QDMA_GLBL2_MAILBOX_EN_MASK                      BIT(0)
@@ -493,9 +496,11 @@ enum ind_ctxt_cmd_sel {
 
 /* VF qdma version */
 #define QDMA_OFFSET_VF_VERSION                              0x1014
-#define     QDMA_GLBL2_VF_EVEREST_IP_MASK                   BIT(12)
-#define     QDMA_GLBL2_VF_VIVADO_RELEASE_MASK               GENMASK(11, 8)
-#define     QDMA_GLBL2_VF_RTL_VERSION_MASK                  GENMASK(7, 0)
+#define QDMA_OFFSET_PF_VERSION                              0x2414
+#define     QDMA_GLBL2_DEVICE_TYPE                       GENMASK(15, 12)
+#define     QDMA_GLBL2_VIVADO_RELEASE_MASK               GENMASK(11, 8)
+#define     QDMA_GLBL2_VERSAL_IP_STATE                  GENMASK(7, 4)
+#define     QDMA_GLBL2_RTL_VERSION_MASK                  GENMASK(3, 0)
 
 
 /* ------------------------- QDMA_TRQ_SEL_QUEUE_PF (0x18000) ----------------*/

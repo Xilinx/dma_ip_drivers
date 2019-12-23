@@ -29,46 +29,50 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef QDMA_DPDK_MBOX_H_
-#define QDMA_DPDK_MBOX_H_
+#ifndef QDMA_DPDK_RXTX_H_
+#define QDMA_DPDK_RXTX_H_
 
-#include "qdma_list.h"
-#include "qdma_mbox_protocol.h"
-#include <rte_ethdev.h>
-
-#define MBOX_POLL_FRQ 1000
-#define MBOX_OP_RSP_TIMEOUT (10000 * MBOX_POLL_FRQ) /* 10 sec */
-#define MBOX_SEND_RETRY_COUNT (MBOX_OP_RSP_TIMEOUT/MBOX_POLL_FRQ)
-
-enum qdma_mbox_rsp_state {
-	QDMA_MBOX_RSP_NO_WAIT,
-	QDMA_MBOX_RSP_WAIT
+#include "qdma_access_export.h"
+ /**
+  * C2H Completion entry structure
+  * This structure is specific for the example design.
+  * Processing of this ring happens in qdma_rxtx.c.
+  */
+struct c2h_cmpt_info {
+	/* For 2018.2 IP, this field
+	 * determines the Standard or User
+	 * format of completion entry
+	 */
+	uint32_t	data_frmt:1;
+	/* This field inverts every time
+	 * PIDX wraps the completion ring
+	 */
+	uint32_t	color:1;
+	/* Indicates that C2H engine
+	 * encountered a descriptor
+	 * error
+	 */
+	uint32_t	err:1;
+	/* Indicates that the completion
+	 * packet consumes descriptor in
+	 * C2H ring
+	 */
+	uint32_t	desc_used:1;
+	/* Indicates length of the data
+	 * packet
+	 */
+	uint32_t	length:16;
 };
 
-struct qdma_dev_mbox {
-	struct qdma_list_head tx_todo_list;
-	struct qdma_list_head rx_pend_list;
-	rte_spinlock_t list_lock;
-	uint32_t rx_data[MBOX_MSG_REG_MAX];
-};
+/*Supporting functions for user logic pluggability*/
+uint16_t qdma_get_rx_queue_id(void *queue_hndl);
+void qdma_get_device_info(void *queue_hndl,
+		enum qdma_device_type *device_type,
+		enum qdma_versal_ip_type *ip_type);
+struct qdma_ul_st_h2c_desc *get_st_h2c_desc(void *queue_hndl);
+struct qdma_ul_mm_desc *get_mm_h2c_desc(void *queue_hndl);
+uint32_t get_mm_c2h_ep_addr(void *queue_hndl);
+uint32_t get_mm_h2c_ep_addr(void *queue_hndl);
+uint32_t get_mm_buff_size(void *queue_hndl);
 
-struct qdma_mbox_msg {
-	uint8_t rsp_rcvd;
-	uint32_t retry_cnt;
-	enum qdma_mbox_rsp_state rsp_wait;
-	uint32_t raw_data[MBOX_MSG_REG_MAX];
-	struct qdma_list_head node;
-};
-
-int qdma_mbox_init(struct rte_eth_dev *dev);
-void qdma_mbox_uninit(struct rte_eth_dev *dev);
-void *qdma_mbox_msg_alloc(void);
-void qdma_mbox_msg_free(void *buffer);
-int qdma_mbox_msg_send(struct rte_eth_dev *dev, struct qdma_mbox_msg *buf,
-		       unsigned int timeout_ms);
-int qdma_dev_notify_qadd(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-int qdma_dev_notify_qdel(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-
-#endif /* QDMA_DPDK_MBOX_H_ */
+#endif /* QDMA_DPDK_RXTX_H_ */

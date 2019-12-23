@@ -109,8 +109,8 @@ enum rte_pmd_qdma_bypass_desc_len {
 
 enum rte_pmd_qdma_xdebug_type {
 	RTE_PMD_QDMA_XDEBUG_QDMA_GLOBAL_CSR,
-	RTE_PMD_QDMA_XDEBUG_QUEUE_CONTEXT,
-	RTE_PMD_QDMA_XDEBUG_QUEUE_STRUCT,
+	RTE_PMD_QDMA_XDEBUG_QDMA_DEVICE_STRUCT,
+	RTE_PMD_QDMA_XDEBUG_QUEUE_INFO,
 	RTE_PMD_QDMA_XDEBUG_QUEUE_DESC_DUMP,
 	RTE_PMD_QDMA_XDEBUG_MAX,
 };
@@ -121,6 +121,27 @@ enum rte_pmd_qdma_xdebug_desc_type {
 	RTE_PMD_QDMA_XDEBUG_DESC_CMPT,
 	RTE_PMD_QDMA_XDEBUG_DESC_MAX,
 };
+
+enum rte_pmd_qdma_device_type {
+	/** @RTE_PMD_QDMA_DEVICE_SOFT - UltraScale+ IP's  */
+	RTE_PMD_QDMA_DEVICE_SOFT,
+	/** @RTE_PMD_QDMA_DEVICE_VERSAL -VERSAL IP  */
+	RTE_PMD_QDMA_DEVICE_VERSAL,
+	/** @RTE_PMD_QDMA_DEVICE_VERSAL_CPM5 - VERSAL CPM5  */
+	RTE_PMD_QDMA_DEVICE_VERSAL_CPM5,
+	/** @RTE_PMD_QDMA_DEVICE_NONE - Not a valid device  */
+	RTE_PMD_QDMA_DEVICE_NONE
+};
+
+enum rte_pmd_qdma_versal_ip_type {
+	/** @RTE_PMD_QDMA_VERSAL_HARD_IP - Hard IP  */
+	RTE_PMD_QDMA_VERSAL_HARD_IP,
+	/** @RTE_PMD_QDMA_VERSAL_SOFT_IP - Soft IP  */
+	RTE_PMD_QDMA_VERSAL_SOFT_IP,
+	/** @RTE_PMD_QDMA_VERSAL_NONE - Not versal device  */
+	RTE_PMD_QDMA_VERSAL_NONE
+};
+
 struct rte_pmd_qdma_xdebug_desc_param {
 	uint16_t queue;
 	int start;
@@ -128,30 +149,110 @@ struct rte_pmd_qdma_xdebug_desc_param {
 	enum rte_pmd_qdma_xdebug_desc_type type;
 };
 
+/**
+ * struct rte_pmd_qdma_dev_attributes - QDMA device attributes
+ */
+struct rte_pmd_qdma_dev_attributes {
+	/** @num_pfs - Num of PFs*/
+	uint8_t num_pfs;
+	/** @num_qs - Num of Queues */
+	uint16_t num_qs;
+	/** @flr_present - FLR resent or not? */
+	uint8_t flr_present:1;
+	/** @st_en - ST mode supported or not? */
+	uint8_t st_en:1;
+	/** @mm_en - MM mode supported or not? */
+	uint8_t mm_en:1;
+	/** @mm_cmpt_en - MM with Completions supported or not? */
+	uint8_t mm_cmpt_en:1;
+	/** @mailbox_en - Mailbox supported or not? */
+	uint8_t mailbox_en:1;
+	/** @mm_channel_max - Num of MM channels */
+	uint8_t mm_channel_max;
+
+	/** @cmpt_ovf_chk_dis - To indicate support of
+	 *overflow check disable in CMPT ring
+	 */
+	uint8_t cmpt_ovf_chk_dis:1;
+	/** @sw_desc_64b - To indicate support of 64 bytes
+	 *C2H/H2C descriptor format
+	 */
+	uint8_t sw_desc_64b:1;
+	/** @cmpt_desc_64b - To indicate support of 64 bytes
+	 *CMPT descriptor format
+	 */
+	uint8_t cmpt_desc_64b:1;
+	/** @cmpt_trig_count_timer - To indicate support of
+	 *counter + timer trigger mode
+	 */
+	uint8_t cmpt_trig_count_timer:1;
+	/** @device_type - Device Type */
+	enum rte_pmd_qdma_device_type device_type;
+	/** @versal_ip_type - Versal IP Type */
+	enum rte_pmd_qdma_versal_ip_type versal_ip_type;
+};
+
 /*Functions*/
 /******************************************************************************/
 /**
- * Function Name:	rte_pmd_qdma_xdebug
- * Description:		Dumps the debug information for the specified debug type
+ * Function Name:	rte_pmd_qdma_dbg_regdump
+ * Description:		Dumps the QDMA configuration registers
+ *			for the given port.
  *
  * @param	portid : Port ID
- * @param	type : Debug Type
- * @param	params   : It has different significance based on debug type,
- *		below is the meaning of params for different debug types.
- *		RTE_PMD_QDMA_XDEBUG_QDMA_GLOBAL_CSR : Not used
- *		RTE_PMD_QDMA_XDEBUG_QUEUE_CONTEXT   : Pointer to variable
- *		specifying Queue Id
- *		RTE_PMD_QDMA_XDEBUG_QUEUE_STRUCT    : Pointer to variable
- *		specifying Queue Id
- *		RTE_PMD_QDMA_XDEBUG_QUEUE_DESC_DUMP : Pointer to variable of
- *		type struct rte_pmd_qdma_xdebug_desc_param
  *
  * @return	'0' on success and "< 0" on failure.
  *
  * @note	None.
  ******************************************************************************/
-int rte_pmd_qdma_xdebug(uint8_t port_id, enum rte_pmd_qdma_xdebug_type type,
-			void *params);
+int rte_pmd_qdma_dbg_regdump(uint8_t port_id);
+
+/******************************************************************************/
+/**
+ * Function Name:	rte_pmd_qdma_dbg_qdevice
+ * Description:		Dumps the device specific SW structure
+ *			for the given port.
+ *
+ * @param	portid : Port ID
+ *
+ * @return	'0' on success and "< 0" on failure.
+ *
+ * @note	None.
+ ******************************************************************************/
+int rte_pmd_qdma_dbg_qdevice(uint8_t port_id);
+
+/******************************************************************************/
+/**
+ * Function Name:	rte_pmd_qdma_dbg_qinfo
+ * Description:		Dumps the queue contexts and queue specific SW
+ *			structures for the given queue ID.
+ *
+ * @param	portid : Port ID
+ * @param	queue  : Queue ID relative to the Port
+ *
+ * @return	'0' on success and "< 0" on failure.
+ *
+ * @note	None.
+ ******************************************************************************/
+int rte_pmd_qdma_dbg_qinfo(uint8_t port_id, uint16_t queue);
+
+/******************************************************************************/
+/**
+ * Function Name:	rte_pmd_qdma_dbg_qdesc
+ * Description:		Dumps the Queue descriptors.
+ *
+ * @param	portid : Port ID
+ * @param	queue  : Queue ID relative to the Port
+ * @param	start  : start index of the descriptor to dump
+ * @param	end    : end index of the descriptor to dump
+ * @param	type   : Descriptor type
+ *
+ * @return	'0' on success and "< 0" on failure.
+ *
+ * @note	None.
+ ******************************************************************************/
+int rte_pmd_qdma_dbg_qdesc(uint8_t port_id, uint16_t queue, int start,
+			int end, enum rte_pmd_qdma_xdebug_desc_type type);
 
 /******************************************************************************/
 /**
@@ -427,6 +528,21 @@ int rte_pmd_qdma_configure_tx_bypass(int portid, uint32_t qid,
 int rte_pmd_qdma_configure_rx_bypass(int portid, uint32_t qid,
 			enum rte_pmd_qdma_rx_bypass_mode bypass_mode,
 			enum rte_pmd_qdma_bypass_desc_len size);
+
+/******************************************************************************/
+/**
+ * Function Name:	rte_pmd_qdma_get_device_capabilities
+ * Description:		Retrive the device capabilities
+ *
+ * @param   portid : Port ID.
+ * @param   dev_attr:Pointer to the device capabilities structure
+ *
+ * @return  '0' on success and '< 0' on failure.
+ *
+ * @note	None.
+ ******************************************************************************/
+int rte_pmd_qdma_get_device_capabilities(int portid,
+			struct rte_pmd_qdma_dev_attributes *dev_attr);
 
 /******************************************************************************/
 /**

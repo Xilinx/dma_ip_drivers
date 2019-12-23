@@ -31,7 +31,6 @@
  */
 
 #include "qdma_mbox_protocol.h"
-
 #include "qdma_platform.h"
 #include "qdma_resource_mgmt.h"
 
@@ -151,6 +150,8 @@ enum mbox_msg_op {
 	MBOX_OP_QNOTIFY_ADD,
 	/** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
 	MBOX_OP_QNOTIFY_DEL,
+	/** @MBOX_OP_QACTIVE_CNT: get active q count */
+	MBOX_OP_GET_QACTIVE_CNT,
 	/** @MBOX_OP_QCTXT_WRT: queue context write */
 	MBOX_OP_QCTXT_WRT,
 	/** @MBOX_OP_QCTXT_RD: queue context read */
@@ -167,6 +168,12 @@ enum mbox_msg_op {
 	MBOX_OP_INTR_CTXT_CLR,
 	/** @MBOX_OP_INTR_CTXT_INV: interrupt context invalidate */
 	MBOX_OP_INTR_CTXT_INV,
+	/** @MBOX_OP_RESET_PREPARE: PF to VF message for VF reset*/
+	MBOX_OP_RESET_PREPARE,
+	/** @MBOX_OP_RESET_DONE: PF reset done */
+	MBOX_OP_RESET_DONE,
+	/** @MBOX_OP_PF_BYE: pf offline */
+	MBOX_OP_PF_BYE,
 
 	/** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
 	MBOX_OP_HELLO_RESP = 0x81,
@@ -180,6 +187,8 @@ enum mbox_msg_op {
 	MBOX_OP_QNOTIFY_ADD_RESP,
 	/** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
 	MBOX_OP_QNOTIFY_DEL_RESP,
+	/** @MBOX_OP_QACTIVE_CNT_RESP: get active q count */
+	MBOX_OP_GET_QACTIVE_CNT_RESP,
 	/** @MBOX_OP_QCTXT_WRT_RESP: response to @MBOX_OP_QCTXT_WRT */
 	MBOX_OP_QCTXT_WRT_RESP,
 	/** @MBOX_OP_QCTXT_RD_RESP: response to @MBOX_OP_QCTXT_RD */
@@ -196,7 +205,12 @@ enum mbox_msg_op {
 	MBOX_OP_INTR_CTXT_CLR_RESP,
 	/** @MBOX_OP_INTR_CTXT_INV_RESP: response to @MBOX_OP_INTR_CTXT_INV */
 	MBOX_OP_INTR_CTXT_INV_RESP,
-
+	/** @MBOX_OP_RESET_PREPARE_RESP: response to @MBOX_OP_RESET_PREPARE */
+	MBOX_OP_RESET_PREPARE_RESP,
+	/** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
+	MBOX_OP_RESET_DONE_RESP,
+	/** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
+	MBOX_OP_PF_BYE_RESP,
 	/** @MBOX_OP_MAX: total mbox opcodes*/
 	MBOX_OP_MAX
 };
@@ -230,6 +244,20 @@ struct mbox_msg_hello {
 };
 
 /**
+ * struct mbox_msg_active_qcnt - get active queue count command
+ */
+struct mbox_msg_active_qcnt {
+	/** @hdr: mailbox message header */
+	struct mbox_msg_hdr hdr;
+	/** @h2c_queues: number of h2c queues */
+	uint32_t h2c_queues;
+	/** @c2h_queues: number of c2h queues */
+	uint32_t c2h_queues;
+	/** @cmpt_queues: number of cmpt queues */
+	uint32_t cmpt_queues;
+};
+
+/**
  * struct mbox_msg_fmap - FMAP programming command
  */
 struct mbox_msg_fmap {
@@ -259,6 +287,8 @@ struct mbox_msg_q_nitfy {
 	struct mbox_msg_hdr hdr;
 	/** @qid_hw: queue ID */
 	uint16_t qid_hw;
+	/** @q_type: type of q */
+	enum qdma_dev_q_type q_type;
 };
 
 /**
@@ -275,7 +305,7 @@ struct mbox_msg_qctxt {
 	/** @c2h: c2h direction */
 	uint8_t c2h:1;
 	/** @cmpt_ctxt_type: completion context type */
-	uint8_t cmpt_ctxt_type:2;
+	enum mbox_cmpt_ctxt_type cmpt_ctxt_type:2;
 	/** @rsvd: reserved */
 	uint8_t rsvd:4;
 	/** union compiled_message - complete hw configuration */
@@ -311,11 +341,26 @@ union qdma_mbox_txrx {
 		struct mbox_msg_qctxt qctxt;
 		/** global csr mailbox message */
 		struct mbox_msg_csr csr;
+		/** acive q count */
+		struct mbox_msg_active_qcnt qcnt;
 		/** q add/del notify message */
 		struct mbox_msg_q_nitfy q_notify;
 		/** buffer to hold raw data between pf and vf */
 		uint32_t raw[MBOX_MSG_REG_MAX];
 };
+
+static inline void mbox_pf_hw_clear_func_ack(void *dev_hndl,
+						 uint8_t func_id)
+{
+	int idx = func_id / 32; /* bitmask, uint32_t reg */
+	int bit = func_id % 32;
+	uint32_t mbox_base = MBOX_BASE_PF;
+
+	/* clear the function's ack status */
+	qdma_reg_write(dev_hndl,
+			mbox_base + MBOX_PF_ACK_BASE + idx * MBOX_PF_ACK_STEP,
+			(1 << bit));
+}
 
 static void qdma_mbox_memcpy(void *to, void *from, uint32_t size)
 {
@@ -339,77 +384,102 @@ static void qdma_mbox_memset(void *to, uint8_t val, uint32_t size)
 static int get_ring_idx(void *dev_hndl, uint16_t ring_sz, uint16_t *rng_idx)
 {
 	uint32_t rng_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
-	int i;
-	int rv = qdma_get_global_ring_sizes(dev_hndl, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, rng_sz);
+	int i, rv;
+	struct qdma_hw_access *hw = NULL;
+
+	qdma_get_hw_access(dev_hndl, &hw);
+	rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, rng_sz,
+			QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ);
 
 	if (rv)
 		return rv;
 	for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
 		if (ring_sz == (rng_sz[i] - 1)) {
 			*rng_idx = i;
-			return 0;
+			return QDMA_SUCCESS;
 		}
 	}
 
-	return -QDMA_MBOX_ERR_RINGSZ;
+	qdma_log_error("%s: Ring size not found, err:%d\n",
+				   __func__, -QDMA_ERR_MBOX_INV_RINGSZ);
+	return -QDMA_ERR_MBOX_INV_RINGSZ;
 }
 
 static int get_buf_idx(void *dev_hndl,  uint16_t buf_sz, uint16_t *buf_idx)
 {
 	uint32_t c2h_buf_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
-	int rv = qdma_get_global_buffer_sizes(dev_hndl, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, c2h_buf_sz);
-	int i;
+	int i, rv;
+	struct qdma_hw_access *hw = NULL;
 
+	qdma_get_hw_access(dev_hndl, &hw);
+
+	rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, c2h_buf_sz,
+			QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_READ);
 	if (rv)
 		return rv;
 	for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
 		if (c2h_buf_sz[i] == buf_sz) {
 			*buf_idx = i;
-			return 0;
+			return QDMA_SUCCESS;
 		}
 	}
 
-	return -QDMA_MBOX_ERR_BUFSZ;
+	qdma_log_error("%s: Buf index not found, err:%d\n",
+				   __func__, -QDMA_ERR_MBOX_INV_BUFSZ);
+	return -QDMA_ERR_MBOX_INV_BUFSZ;
 }
 
 static int get_cntr_idx(void *dev_hndl, uint8_t cntr_val, uint8_t *cntr_idx)
 {
 	uint32_t cntr_th[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
-	int rv = qdma_get_global_counter_threshold(dev_hndl, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, cntr_th);
-	int i;
+	int i, rv;
+	struct qdma_hw_access *hw = NULL;
+
+	qdma_get_hw_access(dev_hndl, &hw);
+
+	rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, cntr_th,
+			QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_READ);
 
 	if (rv)
 		return rv;
 	for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
 		if (cntr_th[i] == cntr_val) {
 			*cntr_idx = i;
-			return 0;
+			return QDMA_SUCCESS;
 		}
 	}
 
-	return -QDMA_MBOX_ERR_CNTR_TH;
+	qdma_log_error("%s: Counter val not found, err:%d\n",
+				   __func__, -QDMA_ERR_MBOX_INV_CNTR_TH);
+	return -QDMA_ERR_MBOX_INV_CNTR_TH;
 }
 
 static int get_tmr_idx(void *dev_hndl, uint8_t tmr_val, uint8_t *tmr_idx)
 {
 	uint32_t tmr_th[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
-	int rv = qdma_get_global_timer_count(dev_hndl, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, tmr_th);
-	int i;
+	int i, rv;
+	struct qdma_hw_access *hw = NULL;
 
+	qdma_get_hw_access(dev_hndl, &hw);
+
+	rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, tmr_th,
+			QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_READ);
 	if (rv)
 		return rv;
 	for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
 		if (tmr_th[i] == tmr_val) {
 			*tmr_idx = i;
-			return 0;
+			return QDMA_SUCCESS;
 		}
 	}
 
-	return -QDMA_MBOX_ERR_TMR_TH;
+	qdma_log_error("%s: Timer val not found, err:%d\n",
+				   __func__, -QDMA_ERR_MBOX_INV_TMR_TH);
+	return -QDMA_ERR_MBOX_INV_TMR_TH;
 }
 
 static int mbox_compose_sw_context(void *dev_hndl,
@@ -417,14 +487,22 @@ static int mbox_compose_sw_context(void *dev_hndl,
 				   struct qdma_descq_sw_ctxt *sw_ctxt)
 {
 	uint16_t rng_idx = 0;
-	int rv = 0;
+	int rv = QDMA_SUCCESS;
 
-	if (!qctxt || !sw_ctxt)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!qctxt || !sw_ctxt) {
+		qdma_log_error("%s: qctxt=%p sw_ctxt=%p, err:%d\n",
+						__func__,
+						qctxt, sw_ctxt,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	rv = get_ring_idx(dev_hndl, qctxt->descq_conf.ringsz, &rng_idx);
-	if (rv < 0)
+	if (rv < 0) {
+		qdma_log_error("%s: failed to get ring index, err:%d\n",
+						__func__, rv);
 		return rv;
+	}
 	/* compose sw context */
 	sw_ctxt->vec = qctxt->descq_conf.intr_id;
 	sw_ctxt->intr_aggr = qctxt->descq_conf.intr_aggr;
@@ -454,7 +532,7 @@ static int mbox_compose_sw_context(void *dev_hndl,
 		sw_ctxt->wbi_chk = 0;
 	}
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 static int mbox_compose_prefetch_context(void *dev_hndl,
@@ -462,20 +540,29 @@ static int mbox_compose_prefetch_context(void *dev_hndl,
 				 struct qdma_descq_prefetch_ctxt *pfetch_ctxt)
 {
 	uint16_t buf_idx = 0;
-	int rv = 0;
+	int rv = QDMA_SUCCESS;
 
-	if (!qctxt || !pfetch_ctxt)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!qctxt || !pfetch_ctxt) {
+		qdma_log_error("%s: qctxt=%p pfetch_ctxt=%p, err:%d\n",
+					   __func__,
+					   qctxt,
+					   pfetch_ctxt,
+					   -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 	rv = get_buf_idx(dev_hndl, qctxt->descq_conf.bufsz, &buf_idx);
-	if (rv < 0)
+	if (rv < 0) {
+		qdma_log_error("%s: failed to get buf index, err:%d\n",
+					   __func__, -QDMA_ERR_INV_PARAM);
 		return rv;
+	}
 	/* prefetch context */
 	pfetch_ctxt->valid = 1;
 	pfetch_ctxt->bypass = qctxt->descq_conf.en_bypass_prefetch;
 	pfetch_ctxt->bufsz_idx = buf_idx;
 	pfetch_ctxt->pfch_en = qctxt->descq_conf.pfch_en;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 
@@ -485,10 +572,14 @@ static int mbox_compose_cmpt_context(void *dev_hndl,
 {
 	uint16_t rng_idx = 0;
 	uint8_t cntr_idx = 0, tmr_idx = 0;
-	int rv = 0;
+	int rv = QDMA_SUCCESS;
 
-	if (!qctxt || !cmpt_ctxt)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!qctxt || !cmpt_ctxt) {
+		qdma_log_error("%s: qctxt=%p cmpt_ctxt=%p, err:%d\n",
+					   __func__, qctxt, cmpt_ctxt,
+					   -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 	rv = get_cntr_idx(dev_hndl, qctxt->descq_conf.cnt_thres, &cntr_idx);
 	if (rv < 0)
 		return rv;
@@ -518,7 +609,7 @@ static int mbox_compose_cmpt_context(void *dev_hndl,
 	cmpt_ctxt->vec = qctxt->descq_conf.intr_id;
 	cmpt_ctxt->int_aggr = qctxt->descq_conf.intr_aggr;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
@@ -530,40 +621,83 @@ static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	int qbase;
 	uint32_t qmax;
 	enum qdma_dev_q_range q_range;
+	struct qdma_hw_access *hw = NULL;
+
+	qdma_get_hw_access(dev_hndl, &hw);
 
 	if (cmpt_ctxt_type == QDMA_MBOX_CMPT_CTXT_ONLY) {
-		rv = qdma_cmpt_context_clear(dev_hndl, qid_hw);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw,
+					    NULL, QDMA_HW_ACCESS_CLEAR);
+		if (rv < 0) {
+			qdma_log_error("%s: clear cmpt ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 	} else {
 		rv = qdma_dev_qinfo_get(pci_bus_num, func_id, &qbase, &qmax);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC;
+		if (rv < 0) {
+			qdma_log_error("%s: failed to get qinfo, err:%d\n",
+					__func__, rv);
+			return rv;
+		}
 
 		q_range = qdma_dev_is_queue_in_range(pci_bus_num,
 						func_id, qid_hw);
-		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			return -QDMA_MBOX_ERR_QID;
+		if (q_range != QDMA_DEV_Q_IN_RANGE) {
+			qdma_log_error("%s: q_range invalid, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 
-		rv = qdma_sw_context_clear(dev_hndl, c2h, qid_hw);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_sw_ctx_conf(dev_hndl, c2h, qid_hw,
+					  NULL, QDMA_HW_ACCESS_CLEAR);
+		if (rv < 0) {
+			qdma_log_error("%s: clear sw_ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
+
+		rv = hw->qdma_hw_ctx_conf(dev_hndl, c2h, qid_hw, NULL,
+					       QDMA_HW_ACCESS_CLEAR);
+		if (rv < 0) {
+			qdma_log_error("%s: clear hw_ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
+
+		rv = hw->qdma_credit_ctx_conf(dev_hndl, c2h, qid_hw, NULL,
+					       QDMA_HW_ACCESS_CLEAR);
+		if (rv < 0) {
+			qdma_log_error("%s: clear cr_ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 
 		if (st && c2h) {
-			rv = qdma_pfetch_context_clear(dev_hndl, qid_hw);
-			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			rv = hw->qdma_pfetch_ctx_conf(dev_hndl, qid_hw,
+						       NULL,
+						       QDMA_HW_ACCESS_CLEAR);
+			if (rv < 0) {
+				qdma_log_error("%s:clear pfetch ctxt, err:%d\n",
+						__func__, rv);
+				return rv;
+			}
 		}
 
 		if ((cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
 		    (cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_ST)) {
-			rv = qdma_cmpt_context_clear(dev_hndl, qid_hw);
-			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw,
+						     NULL,
+						     QDMA_HW_ACCESS_CLEAR);
+			if (rv < 0) {
+				qdma_log_error("%s: clear cmpt ctxt, err:%d\n",
+							__func__, rv);
+				return rv;
+			}
 		}
 	}
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 static int mbox_invalidate_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
@@ -575,40 +709,83 @@ static int mbox_invalidate_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	int qbase;
 	uint32_t qmax;
 	enum qdma_dev_q_range q_range;
+	struct qdma_hw_access *hw = NULL;
+
+	qdma_get_hw_access(dev_hndl, &hw);
 
 	if (cmpt_ctxt_type == QDMA_MBOX_CMPT_CTXT_ONLY) {
-		rv = qdma_cmpt_context_invalidate(dev_hndl, qid_hw);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw, NULL,
+					    QDMA_HW_ACCESS_INVALIDATE);
+		if (rv < 0) {
+			qdma_log_error("%s: inv cmpt ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 	} else {
 		rv = qdma_dev_qinfo_get(pci_bus_num, func_id, &qbase, &qmax);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC;
+		if (rv < 0) {
+			qdma_log_error("%s: failed to get qinfo, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 
 		q_range = qdma_dev_is_queue_in_range(pci_bus_num,
 						func_id, qid_hw);
-		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			return -QDMA_MBOX_ERR_QID;
+		if (q_range != QDMA_DEV_Q_IN_RANGE) {
+			qdma_log_error("%s: Invalid qrange, err:%d\n",
+							__func__, rv);
+			return rv;
+		}
 
-		rv = qdma_sw_context_invalidate(dev_hndl, c2h, qid_hw);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_sw_ctx_conf(dev_hndl, c2h, qid_hw,
+					  NULL, QDMA_HW_ACCESS_INVALIDATE);
+		if (rv < 0) {
+			qdma_log_error("%s: inv sw ctxt, err:%d\n",
+							__func__, rv);
+			return rv;
+		}
+
+		rv = hw->qdma_hw_ctx_conf(dev_hndl, c2h, qid_hw, NULL,
+				QDMA_HW_ACCESS_INVALIDATE);
+		if (rv < 0) {
+			qdma_log_error("%s: clear hw_ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
+
+		rv = hw->qdma_credit_ctx_conf(dev_hndl, c2h, qid_hw, NULL,
+				QDMA_HW_ACCESS_INVALIDATE);
+		if (rv < 0) {
+			qdma_log_error("%s: clear cr_ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 
 		if (st && c2h) {
-			rv = qdma_pfetch_context_invalidate(dev_hndl, qid_hw);
-			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			rv = hw->qdma_pfetch_ctx_conf(dev_hndl, qid_hw,
+						NULL,
+						QDMA_HW_ACCESS_INVALIDATE);
+			if (rv < 0) {
+				qdma_log_error("%s: inv pfetch ctxt, err:%d\n",
+						__func__, rv);
+				return rv;
+			}
 		}
 
 		if ((cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
 		    (cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_ST)) {
-			rv = qdma_cmpt_context_invalidate(dev_hndl, qid_hw);
-			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw,
+						NULL,
+						QDMA_HW_ACCESS_INVALIDATE);
+			if (rv < 0) {
+				qdma_log_error("%s: inv cmpt ctxt, err:%d\n",
+						__func__, rv);
+				return rv;
+			}
 		}
 	}
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
@@ -620,18 +797,23 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	enum qdma_dev_q_range q_range;
 	struct qdma_descq_context descq_ctxt;
 	uint16_t qid_hw = qctxt->qid_hw;
+	struct qdma_hw_access *hw = NULL;
 
+	qdma_get_hw_access(dev_hndl, &hw);
 
 	rv = qdma_dev_qinfo_get(pci_bus_num, qctxt->descq_conf.func_id,
 				&qbase, &qmax);
 	if (rv < 0)
-		return -QDMA_MBOX_ERR_MSG_FROM_INVALID_SRC;
+		return rv;
 
 	q_range = qdma_dev_is_queue_in_range(pci_bus_num,
 					     qctxt->descq_conf.func_id,
 					     qctxt->qid_hw);
-	if (q_range != QDMA_DEV_Q_IN_RANGE)
-		return -QDMA_MBOX_ERR_QID;
+	if (q_range != QDMA_DEV_Q_IN_RANGE) {
+		qdma_log_error("%s: Invalid qrange, err:%d\n",
+							__func__, rv);
+		return rv;
+	}
 
 	qdma_mbox_memset(&descq_ctxt, 0, sizeof(struct qdma_descq_context));
 
@@ -641,14 +823,21 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 		if (rv < 0)
 			return rv;
 
-		rv = qdma_cmpt_context_clear(dev_hndl, qid_hw);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw,
+					    NULL, QDMA_HW_ACCESS_CLEAR);
+		if (rv < 0) {
+			qdma_log_error("%s: clear cmpt ctxt, err:%d\n",
+								__func__, rv);
+			return rv;
+		}
 
-		rv = qdma_cmpt_context_write(dev_hndl, qid_hw,
-			     &descq_ctxt.cmpt_ctxt);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw,
+			     &descq_ctxt.cmpt_ctxt, QDMA_HW_ACCESS_WRITE);
+		if (rv < 0) {
+			qdma_log_error("%s: write cmpt ctxt, err:%d\n",
+								__func__, rv);
+			return rv;
+		}
 
 	} else {
 		rv = mbox_compose_sw_context(dev_hndl, qctxt,
@@ -679,27 +868,39 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 					qctxt->cmpt_ctxt_type);
 		if (rv < 0)
 			return rv;
-		rv = qdma_sw_context_write(dev_hndl, qctxt->c2h, qid_hw,
-					   &descq_ctxt.sw_ctxt);
-		if (rv < 0)
-			return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+		rv = hw->qdma_sw_ctx_conf(dev_hndl, qctxt->c2h, qid_hw,
+					   &descq_ctxt.sw_ctxt,
+					   QDMA_HW_ACCESS_WRITE);
+		if (rv < 0) {
+			qdma_log_error("%s: write sw ctxt, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 
 		if (qctxt->st && qctxt->c2h) {
-			rv = qdma_pfetch_context_write(dev_hndl, qid_hw,
-						       &descq_ctxt.pfetch_ctxt);
-			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			rv = hw->qdma_pfetch_ctx_conf(dev_hndl, qid_hw,
+						       &descq_ctxt.pfetch_ctxt,
+						       QDMA_HW_ACCESS_WRITE);
+			if (rv < 0) {
+				qdma_log_error("%s:write pfetch ctxt, err:%d\n",
+						__func__, rv);
+				return rv;
+			}
 		}
 
 		if ((qctxt->cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
 		    (qctxt->cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_ST)) {
-			rv = qdma_cmpt_context_write(dev_hndl, qid_hw,
-						     &descq_ctxt.cmpt_ctxt);
-			if (rv < 0)
-				return -QDMA_MBOX_ERR_CONTEXT_BUSY;
+			rv = hw->qdma_cmpt_ctx_conf(dev_hndl, qid_hw,
+						     &descq_ctxt.cmpt_ctxt,
+						     QDMA_HW_ACCESS_WRITE);
+			if (rv < 0) {
+				qdma_log_error("%s: write cmpt ctxt, err:%d\n",
+						__func__, rv);
+				return rv;
+			}
 		}
 	}
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 static int mbox_read_queue_contexts(void *dev_hndl, uint16_t qid_hw,
@@ -708,35 +909,58 @@ static int mbox_read_queue_contexts(void *dev_hndl, uint16_t qid_hw,
 			struct qdma_descq_context *ctxt)
 {
 	int rv;
+	struct qdma_hw_access *hw = NULL;
 
-	rv = qdma_sw_context_read(dev_hndl, c2h, qid_hw, &ctxt->sw_ctxt);
-	if (rv < 0)
-		return rv;
+	qdma_get_hw_access(dev_hndl, &hw);
 
-	rv = qdma_hw_context_read(dev_hndl, c2h, qid_hw, &ctxt->hw_ctxt);
-	if (rv < 0)
+	rv = hw->qdma_sw_ctx_conf(dev_hndl, c2h, qid_hw, &ctxt->sw_ctxt,
+				  QDMA_HW_ACCESS_READ);
+	if (rv < 0) {
+		qdma_log_error("%s: read sw ctxt, err:%d\n",
+					__func__, rv);
 		return rv;
+	}
 
-	rv = qdma_credit_context_read(dev_hndl, c2h, qid_hw, &ctxt->cr_ctxt);
-	if (rv < 0)
+	rv = hw->qdma_hw_ctx_conf(dev_hndl, c2h, qid_hw, &ctxt->hw_ctxt,
+				  QDMA_HW_ACCESS_READ);
+	if (rv < 0) {
+		qdma_log_error("%s: read hw ctxt, err:%d\n",
+					__func__, rv);
 		return rv;
+	}
+
+	rv = hw->qdma_credit_ctx_conf(dev_hndl, c2h, qid_hw, &ctxt->cr_ctxt,
+				      QDMA_HW_ACCESS_READ);
+	if (rv < 0) {
+		qdma_log_error("%s: read credit ctxt, err:%d\n",
+					__func__, rv);
+		return rv;
+	}
 
 	if (st && c2h) {
-		rv = qdma_pfetch_context_read(dev_hndl,
-					qid_hw, &ctxt->pfetch_ctxt);
-		if (rv < 0)
+		rv = hw->qdma_pfetch_ctx_conf(dev_hndl,
+					qid_hw, &ctxt->pfetch_ctxt,
+					QDMA_HW_ACCESS_READ);
+		if (rv < 0) {
+			qdma_log_error("%s: read pfetch ctxt, err:%d\n",
+						__func__, rv);
 			return rv;
+		}
 	}
 
 	if ((cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_MM) ||
 	    (cmpt_ctxt_type == QDMA_MBOX_CMPT_WITH_ST)) {
-		rv = qdma_cmpt_context_read(dev_hndl,
-					qid_hw, &ctxt->cmpt_ctxt);
-		if (rv < 0)
+		rv = hw->qdma_cmpt_ctx_conf(dev_hndl,
+					qid_hw, &ctxt->cmpt_ctxt,
+					QDMA_HW_ACCESS_READ);
+		if (rv < 0) {
+			qdma_log_error("%s: read cmpt ctxt, err:%d\n",
+						__func__, rv);
 			return rv;
+		}
 	}
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
@@ -746,11 +970,17 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 	union qdma_mbox_txrx *rcv =  (union qdma_mbox_txrx *)rcv_msg;
 	union qdma_mbox_txrx *resp =  (union qdma_mbox_txrx *)resp_msg;
 	struct mbox_msg_hdr *hdr = &rcv->hdr;
-	int rv = 0;
+	struct qdma_hw_access *hw = NULL;
+	int rv = QDMA_SUCCESS;
 	int ret = 0;
 
-	if (!rcv)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!rcv) {
+		qdma_log_error("%s: rcv_msg=%p failure:%d\n",
+						__func__, rcv,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+	qdma_get_hw_access(dev_hndl, &hw);
 
 	switch (rcv->hdr.op) {
 	case MBOX_OP_BYE:
@@ -759,7 +989,8 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 
 		fmap.qbase = 0;
 		fmap.qmax = 0;
-		rv = qdma_fmap_write(dev_hndl, hdr->src_func_id, &fmap);
+		rv = hw->qdma_fmap_conf(dev_hndl, hdr->src_func_id, &fmap,
+					QDMA_HW_ACCESS_WRITE);
 
 		qdma_dev_entry_destroy(pci_bus_num,
 				hdr->src_func_id);
@@ -784,12 +1015,13 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		if (!rv) {
 			rsp_hello->qbase = fmap->qbase;
 			rsp_hello->qmax = fmap->qmax;
-			qdma_get_device_attributes(dev_hndl,
-							&rsp_hello->dev_cap);
+			hw->qdma_get_device_attributes(dev_hndl,
+						       &rsp_hello->dev_cap);
 		}
 		qdma_mbox_memset(&fmap_cfg, 0,
 				 sizeof(struct qdma_fmap_cfg));
-		qdma_fmap_write(dev_hndl, hdr->src_func_id, &fmap_cfg);
+		hw->qdma_fmap_conf(dev_hndl, hdr->src_func_id, &fmap_cfg,
+				   QDMA_HW_ACCESS_WRITE);
 
 		ret = QDMA_MBOX_VF_ONLINE;
 	}
@@ -802,15 +1034,19 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		fmap_cfg.qbase = fmap->qbase;
 		fmap_cfg.qmax = fmap->qmax;
 
-		rv = qdma_fmap_write(dev_hndl, hdr->src_func_id,
-				     &fmap_cfg);
-		if (rv < 0)
-			rv = -QDMA_MBOX_ERR_FMAP;
+		rv = hw->qdma_fmap_conf(dev_hndl, hdr->src_func_id,
+				     &fmap_cfg, QDMA_HW_ACCESS_WRITE);
+		if (rv < 0) {
+			qdma_log_error("%s: failed to write fmap, err:%d\n",
+						__func__, rv);
+			return rv;
+		}
 	}
 	break;
 	case MBOX_OP_CSR:
 	{
 		struct mbox_msg_csr *rsp_csr = &resp->csr;
+		struct qdma_dev_attributes *dev_cap;
 
 		uint32_t ringsz[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
 		uint32_t bufsz[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
@@ -818,30 +1054,39 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		uint32_t cntr_th[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
 		int i;
 
-		rv = qdma_get_global_ring_sizes(dev_hndl, 0,
-				QDMA_GLOBAL_CSR_ARRAY_SZ, ringsz);
-		if (rv < 0) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
+		rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, ringsz,
+				QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ);
+		if (rv < 0)
 			goto exit_func;
+
+		qdma_get_device_attr(dev_hndl, &dev_cap);
+
+		if (dev_cap->st_en) {
+			rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, bufsz,
+				QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_READ);
+			if (rv < 0 &&
+				(rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED))
+				goto exit_func;
 		}
-		rv = qdma_get_global_buffer_sizes(dev_hndl, 0,
-				QDMA_GLOBAL_CSR_ARRAY_SZ, bufsz);
-		if (rv < 0 && (rv != -QDMA_FEATURE_NOT_SUPPORTED)) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
-			goto exit_func;
+
+		if (dev_cap->st_en || dev_cap->mm_cmpt_en) {
+			rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, tmr_th,
+				QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_READ);
+			if (rv < 0 &&
+				(rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED))
+				goto exit_func;
+
+			rv = hw->qdma_global_csr_conf(dev_hndl, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, cntr_th,
+				QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_READ);
+			if (rv < 0 &&
+				(rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED))
+				goto exit_func;
 		}
-		rv = qdma_get_global_timer_count(dev_hndl, 0,
-				QDMA_GLOBAL_CSR_ARRAY_SZ, tmr_th);
-		if (rv < 0 && (rv != -QDMA_FEATURE_NOT_SUPPORTED)) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
-			goto exit_func;
-		}
-		rv = qdma_get_global_counter_threshold(dev_hndl, 0,
-				QDMA_GLOBAL_CSR_ARRAY_SZ, cntr_th);
-		if (rv < 0 && (rv != -QDMA_FEATURE_NOT_SUPPORTED)) {
-			rv = -QDMA_MBOX_ERR_CSR_READ;
-			goto exit_func;
-		}
+
 		for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
 			rsp_csr->csr_info.ringsz[i] = ringsz[i] &
 					0xFFFF;
@@ -854,8 +1099,8 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 			}
 		}
 
-		if (rv == -QDMA_FEATURE_NOT_SUPPORTED)
-			rv = 0;
+		if (rv == -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED)
+			rv = QDMA_SUCCESS;
 	}
 	break;
 	case MBOX_OP_QREQ:
@@ -871,14 +1116,14 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 						&resp->fmap.qbase,
 						&resp->fmap.qmax);
 		if (rv < 0)
-			rv = -QDMA_MBOX_ERR_NUM_QUEUES;
+			rv = -QDMA_ERR_MBOX_NUM_QUEUES;
 		else {
 			struct qdma_fmap_cfg fmap_cfg;
 
 			qdma_mbox_memset(&fmap_cfg, 0,
 					 sizeof(struct qdma_fmap_cfg));
-			qdma_fmap_write(dev_hndl, hdr->src_func_id,
-					&fmap_cfg);
+			hw->qdma_fmap_conf(dev_hndl, hdr->src_func_id,
+					&fmap_cfg, QDMA_HW_ACCESS_WRITE);
 		}
 	}
 	break;
@@ -892,11 +1137,12 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 				q_notify->hdr.src_func_id,
 				q_notify->qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			rv = -QDMA_MBOX_ERR_QID;
+			rv = -QDMA_ERR_MBOX_INV_QID;
 		else
 			rv = qdma_dev_increment_active_queue(
 					pci_bus_num,
-					q_notify->hdr.src_func_id);
+					q_notify->hdr.src_func_id,
+					q_notify->q_type);
 	}
 	break;
 	case MBOX_OP_QNOTIFY_DEL:
@@ -909,11 +1155,36 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 				q_notify->hdr.src_func_id,
 				q_notify->qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
-			rv = -QDMA_MBOX_ERR_QID;
+			rv = -QDMA_ERR_MBOX_INV_QID;
 		else
 			rv = qdma_dev_decrement_active_queue(
 					pci_bus_num,
-					q_notify->hdr.src_func_id);
+					q_notify->hdr.src_func_id,
+					q_notify->q_type);
+	}
+	break;
+	case MBOX_OP_GET_QACTIVE_CNT:
+	{
+		rv = qdma_get_device_active_queue_count(
+				pci_bus_num,
+				rcv->hdr.src_func_id,
+				QDMA_DEV_Q_TYPE_H2C);
+
+		resp->qcnt.h2c_queues = rv;
+
+		rv = qdma_get_device_active_queue_count(
+				pci_bus_num,
+				rcv->hdr.src_func_id,
+				QDMA_DEV_Q_TYPE_C2H);
+
+		resp->qcnt.c2h_queues = rv;
+
+		rv = qdma_get_device_active_queue_count(
+				pci_bus_num,
+				rcv->hdr.src_func_id,
+				QDMA_DEV_Q_TYPE_CMPT);
+
+		resp->qcnt.cmpt_queues = rv;
 	}
 	break;
 	case MBOX_OP_INTR_CTXT_WRT:
@@ -927,16 +1198,17 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 			ring_index = ictxt->ring_index_list[i];
 
 			ctxt = &ictxt->ictxt[i];
-			rv = qdma_indirect_intr_context_clear(dev_hndl,
-						      ring_index);
+			rv = hw->qdma_indirect_intr_ctx_conf(dev_hndl,
+						      ring_index,
+						      NULL,
+						      QDMA_HW_ACCESS_CLEAR);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
-			rv = qdma_indirect_intr_context_write(dev_hndl,
-						      ring_index, ctxt);
+				resp->hdr.status = rv;
+			rv = hw->qdma_indirect_intr_ctx_conf(dev_hndl,
+						      ring_index, ctxt,
+						      QDMA_HW_ACCESS_WRITE);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 		}
 	}
 	break;
@@ -950,12 +1222,12 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		for (i = 0; i < rcv_ictxt->num_rings; i++) {
 			ring_index = rcv_ictxt->ring_index_list[i];
 
-			rv = qdma_indirect_intr_context_read(dev_hndl,
+			rv = hw->qdma_indirect_intr_ctx_conf(dev_hndl,
 						      ring_index,
-						      &rsp_ictxt->ictxt[i]);
+						      &rsp_ictxt->ictxt[i],
+						      QDMA_HW_ACCESS_READ);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 
 		}
 	}
@@ -966,12 +1238,12 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		struct mbox_msg_intr_ctxt *ictxt = &rcv->intr_ctxt.ctxt;
 
 		for (i = 0; i < ictxt->num_rings; i++) {
-			rv = qdma_indirect_intr_context_clear(
+			rv = hw->qdma_indirect_intr_ctx_conf(
 					dev_hndl,
-					ictxt->ring_index_list[i]);
+					ictxt->ring_index_list[i],
+					NULL, QDMA_HW_ACCESS_CLEAR);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 		}
 	}
 	break;
@@ -981,12 +1253,12 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		int i;
 
 		for (i = 0; i < ictxt->num_rings; i++) {
-			rv = qdma_indirect_intr_context_invalidate(
+			rv = hw->qdma_indirect_intr_ctx_conf(
 					dev_hndl,
-					ictxt->ring_index_list[i]);
+					ictxt->ring_index_list[i],
+					NULL, QDMA_HW_ACCESS_INVALIDATE);
 			if (rv < 0)
-				resp->hdr.status =
-					-QDMA_MBOX_ERR_CONTEXT_BUSY;
+				resp->hdr.status = rv;
 		}
 	}
 	break;
@@ -1036,8 +1308,21 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 					       qctxt);
 	}
 	break;
+	case MBOX_OP_RESET_PREPARE_RESP:
+		mbox_pf_hw_clear_func_ack(dev_hndl, hdr->src_func_id);
+		return QDMA_MBOX_VF_RESET;
+	case MBOX_OP_RESET_DONE_RESP:
+		mbox_pf_hw_clear_func_ack(dev_hndl, hdr->src_func_id);
+		return QDMA_MBOX_PF_RESET_DONE;
+	case MBOX_OP_PF_BYE_RESP:
+		mbox_pf_hw_clear_func_ack(dev_hndl, hdr->src_func_id);
+		return QDMA_MBOX_PF_BYE;
 	default:
-		return -QDMA_MBOX_ERR_INVALID_MSG;
+		qdma_log_error("%s: op=%d invalid, err:%d\n",
+						__func__,
+						rcv->hdr.op,
+						-QDMA_ERR_MBOX_INV_MSG);
+		return -QDMA_ERR_MBOX_INV_MSG;
 	break;
 	}
 
@@ -1056,8 +1341,12 @@ int qmda_mbox_compose_vf_online(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_HELLO;
@@ -1065,7 +1354,7 @@ int qmda_mbox_compose_vf_online(uint16_t func_id,
 	msg->fmap.qbase = (uint32_t)*qbase;
 	msg->fmap.qmax = qmax;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_offline(uint16_t func_id,
@@ -1073,14 +1362,18 @@ int qdma_mbox_compose_vf_offline(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_BYE;
 	msg->hdr.src_func_id = func_id;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_qreq(uint16_t func_id,
@@ -1088,8 +1381,12 @@ int qdma_mbox_compose_vf_qreq(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QREQ;
@@ -1097,39 +1394,72 @@ int qdma_mbox_compose_vf_qreq(uint16_t func_id,
 	msg->fmap.qbase = qbase;
 	msg->fmap.qmax = qmax;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_notify_qadd(uint16_t func_id,
-				     uint16_t qid_hw, uint32_t *raw_data)
+				     uint16_t qid_hw,
+				     enum qdma_dev_q_type q_type,
+				     uint32_t *raw_data)
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QNOTIFY_ADD;
 	msg->hdr.src_func_id = func_id;
 	msg->q_notify.qid_hw = qid_hw;
+	msg->q_notify.q_type = q_type;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
-int qdma_mbox_compose_vf_notify_qdel(uint16_t func_id,
-				     uint16_t qid_hw, uint32_t *raw_data)
+int qdma_mbox_compose_vf_get_device_active_qcnt(uint16_t func_id,
+		uint32_t *raw_data)
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
+	msg->hdr.op = MBOX_OP_GET_QACTIVE_CNT;
+	msg->hdr.src_func_id = func_id;
+
+	return QDMA_SUCCESS;
+}
+
+int qdma_mbox_compose_vf_notify_qdel(uint16_t func_id,
+				     uint16_t qid_hw,
+				     enum qdma_dev_q_type q_type,
+				    uint32_t *raw_data)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
+
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QNOTIFY_DEL;
 	msg->hdr.src_func_id = func_id;
 	msg->q_notify.qid_hw = qid_hw;
+	msg->q_notify.q_type = q_type;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_fmap_prog(uint16_t func_id,
@@ -1138,8 +1468,12 @@ int qdma_mbox_compose_vf_fmap_prog(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+					__func__, raw_data,
+					-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_FMAP;
@@ -1147,7 +1481,7 @@ int qdma_mbox_compose_vf_fmap_prog(uint16_t func_id,
 	msg->fmap.qbase = (uint32_t)qbase;
 	msg->fmap.qmax = qmax;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_qctxt_write(uint16_t func_id,
@@ -1158,8 +1492,12 @@ int qdma_mbox_compose_vf_qctxt_write(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_WRT;
@@ -1172,7 +1510,7 @@ int qdma_mbox_compose_vf_qctxt_write(uint16_t func_id,
 	qdma_mbox_memcpy(&msg->qctxt.descq_conf, descq_conf,
 	       sizeof(struct mbox_descq_conf));
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_qctxt_read(uint16_t func_id,
@@ -1182,8 +1520,12 @@ int qdma_mbox_compose_vf_qctxt_read(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_RD;
@@ -1193,7 +1535,7 @@ int qdma_mbox_compose_vf_qctxt_read(uint16_t func_id,
 	msg->qctxt.st = st;
 	msg->qctxt.cmpt_ctxt_type = cmpt_ctxt_type;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_qctxt_invalidate(uint16_t func_id,
@@ -1203,8 +1545,12 @@ int qdma_mbox_compose_vf_qctxt_invalidate(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_INV;
@@ -1214,7 +1560,7 @@ int qdma_mbox_compose_vf_qctxt_invalidate(uint16_t func_id,
 	msg->qctxt.st = st;
 	msg->qctxt.cmpt_ctxt_type = cmpt_ctxt_type;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_qctxt_clear(uint16_t func_id,
@@ -1224,8 +1570,12 @@ int qdma_mbox_compose_vf_qctxt_clear(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_QCTXT_CLR;
@@ -1235,7 +1585,7 @@ int qdma_mbox_compose_vf_qctxt_clear(uint16_t func_id,
 	msg->qctxt.st = st;
 	msg->qctxt.cmpt_ctxt_type = cmpt_ctxt_type;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_csr_read(uint16_t func_id,
@@ -1243,14 +1593,18 @@ int qdma_mbox_compose_csr_read(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_CSR;
 	msg->hdr.src_func_id = func_id;
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_intr_ctxt_write(uint16_t func_id,
@@ -1259,8 +1613,12 @@ int qdma_mbox_compose_vf_intr_ctxt_write(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_WRT;
@@ -1268,7 +1626,7 @@ int qdma_mbox_compose_vf_intr_ctxt_write(uint16_t func_id,
 	qdma_mbox_memcpy(&msg->intr_ctxt.ctxt, intr_ctxt,
 	       sizeof(struct mbox_msg_intr_ctxt));
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_intr_ctxt_read(uint16_t func_id,
@@ -1277,8 +1635,12 @@ int qdma_mbox_compose_vf_intr_ctxt_read(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_RD;
@@ -1286,7 +1648,7 @@ int qdma_mbox_compose_vf_intr_ctxt_read(uint16_t func_id,
 	qdma_mbox_memcpy(&msg->intr_ctxt.ctxt, intr_ctxt,
 	       sizeof(struct mbox_msg_intr_ctxt));
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_intr_ctxt_clear(uint16_t func_id,
@@ -1295,8 +1657,12 @@ int qdma_mbox_compose_vf_intr_ctxt_clear(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_CLR;
@@ -1304,7 +1670,7 @@ int qdma_mbox_compose_vf_intr_ctxt_clear(uint16_t func_id,
 	qdma_mbox_memcpy(&msg->intr_ctxt.ctxt, intr_ctxt,
 	       sizeof(struct mbox_msg_intr_ctxt));
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 int qdma_mbox_compose_vf_intr_ctxt_invalidate(uint16_t func_id,
@@ -1313,8 +1679,12 @@ int qdma_mbox_compose_vf_intr_ctxt_invalidate(uint16_t func_id,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 
-	if (!raw_data)
-		return -QDMA_MBOX_ERR_INVALID_PARAM;
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
 	msg->hdr.op = MBOX_OP_INTR_CTXT_INV;
@@ -1322,7 +1692,7 @@ int qdma_mbox_compose_vf_intr_ctxt_invalidate(uint16_t func_id,
 	qdma_mbox_memcpy(&msg->intr_ctxt.ctxt, intr_ctxt,
 	       sizeof(struct mbox_msg_intr_ctxt));
 
-	return 0;
+	return QDMA_SUCCESS;
 }
 
 uint8_t qdma_mbox_is_msg_response(uint32_t *send_data, uint32_t *rcv_data)
@@ -1341,12 +1711,37 @@ int qdma_mbox_vf_response_status(uint32_t *rcv_data)
 	return msg->hdr.status;
 }
 
-uint8_t qdma_mbox_vf_func_id_get(uint32_t *rcv_data)
+uint8_t qdma_mbox_vf_func_id_get(uint32_t *rcv_data, uint8_t is_vf)
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)rcv_data;
+	uint16_t func_id;
 
-	return msg->hdr.dst_func_id;
+	if (is_vf)
+		func_id = msg->hdr.dst_func_id;
+	else
+		func_id = msg->hdr.src_func_id;
+
+	return func_id;
 }
+
+int qdma_mbox_vf_active_queues_get(uint32_t *rcv_data,
+		enum qdma_dev_q_type q_type)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)rcv_data;
+	int queues = 0;
+
+	if (q_type == QDMA_DEV_Q_TYPE_H2C)
+		queues = msg->qcnt.h2c_queues;
+
+	if (q_type == QDMA_DEV_Q_TYPE_C2H)
+		queues = msg->qcnt.c2h_queues;
+
+	if (q_type == QDMA_DEV_Q_TYPE_CMPT)
+		queues = msg->qcnt.cmpt_queues;
+
+	return queues;
+}
+
 
 uint8_t qdma_mbox_vf_parent_func_id_get(uint32_t *rcv_data)
 {
@@ -1360,14 +1755,7 @@ int qdma_mbox_vf_dev_info_get(uint32_t *rcv_data,
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)rcv_data;
 
-	dev_cap->num_pfs = msg->hello.dev_cap.num_pfs;
-	dev_cap->num_qs = msg->hello.dev_cap.num_qs;
-	dev_cap->flr_present = msg->hello.dev_cap.flr_present;
-	dev_cap->st_en = msg->hello.dev_cap.st_en;
-	dev_cap->mm_en = msg->hello.dev_cap.mm_en;
-	dev_cap->mm_cmpt_en = msg->hello.dev_cap.mm_cmpt_en;
-	dev_cap->mailbox_en = msg->hello.dev_cap.mailbox_en;
-	dev_cap->mm_channel_max = msg->hello.dev_cap.mm_channel_max;
+	*dev_cap = msg->hello.dev_cap;
 
 	return msg->hdr.status;
 }
@@ -1414,19 +1802,6 @@ int qdma_mbox_vf_intr_context_get(uint32_t *rcv_data,
 	return msg->hdr.status;
 }
 
-static inline void mbox_pf_hw_clear_func_ack(void *dev_hndl,
-					     uint8_t func_id)
-{
-	int idx = func_id / 32; /* bitmask, uint32_t reg */
-	int bit = func_id % 32;
-	uint32_t mbox_base = MBOX_BASE_PF;
-
-	/* clear the function's ack status */
-	qdma_reg_write(dev_hndl,
-		       mbox_base + MBOX_PF_ACK_BASE + idx * MBOX_PF_ACK_STEP,
-		(1 << bit));
-}
-
 void qdma_mbox_pf_hw_clear_ack(void *dev_hndl)
 {
 	uint32_t v;
@@ -1464,7 +1839,7 @@ int qdma_mbox_send(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 	if (v & F_MBOX_FN_STATUS_OUT_MSG)
-		return -QDMA_MBOX_SEND_BUSY;
+		return -QDMA_ERR_MBOX_SEND_BUSY;
 
 	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP)
 		qdma_reg_write(dev_hndl, mbox_base + reg, raw_data[i]);
@@ -1490,9 +1865,8 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 
-
 	if (!(v & M_MBOX_FN_STATUS_IN_MSG))
-		return -QDMA_MOBX_NO_MSG_IN;
+		return -QDMA_ERR_MOBX_NO_MSG_IN;
 
 	if (!is_vf) {
 		from_id = G_MBOX_FN_STATUS_SRC(v);
@@ -1506,14 +1880,18 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 		if (raw_data[i])
 			all_zero_msg = 0;
 	}
+
 	/* ack'ed the sender */
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_CMD, F_MBOX_FN_CMD_RCV);
-	if (all_zero_msg)
-		return -QDMA_MBOX_ALL_ZERO_MSG;
+	if (all_zero_msg) {
+		qdma_log_error("%s: Message recv'd is all zeros. failure:%d\n",
+					__func__,
+					-QDMA_ERR_MBOX_ALL_ZERO_MSG);
+		return -QDMA_ERR_MBOX_ALL_ZERO_MSG;
+	}
 
 	if (!is_vf && (from_id != msg->hdr.src_func_id))
 		msg->hdr.src_func_id = from_id;
-
 
 	return QDMA_SUCCESS;
 }
@@ -1548,3 +1926,91 @@ void qdma_mbox_disable_interrupts(void *dev_hndl, uint8_t is_vf)
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_ISR_EN, 0x0);
 }
 
+
+int qdma_mbox_compose_vf_reset_message(uint32_t *raw_data, uint8_t src_funcid,
+				uint8_t dest_funcid)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
+
+	if (!raw_data)
+		return -QDMA_ERR_INV_PARAM;
+
+	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
+	msg->hdr.op = MBOX_OP_RESET_PREPARE;
+	msg->hdr.src_func_id = src_funcid;
+	msg->hdr.dst_func_id = dest_funcid;
+	return 0;
+}
+
+int qdma_mbox_compose_pf_reset_done_message(uint32_t *raw_data,
+					uint8_t src_funcid, uint8_t dest_funcid)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
+
+	if (!raw_data)
+		return -QDMA_ERR_INV_PARAM;
+
+	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
+	msg->hdr.op = MBOX_OP_RESET_DONE;
+	msg->hdr.src_func_id = src_funcid;
+	msg->hdr.dst_func_id = dest_funcid;
+	return 0;
+}
+
+int qdma_mbox_compose_pf_offline(uint32_t *raw_data, uint8_t src_funcid,
+				uint8_t dest_funcid)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
+
+	if (!raw_data)
+		return -QDMA_ERR_INV_PARAM;
+
+	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
+	msg->hdr.op = MBOX_OP_PF_BYE;
+	msg->hdr.src_func_id = src_funcid;
+	msg->hdr.dst_func_id = dest_funcid;
+	return 0;
+}
+
+int qdma_mbox_vf_rcv_msg_handler(uint32_t *rcv_msg, uint32_t *resp_msg)
+{
+	union qdma_mbox_txrx *rcv =  (union qdma_mbox_txrx *)rcv_msg;
+	union qdma_mbox_txrx *resp =  (union qdma_mbox_txrx *)resp_msg;
+	int rv = 0;
+
+	switch (rcv->hdr.op) {
+	case MBOX_OP_RESET_PREPARE:
+		resp->hdr.op = rcv->hdr.op + MBOX_MSG_OP_RSP_OFFSET;
+		resp->hdr.dst_func_id = rcv->hdr.src_func_id;
+		resp->hdr.src_func_id = rcv->hdr.dst_func_id;
+		rv = QDMA_MBOX_VF_RESET;
+		break;
+	case MBOX_OP_RESET_DONE:
+		resp->hdr.op = rcv->hdr.op + MBOX_MSG_OP_RSP_OFFSET;
+		resp->hdr.dst_func_id = rcv->hdr.src_func_id;
+		resp->hdr.src_func_id = rcv->hdr.dst_func_id;
+		rv = QDMA_MBOX_PF_RESET_DONE;
+		break;
+	case MBOX_OP_PF_BYE:
+		resp->hdr.op = rcv->hdr.op + MBOX_MSG_OP_RSP_OFFSET;
+		resp->hdr.dst_func_id = rcv->hdr.src_func_id;
+		resp->hdr.src_func_id = rcv->hdr.dst_func_id;
+		rv = QDMA_MBOX_PF_BYE;
+		break;
+	default:
+		break;
+	}
+	return rv;
+}
+
+uint8_t qdma_mbox_out_status(void *dev_hndl, uint8_t is_vf)
+{
+	uint32_t v;
+	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
+
+	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
+	if (v & F_MBOX_FN_STATUS_OUT_MSG)
+		return 1;
+	else
+		return 0;
+}

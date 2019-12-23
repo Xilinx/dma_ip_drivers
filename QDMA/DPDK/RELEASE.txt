@@ -1,8 +1,9 @@
-Release: 2019.1
+RELEASE: 2019.2
 ===============
 
-This release is based on DPDK v18.11 containing QDMA poll mode driver and
-QDMA test application. This release is validated on QDMA 2019.1 design.
+This release is based on DPDK v18.11 and contains QDMA poll mode driver and
+QDMA test application. This release is validated on QDMA 2019.2 patch based
+example design and QDMA 2019.1 based example design.
 
 This release includes a patch file for dpdk-pktgen v3.6.1 that extends
 dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
@@ -48,13 +49,22 @@ SUPPORTED FEATURES:
 - Driver restructuring to partition QDMA access code such that it can be used across different drivers
 - Device configuration through additional driver APIs
 
-KNOWN BUGS:
-===========
-- Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-- dma_from_device command in qdma_testapp application requests more data from user logic than specified
+2019.2 Features
+---------------
+- Support reset of a VF device (via rte_eth_dev_reset() API)
+- Support PF device removal when its VF device is active
+- Split user logic related data path handling code to qdma_user.c and qdma_user.h
+- Bug Fixes
+	- Correct the PF and VF function Ids used in the driver in accordance with HW
+	- Fix dma_from_device command in qdma_testapp application that requests more data from user logic than specified
+	- Fix memory offset calculation in dma_from_device and dma_to_device command in qdma_testapp application for MM mode
 
-LIMITATIONS:
-===========
+KNOWN ISSUES:
+=============
+- Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
+
+DRIVER LIMITATIONS:
+===================
 - Big endian systems are not supported
-- All VFs created by a PF should be shut down before terminating the parent PF. This is needed as all the QDMA VF configuration is through this parent PF.
 - For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.

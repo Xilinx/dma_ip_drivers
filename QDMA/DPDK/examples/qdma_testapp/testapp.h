@@ -68,6 +68,7 @@ struct port_info {
 	int bypass_bar_idx;
 	unsigned int queue_base;
 	unsigned int num_queues;
+	unsigned int nb_descs;
 	unsigned int st_queues;
 	unsigned int buff_size;
 	char mem_pool[RTE_MEMPOOL_NAMESIZE];
@@ -81,6 +82,7 @@ int do_recv_mm(int portid, int fd, int queueid, int size, int tot_num_desc);
 int do_xmit(int portid, int fd, int queueid, int size, int nb_desc, int zbyte);
 void load_file_cmds(struct cmdline *cl);
 void port_close(int port_id);
-void qdma_desc_dump(struct rte_eth_dev *dev, uint32_t qid);
-void queue_context_dump(uint8_t bar_id, uint32_t qid, struct cmdline *cl);
+int port_reset(int port_id, int num_queues, int st_queues,
+				int nb_descs, int buff_size);
+void port_remove(int port_id);
 int parse_cmdline(int argc, char **argv);

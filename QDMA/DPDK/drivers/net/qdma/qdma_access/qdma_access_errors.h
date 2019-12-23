@@ -1,7 +1,7 @@
-/*-
- * BSD LICENSE
- *
+/*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ *
+ * BSD LICENSE
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,46 +29,52 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef QDMA_DPDK_MBOX_H_
-#define QDMA_DPDK_MBOX_H_
 
-#include "qdma_list.h"
-#include "qdma_mbox_protocol.h"
-#include <rte_ethdev.h>
+#ifndef QDMA_ACCESS_ERRORS_H_
+#define QDMA_ACCESS_ERRORS_H_
 
-#define MBOX_POLL_FRQ 1000
-#define MBOX_OP_RSP_TIMEOUT (10000 * MBOX_POLL_FRQ) /* 10 sec */
-#define MBOX_SEND_RETRY_COUNT (MBOX_OP_RSP_TIMEOUT/MBOX_POLL_FRQ)
 
-enum qdma_mbox_rsp_state {
-	QDMA_MBOX_RSP_NO_WAIT,
-	QDMA_MBOX_RSP_WAIT
+/**
+ * DOC: QDMA common library error codes definitions
+ *
+ * Header file *qdma_access_errors.h* defines error codes for common library
+ */
+
+struct err_code_map {
+	int acc_err_code;
+	int err_code;
 };
 
-struct qdma_dev_mbox {
-	struct qdma_list_head tx_todo_list;
-	struct qdma_list_head rx_pend_list;
-	rte_spinlock_t list_lock;
-	uint32_t rx_data[MBOX_MSG_REG_MAX];
+#define QDMA_HW_ERR_NOT_DETECTED		1
+
+enum qdma_access_error_codes {
+	QDMA_SUCCESS = 0,
+	QDMA_ERR_INV_PARAM,
+	QDMA_ERR_NO_MEM,
+	QDMA_ERR_HWACC_BUSY_TIMEOUT,
+	QDMA_ERR_HWACC_INV_CONFIG_BAR,
+	QDMA_ERR_HWACC_NO_PEND_LEGCY_INTR,
+	QDMA_ERR_HWACC_BAR_NOT_FOUND,
+	QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED,   /* 7 */
+
+	QDMA_ERR_RM_RES_EXISTS,				/* 8 */
+	QDMA_ERR_RM_RES_NOT_EXISTS,
+	QDMA_ERR_RM_DEV_EXISTS,
+	QDMA_ERR_RM_DEV_NOT_EXISTS,
+	QDMA_ERR_RM_NO_QUEUES_LEFT,
+	QDMA_ERR_RM_QMAX_CONF_REJECTED,		/* 13 */
+
+	QDMA_ERR_MBOX_FMAP_WR_FAILED,		/* 14 */
+	QDMA_ERR_MBOX_NUM_QUEUES,
+	QDMA_ERR_MBOX_INV_QID,
+	QDMA_ERR_MBOX_INV_RINGSZ,
+	QDMA_ERR_MBOX_INV_BUFSZ,
+	QDMA_ERR_MBOX_INV_CNTR_TH,
+	QDMA_ERR_MBOX_INV_TMR_TH,
+	QDMA_ERR_MBOX_INV_MSG,
+	QDMA_ERR_MBOX_SEND_BUSY,
+	QDMA_ERR_MOBX_NO_MSG_IN,
+	QDMA_ERR_MBOX_ALL_ZERO_MSG,			/* 24 */
 };
 
-struct qdma_mbox_msg {
-	uint8_t rsp_rcvd;
-	uint32_t retry_cnt;
-	enum qdma_mbox_rsp_state rsp_wait;
-	uint32_t raw_data[MBOX_MSG_REG_MAX];
-	struct qdma_list_head node;
-};
-
-int qdma_mbox_init(struct rte_eth_dev *dev);
-void qdma_mbox_uninit(struct rte_eth_dev *dev);
-void *qdma_mbox_msg_alloc(void);
-void qdma_mbox_msg_free(void *buffer);
-int qdma_mbox_msg_send(struct rte_eth_dev *dev, struct qdma_mbox_msg *buf,
-		       unsigned int timeout_ms);
-int qdma_dev_notify_qadd(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-int qdma_dev_notify_qdel(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-
-#endif /* QDMA_DPDK_MBOX_H_ */
+#endif /* QDMA_ACCESS_H_ */

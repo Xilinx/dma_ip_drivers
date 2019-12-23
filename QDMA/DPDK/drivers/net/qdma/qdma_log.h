@@ -29,46 +29,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef QDMA_DPDK_MBOX_H_
-#define QDMA_DPDK_MBOX_H_
 
-#include "qdma_list.h"
-#include "qdma_mbox_protocol.h"
-#include <rte_ethdev.h>
+#ifndef __QDMA_LOG_H__
+#define __QDMA_LOG_H__
 
-#define MBOX_POLL_FRQ 1000
-#define MBOX_OP_RSP_TIMEOUT (10000 * MBOX_POLL_FRQ) /* 10 sec */
-#define MBOX_SEND_RETRY_COUNT (MBOX_OP_RSP_TIMEOUT/MBOX_POLL_FRQ)
+#include <rte_log.h>
 
-enum qdma_mbox_rsp_state {
-	QDMA_MBOX_RSP_NO_WAIT,
-	QDMA_MBOX_RSP_WAIT
-};
+#ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
+#define PMD_DRV_LOG(level, fmt, args...) \
+	RTE_LOG(level, PMD, "%s(): " fmt "\n", __func__, ## args)
+#else
+#define PMD_DRV_LOG(level, fmt, args...)  do { } while (0)
+#endif
 
-struct qdma_dev_mbox {
-	struct qdma_list_head tx_todo_list;
-	struct qdma_list_head rx_pend_list;
-	rte_spinlock_t list_lock;
-	uint32_t rx_data[MBOX_MSG_REG_MAX];
-};
 
-struct qdma_mbox_msg {
-	uint8_t rsp_rcvd;
-	uint32_t retry_cnt;
-	enum qdma_mbox_rsp_state rsp_wait;
-	uint32_t raw_data[MBOX_MSG_REG_MAX];
-	struct qdma_list_head node;
-};
-
-int qdma_mbox_init(struct rte_eth_dev *dev);
-void qdma_mbox_uninit(struct rte_eth_dev *dev);
-void *qdma_mbox_msg_alloc(void);
-void qdma_mbox_msg_free(void *buffer);
-int qdma_mbox_msg_send(struct rte_eth_dev *dev, struct qdma_mbox_msg *buf,
-		       unsigned int timeout_ms);
-int qdma_dev_notify_qadd(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-int qdma_dev_notify_qdel(struct rte_eth_dev *dev, uint32_t qidx_hw,
-						enum qdma_dev_q_type q_type);
-
-#endif /* QDMA_DPDK_MBOX_H_ */
+#endif /* ifndef __QDMA_LOG_H__ */
