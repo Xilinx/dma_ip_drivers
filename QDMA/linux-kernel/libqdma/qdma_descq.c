@@ -38,6 +38,12 @@
 #include "qdma_nl.h"
 #endif
 
+struct q_state_name q_state_list[] = {
+	{Q_STATE_DISABLED, "disabled"},
+	{Q_STATE_ENABLED, "cfg'ed"},
+	{Q_STATE_ONLINE, "online"}
+};
+
 /*
  * dma transfer requests
  */
@@ -70,6 +76,7 @@ int qdma_sgl_find_offset(struct qdma_request *req, struct qdma_sw_sg **sg_p,
 		*sg_offset = 0;
 		return 0;
 	}
+
 
 	for (i = 0;  i < sgcnt; i++, sg++) {
 		len += sg->len;
@@ -195,17 +202,17 @@ static ssize_t descq_mm_proc_request(struct qdma_descq *descq)
 		if (is_ul_ext) {
 			int desc_consumed =
 				qconf->fp_bypass_desc_fill(descq,
-							   QDMA_Q_MODE_MM,
-							   qconf->c2h ?
-							   QDMA_Q_DIR_C2H :
-							   QDMA_Q_DIR_H2C,
-							   req);
+						   QDMA_Q_MODE_MM,
+						   (qconf->q_type == Q_C2H) ?
+						   QDMA_Q_DIR_C2H :
+						   QDMA_Q_DIR_H2C,
+						   req);
 			if (desc_consumed > 0)
 				desc_cnt += desc_consumed;
 			goto update_pidx;
 		}
 		rv = qdma_sgl_find_offset(req, &sg, &sg_offset);
-		if (unlikely(rv < 0)) {
+		if (rv < 0) {
 			pr_info("descq %s, req 0x%p, OOR %u/%u, %d/%u.\n",
 				descq->conf.name, req, cb->offset,
 				req->count, rv, sg_max);
@@ -243,7 +250,7 @@ static ssize_t descq_mm_proc_request(struct qdma_descq *descq)
 				desc->rsvd1 = 0UL;
 				desc->rsvd0 = 0U;
 
-				if (descq->conf.c2h) {
+				if (descq->conf.q_type == Q_C2H) {
 					desc->src_addr = ep_addr;
 					desc->dst_addr = addr;
 				} else {
@@ -294,6 +301,7 @@ static ssize_t descq_mm_proc_request(struct qdma_descq *descq)
 		qdma_update_request(descq, req, desc_cnt, data_cnt, sg_offset,
 				    sg);
 		descq->pidx = pidx;
+		descq->avail -= desc_cnt;
 update_pidx:
 
 		desc_written += desc_cnt;
@@ -302,7 +310,6 @@ update_pidx:
 			descq->conf.name, desc_cnt, pidx, descq->avail,
 			req->ep_addr, data_cnt, data_cnt);
 
-		descq->avail -= desc_cnt;
 		descq->pend_req_desc -= desc_cnt;
 	}
 
@@ -310,7 +317,7 @@ update_pidx:
 		descq->pend_list_empty = 0;
 		descq->pidx_info.pidx = descq->pidx;
 		rv = queue_pidx_update(descq->xdev, descq->conf.qidx,
-				descq->conf.c2h, &descq->pidx_info);
+				descq->conf.q_type, &descq->pidx_info);
 		if (unlikely(rv < 0)) {
 			pr_err("%s: Failed to update pidx\n",
 					descq->conf.name);
@@ -404,7 +411,7 @@ static ssize_t descq_proc_st_h2c_request(struct qdma_descq *descq)
 		rv = qdma_sgl_find_offset(req, &sg,
 					      &sg_offset);
 
-		if (unlikely(rv < 0)) {
+		if (rv < 0) {
 			pr_err("descq %s, req 0x%p, OOR %u/%u, %d/%u.\n",
 			descq->conf.name, req, cb->offset,
 			req->count, rv, sg_max);
@@ -417,8 +424,6 @@ static ssize_t descq_proc_st_h2c_request(struct qdma_descq *descq)
 			i, sg, sg_offset);
 		desc->flags = 0;
 		desc->cdh_flags = 0;
-		if (i == 0)
-			desc->flags |= S_H2C_DESC_F_SOP;
 
 		for (; i < sg_max && desc_cnt < desc_max; i++, sg++) {
 			unsigned int tlen = sg->len;
@@ -443,8 +448,14 @@ static ssize_t descq_proc_st_h2c_request(struct qdma_descq *descq)
 				addr += len;
 				tlen -= len;
 
-				if ((i == sg_max - 1))
-					desc->flags |= S_H2C_DESC_F_EOP;
+				/* Setting SOP/EOP for the dummy bypass case */
+				if (descq->conf.desc_bypass) {
+					if (i == 0)
+						desc->flags |= S_H2C_DESC_F_SOP;
+
+					if ((i == sg_max - 1))
+						desc->flags |= S_H2C_DESC_F_EOP;
+				}
 
 #if 0
 				pr_info("desc %d, pidx 0x%x, data_cnt %u, cb off %u:\n",
@@ -479,6 +490,7 @@ static ssize_t descq_proc_st_h2c_request(struct qdma_descq *descq)
 		qdma_update_request(descq, req, desc_cnt, data_cnt, sg_offset,
 				    sg);
 		descq->pidx = pidx;
+		descq->avail -= desc_cnt;
 update_pidx:
 		if (!desc_cnt)
 			break;
@@ -488,7 +500,6 @@ update_pidx:
 			descq->conf.name, desc_cnt, pidx, descq->avail,
 			data_cnt, data_cnt, cb->offset);
 
-		descq->avail -= desc_cnt;
 		descq->pend_req_desc -= desc_cnt;
 	}
 
@@ -496,7 +507,7 @@ update_pidx:
 		descq->pend_list_empty = 0;
 		descq->pidx_info.pidx = descq->pidx;
 		ret = queue_pidx_update(descq->xdev, descq->conf.qidx,
-				descq->conf.c2h, &descq->pidx_info);
+				descq->conf.q_type, &descq->pidx_info);
 		if (ret < 0) {
 			pr_err("%s: Failed to update pidx\n",
 					descq->conf.name);
@@ -526,7 +537,7 @@ static inline int get_desc_size(struct qdma_descq *descq)
 	if (!descq->conf.st)
 		return (int)sizeof(struct qdma_mm_desc);
 
-	if (descq->conf.c2h)
+	if (descq->conf.q_type == Q_C2H)
 		return (int)sizeof(struct qdma_c2h_desc);
 
 	return (int)sizeof(struct qdma_h2c_desc);
@@ -556,7 +567,7 @@ static void *desc_ring_alloc(struct xlnx_dma_dev *xdev, int ring_sz,
 	u8 *p = dma_alloc_coherent(&xdev->conf.pdev->dev, len, bus, GFP_KERNEL);
 
 	if (!p) {
-		pr_info("%s, OOM, sz ring %d, desc %d, cmpl status sz %d.\n",
+		pr_err("%s, OOM, sz ring %d, desc %d, cmpl status sz %d.\n",
 			xdev->conf.name, ring_sz, desc_sz, cs_sz);
 		return NULL;
 	}
@@ -693,8 +704,8 @@ static int descq_mm_n_h2c_cmpl_status(struct qdma_descq *descq)
 	pr_debug("%s, 0x%p, credit %u.\n",
 		descq->conf.name, descq, descq->credit);
 	rv = queue_pidx_update(descq->xdev, descq->conf.qidx,
-			descq->conf.c2h, &descq->pidx_info);
-	if (unlikely(rv < 0)) {
+			descq->conf.q_type, &descq->pidx_info);
+	if  (unlikely(rv < 0)) {
 		pr_err("%s: Failed to update pidx\n", descq->conf.name);
 		return -EINVAL;
 	}
@@ -749,7 +760,7 @@ int qdma_q_desc_get(void *q_hndl, const unsigned int desc_cnt,
 	descq->pidx = incr_pidx(descq->pidx,
 				desc_cnt,
 				descq->conf.rngsz);
-
+	descq->avail -= desc_cnt;
 	return 0;
 }
 
@@ -758,8 +769,8 @@ int qdma_q_init_pointers(void *q_hndl)
 	struct qdma_descq *descq = (struct qdma_descq *)q_hndl;
 	int rv;
 
-	if ((descq->conf.st && descq->conf.c2h) ||
-			(!descq->conf.st && descq->mm_cmpt_ring_crtd)) {
+	if ((descq->conf.st && (descq->conf.q_type == Q_C2H)) ||
+			(!descq->conf.st && (descq->conf.q_type == Q_CMPT))) {
 		if (descq->conf.init_pidx_dis) {
 			/* use qdma_q_init_pointers
 			 *for updating the pidx and cidx later
@@ -774,9 +785,12 @@ int qdma_q_init_pointers(void *q_hndl)
 				return -EINVAL;
 			}
 
+			if (descq->conf.q_type == Q_CMPT)
+				return 0;
+
 			descq->pidx_info.pidx = descq->conf.rngsz - 1;
 			rv = queue_pidx_update(descq->xdev, descq->conf.qidx,
-					descq->conf.c2h, &descq->pidx_info);
+					descq->conf.q_type, &descq->pidx_info);
 			if (unlikely(rv < 0)) {
 				pr_err("%s: Failed to update pidx\n",
 						descq->conf.name);
@@ -794,59 +808,36 @@ int qdma_q_init_pointers(void *q_hndl)
 	return 0;
 }
 
-static int is_mm_cmpl_required(struct qdma_descq *descq)
+void qdma_queue_update_pointers(unsigned long dev_hndl, unsigned long qhndl)
 {
-	struct xlnx_dma_dev *xdev = descq->xdev;
-	struct qdma_dev *qdev = xdev_2_qdev(xdev);
-	struct qdma_descq *pairq;
-	int mml_cmpl_needed = 0;
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	struct qdma_descq *descq = qdma_device_get_descq_by_id(xdev, qhndl,
+							NULL, 0, 0);
+	int ret;
 
-	if (!descq->conf.st && descq->conf.en_mm_cmpt) {
-		if (xdev->dev_cap.mm_cmpt_en) {
-			if (descq->conf.c2h)
-				pairq = qdev->h2c_descq + descq->conf.qidx;
-			else
-				pairq = qdev->c2h_descq + descq->conf.qidx;
-
-			/** Check if the completion ring needs to be created
-			 *  completion ring is created only if the current
-			 *  HW supports MM completions and ring not already
-			 *  created in queue pair
-			 */
-
-			lock_descq(pairq);
-			if (pairq->q_state != Q_STATE_ONLINE) {
-			/**
-			 * if Pairq q state is disabled, i.e pair queue is not
-			 * already created then, when mm_cmpl is requested
-			 * on present queue, go ahead and create it
-			 * If Pairq is added but not started yet,
-			 * i.e in enabled state then also, go ahead and create
-			 * the cmpt ring if mm_cmpl is requested As,
-			 * when pairq start is called, present queue will be in
-			 * online state and cmpt ring would be already created
-			 */
-				mml_cmpl_needed = 1;
-			} else {
-				if (pairq->conf.en_mm_cmpt &&
-					    pairq->mm_cmpt_ring_crtd) {
-					pr_debug("pairq->q_state is online and cmpt already created");
-					mml_cmpl_needed = 0;
-				} else {
-					pr_debug("pairq->q_state is online but cmpt is not created");
-					mml_cmpl_needed = 1;
-				}
+	if (descq) {
+		if (descq->conf.st && (descq->conf.q_type == Q_C2H)) {
+			ret = queue_cmpt_cidx_update(descq->xdev,
+					descq->conf.qidx,
+					&descq->cmpt_cidx_info);
+			if (ret < 0) {
+				pr_err("%s: Failed to update cmpt cidx\n",
+						descq->conf.name);
+				return;
 			}
-			unlock_descq(pairq);
-		} else {
-			pr_warn("MM Completion capability not supported");
-			mml_cmpl_needed = 0;
+			ret = queue_pidx_update(descq->xdev,
+					descq->conf.qidx,
+					descq->conf.q_type,
+					&descq->pidx_info);
+			if (ret < 0) {
+				pr_err("%s: Failed to update pidx\n",
+						descq->conf.name);
+				return;
+			}
 		}
 	}
 
-	return mml_cmpl_needed;
 }
-
 int qdma_descq_alloc_resource(struct qdma_descq *descq)
 {
 	struct xlnx_dma_dev *xdev = descq->xdev;
@@ -860,17 +851,20 @@ int qdma_descq_alloc_resource(struct qdma_descq *descq)
 	u8 bypass_data[DESC_SZ_64B_BYTES];
 #endif
 	/* descriptor ring */
-	descq->desc = desc_ring_alloc(xdev, descq->conf.rngsz,
+	if (descq->conf.q_type != Q_CMPT) {
+		descq->desc = desc_ring_alloc(xdev, descq->conf.rngsz,
 				get_desc_size(descq),
 				get_desc_cmpl_status_size(descq),
 				&descq->desc_bus, &descq->desc_cmpl_status);
-	if (!descq->desc) {
-		pr_info("dev %s, descq %s, sz %u, desc ring OOM.\n",
-			xdev->conf.name, descq->conf.name, descq->conf.rngsz);
-		goto err_out;
+		if (!descq->desc) {
+			pr_err("dev %s, descq %s, sz %u, desc ring OOM.\n",
+				xdev->conf.name, descq->conf.name,
+				descq->conf.rngsz);
+			goto err_out;
+		}
 	}
 
-	if (descq->conf.st && descq->conf.c2h) {
+	if (descq->conf.st && (descq->conf.q_type == Q_C2H)) {
 		struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
 
 		flq->desc = (struct qdma_c2h_desc *)descq->desc;
@@ -887,7 +881,7 @@ int qdma_descq_alloc_resource(struct qdma_descq *descq)
 
 		/* freelist / rx buffers */
 		rv = descq_flq_alloc_resource(descq);
-		if (unlikely(rv < 0))
+		if (rv < 0)
 			goto err_out;
 	} else if (is_ul_ext) {
 		int i;
@@ -908,8 +902,8 @@ int qdma_descq_alloc_resource(struct qdma_descq *descq)
 		}
 	}
 
-	if ((descq->conf.st && descq->conf.c2h) ||
-		    (!descq->conf.st && descq->mm_cmpt_ring_crtd)) {
+	if ((descq->conf.st && (descq->conf.q_type == Q_C2H)) ||
+		    (!descq->conf.st && (descq->conf.q_type == Q_CMPT))) {
 
 		descq->color = 1;
 
@@ -942,7 +936,7 @@ int qdma_descq_alloc_resource(struct qdma_descq *descq)
 	/* Fill in the descriptors with some hard coded value for testing */
 #ifdef TEST_64B_DESC_BYPASS_FEATURE
 	desc_bypass = descq->desc;
-	if (descq->conf.st && !(descq->conf.c2h)) {
+	if (descq->conf.st && (descq->conf.q_type == Q_H2C)) {
 		if (descq->conf.desc_bypass &&
 				(descq->conf.sw_desc_sz == DESC_SZ_64B)) {
 			for (i = 0; i < descq->conf.rngsz; i++) {
@@ -974,7 +968,7 @@ void qdma_descq_free_resource(struct qdma_descq *descq)
 		pr_debug("%s: desc 0x%p, cmpt 0x%p.\n",
 			descq->conf.name, descq->desc, descq->desc_cmpt);
 
-		if (descq->conf.st && descq->conf.c2h)
+		if (descq->conf.st && (descq->conf.q_type == Q_C2H))
 			descq_flq_free_resource(descq);
 		else
 			kfree(descq->desc_list);
@@ -1021,7 +1015,7 @@ void qdma_descq_config(struct qdma_descq *descq, struct qdma_queue_conf *qconf,
 		descq->conf.name[len] = '\0';
 
 		descq->conf.st = qconf->st;
-		descq->conf.c2h = qconf->c2h;
+		descq->conf.q_type = qconf->q_type;
 
 	} else {
 		descq->conf.desc_rng_sz_idx = qconf->desc_rng_sz_idx;
@@ -1039,6 +1033,11 @@ void qdma_descq_config(struct qdma_descq *descq, struct qdma_queue_conf *qconf,
 		descq->conf.cmpl_timer_idx = qconf->cmpl_timer_idx;
 		descq->conf.fetch_credit = qconf->fetch_credit;
 		descq->conf.cmpl_cnt_th_idx = qconf->cmpl_cnt_th_idx;
+		if ((descq->xdev->version_info.device_type ==
+				QDMA_DEVICE_VERSAL) &&
+			(descq->xdev->version_info.versal_ip_type ==
+					QDMA_VERSAL_HARD_IP))
+			descq->channel = qconf->mm_channel;
 
 		descq->conf.desc_bypass = qconf->desc_bypass;
 		descq->conf.pfetch_bypass = qconf->pfetch_bypass;
@@ -1046,12 +1045,8 @@ void qdma_descq_config(struct qdma_descq *descq, struct qdma_queue_conf *qconf,
 		descq->conf.cmpl_udd_en = qconf->cmpl_udd_en;
 		descq->conf.cmpl_desc_sz = qconf->cmpl_desc_sz;
 		descq->conf.sw_desc_sz = qconf->sw_desc_sz;
-		descq->conf.pipe_gl_max = qconf->pipe_gl_max;
-		descq->conf.pipe_flow_id = qconf->pipe_flow_id;
-		descq->conf.pipe_slr_id = qconf->pipe_slr_id;
-		descq->conf.pipe_tdest = qconf->pipe_tdest;
 		descq->conf.cmpl_ovf_chk_dis = qconf->cmpl_ovf_chk_dis;
-		descq->conf.en_mm_cmpt = qconf->en_mm_cmpt;
+		descq->conf.adaptive_rx = qconf->adaptive_rx;
 	}
 }
 
@@ -1059,6 +1054,7 @@ int qdma_descq_config_complete(struct qdma_descq *descq)
 {
 	struct global_csr_conf *csr_info = &descq->xdev->csr_info;
 	struct qdma_queue_conf *qconf = &descq->conf;
+	struct xlnx_dma_dev *xdev = descq->xdev;
 
 	qconf->rngsz = csr_info->ring_sz[qconf->desc_rng_sz_idx] - 1;
 
@@ -1066,8 +1062,8 @@ int qdma_descq_config_complete(struct qdma_descq *descq)
 	 * make the cmpl ring size bigger if possible to avoid run out of
 	 * cmpl entry while desc. ring still have free entries
 	 */
-	if ((qconf->st && qconf->c2h) ||
-			(!qconf->st && qconf->en_mm_cmpt)) {
+	if ((qconf->st && (qconf->q_type == Q_C2H)) ||
+			(!qconf->st && (qconf->q_type == Q_CMPT))) {
 		int i;
 		unsigned int v = csr_info->ring_sz[qconf->cmpl_rng_sz_idx];
 		int best_fit_idx = -1;
@@ -1095,7 +1091,7 @@ int qdma_descq_config_complete(struct qdma_descq *descq)
 		descq->cmpt_cidx_info.counter_idx = qconf->cmpl_cnt_th_idx;
 		descq->cmpt_cidx_info.wrb_en = qconf->cmpl_stat_en;
 	}
-	if (qconf->st && qconf->c2h)
+	if (qconf->st && (qconf->q_type == Q_C2H))
 		descq->pidx_info.irq_en = 0;
 	else
 		descq->pidx_info.irq_en = descq->conf.irq_en;
@@ -1114,16 +1110,39 @@ int qdma_descq_config_complete(struct qdma_descq *descq)
 	descq->credit = 0;
 	descq->pend_req_desc = 0;
 
-	descq->mm_cmpt_ring_crtd = is_mm_cmpl_required(descq);
-
 	/* ST C2H only */
-	if ((qconf->c2h && qconf->st) ||
-			(!qconf->st && descq->mm_cmpt_ring_crtd)) {
+	if ((qconf->st && (qconf->q_type == Q_C2H)) ||
+			(!qconf->st && (qconf->q_type == Q_CMPT))) {
+		int i;
+
 		descq->cmpt_entry_len = 8 << qconf->cmpl_desc_sz;
 
 		pr_debug("%s: cmpl sz %u(%d), udd_en %d.\n",
 			descq->conf.name, descq->cmpt_entry_len,
 			descq->conf.cmpl_desc_sz, descq->conf.cmpl_udd_en);
+		descq->c2h_pend_pkt_moving_avg =
+			csr_info->c2h_cnt_th[descq->conf.cmpl_cnt_th_idx];
+		for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
+			if (descq->conf.cmpl_cnt_th_idx ==
+					descq->xdev->sorted_c2h_cntr_idx[i]) {
+				descq->sorted_c2h_cntr_idx = i;
+				break;
+			}
+		}
+		i = xdev->sorted_c2h_cntr_idx[descq->sorted_c2h_cntr_idx + 1];
+		descq->c2h_pend_pkt_avg_thr_hi =
+				(descq->c2h_pend_pkt_moving_avg +
+				csr_info->c2h_cnt_th[i]);
+		i = xdev->sorted_c2h_cntr_idx[descq->sorted_c2h_cntr_idx - 1];
+		descq->c2h_pend_pkt_avg_thr_lo =
+				(descq->c2h_pend_pkt_moving_avg +
+				csr_info->c2h_cnt_th[i]);
+		descq->c2h_pend_pkt_avg_thr_hi >>= 1;
+		descq->c2h_pend_pkt_avg_thr_lo >>= 1;
+		pr_debug("q%u: sorted idx =  %u %u %u", descq->conf.qidx,
+			descq->sorted_c2h_cntr_idx,
+			descq->c2h_pend_pkt_avg_thr_lo,
+			descq->c2h_pend_pkt_avg_thr_hi);
 	}
 
 	return 0;
@@ -1133,14 +1152,14 @@ int qdma_descq_prog_hw(struct qdma_descq *descq)
 {
 	int rv = qdma_descq_context_setup(descq);
 
-	if (unlikely(rv < 0)) {
-		pr_err("%s failed to program contexts", descq->conf.name);
+	if (rv < 0) {
+		pr_warn("%s failed to program contexts", descq->conf.name);
 		return rv;
 	}
 
 	/* update pidx/cidx */
-	if ((descq->conf.st && descq->conf.c2h) ||
-		(!descq->conf.st && descq->mm_cmpt_ring_crtd)) {
+	if ((descq->conf.st && (descq->conf.q_type == Q_C2H)) ||
+		(!descq->conf.st && (descq->conf.q_type == Q_CMPT))) {
 		if (!descq->conf.init_pidx_dis) {
 			/* use qdma_q_init_pointers
 			 * for updating the pidx and cidx later
@@ -1155,9 +1174,12 @@ int qdma_descq_prog_hw(struct qdma_descq *descq)
 				return -EINVAL;
 			}
 
+			if (descq->conf.q_type == Q_CMPT)
+				return rv;
+
 			descq->pidx_info.pidx = descq->conf.rngsz - 1;
 			rv = queue_pidx_update(descq->xdev, descq->conf.qidx,
-					descq->conf.c2h, &descq->pidx_info);
+					descq->conf.q_type, &descq->pidx_info);
 			if (unlikely(rv < 0)) {
 				pr_err("%s: Failed to update pidx\n",
 						descq->conf.name);
@@ -1172,11 +1194,11 @@ int qdma_descq_prog_hw(struct qdma_descq *descq)
 void qdma_descq_service_cmpl_update(struct qdma_descq *descq, int budget,
 				bool c2h_upd_cmpl)
 {
-	if (descq->conf.st && descq->conf.c2h) {
+	if (descq->conf.st && (descq->conf.q_type == Q_C2H)) {
 		lock_descq(descq);
 		if (descq->q_state == Q_STATE_ONLINE)
 			descq_process_completion_st_c2h(descq, budget,
-							c2h_upd_cmpl);
+						c2h_upd_cmpl);
 		unlock_descq(descq);
 	} else if ((descq->xdev->conf.qdma_drv_mode == POLL_MODE) ||
 			(descq->xdev->conf.qdma_drv_mode == AUTO_MODE)) {
@@ -1198,7 +1220,7 @@ ssize_t qdma_descq_proc_sgt_request(struct qdma_descq *descq)
 {
 	if (!descq->conf.st) /* MM H2C/C2H */
 		return descq_mm_proc_request(descq);
-	else if (descq->conf.st && !descq->conf.c2h) /* ST H2C */
+	else if (descq->conf.st && (descq->conf.q_type == Q_H2C)) /* ST H2C */
 		return descq_proc_st_h2c_request(descq);
 	else	/* ST C2H - should not happen - handled separately */
 		return -EINVAL;
@@ -1207,7 +1229,7 @@ ssize_t qdma_descq_proc_sgt_request(struct qdma_descq *descq)
 void incr_cmpl_desc_cnt(struct qdma_descq *descq, unsigned int cnt)
 {
 	descq->total_cmpl_descs += cnt;
-	switch ((descq->conf.st << 1) | descq->conf.c2h) {
+	switch ((descq->conf.st << 1) | descq->conf.q_type) {
 	case 0:
 		descq->xdev->total_mm_h2c_pkts += cnt;
 		break;
@@ -1231,18 +1253,20 @@ void qdma_sgt_req_done(struct qdma_descq *descq, struct qdma_sgt_req_cb *cb,
 	struct qdma_request *req = (struct qdma_request *)cb;
 
 	if (error)
-		pr_info("req 0x%p, cb 0x%p, fp_done 0x%p done, err %d.\n",
+		pr_err("req 0x%p, cb 0x%p, fp_done 0x%p done, err %d.\n",
 			req, cb, req->fp_done, error);
 
 	list_del(&cb->list);
 	if (cb->unmap_needed) {
 		sgl_unmap(descq->xdev->conf.pdev, req->sgl, req->sgcnt,
-			descq->conf.c2h ? DMA_FROM_DEVICE : DMA_TO_DEVICE);
+			(descq->conf.q_type == Q_C2H) ?
+			DMA_FROM_DEVICE : DMA_TO_DEVICE);
 		cb->unmap_needed = 0;
 	}
 	if (req->fp_done) {
 		if ((cb->offset != req->count) &&
-				!(descq->conf.st && descq->conf.c2h)) {
+				!(descq->conf.st &&
+				(descq->conf.q_type == Q_C2H))) {
 			pr_info("req 0x%p not completed %u != %u.\n",
 				req, cb->offset, req->count);
 			error = -EINVAL;
@@ -1257,7 +1281,7 @@ void qdma_sgt_req_done(struct qdma_descq *descq, struct qdma_sgt_req_cb *cb,
 		qdma_waitq_wakeup(&cb->wq);
 	}
 
-	if (descq->conf.st && descq->conf.c2h)
+	if (descq->conf.st && (descq->conf.q_type == Q_C2H))
 		descq->pend_list_empty = (descq->avail == 0);
 	else
 		descq->pend_list_empty = (descq->avail ==
@@ -1273,7 +1297,8 @@ int qdma_descq_dump_desc(struct qdma_descq *descq, int start,
 	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
 	int desc_sz = get_desc_size(descq);
 	u8 *p = descq->desc + start * desc_sz;
-	struct qdma_sw_sg *fl = (descq->conf.st && descq->conf.c2h) ?
+	struct qdma_sw_sg *fl = (descq->conf.st &&
+				(descq->conf.q_type == Q_C2H)) ?
 				flq->sdesc + start : NULL;
 	int i = start;
 	int len = strlen(buf);
@@ -1311,7 +1336,7 @@ int qdma_descq_dump_desc(struct qdma_descq *descq, int start,
 	len = strlen(buf);
 	buf[len++] = '\n';
 
-	if (descq->conf.st && descq->conf.c2h) {
+	if (descq->conf.st && (descq->conf.q_type == Q_C2H)) {
 		p = page_address(fl->pg);
 		len += sprintf(buf + len, "data 0: 0x%p ", p);
 		hex_dump_to_buffer(p, descq->cmpt_entry_len,
@@ -1340,40 +1365,9 @@ int qdma_descq_dump_cmpt(struct qdma_descq *descq, int start,
 	int i = start;
 	int len = strlen(buf);
 	int stride = descq->cmpt_entry_len;
-	struct qdma_descq *pairq;
-	char *cur = buf;
-	char * const buf_end = buf + buflen;
-	struct qdma_dev *qdev = xdev_2_qdev(descq->xdev);
-	int  rv = 0;
 
 	if (!descq->desc_cmpt)
 		return 0;
-
-	if (!descq->conf.st) {
-		if (descq->conf.c2h)
-			pairq = qdev->h2c_descq + descq->conf.qidx;
-		else
-			pairq = qdev->c2h_descq + descq->conf.qidx;
-
-		if (!((descq->conf.en_mm_cmpt ||
-			pairq->conf.en_mm_cmpt) &&
-			(descq->mm_cmpt_ring_crtd ||
-			pairq->mm_cmpt_ring_crtd))) {
-			pr_err("MM Completion not enabled for this queue");
-			rv = -EINVAL;
-			cur += snprintf(cur, buf_end - cur,
-					"%s, MM Completion not enabled for this queue\n",
-					descq->xdev->conf.name);
-			if (cur >= buf_end) {
-				*buf = '\0';
-				return rv;
-			}
-			return rv;
-		}
-
-		if (!descq->mm_cmpt_ring_crtd && pairq->mm_cmpt_ring_crtd)
-			descq = pairq;
-	}
 
 	for (cmpt += (start * stride);
 			i < end && i < descq->conf.rngsz_cmpt; i++,
@@ -1416,19 +1410,22 @@ int qdma_descq_dump_state(struct qdma_descq *descq, char *buf, int buflen)
 		return 0;
 	}
 
-	cur += snprintf(cur, end - cur, "%s %s ",
-			descq->conf.name, descq->conf.c2h ? "C2H" : "H2C");
+	if (descq->conf.q_type != Q_CMPT)
+		cur += snprintf(cur, end - cur, "%s %s ",
+				descq->conf.name,
+				(descq->conf.q_type == Q_C2H) ? "C2H" : "H2C");
+	else
+		cur += snprintf(cur, end - cur, "%s %s ",
+				descq->conf.name, "CMPT");
 	if (cur >= end)
 		goto handle_truncation;
 
 	if (descq->err)
 		cur += snprintf(cur, end - cur, "ERR\n");
-	else if (descq->q_state == Q_STATE_ONLINE)
-		cur += snprintf(cur, end - cur, "online\n");
-	else if (descq->q_state == Q_STATE_ENABLED)
-		cur += snprintf(cur, end - cur, "cfg'ed\n");
 	else
-		cur += snprintf(cur, end - cur, "un-initialized\n");
+		cur += snprintf(cur, end - cur, "%s\n",
+					q_state_list[descq->q_state].name);
+
 	if (cur >= end)
 		goto handle_truncation;
 
@@ -1467,7 +1464,7 @@ int qdma_descq_dump(struct qdma_descq *descq, char *buf, int buflen, int detail)
 	if (cur >= end)
 		goto handle_truncation;
 
-	if (descq->conf.st && descq->conf.c2h) {
+	if (descq->conf.st && (descq->conf.q_type == Q_C2H)) {
 		cur += snprintf(cur, end - cur,
 			"\tcmpt desc 0x%p/0x%llx, %u\n",
 			descq->desc_cmpt, descq->desc_cmpt_bus,
@@ -1572,6 +1569,7 @@ int qdma_queue_set_err_induction(unsigned long dev_hndl, unsigned long id,
 		pr_err("Invalid qid: %ld", id);
 		return -EINVAL;
 	}
+
 	if (err_no < sb_mi_h2c0_dat) {
 		descq->induce_err &= ~(1 << err_no);
 		descq->induce_err |= (err_en << err_no);
@@ -1592,20 +1590,40 @@ int qdma_queue_set_err_induction(unsigned long dev_hndl, unsigned long id,
 int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long id,
 				struct qdma_request *req)
 {
-	struct qdma_descq *descq = qdma_device_get_descq_by_id(
-					(struct xlnx_dma_dev *)dev_hndl,
-					id, NULL, 0, 1);
-	struct qdma_sgt_req_cb *cb = qdma_req_cb_get(req);
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	struct qdma_descq *descq;
+	struct qdma_sgt_req_cb *cb;
 	int rv;
 
+	/** make sure that the dev_hndl passed is Valid */
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
+		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	if (!req) {
+		pr_err("req is NULL");
+		return -EINVAL;
+	}
+
+	cb = qdma_req_cb_get(req);
+
+	descq = qdma_device_get_descq_by_id(xdev, id, NULL, 0, 1);
 	if (!descq) {
 		pr_err("Invalid qid: %ld", id);
 		return -EINVAL;
 	}
 
-	if (!descq->conf.st || descq->conf.c2h) {
-		pr_err("%s: st %d, c2h %d.\n",
-			descq->conf.name, descq->conf.st, descq->conf.c2h);
+	if ((!descq->conf.st) ||
+		((descq->conf.st &&
+		(descq->conf.q_type == Q_C2H)))) {
+		pr_err("%s: st %d, type %d.\n",
+			descq->conf.name, descq->conf.st, descq->conf.q_type);
 		return -EINVAL;
 	}
 
@@ -1615,7 +1633,7 @@ int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long id,
 	if (!req->dma_mapped) {
 		rv = sgl_map(descq->xdev->conf.pdev, req->sgl, req->sgcnt,
 				DMA_TO_DEVICE);
-		if (unlikely(rv < 0)) {
+		if (rv < 0) {
 			pr_err("%s map sgl %u failed, %u.\n",
 				descq->conf.name, req->sgcnt, req->count);
 			goto unmap_sgl;
@@ -1656,18 +1674,19 @@ int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long id,
 	uint8_t i = 0;
 	int len = 0;
 	int print_len = 0;
-	struct qdma_descq *descq = qdma_device_get_descq_by_id(
-					(struct xlnx_dma_dev *)dev_hndl,
-					id, buf, buflen, 1);
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	struct qdma_descq *descq = NULL;
 	struct qdma_c2h_cmpt_cmpl_status *cs;
 
-	if (!descq) {
-		pr_err("Invalid qid: %ld", id);
+	if (!buf || !buflen || !xdev) {
+		pr_err("Invalid bud:%p, buflen:%d", buf, buflen);
 		return -EINVAL;
 	}
 
-	if (!buf || !buflen) {
-		pr_err("Invalid bud:%p, buflen:%d", buf, buflen);
+	descq = qdma_device_get_descq_by_id(xdev, id, buf, buflen, 1);
+
+	if (!descq) {
+		pr_err("Invalid qid: %ld", id);
 		return -EINVAL;
 	}
 
@@ -1684,12 +1703,26 @@ int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long id,
 	 */
 	for (i = 0; i < descq->cmpt_entry_len; i++) {
 		if (buf && buflen) {
-			if (i == 0)
-				print_len = sprintf(buf + len, "%02x",
-						(cmpt[i] & 0xF0));
-			else
-				print_len = sprintf(buf + len, "%02x",
-						    cmpt[i]);
+			if ((xdev->version_info.device_type ==
+					QDMA_DEVICE_VERSAL) &&
+				(xdev->version_info.versal_ip_type ==
+					QDMA_VERSAL_HARD_IP)) {
+				if (i <= 1)
+					continue;
+				else if (i == 2)
+					print_len = sprintf(buf + len, "%02x",
+							(0xF0 & cmpt[i]));
+				else
+					print_len = sprintf(buf + len, "%02x",
+							cmpt[i]);
+			} else {
+				if (i == 0)
+					print_len = sprintf(buf + len, "%02x",
+							(cmpt[i] & 0xF0));
+				else
+					print_len = sprintf(buf + len, "%02x",
+							cmpt[i]);
+			}
 
 		}
 		buflen -= print_len;
@@ -1735,9 +1768,6 @@ int qdma_descq_read_cmpt_data(unsigned long dev_hndl, unsigned long id,
 	unsigned int cidx_cmpt = 0;
 	int  rv = 0;
 	u32 pend = 0;
-	struct qdma_descq *pairq = NULL;
-	char *cur = buf;
-	char * const end = buf + buflen;
 	struct qdma_dev *qdev = NULL;
 
 	if (!descq) {
@@ -1752,33 +1782,7 @@ int qdma_descq_read_cmpt_data(unsigned long dev_hndl, unsigned long id,
 
 	qdev = xdev_2_qdev(descq->xdev);
 
-	pr_debug("descq->conf.rngsz = %d, descq->conf.rngsz_cmpt = %d",
-		descq->conf.rngsz, descq->conf.rngsz_cmpt);
-	if (!descq->conf.st) {
-		if (descq->conf.c2h)
-			pairq = qdev->h2c_descq + descq->conf.qidx;
-		else
-			pairq = qdev->c2h_descq + descq->conf.qidx;
-
-		if (!((descq->conf.en_mm_cmpt ||
-			pairq->conf.en_mm_cmpt) &&
-			(descq->mm_cmpt_ring_crtd ||
-			pairq->mm_cmpt_ring_crtd))) {
-			pr_err("MM Completion not enabled for this queue");
-			rv = -EINVAL;
-			cur += snprintf(cur, end - cur,
-					"%s, MM Completion not enabled for this queue\n",
-					descq->xdev->conf.name);
-			if (cur >= end) {
-				*buf = '\0';
-				*num_entries = 0;
-			}
-			return rv;
-		}
-
-		if (!descq->mm_cmpt_ring_crtd && pairq->mm_cmpt_ring_crtd)
-			descq = pairq;
-	} else {
+	if (descq->conf.st) {
 		pr_err("Not supported for ST mode");
 		rv = -EINVAL;
 		return rv;
@@ -1793,8 +1797,8 @@ int qdma_descq_read_cmpt_data(unsigned long dev_hndl, unsigned long id,
 	pend = ring_idx_delta(pidx_cmpt,
 			      cidx_cmpt,
 				descq->conf.rngsz_cmpt);
-	pr_debug("pend = %d, cs->pidx = %d cs->cidx = %d, descq->cidx_cmpt = %d, descq->pidx_cmpt = %d",
-				    pend, cs->pidx, cs->cidx,
+	pr_debug("ringsz %d, pend = %d, cs->pidx = %d cs->cidx = %d, descq->cidx_cmpt = %d, descq->pidx_cmpt = %d",
+			descq->conf.rngsz_cmpt, pend, cs->pidx, cs->cidx,
 				    cidx_cmpt,
 				    pidx_cmpt);
 	*num_entries = min(pend, descq->conf.rngsz_cmpt);

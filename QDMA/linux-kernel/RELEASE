@@ -1,8 +1,7 @@
-Release: 2019.1 Patch
-=====================
+RELEASE: 2019.2
+===============
 
-NOTE:
-	This release is based on the 2019.1 QDMA IP
+This release is validated on QDMA 2019.2 Patch based example design and QDMA 2019.1 based example design
 
 SUPPORTED FEATURES:
 ===================
@@ -58,21 +57,21 @@ SUPPORTED FEATURES:
 - Interoperability between Linux driver (as PF/VF) and DPDK driver (as PF/VF)
 - Driver restructuring to partition QDMA access code such that it can be used across different drivers
 
-2019.1 Patch Updates
---------------------
-- Addressed the issues observed in static analysis of the code base
-- Added the User Logic pluggability
-- Supported HW Error detection in poll mode
-
+2019.2 Features
+---------------
+- Support for PF device removal when its VF devices are active
+- Support for Interrupt moderation and adaptive counter threshold
+- Support for configurable number of User and Data interrupts
+- Added user logic pluggable interfaces for processing the descriptors and completions
+- Added new interfaces for updating the Consumer Index and Producer Index
 
 KNOWN ISSUES:
 =============
 - Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-- FLR Reset on a PF while any VFs are attached to PF is not working
+- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
 
 DRIVER LIMITATIONS:
 ===================
-- Driver compilation on Fedora 28 with gcc8.1 results compilation warnings
+- Driver compilation on Fedora 28 with gcc8.1 results in compilation warnings
 - Big endian systems are not supported
-- All VFs created by a PF should be shut down before terminating the parent PF. This is needed as all the QDMA VF configuration is through this parent PF.
 - For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.

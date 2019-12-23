@@ -37,9 +37,11 @@ int xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id)
 		return -ENOMEM;
 
 	qdma_mbox_compose_vf_offline(xdev->func_id, m->raw);
-
-	rv = qdma_mbox_msg_send(xdev, m, 0, 0);
-	if (unlikely(rv < 0))
+	/** For sending BYE message, retry to send multiple
+	 * times before giving up by giving non-zero timeout value
+	 */
+	rv = qdma_mbox_msg_send(xdev, m, 0, QDMA_MBOX_MSG_TIMEOUT_MS);
+	if (rv < 0)
 		pr_info("%s, send bye failed %d.\n", xdev->conf.name, rv);
 
 	return rv;
@@ -50,7 +52,6 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
 	int rv;
 	int qbase = -1;
 	struct mbox_msg *m = qdma_mbox_msg_alloc();
-	struct qdma_dev_attributes dev_cap;
 
 	if (!m)
 		return -ENOMEM;
@@ -58,34 +59,36 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
 	qmda_mbox_compose_vf_online(xdev->func_id, 0, &qbase, m->raw);
 
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (unlikely(rv < 0))
-		pr_info("%s, send hello failed %d.\n",  xdev->conf.name, rv);
+	if (rv < 0) {
+		pr_err("%s, send hello failed %d.\n",  xdev->conf.name, rv);
+		qdma_mbox_msg_free(m);
+		return rv;
+	}
 
-	rv = qdma_mbox_vf_dev_info_get(m->raw, &dev_cap);
-	if (unlikely(rv < 0)) {
+	rv = qdma_mbox_vf_dev_info_get(m->raw, &xdev->dev_cap);
+	if (rv < 0) {
 		pr_info("%s, failed to get dev info %d.\n",
 			xdev->conf.name, rv);
 		rv = -EINVAL;
 	} else {
-		xdev->dev_cap.num_pfs = dev_cap.num_pfs;
-		xdev->dev_cap.num_qs = dev_cap.num_qs;
-		xdev->dev_cap.flr_present = dev_cap.flr_present;
-		xdev->dev_cap.st_en = dev_cap.st_en;
-		xdev->dev_cap.mm_en = dev_cap.mm_en;
-		xdev->dev_cap.mm_cmpt_en = dev_cap.mm_cmpt_en;
-		xdev->dev_cap.mailbox_en = dev_cap.mailbox_en;
-		xdev->dev_cap.mm_channel_max = dev_cap.mm_channel_max;
-
-		pr_info("%s: num_pfs:%d, num_qs:%d, flr_present:%d, st_en:%d, mm_en:%d, mm_cmpt_en:%d, mailbox_en:%d, mm_channel_max:%d",
-			xdev->conf.name,
-			xdev->dev_cap.num_pfs,
-			xdev->dev_cap.num_qs,
-			xdev->dev_cap.flr_present,
-			xdev->dev_cap.st_en,
-			xdev->dev_cap.mm_en,
-			xdev->dev_cap.mm_cmpt_en,
-			xdev->dev_cap.mailbox_en,
-			xdev->dev_cap.mm_channel_max);
+		pr_info("%s: num_pfs:%d, num_qs:%d, flr_present:%d, st_en:%d, mm_en:%d, mm_cmpt_en:%d, mailbox_en:%d, mm_channel_max:%d, qid2vec_ctx:%d, cmpt_ovf_chk_dis:%d, mailbox_intr:%d, sw_desc_64b:%d, cmpt_desc_64b:%d, dynamic_bar:%d, legacy_intr:%d, cmpt_trig_count_timer:%d",
+				xdev->conf.name,
+				xdev->dev_cap.num_pfs,
+				xdev->dev_cap.num_qs,
+				xdev->dev_cap.flr_present,
+				xdev->dev_cap.st_en,
+				xdev->dev_cap.mm_en,
+				xdev->dev_cap.mm_cmpt_en,
+				xdev->dev_cap.mailbox_en,
+				xdev->dev_cap.mm_channel_max,
+				xdev->dev_cap.qid2vec_ctx,
+				xdev->dev_cap.cmpt_ovf_chk_dis,
+				xdev->dev_cap.mailbox_intr,
+				xdev->dev_cap.sw_desc_64b,
+				xdev->dev_cap.cmpt_desc_64b,
+				xdev->dev_cap.dynamic_bar,
+				xdev->dev_cap.legacy_intr,
+				xdev->dev_cap.cmpt_trig_count_timer);
 	}
 
 	qdma_mbox_msg_free(m);
@@ -93,13 +96,6 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
 }
 
 #elif defined(CONFIG_PCI_IOV)
-
-struct qdma_vf_info {
-	unsigned short func_id;
-	unsigned short qbase;
-	unsigned short qmax;
-	unsigned short filler;
-};
 
 void xdev_sriov_disable(struct xlnx_dma_dev *xdev)
 {
@@ -136,7 +132,7 @@ int xdev_sriov_enable(struct xlnx_dma_dev *xdev, int num_vfs)
 
 	vf = kmalloc(num_vfs * (sizeof(struct qdma_vf_info)), GFP_KERNEL);
 	if (!vf) {
-		pr_info("%s OOM, %d * %ld.\n",
+		pr_info("%s failed to allocate memory for VFs, %d * %ld.\n",
 			xdev->conf.name, num_vfs, sizeof(struct qdma_vf_info));
 		return -ENOMEM;
 	}
@@ -178,7 +174,7 @@ int qdma_device_sriov_config(struct pci_dev *pdev, unsigned long dev_hndl,
 		return -EINVAL;
 
 	rv = xdev_check_hndl(__func__, pdev, dev_hndl);
-	if (unlikely(rv < 0))
+	if (rv < 0)
 		return rv;
 
 	/* if zero disable sriov */
@@ -193,7 +189,7 @@ int qdma_device_sriov_config(struct pci_dev *pdev, unsigned long dev_hndl,
 	}
 
 	rv = xdev_sriov_enable(xdev, num_vfs);
-	if (unlikely(rv < 0))
+	if (rv < 0)
 		return rv;
 
 	return xdev->vf_count;
@@ -203,18 +199,23 @@ void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id)
 {
 	struct qdma_vf_info *vf = (struct qdma_vf_info *)xdev->vf_info;
 	int i;
-	u8 vf_offline_count = 1; /* one for the current func_id */
 
+	xdev->vf_count_online--;
 	for (i = 0; i < xdev->vf_count; i++, vf++) {
 		if (vf->func_id == func_id) {
-			vf->func_id = QDMA_FUNC_ID_INVALID;
+			/** func_id cannot be marked invalid in the PF FLR flow.
+			 *  This is because, after PF comes back up
+			 *  it should have valid func_id list to be able to
+			 *  send out the RESET_DONE msg
+			 */
+			if (xdev->reset_state == RESET_STATE_IDLE)
+				vf->func_id = QDMA_FUNC_ID_INVALID;
 			vf->qbase = 0;
 			vf->qmax = 0;
-		} else if (vf->func_id == QDMA_FUNC_ID_INVALID)
-			vf_offline_count++;
+		}
 	}
-	if (vf_offline_count == xdev->vf_count)
-		qdma_waitq_wakeup(&xdev->wq);
+
+	qdma_waitq_wakeup(&xdev->wq);
 }
 
 int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
@@ -222,15 +223,20 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
 	struct qdma_vf_info *vf = (struct qdma_vf_info *)xdev->vf_info;
 	int i;
 
-	for (i = 0; i < xdev->vf_count; i++, vf++) {
-		if (vf->func_id == QDMA_FUNC_ID_INVALID) {
-			vf->func_id = func_id;
-			return 0;
-		}
-	}
+	xdev->vf_count_online++;
 
-	pr_info("%s, func 0x%x, NO free slot.\n", xdev->conf.name, func_id);
-	return -EINVAL;
+	if (xdev->reset_state == RESET_STATE_IDLE) {
+		for (i = 0; i < xdev->vf_count; i++, vf++) {
+			if (vf->func_id == QDMA_FUNC_ID_INVALID) {
+				vf->func_id = func_id;
+				return 0;
+			}
+		}
+		pr_info("%s, func 0x%x, NO free slot.\n", xdev->conf.name,
+				func_id);
+		return -EINVAL;
+	} else
+		return 0;
 }
 
 int xdev_sriov_vf_fmap(struct xlnx_dma_dev *xdev, u8 func_id,

@@ -20,11 +20,11 @@
 #include "qdma_access_errors.h"
 #include <linux/errno.h>
 #include <linux/delay.h>
-
+#include "qdma_platform.h"
 
 struct err_code_map error_code_map_list[] = {
 	{QDMA_SUCCESS,				0},
-	{QDMA_ERR_INV_PARAM,		EINVAL},
+	{QDMA_ERR_INV_PARAM,			EINVAL},
 	{QDMA_ERR_NO_MEM,			ENOMEM},
 	{QDMA_ERR_HWACC_BUSY_TIMEOUT,		EBUSY},
 	{QDMA_ERR_HWACC_INV_CONFIG_BAR,		EINVAL},
@@ -49,9 +49,6 @@ struct err_code_map error_code_map_list[] = {
 	{QDMA_ERR_MOBX_NO_MSG_IN,		EINVAL},
 	{QDMA_ERR_MBOX_ALL_ZERO_MSG,		EINVAL},
 };
-
-
-
 
 /**
  * mutex  used for resource management APIs
@@ -117,7 +114,9 @@ void qdma_resource_lock_give(void)
 
 void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx)
 {
-	pr_err("%s detected", qdma_get_hw_error_name(err_idx));
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+
+	pr_err("%s detected", xdev->hw.qdma_hw_get_error_name(err_idx));
 }
 
 void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap)
@@ -127,8 +126,20 @@ void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap)
 	*dev_cap = &xdev->dev_cap;
 }
 
+void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw)
+{
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	*hw = &xdev->hw;
+}
+
+void qdma_strncpy(char *dest, const char *src, size_t n)
+{
+	strncpy(dest, src, n);
+}
+
 
 int qdma_get_err_code(int acc_err_code)
 {
+	acc_err_code *= -1;
 	return -(error_code_map_list[acc_err_code].err_code);
 }

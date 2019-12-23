@@ -108,13 +108,16 @@ void qdma_fill_intr_ctxt(struct qdma_indirect_intr_ctxt *intr_ctxt);
  * parse_ctxt_to_buf() - parses queue context to human readable format
  *
  * @param[in]	cntxt: context to parse. An enum value
+ * @param[in]	version_info: HW version information
  * @param[out]	buf: buffer to write parsed context
  * @param[in]	buflen: buffer len
  *
  * @return	>0: size read
  * @return	<0: error
  *****************************************************************************/
-int qdma_parse_ctxt_to_buf(enum qdma_q_cntxt cntxt, char *buf, int buflen);
+int qdma_parse_ctxt_to_buf(enum qdma_q_cntxt cntxt,
+		struct qdma_hw_version_info *version_info,
+		char *buf, int buflen);
 
 /*****************************************************************************/
 /**
@@ -169,7 +172,7 @@ int qdma_descq_context_setup(struct qdma_descq *descq);
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-				bool st, bool c2h, bool mm_cmpt_en, bool clr);
+				bool st, u8 type, bool clr);
 
 /*****************************************************************************/
 /**
@@ -186,8 +189,7 @@ int qdma_descq_context_clear(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_context_read(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-				bool st, bool c2h, bool mm_cmpt_en,
-				struct qdma_descq_context *ctxt);
+			bool st, u8 type, struct qdma_descq_context *context);
 
 /*****************************************************************************/
 /**
@@ -220,8 +222,7 @@ int qdma_intr_context_read(struct xlnx_dma_dev *xdev,
  * @return	<0: failure
  *****************************************************************************/
 int qdma_descq_context_program(struct xlnx_dma_dev *xdev, unsigned int qid_hw,
-				bool st, bool c2h, bool mm_cmpt_en,
-				struct qdma_descq_context *ctxt);
+			bool st, u8 type, struct qdma_descq_context *context);
 
 #endif
 

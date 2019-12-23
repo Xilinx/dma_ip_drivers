@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #ifndef QDMA_RESOURCE_MGMT_H_
@@ -27,6 +39,20 @@ enum qdma_dev_q_range {
 	QDMA_DEV_Q_OUT_OF_RANGE,
 	/** @QDMA_DEV_Q_RANGE_MAX: total Q validity states */
 	QDMA_DEV_Q_RANGE_MAX
+};
+
+/**
+ * enum qdma_dev_q_type: Q type
+ */
+enum qdma_dev_q_type {
+	/** @QDMA_DEV_Q_TYPE_H2C: H2C Q */
+	QDMA_DEV_Q_TYPE_H2C,
+	/** @QDMA_DEV_Q_TYPE_C2H: C2H Q */
+	QDMA_DEV_Q_TYPE_C2H,
+	/** @QDMA_DEV_Q_TYPE_CMPT: CMPT Q */
+	QDMA_DEV_Q_TYPE_CMPT,
+	/** @QDMA_DEV_Q_TYPE_MAX: Total Q types */
+	QDMA_DEV_Q_TYPE_MAX
 };
 
 /*****************************************************************************/
@@ -136,12 +162,14 @@ enum qdma_dev_q_range qdma_dev_is_queue_in_range(uint32_t pci_bus_num,
  *
  * @pci_bus_num:  pci bus number
  * @func_id:     device identification id
+ * @q_type: direction of q
  *
  * This API is used to increment the active queue count of this function
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
-int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id);
+int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id,
+				    enum qdma_dev_q_type q_typ);
 
 /*****************************************************************************/
 /**
@@ -149,12 +177,14 @@ int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id);
  *
  * @pci_bus_num:  pci bus number
  * @func_id:     device identification id
+ * @q_type: direction of queue
  *
  * This API is used to increment the active queue count of this function
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
-int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id);
+int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id,
+				    enum qdma_dev_q_type q_type);
 
 /*****************************************************************************/
 /**
@@ -174,13 +204,15 @@ uint32_t qdma_get_active_queue_count(uint32_t pci_bus_numd);
  *
  * @pci_bus_num:  pci bus number
  * @func_id:     device identification id
+ * @q_type: direction of queue
  *
  * This API is used to get the active queue count of this function
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
-uint32_t qdma_get_device_active_queue_count(uint32_t pci_bus_num,
-						uint32_t func_id);
+int qdma_get_device_active_queue_count(uint32_t pci_bus_num,
+					uint32_t func_id,
+					enum qdma_dev_q_type q_type);
 
 #ifdef __cplusplus
 }

@@ -164,7 +164,7 @@ else # bundled install
 endif
 
 $(shell rm -f $(srcdir)/drv/libqdma; ln -fs $(srcdir)/libqdma $(srcdir)/drv;)
-$(shell rm -f $(srcdir)/include/qdma_reg_dump.h; ln -fs $(srcdir)/libqdma/qdma_access/qdma_reg_dump.h $(srcdir)/include/qdma_reg_dump.h;)
+$(shell rm -f $(srcdir)/include/qdma_reg_dump.h; ln -fs $(srcdir)/../qdma_access/qdma_reg_dump.h $(srcdir)/include/qdma_reg_dump.h;)
 
 .PHONY: eval.mak
 
@@ -185,6 +185,13 @@ install: install-user install-etc install-dev
 
 .PHONY: uninstall
 uninstall: uninstall-user uninstall-dev
+
+.PHONY: qdmautils
+qdmautils:
+	@echo "#######################";
+	@echo "####  qdmautils    ####";
+	@echo "#######################";
+	$(MAKE) -C qdmautils
 
 .PHONY: user
 user:
@@ -227,6 +234,10 @@ post:
 .PHONY: clean
 clean:
 	@echo "#######################";
+	@echo "####  qdmautils    ####";
+	@echo "#######################";
+	$(MAKE) -C qdmautils clean;
+	@echo "#######################";
 	@echo "####  user         ####";
 	@echo "#######################";
 	$(MAKE) -C user clean;
@@ -255,6 +266,7 @@ install-user:
 	@echo "installing user tools to $(user_install_path) ..."
 	@mkdir -p -m 755 $(user_install_path)
 	@install -v -m 755 build/dmactl* $(user_install_path)
+	@install -v -m 755 build/qdma_xfer_app* $(user_install_path)
 	@install -v -m 755 tools/dma_from_device $(user_install_path)
 	@install -v -m 755 tools/dma_to_device $(user_install_path)
 	@install -v -m 755 tools/dmaperf $(user_install_path)
@@ -286,6 +298,7 @@ uninstall-mods:
 uninstall-user:
 	@echo "Un-installing user tools under $(user_install_path) ..."
 	@/bin/rm -f $(user_install_path)/dmactl
+	@/bin/rm -f $(user_install_path)/qdma_xfer_app
 	@/bin/rm -f $(user_install_path)/dma_from_device
 	@/bin/rm -f $(user_install_path)/dma_to_device
 	@/bin/rm -f $(user_install_path)/dmaperf

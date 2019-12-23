@@ -33,10 +33,54 @@
 struct xlnx_dma_dev;
 
 /**
- * @struct - qdma_intr_ring
+ * @struct - qdma_intr_ring_cpm
+ * @brief	Interrupt ring entry definition for 2018.2 CPM release
+ */
+struct qdma_intr_ring_cpm {
+	/** producer index. This is from Interrupt source.
+	 *  Cumulative pointer of total interrupt Aggregation
+	 *  Ring entry written
+	 */
+	__be64 pidx:16;
+	/** consumer index. This is from Interrupt source.
+	 *  Cumulative consumed pointer
+	 */
+	__be64 cidx:16;
+	/** source color. This is from Interrupt source.
+	 *  This bit inverts every time pidx wraps around
+	 *  and this field gets copied to color field of descriptor.
+	 */
+	__be64 s_color:1;
+	/** This is from Interrupt source.
+	 * Interrupt state, 0: CMPT_INT_ISR; 1: CMPT_INT_TRIG; 2: CMPT_INT_ARMED
+	 */
+	__be64 intr_satus:2;
+	/** error. This is from interrupt source
+	 *  {C2h_err[1:0], h2c_err[1:0]}
+	 */
+	__be64 error:4;
+	/**  11 reserved bits*/
+	__be64 rsvd:11;
+	/**  Is the interrupt raised due to error ?
+	 *   1: error interrupt; 0: non-error interrupt
+	 */
+	__be64 error_int:1;
+	/**  interrupt type, 0: H2C; 1: C2H*/
+	__be64 intr_type:1;
+	/**  This is from Interrupt source. Queue ID*/
+	__be64 qid:11;
+	/**  The color bit of the Interrupt Aggregation Ring.
+	 *   This bit inverts every time pidx wraps around on the
+	 *   Interrupt Aggregation Ring.
+	 */
+	__be64 coal_color:1;
+};
+
+/**
+ * @struct - qdma_intr_ring_generic
  * @brief	Interrupt ring entry definition
  */
-struct qdma_intr_ring {
+struct qdma_intr_ring_generic {
 	/** producer index. This is from Interrupt source.
 	 *  Cumulative pointer of total interrupt Aggregation
 	 *  Ring entry written
@@ -71,6 +115,12 @@ struct qdma_intr_ring {
 	 */
 	__be64 coal_color:1;
 };
+
+union qdma_intr_ring {
+	struct qdma_intr_ring_cpm ring_cpm;
+	struct qdma_intr_ring_generic ring_generic;
+};
+
 
 /*****************************************************************************/
 /**

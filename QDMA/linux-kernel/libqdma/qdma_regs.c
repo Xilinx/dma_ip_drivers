@@ -47,7 +47,8 @@ int qdma_set_ring_sizes(struct xlnx_dma_dev *xdev, u8 index,
 	for (i = index; i < (index + count); i++)
 		*(glbl_rng_sz + i) += 1;
 
-	if (qdma_set_global_ring_sizes(xdev, index, count, glbl_rng_sz))
+	if (xdev->hw.qdma_global_csr_conf(xdev, index, count, glbl_rng_sz,
+					QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
 
 	return 0;
@@ -61,7 +62,8 @@ int qdma_get_ring_sizes(struct xlnx_dma_dev *xdev, u8 index,
 	if (!xdev || !glbl_rng_sz)
 		return -EINVAL;
 
-	if (qdma_get_global_ring_sizes(xdev, index, count, glbl_rng_sz))
+	if (xdev->hw.qdma_global_csr_conf(xdev, index, count, glbl_rng_sz,
+					QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ))
 		return -EINVAL;
 
 	/* Subtracting 1 for the wrap around descriptor and status descriptor */
@@ -77,21 +79,28 @@ int qdma_get_ring_sizes(struct xlnx_dma_dev *xdev, u8 index,
  *
  * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
  * @param[in]	reg_addr:	register address
+ * @param[out]	value:          pointer to hold the read value
  *
- * @return	value of the config register
+ * Return:	0 for success and <0 for error
  *****************************************************************************/
-unsigned int qdma_device_read_config_register(unsigned long dev_hndl,
-					unsigned int reg_addr)
+int qdma_device_read_config_register(unsigned long dev_hndl,
+					unsigned int reg_addr, u32 *value)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 
-	if (!xdev)
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
 		return -EINVAL;
+	}
 
-	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0)
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
 		return -EINVAL;
+	}
 
-	return readl(xdev->regs + reg_addr);
+	*value = readl(xdev->regs + reg_addr);
+
+	return 0;
 }
 
 /*****************************************************************************/
@@ -102,20 +111,27 @@ unsigned int qdma_device_read_config_register(unsigned long dev_hndl,
  * @param[in]	reg_addr:	register address
  * @param[in]	value:		register value to be writen
  *
+ * Return:	0 for success and <0 for error
  *****************************************************************************/
-void qdma_device_write_config_register(unsigned long dev_hndl,
+int qdma_device_write_config_register(unsigned long dev_hndl,
 				unsigned int reg_addr, unsigned int val)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 
-	if (!xdev)
-		return;
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
+		return -EINVAL;
+	}
 
-	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0)
-		return;
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
 
 	pr_debug("%s reg 0x%x, w 0x%08x.\n", xdev->conf.name, reg_addr, val);
 	writel(val, xdev->regs + reg_addr);
+
+	return 0;
 }
 
 
@@ -135,7 +151,7 @@ int qdma_csr_read(struct xlnx_dma_dev *xdev, struct global_csr_conf *csr)
 
 	qdma_mbox_compose_csr_read(xdev->func_id, m->raw);
 	rv = qdma_mbox_msg_send(xdev, m, 1, QDMA_MBOX_MSG_TIMEOUT_MS);
-	if (unlikely(rv < 0))
+	if (rv < 0)
 		goto free_msg;
 
 	rv = qdma_mbox_vf_csr_get(m->raw, &csr_info);
@@ -148,9 +164,10 @@ int qdma_csr_read(struct xlnx_dma_dev *xdev, struct global_csr_conf *csr)
 		}
 		csr->wb_intvl = csr_info.wb_intvl;
 	} else {
-		pr_err("csr info read failed with error = %d", rv);
+		pr_err("csr info read failed, rv = %d", rv);
 		rv = -EINVAL;
 	}
+
 
 free_msg:
 	qdma_mbox_msg_free(m);
@@ -172,66 +189,102 @@ int qdma_global_csr_set(unsigned long dev_hndl, u8 index, u8 count,
 #endif
 #else /* ifdef __QDMA_VF__ */
 
+static void qdma_sort_c2h_cntr_th_values(struct xlnx_dma_dev *xdev)
+{
+	uint8_t i, idx = 0, j = 0;
+	uint8_t c2h_cntr_val = xdev->csr_info.c2h_cnt_th[0];
+	uint8_t least_max = 0;
+	int ref_idx = -1;
+
+get_next_idx:
+	for (i = 0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
+		if ((ref_idx >= 0) && (ref_idx == i))
+			continue;
+		if (xdev->csr_info.c2h_cnt_th[i] < least_max)
+			continue;
+		c2h_cntr_val = xdev->csr_info.c2h_cnt_th[i];
+		idx = i;
+		break;
+	}
+	for (; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++) {
+		if ((ref_idx >= 0) && (ref_idx == i))
+			continue;
+		if (xdev->csr_info.c2h_cnt_th[i] < least_max)
+			continue;
+		if (c2h_cntr_val >= xdev->csr_info.c2h_cnt_th[i]) {
+			c2h_cntr_val = xdev->csr_info.c2h_cnt_th[i];
+			idx = i;
+		}
+	}
+	xdev->sorted_c2h_cntr_idx[j] = idx;
+	ref_idx = idx;
+	j++;
+	idx = j;
+	least_max = c2h_cntr_val;
+	if (j < QDMA_GLOBAL_CSR_ARRAY_SZ)
+		goto get_next_idx;
+}
+
 int qdma_csr_read(struct xlnx_dma_dev *xdev, struct global_csr_conf *csr)
 {
 	int rv = 0;
 
-	if (!xdev) {
-		pr_err("Invalid device handle");
-		return -EINVAL;
-	}
-
-	rv = qdma_get_global_ring_sizes(xdev, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, csr->ring_sz);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, csr->ring_sz,
+				QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
-		pr_err("Failed to read global ring sizes with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("Failed to read global ring sizes, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
-	rv = qdma_get_global_writeback_interval(xdev, &csr->wb_intvl);
+	rv = xdev->hw.qdma_global_writeback_interval_conf(xdev,
+						&csr->wb_intvl,
+						QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
 		if (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED) {
-			pr_err("Failed to read write back interval with error = %d",
+			pr_err("Failed to read write back interval, err = %d",
 					rv);
-			return qdma_get_error_code(rv);
+			return xdev->hw.qdma_get_error_code(rv);
 		}
 		pr_warn("Hardware Feature not supported");
 	}
 
-	rv = qdma_get_global_buffer_sizes(xdev, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, csr->c2h_buf_sz);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, csr->c2h_buf_sz,
+				QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
 		if (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED) {
-			pr_err("Failed to read global buffer sizes with error = %d",
+			pr_err("Failed to read global buffer sizes, err = %d",
 						rv);
-			return qdma_get_error_code(rv);
+			return xdev->hw.qdma_get_error_code(rv);
 		}
 		pr_warn("Hardware Feature not supported");
 	}
 
-	rv = qdma_get_global_timer_count(xdev, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, csr->c2h_timer_cnt);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, csr->c2h_timer_cnt,
+				QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
 		if (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED) {
-			pr_err("Failed to read global timer count with error = %d",
+			pr_err("Failed to read global timer count, err = %d",
 						rv);
-			return qdma_get_error_code(rv);
+			return xdev->hw.qdma_get_error_code(rv);
 		}
 		pr_warn("Hardware Feature not supported");
 	}
 
-	rv = qdma_get_global_counter_threshold(xdev, 0,
-				QDMA_GLOBAL_CSR_ARRAY_SZ,
-				csr->c2h_cnt_th);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0,
+				QDMA_GLOBAL_CSR_ARRAY_SZ, csr->c2h_cnt_th,
+				QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
 		if (rv != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED) {
-			pr_err("Failed to read global counter threshold, rv = %d",
+			pr_err("Failed to read global counter threshold, err = %d",
 					rv);
-			return qdma_get_error_code(rv);
+			return xdev->hw.qdma_get_error_code(rv);
 		}
 		pr_warn("Hardware Feature not supported");
 	}
-
+	qdma_sort_c2h_cntr_th_values(xdev);
 	return 0;
 }
 
@@ -253,16 +306,21 @@ int qdma_global_csr_set(unsigned long dev_hndl, u8 index, u8 count,
 				xdev->mod_name);
 		return -EINVAL;
 	}
-	if (qdma_set_global_writeback_interval(xdev, csr->wb_intvl))
+	if (xdev->hw.qdma_global_writeback_interval_conf(xdev, csr->wb_intvl,
+							 QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
-	if (qdma_set_ring_sizes(xdev, index, count, csr->ring_sz))
+	if (xdev->hw.qdma_global_csr_conf(xdev, index, count, csr->ring_sz,
+				QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
-	if (qdma_set_global_timer_count(xdev, index, count, csr->c2h_timer_cnt))
+	if (xdev->hw.qdma_global_csr_conf(xdev, index, count,
+					  csr->c2h_timer_cnt,
+				QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
-	if (qdma_set_global_counter_threshold(xdev, index, count,
-			csr->c2h_cnt_th))
+	if (xdev->hw.qdma_global_csr_conf(xdev, index, count, csr->c2h_cnt_th,
+					QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
-	if (qdma_set_global_buffer_sizes(xdev, index, count, csr->c2h_buf_sz))
+	if (xdev->hw.qdma_global_csr_conf(xdev, index, count, csr->c2h_buf_sz,
+					QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
 
 	rv = qdma_csr_read(xdev, &xdev->csr_info);
@@ -280,8 +338,23 @@ int qdma_global_csr_get(unsigned long dev_hndl, u8 index, u8 count,
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 	int i = 0;
 
-	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0)
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
 		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	if ((index + count) > QDMA_GLOBAL_CSR_ARRAY_SZ) {
+		pr_err("%s: Invalid index=%u and count=%u > %d",
+					   __func__, index, count,
+					   QDMA_GLOBAL_CSR_ARRAY_SZ);
+		return -EINVAL;
+	}
+
 	/** If qdma_get_active_queue_count() > 0,
 	 *  read the stored xdev csr values.
 	 */
@@ -306,6 +379,22 @@ int qdma_device_flr_quirk_set(struct pci_dev *pdev, unsigned long dev_hndl)
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 	int rv;
 
+	if (!dev_hndl) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	if (xdev->conf.pdev != pdev) {
+		pr_err("Invalid pdev passed: pci_dev(0x%lx) != pdev(0x%lx)\n",
+			(unsigned long)xdev->conf.pdev, (unsigned long)pdev);
+		return -EINVAL;
+	}
+
 	if (!xdev->dev_cap.flr_present) {
 		pr_info("FLR not present, therefore skipping FLR reset\n");
 		return 0;
@@ -315,14 +404,12 @@ int qdma_device_flr_quirk_set(struct pci_dev *pdev, unsigned long dev_hndl)
 		return -EINVAL;
 
 #ifndef __QDMA_VF__
-	rv = qdma_initiate_flr(xdev, 0);
+	rv = xdev->hw.qdma_initiate_flr(xdev, 0);
 #else
-	rv = qdma_initiate_flr(xdev, 1);
+	rv = xdev->hw.qdma_initiate_flr(xdev, 1);
 #endif
-	if (unlikely(rv < 0)) {
-		pr_err("Failed to initiate FLR with error = %d", rv);
+	if (rv)
 		return -EINVAL;
-	}
 
 	return 0;
 }
@@ -333,23 +420,34 @@ int qdma_device_flr_quirk_check(struct pci_dev *pdev, unsigned long dev_hndl)
 	int rv;
 	uint8_t flr_done = 0;
 
+	if (!dev_hndl) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	if (xdev->conf.pdev != pdev) {
+		pr_err("Invalid pdev passed: pci_dev(0x%lx) != pdev(0x%lx)\n",
+			(unsigned long)xdev->conf.pdev, (unsigned long)pdev);
+		return -EINVAL;
+	}
+
 	if (!xdev->dev_cap.flr_present) {
 		pr_info("FLR not present, therefore skipping FLR reset status\n");
 		return 0;
 	}
 
-	if (!dev_hndl || xdev_check_hndl(__func__, pdev, dev_hndl) < 0)
-		return -EINVAL;
-
 #ifndef __QDMA_VF__
-	rv = qdma_is_flr_done(xdev, 0, &flr_done);
+	rv = xdev->hw.qdma_is_flr_done(xdev, 0, &flr_done);
 #else
-	rv = qdma_is_flr_done(xdev, 1, &flr_done);
+	rv = xdev->hw.qdma_is_flr_done(xdev, 1, &flr_done);
 #endif
-	if (unlikely(rv < 0)) {
-		pr_err(" FLR done failed with error = %d", rv);
+	if (rv)
 		return -EINVAL;
-	}
 
 	if (!flr_done)
 		pr_info("%s, flr status stuck\n", xdev->conf.name);
@@ -364,29 +462,42 @@ int qdma_device_version_info(unsigned long dev_hndl,
 	struct qdma_hw_version_info info;
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 
-	if (!xdev || !version_info)
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
 		return -EINVAL;
+	}
+
+	if (!version_info) {
+		pr_err("version_info is NULL");
+		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
 
 	memset(&info, 0, sizeof(info));
 #ifndef __QDMA_VF__
-	rv = qdma_get_version(xdev, QDMA_DEV_PF, &info);
+	rv = xdev->hw.qdma_get_version(xdev, QDMA_DEV_PF, &info);
 #else
-	rv = qdma_get_version(xdev, QDMA_DEV_VF, &info);
+	rv = xdev->hw.qdma_get_version(xdev, QDMA_DEV_VF, &info);
 #endif
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		pr_err("failed to get version with error = %d", rv);
-		return qdma_get_error_code(rv);
+		return  xdev->hw.qdma_get_error_code(rv);
 	}
 
-	strncpy(version_info->everest_ip_str,
-			qdma_get_everest_ip(info.everest_ip),
-			sizeof(version_info->everest_ip_str) - 1);
-	strncpy(version_info->rtl_version_str,
-			qdma_get_rtl_version(info.rtl_version),
+	strncpy(version_info->versal_ip_str, info.qdma_versal_ip_type_str,
+			sizeof(version_info->versal_ip_str) - 1);
+	strncpy(version_info->rtl_version_str, info.qdma_rtl_version_str,
 			sizeof(version_info->rtl_version_str) - 1);
 	strncpy(version_info->vivado_release_str,
-			qdma_get_vivado_release_id(info.vivado_release),
+			info.qdma_vivado_release_id_str,
 			sizeof(version_info->vivado_release_str) - 1);
+	strncpy(version_info->device_type_str,
+			info.qdma_device_type_str,
+			sizeof(version_info->device_type_str) - 1);
 	return 0;
 }
 
@@ -397,18 +508,9 @@ void qdma_device_attributes_get(struct xlnx_dma_dev *xdev)
 
 	memset(&dev_info, 0, sizeof(dev_info));
 
-	qdma_get_device_attributes(xdev, &dev_info);
+	xdev->hw.qdma_get_device_attributes(xdev, &xdev->dev_cap);
 
-	xdev->dev_cap.num_pfs = dev_info.num_pfs;
-	xdev->dev_cap.num_qs = dev_info.num_qs;
-	xdev->dev_cap.flr_present = dev_info.flr_present;
-	xdev->dev_cap.st_en = dev_info.st_en;
-	xdev->dev_cap.mm_en = dev_info.mm_en;
-	xdev->dev_cap.mm_cmpt_en = dev_info.mm_cmpt_en;
-	xdev->dev_cap.mailbox_en = dev_info.mailbox_en;
-	xdev->dev_cap.mm_channel_max = dev_info.mm_channel_max;
-
-	pr_info("%s: num_pfs:%d, num_qs:%d, flr_present:%d, st_en:%d, mm_en:%d, mm_cmpt_en:%d, mailbox_en:%d, mm_channel_max:%d",
+	pr_info("%s: num_pfs:%d, num_qs:%d, flr_present:%d, st_en:%d, mm_en:%d, mm_cmpt_en:%d, mailbox_en:%d, mm_channel_max:%d, qid2vec_ctx:%d, cmpt_ovf_chk_dis:%d, mailbox_intr:%d, sw_desc_64b:%d, cmpt_desc_64b:%d, dynamic_bar:%d, legacy_intr:%d, cmpt_trig_count_timer:%d",
 		xdev->conf.name,
 		xdev->dev_cap.num_pfs,
 		xdev->dev_cap.num_qs,
@@ -417,7 +519,15 @@ void qdma_device_attributes_get(struct xlnx_dma_dev *xdev)
 		xdev->dev_cap.mm_en,
 		xdev->dev_cap.mm_cmpt_en,
 		xdev->dev_cap.mailbox_en,
-		xdev->dev_cap.mm_channel_max);
+		xdev->dev_cap.mm_channel_max,
+		xdev->dev_cap.qid2vec_ctx,
+		xdev->dev_cap.cmpt_ovf_chk_dis,
+		xdev->dev_cap.mailbox_intr,
+		xdev->dev_cap.sw_desc_64b,
+		xdev->dev_cap.cmpt_desc_64b,
+		xdev->dev_cap.dynamic_bar,
+		xdev->dev_cap.legacy_intr,
+		xdev->dev_cap.cmpt_trig_count_timer);
 }
 #endif
 
@@ -425,12 +535,25 @@ int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long id,
 			struct qdma_cmpl_ctrl *cctrl, bool set)
 {
 	int rv = 0;
-	struct qdma_descq *descq =  qdma_device_get_descq_by_id(
-					(struct xlnx_dma_dev *)dev_hndl,
-					id, NULL, 0, 1);
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	struct qdma_descq *descq;
 
-	if (!descq)
+	/** make sure that the dev_hndl passed is Valid */
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
 		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		return -EINVAL;
+	}
+
+	descq = qdma_device_get_descq_by_id(xdev, id, NULL, 0, 1);
+	if (!descq) {
+		pr_err("Invalid qid: %ld", id);
+		return -EINVAL;
+	}
 
 	if (set) {
 		lock_descq(descq);

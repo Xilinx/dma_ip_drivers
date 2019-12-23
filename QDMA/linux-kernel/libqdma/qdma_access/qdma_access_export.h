@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #ifndef QDMA_ACCESS_EXPORT_H_
@@ -34,7 +46,38 @@ struct qdma_dev_attributes {
 	uint8_t mailbox_en:1;
 	/** @mm_channel_max - Num of MM channels */
 	uint8_t mm_channel_max;
+
+	/** Below are the list of HW features which are populated by qdma_access
+	 * based on RTL version
+	 */
+	/** @qid2vec_ctx - To indicate support of qid2vec context */
+	uint8_t qid2vec_ctx:1;
+	/** @cmpt_ovf_chk_dis - To indicate support of overflow check
+	 * disable in CMPT ring
+	 */
+	uint8_t cmpt_ovf_chk_dis:1;
+	/** @mailbox_intr - To indicate support of mailbox interrupt */
+	uint8_t mailbox_intr:1;
+	/** @sw_desc_64b - To indicate support of 64 bytes C2H/H2C
+	 * descriptor format
+	 */
+	uint8_t sw_desc_64b:1;
+	/** @cmpt_desc_64b - To indicate support of 64 bytes CMPT
+	 * descriptor format
+	 */
+	uint8_t cmpt_desc_64b:1;
+	/** @dynamic_bar - To indicate support of dynamic bar detection */
+	uint8_t dynamic_bar:1;
+	/** @legacy_intr - To indicate support of legacy interrupt */
+	uint8_t legacy_intr:1;
+	/** @cmpt_trig_count_timer - To indicate support of counter + timer
+	 * trigger mode
+	 */
+	uint8_t cmpt_trig_count_timer:1;
 };
+
+/** qdma_dev_attributes structure size */
+#define QDMA_DEV_ATTR_STRUCT_SIZE	(sizeof(struct qdma_dev_attributes))
 
 /**
  * @enum qdma_desc_size - QDMA queue descriptor size
@@ -123,18 +166,35 @@ enum qdma_rtl_version {
 	QDMA_RTL_PATCH
 };
 
-enum qdma_everest_ip {
-	/** @QDMA_SOFT_IP - Soft IP  */
-	QDMA_SOFT_IP,
-	/** @QDMA_HARD_IP - Hard IP  */
-	QDMA_HARD_IP
+enum qdma_versal_ip_type {
+	/** @QDMA_VERSAL_HARD_IP - Hard IP  */
+	QDMA_VERSAL_HARD_IP,
+	/** @QDMA_VERSAL_SOFT_IP - Soft IP  */
+	QDMA_VERSAL_SOFT_IP,
+	/** @QDMA_VERSAL_NONE - Not versal device  */
+	QDMA_VERSAL_NONE
 };
 
 enum qdma_vivado_release_id {
 	/** @QDMA_VIVADO_2018_3 - Vivado version 2018.3  */
 	QDMA_VIVADO_2018_3,
 	/** @QDMA_VIVADO_2019_1 - Vivado version 2019.1  */
-	QDMA_VIVADO_2019_1
+	QDMA_VIVADO_2019_1,
+	/** @QDMA_VIVADO_2019_2 - Vivado version 2019.2  */
+	QDMA_VIVADO_2019_2,
+	/** @QDMA_VIVADO_NONE - Not a valid Vivado version*/
+	QDMA_VIVADO_NONE
+};
+
+enum qdma_device_type {
+	/** @QDMA_DEVICE_SOFT - UltraScale+ IP's  */
+	QDMA_DEVICE_SOFT,
+	/** @QDMA_DEVICE_VERSAL -VERSAL IP  */
+	QDMA_DEVICE_VERSAL,
+	/** @QDMA_DEVICE_VERSAL_CPM5 - VERSAL CPM5  */
+	QDMA_DEVICE_VERSAL_CPM5,
+	/** @QDMA_DEVICE_NONE - Not a valid device  */
+	QDMA_DEVICE_NONE
 };
 
 /**

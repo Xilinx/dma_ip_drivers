@@ -214,7 +214,7 @@ static long cdev_gen_ioctl(struct file *file, unsigned int cmd,
 	if (xcdev->fp_ioctl_extra)
 		return xcdev->fp_ioctl_extra(xcdev, cmd, arg);
 
-	pr_info("%s ioctl NOT supported.\n", xcdev->name);
+	pr_err("%s ioctl NOT supported.\n", xcdev->name);
 	return -EINVAL;
 }
 
@@ -347,13 +347,13 @@ static ssize_t cdev_gen_read_write(struct file *file, char __user *buf,
 	unsigned long qhndl;
 
 	if (!xcdev) {
-		pr_info("file 0x%p, xcdev NULL, 0x%p,%llu, pos %llu, W %d.\n",
+		pr_err("file 0x%p, xcdev NULL, 0x%p,%llu, pos %llu, W %d.\n",
 			file, buf, (u64)count, (u64)*pos, write);
 		return -EINVAL;
 	}
 
 	if (!xcdev->fp_rw) {
-		pr_info("file 0x%p, %s, NO rw, 0x%p,%llu, pos %llu, W %d.\n",
+		pr_err("file 0x%p, %s, NO rw, 0x%p,%llu, pos %llu, W %d.\n",
 			file, xcdev->name, buf, (u64)count, (u64)*pos, write);
 		return -EINVAL;
 	}
@@ -425,7 +425,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 
 	caio = kmem_cache_alloc(cdev_cache, GFP_KERNEL);
 	if (!caio) {
-		pr_info("OOM");
+		pr_err("Failed to allocate caio");
 		return -ENOMEM;
 	}
 	memset(caio, 0, sizeof(struct cdev_async_io));
@@ -583,20 +583,14 @@ static const struct file_operations cdev_gen_fops = {
  * xcb: per pci device character device control info.
  * xcdev: per queue character device
  */
-int qdma_cdev_display(void *p, char *buf)
-{
-	struct qdma_cdev *xcdev = (struct qdma_cdev *)p;
-
-	return sprintf(buf, ", cdev %s", xcdev->name);
-}
-
 void qdma_cdev_destroy(struct qdma_cdev *xcdev)
 {
-	pr_debug("destroying cdev %p", xcdev);
+
 	if (!xcdev) {
-		pr_info("xcdev NULL.\n");
+		pr_err("xcdev is NULL.\n");
 		return;
 	}
+	pr_debug("destroying cdev %p", xcdev);
 
 	if (xcdev->sys_device)
 		device_destroy(qdma_class, xcdev->cdevno);
@@ -618,9 +612,10 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 	xcdev = kzalloc(sizeof(struct qdma_cdev) + strlen(qconf->name) + 1,
 			GFP_KERNEL);
 	if (!xcdev) {
-		pr_info("%s OOM %lu.\n", qconf->name, sizeof(struct qdma_cdev));
+		pr_err("%s failed to allocate cdev %lu.\n",
+		       qconf->name, sizeof(struct qdma_cdev));
 		if (ebuf && ebuflen) {
-			rv = sprintf(ebuf, "%s cdev OOM %lu.\n",
+			rv = sprintf(ebuf, "%s failed to allocate cdev %lu.\n",
 				qconf->name, sizeof(struct qdma_cdev));
 			ebuf[rv] = '\0';
 
@@ -630,14 +625,15 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 
 	xcdev->cdev.owner = THIS_MODULE;
 	xcdev->xcb = xcb;
-	priv_data = qconf->c2h ? &xcdev->c2h_qhndl : &xcdev->h2c_qhndl;
+	priv_data = (qconf->q_type == Q_C2H) ?
+			&xcdev->c2h_qhndl : &xcdev->h2c_qhndl;
 	*priv_data = qhndl;
-	xcdev->dir_init = (1 << qconf->c2h);
+	xcdev->dir_init = (1 << qconf->q_type);
 	strcpy(xcdev->name, qconf->name);
 
 	xcdev->minor = minor;
 	if (xcdev->minor >= xcb->cdev_minor_cnt) {
-		pr_info("%s: no char dev. left.\n", qconf->name);
+		pr_err("%s: no char dev. left.\n", qconf->name);
 		if (ebuf && ebuflen) {
 			rv = sprintf(ebuf, "%s cdev no cdev left.\n",
 					qconf->name);
@@ -653,7 +649,7 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 	/* bring character device live */
 	rv = cdev_add(&xcdev->cdev, xcdev->cdevno, 1);
 	if (rv < 0) {
-		pr_info("cdev_add failed %d, %s.\n", rv, xcdev->name);
+		pr_err("cdev_add failed %d, %s.\n", rv, xcdev->name);
 		if (ebuf && ebuflen) {
 			int l = sprintf(ebuf, "%s cdev add failed %d.\n",
 					qconf->name, rv);
@@ -668,7 +664,7 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 				xcdev->cdevno, NULL, "%s", xcdev->name);
 		if (IS_ERR(xcdev->sys_device)) {
 			rv = PTR_ERR(xcdev->sys_device);
-			pr_info("%s device_create failed %d.\n",
+			pr_err("%s device_create failed %d.\n",
 				xcdev->name, rv);
 			if (ebuf && ebuflen) {
 				int l = sprintf(ebuf,
@@ -762,10 +758,10 @@ int qdma_cdev_init(void)
 {
 	qdma_class = class_create(THIS_MODULE, QDMA_CDEV_CLASS_NAME);
 	if (IS_ERR(qdma_class)) {
-		pr_info("%s: failed to create class 0x%lx.",
+		pr_err("%s: failed to create class 0x%lx.",
 			QDMA_CDEV_CLASS_NAME, (unsigned long)qdma_class);
 		qdma_class = NULL;
-		return -1;
+		return -ENODEV;
 	}
 	/* using kmem_cache_create to enable sequential cleanup */
 	cdev_cache = kmem_cache_create("cdev_cache",
@@ -774,7 +770,7 @@ int qdma_cdev_init(void)
 					SLAB_HWCACHE_ALIGN,
 					NULL);
 	if (!cdev_cache) {
-		pr_info("memory allocation for cdev_cache failed. OOM\n");
+		pr_err("failed to allocate cdev_cache\n");
 		return -ENOMEM;
 	}
 

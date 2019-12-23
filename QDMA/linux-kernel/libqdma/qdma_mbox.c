@@ -104,6 +104,10 @@ int qdma_mbox_msg_send(struct xlnx_dma_dev *xdev, struct mbox_msg *m,
 
 	m->wait_resp = wait_resp ? 1 : 0;
 
+#if defined(__QDMA_VF__)
+	if (xdev->reset_state == RESET_STATE_INVALID)
+		return -EINVAL;
+#endif
 	/* queue up to ensure order */
 	spin_lock_bh(&mbox->list_lock);
 	list_add_tail(&m->list, &mbox->tx_todo_list);
@@ -144,9 +148,12 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 {
 	struct mbox_msg *m_rcv = &mbox->rx;
 	struct mbox_msg *m_snd = NULL, *tmp1 = NULL, *tmp2 = NULL;
+	struct mbox_msg *m_resp = NULL;
+	int rv = 0;
 
 	if (mbox->xdev->func_id == mbox->xdev->func_id_parent) {
-		mbox->xdev->func_id = qdma_mbox_vf_func_id_get(m_rcv->raw);
+		mbox->xdev->func_id = qdma_mbox_vf_func_id_get(m_rcv->raw,
+							QDMA_DEV);
 		mbox->xdev->func_id_parent = qdma_mbox_vf_parent_func_id_get(
 				m_rcv->raw);
 	}
@@ -163,6 +170,36 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 		}
 	}
 	spin_unlock_bh(&mbox->list_lock);
+
+	if (list_empty(&mbox->rx_pend_list)) {
+		m_resp = qdma_mbox_msg_alloc();
+		if (!m_resp) {
+			pr_err("Failed to allocate mbox msg\n");
+			return -ENOMEM;
+		}
+		rv = qdma_mbox_vf_rcv_msg_handler(m_rcv->raw, m_resp->raw);
+		if (rv == QDMA_MBOX_VF_RESET) {
+			qdma_mbox_msg_send(mbox->xdev, m_resp, 0,
+						QDMA_MBOX_MSG_TIMEOUT_MS);
+			mbox->xdev->reset_state = RESET_STATE_RECV_PF_RESET_REQ;
+			queue_work(mbox->xdev->workq,
+					   &(mbox->xdev->reset_work));
+		} else if (rv == QDMA_MBOX_PF_RESET_DONE) {
+			qdma_mbox_msg_send(mbox->xdev, m_resp, 0,
+						QDMA_MBOX_MSG_TIMEOUT_MS);
+			mbox->xdev->reset_state =
+				RESET_STATE_RECV_PF_RESET_DONE;
+			qdma_waitq_wakeup(&mbox->xdev->wq);
+		}  else if (rv == QDMA_MBOX_PF_BYE) {
+			qdma_mbox_msg_send(mbox->xdev, m_resp, 0,
+						QDMA_MBOX_MSG_TIMEOUT_MS);
+			mbox->xdev->reset_state =
+				RESET_STATE_RECV_PF_OFFLINE_REQ;
+			queue_work(mbox->xdev->workq,
+					   &(mbox->xdev->reset_work));
+		}
+
+	}
 
 	if (m_snd) {
 		/* a matching request is found */
@@ -183,7 +220,11 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 {
 	struct mbox_msg *m = &mbox->rx;
 	struct mbox_msg *m_resp = qdma_mbox_msg_alloc();
+	struct mbox_msg *m_snd = NULL, *tmp1 = NULL, *tmp2 = NULL;
 	int rv;
+
+	if (!m_resp)
+		return -ENOMEM;
 
 	rv = qdma_mbox_pf_rcv_msg_handler(mbox->xdev,
 					  mbox->xdev->conf.pdev->bus->number,
@@ -192,20 +233,47 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 
 	if (rv == QDMA_MBOX_VF_OFFLINE) {
 #ifdef CONFIG_PCI_IOV
-		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m_resp->raw);
+		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m->raw, QDMA_DEV);
 
 		xdev_sriov_vf_offline(mbox->xdev, vf_func_id);
 #endif
 		qdma_mbox_msg_free(m_resp);
 	} else if (rv == QDMA_MBOX_VF_ONLINE) {
 #ifdef CONFIG_PCI_IOV
-		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m_resp->raw);
+		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m->raw, QDMA_DEV);
 
 		xdev_sriov_vf_online(mbox->xdev, vf_func_id);
 #endif
-		qdma_mbox_msg_send(mbox->xdev, m_resp, 0, 0);
+		qdma_mbox_msg_send(mbox->xdev, m_resp, 0,
+					QDMA_MBOX_MSG_TIMEOUT_MS);
+	} else if (rv == QDMA_MBOX_VF_RESET ||
+			   rv == QDMA_MBOX_PF_RESET_DONE ||
+			   rv == QDMA_MBOX_PF_BYE) {
+		spin_lock_bh(&mbox->list_lock);
+		if (!list_empty(&mbox->rx_pend_list)) {
+			list_for_each_entry_safe(tmp1, tmp2,
+						&mbox->rx_pend_list,
+						list) {
+				if (qdma_mbox_is_msg_response(tmp1->raw,
+								m->raw)) {
+					m_snd = tmp1;
+					m_snd->resp_op_matched = 1;
+					break;
+				}
+			}
+		}
+		if (m_snd) {
+			list_del(&m_snd->list);
+			memcpy(m_snd->raw, m->raw, MBOX_MSG_REG_MAX *
+				   sizeof(uint32_t));
+			qdma_waitq_wakeup(&m_snd->waitq);
+			qdma_mbox_msg_free(m_snd);
+		}
+		qdma_mbox_msg_free(m_resp);
+		spin_unlock_bh(&mbox->list_lock);
 	} else
-		qdma_mbox_msg_send(mbox->xdev, m_resp, 0, 0);
+		qdma_mbox_msg_send(mbox->xdev, m_resp, 0,
+					QDMA_MBOX_MSG_TIMEOUT_MS);
 
 	return 0;
 }
@@ -242,12 +310,14 @@ static void mbox_tx_work(struct work_struct *work)
 		m = list_first_entry(&mbox->tx_todo_list,
 						struct mbox_msg, list);
 
-		list_del(&m->list); /* remove from list first*/
 		spin_unlock_bh(&mbox->list_lock);
 
 		if (mbox_hw_send(mbox, m) == 0) {
 			mbox->send_busy = 0;
-			/* message sent */
+			spin_lock_bh(&mbox->list_lock);
+			/* Msg tx successful, remove from list */
+			list_del(&m->list);
+			spin_unlock_bh(&mbox->list_lock);
 
 			/* response needed */
 			if (m->wait_resp) {
@@ -262,15 +332,15 @@ static void mbox_tx_work(struct work_struct *work)
 				if (!m->wait_resp) {
 					m->retry_cnt--;
 					if (!m->retry_cnt) {
+						spin_lock_bh(&mbox->list_lock);
+						list_del(&m->list);
+						spin_unlock_bh(
+							&mbox->list_lock);
 						qdma_mbox_msg_free(m);
 						break;
 					}
 				}
 				mbox->send_busy = 1;
-				spin_lock_bh(&mbox->list_lock);
-				/* put it back at the top of the list */
-				list_add(&m->list, &mbox->tx_todo_list);
-				spin_unlock_bh(&mbox->list_lock);
 				mbox_timer_start(mbox);
 			} else
 				qdma_mbox_msg_free(m);
@@ -343,6 +413,8 @@ static void mbox_timer_handler(unsigned long arg)
 void qdma_mbox_stop(struct xlnx_dma_dev *xdev)
 {
 	struct qdma_mbox *mbox = &xdev->mbox;
+	uint8_t retry_count = 100;
+	int rv = 0;
 
 	do {
 		spin_lock_bh(&mbox->list_lock);
@@ -352,21 +424,31 @@ void qdma_mbox_stop(struct xlnx_dma_dev *xdev)
 		mdelay(10); /* sleep 10ms for msgs to be sent or freed */
 	} while (1);
 	spin_unlock_bh(&mbox->list_lock);
+
+	do {
+		rv = qdma_mbox_out_status(xdev, QDMA_DEV);
+		if (!rv)
+			break;
+		retry_count--;
+		mdelay(10);
+	} while (retry_count != 0);
 	mbox_timer_stop(&xdev->mbox);
-#ifndef MAILBOX_INTERRUPT_DISABLE
-	if (!xdev->mbox.rx_poll)
-		qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
-#endif
+	pr_debug("func_id=%d retry_count=%d\n", xdev->func_id, retry_count);
+	if ((xdev->version_info.device_type ==
+			QDMA_DEVICE_SOFT) &&
+		(xdev->version_info.vivado_release >=
+			QDMA_VIVADO_2019_1)) {
+		if (!xdev->mbox.rx_poll)
+			qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
+	}
 }
 
 void qdma_mbox_start(struct xlnx_dma_dev *xdev)
 {
 	if (xdev->mbox.rx_poll)
 		mbox_timer_start(&xdev->mbox);
-#ifndef MAILBOX_INTERRUPT_DISABLE
 	else
 		qdma_mbox_enable_interrupts(xdev, QDMA_DEV);
-#endif
 }
 
 void qdma_mbox_cleanup(struct xlnx_dma_dev *xdev)
@@ -375,10 +457,8 @@ void qdma_mbox_cleanup(struct xlnx_dma_dev *xdev)
 
 	if (mbox->workq) {
 		mbox_timer_stop(mbox);
-#ifndef MAILBOX_INTERRUPT_DISABLE
 		if (!xdev->mbox.rx_poll)
 			qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
-#endif
 		flush_workqueue(mbox->workq);
 		destroy_workqueue(mbox->workq);
 	}
@@ -421,16 +501,19 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 #endif
 	/* ack any received messages in the Q */
 	qdma_mbox_hw_init(xdev, QDMA_DEV);
-#ifndef MAILBOX_INTERRUPT_DISABLE
-	if ((xdev->conf.qdma_drv_mode != POLL_MODE) &&
-		(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) {
-		mbox->rx_poll = 0;
-		qdma_mbox_enable_interrupts(xdev, QDMA_DEV);
+	if ((xdev->version_info.device_type ==
+			QDMA_DEVICE_SOFT) &&
+		(xdev->version_info.vivado_release >=
+			QDMA_VIVADO_2019_1)) {
+		if ((xdev->conf.qdma_drv_mode != POLL_MODE) &&
+			(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) {
+			mbox->rx_poll = 0;
+			qdma_mbox_enable_interrupts(xdev, QDMA_DEV);
+		} else
+			mbox->rx_poll = 1;
 	} else
 		mbox->rx_poll = 1;
-#else
-	mbox->rx_poll = 1;
-#endif
+
 	qdma_timer_setup(timer, mbox_timer_handler, mbox);
 
 	return 0;

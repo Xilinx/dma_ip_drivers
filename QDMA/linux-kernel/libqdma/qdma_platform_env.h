@@ -24,4 +24,9 @@
 
 #define QDMA_SNPRINTF	snprintf
 
+#define qdma_log_info(x_, ...) pr_info(x_, ##__VA_ARGS__)
+#define qdma_log_warning(x_, ...) pr_warn(x_, ##__VA_ARGS__)
+#define qdma_log_error(x_, ...) pr_err(x_, ##__VA_ARGS__)
+#define qdma_log_debug(x_, ...) pr_debug(x_, ##__VA_ARGS__)
+
 #endif /* LIBQDMA_QDMA_PLATFORM_ENV_H_ */
