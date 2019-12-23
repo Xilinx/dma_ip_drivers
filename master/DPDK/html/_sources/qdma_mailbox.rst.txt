@@ -13,7 +13,7 @@ Virtualization (SR-IOV). SR-IOV classifies the functions as:
 	Registers (BARs) but lacking the full configuration resources and are controlled by the PF
 	configuration. The main role of the VF is data transfer.
 
-VF can communicate to a PF through mailbox. Each function implements one 128B inbox and 128B outbox message buffer.
+VF can communicate to a PF through mailbox for its queue configuration. Each function implements one 128B inbox and 128B outbox message buffer.
 These mailboxes are accessible to the driver via PCIe BAR of its own function.
 HW also provides ability to interrupt the driver for an incoming mailbox message to a PCIe function.
 For further details on the mailbox internals and mailbox registers, refer to QDMA_Product_Guide_.
@@ -46,6 +46,8 @@ Following are the list of messages supported between PF and VF driver
 		MBOX_OP_QNOTIFY_ADD,
 		/** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
 		MBOX_OP_QNOTIFY_DEL,
+		/** @MBOX_OP_QACTIVE_CNT: get active q count */
+		MBOX_OP_GET_QACTIVE_CNT,
 		/** @MBOX_OP_QCTXT_WRT: queue context write */
 		MBOX_OP_QCTXT_WRT,
 		/** @MBOX_OP_QCTXT_RD: queue context read */
@@ -62,6 +64,12 @@ Following are the list of messages supported between PF and VF driver
 		MBOX_OP_INTR_CTXT_CLR,
 		/** @MBOX_OP_INTR_CTXT_INV: interrupt context invalidate */
 		MBOX_OP_INTR_CTXT_INV,
+		/** @MBOX_OP_RESET_PREPARE: PF to VF message for VF reset*/
+		MBOX_OP_RESET_PREPARE,
+		/** @MBOX_OP_RESET_DONE: PF reset done */
+		MBOX_OP_RESET_DONE,
+		/** @MBOX_OP_PF_BYE: pf offline */
+		MBOX_OP_PF_BYE,
 
 		/** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
 		MBOX_OP_HELLO_RESP = 0x81,
@@ -75,6 +83,8 @@ Following are the list of messages supported between PF and VF driver
 		MBOX_OP_QNOTIFY_ADD_RESP,
 		/** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
 		MBOX_OP_QNOTIFY_DEL_RESP,
+		/** @MBOX_OP_QACTIVE_CNT_RESP: get active q count */
+		MBOX_OP_GET_QACTIVE_CNT_RESP,
 		/** @MBOX_OP_QCTXT_WRT_RESP: response to @MBOX_OP_QCTXT_WRT */
 		MBOX_OP_QCTXT_WRT_RESP,
 		/** @MBOX_OP_QCTXT_RD_RESP: response to @MBOX_OP_QCTXT_RD */
@@ -91,6 +101,12 @@ Following are the list of messages supported between PF and VF driver
 		MBOX_OP_INTR_CTXT_CLR_RESP,
 		/** @MBOX_OP_INTR_CTXT_INV_RESP: response to @MBOX_OP_INTR_CTXT_INV */
 		MBOX_OP_INTR_CTXT_INV_RESP,
+		/** @MBOX_OP_RESET_PREPARE_RESP: response to @MBOX_OP_RESET_PREPARE */
+		MBOX_OP_RESET_PREPARE_RESP,
+		/** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
+		MBOX_OP_RESET_DONE_RESP,
+		/** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
+		MBOX_OP_PF_BYE_RESP,
 
 		/** @MBOX_OP_MAX: total mbox opcodes*/
 		MBOX_OP_MAX

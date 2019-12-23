@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Driver Design &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  <title>Driver Design &mdash; QDMA DPDK Driver 2019.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="Developers Guide" href="dev-guide.html"/>
         <link rel="next" title="DPDK Callback APIs" href="dpdk-callbacks.html"/>
         <link rel="prev" title="Developers Guide" href="dev-guide.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -104,8 +104,12 @@
 <li class="toctree-l4"><a class="reference internal" href="qdma_resmgmt.html">QDMA Queue Resource Management</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#mailbox-communication">Mailbox Communication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mailbox-communication-for-vf-configuration">Mailbox Communication for VF configuration</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="qdma_mailbox.html">QDMA Mailbox</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pf-vf-shutdown">PF/VF Shutdown</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pf_vf_shutdown.html">PF/VF Shutdown</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
@@ -168,29 +172,31 @@
 It supports both streaming (network) and memory (compute) interface to QDMA.
 Below diagram gives a high level system overview of the QDMA DPDK driver.</p>
 <img alt="_images/dpdk_overview.png" class="align-center" src="_images/dpdk_overview.png" />
+<p>Below sections describes design of different blocks and use cases of DPDK driver.</p>
 <div class="section" id="driver-interfaces-and-callbacks">
 <h2>Driver interfaces and callbacks<a class="headerlink" href="#driver-interfaces-and-callbacks" title="Permalink to this headline">¶</a></h2>
 <p>The Driver registers two driver interfaces (<code class="docutils literal notranslate"><span class="pre">net_qdma</span></code> for PFs and <code class="docutils literal notranslate"><span class="pre">net_qdma_vf</span></code> for VFs) with DPDK RTE.
 Below <code class="docutils literal notranslate"><span class="pre">eth_dev_ops</span></code> callbacks are implemented by both driver interfaces of the DPDK driver.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre>static struct eth_dev_ops qdma_eth_dev_ops = {
-        .dev_configure          = qdma_dev_configure,
-        .dev_infos_get          = qdma_dev_infos_get,
-        .dev_start              = qdma_dev_start,
-        .dev_stop               = qdma_dev_stop,
-        .dev_close              = qdma_dev_close,
-        .link_update            = qdma_dev_link_update,
-        .rx_queue_setup         = qdma_dev_rx_queue_setup,
-        .tx_queue_setup         = qdma_dev_tx_queue_setup,
-        .rx_queue_release       = qdma_dev_rx_queue_release,
-        .tx_queue_release       = qdma_dev_tx_queue_release,
-        .rx_queue_start         = qdma_dev_rx_queue_start,
-        .rx_queue_stop          = qdma_dev_rx_queue_stop,
-        .tx_queue_start         = qdma_dev_tx_queue_start,
-        .tx_queue_stop          = qdma_dev_tx_queue_stop,
-        .stats_get              = qdma_dev_stats_get,
+        .dev_configure      = qdma_dev_configure,
+        .dev_infos_get      = qdma_dev_infos_get,
+        .dev_start          = qdma_dev_start,
+        .dev_stop           = qdma_dev_stop,
+        .dev_close          = qdma_dev_close,
+        .link_update        = qdma_dev_link_update,
+        .rx_queue_setup     = qdma_dev_rx_queue_setup,
+        .tx_queue_setup     = qdma_dev_tx_queue_setup,
+        .rx_queue_release   = qdma_dev_rx_queue_release,
+        .tx_queue_release   = qdma_dev_tx_queue_release,
+        .rx_queue_start     = qdma_dev_rx_queue_start,
+        .rx_queue_stop      = qdma_dev_rx_queue_stop,
+        .tx_queue_start     = qdma_dev_tx_queue_start,
+        .tx_queue_stop      = qdma_dev_tx_queue_stop,
+        .stats_get          = qdma_dev_stats_get,
 };
 </pre></div>
 </div>
+<p>Additionally <code class="docutils literal notranslate"><span class="pre">dev_reset</span></code> callback is implemented for VF driver interface only.</p>
 <p>Below sequence diagram depicts the application call flow to these driver callbacks and their high level operations.</p>
 <img alt="_images/dpdk_call_flow.png" src="_images/dpdk_call_flow.png" />
 <p>Implementation details of the callback APIs is described further in</p>
@@ -214,11 +220,19 @@ Below <code class="docutils literal notranslate"><span class="pre">eth_dev_ops</
 </ul>
 </div>
 </div>
-<div class="section" id="mailbox-communication">
-<h2>Mailbox Communication<a class="headerlink" href="#mailbox-communication" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mailbox-communication-for-vf-configuration">
+<h2>Mailbox Communication for VF configuration<a class="headerlink" href="#mailbox-communication-for-vf-configuration" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="qdma_mailbox.html">QDMA Mailbox</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="pf-vf-shutdown">
+<h2>PF/VF Shutdown<a class="headerlink" href="#pf-vf-shutdown" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pf_vf_shutdown.html">PF/VF Shutdown</a></li>
 </ul>
 </div>
 </div>
@@ -230,14 +244,34 @@ If the errors are enabled by SW, QDMA logs the status of error in the respective
 </div>
 <div class="section" id="dpdk-driver-debug">
 <h2>DPDK Driver debug<a class="headerlink" href="#dpdk-driver-debug" title="Permalink to this headline">¶</a></h2>
-<p>DPDK driver provides API <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_xdebug()</span></code> to dump debug information. Below debug information can be dumped using this API</p>
-<ul class="simple">
-<li>Dump QDMA registers</li>
-<li>Dump queue contexts for the given queue id</li>
-<li>Dump software information for the given queue id</li>
-<li>Dump the specified descriptor ring of the given queue id</li>
+<p>DPDK driver provides below APIs to dump debug information.</p>
+<ul>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_regdump()</span></code></dt>
+<dd><p class="first last">Dump QDMA registers</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_qdevice()</span></code></dt>
+<dd><p class="first last">Dump QDMA device structure maintained by SW</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_qinfo()</span></code></dt>
+<dd><p class="first last">Dump QDMA queue context maintained by HW and queue structures maintained by SW</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_qdesc()</span></code></dt>
+<dd><p class="first last">Dump the specified descriptor ring of the given queue id</p>
+</dd>
+</dl>
+</li>
 </ul>
-<p>User application can call this API to dump the required debug information.</p>
+<p>User application can call these APIs to dump the required debug information.</p>
 </div>
 </div>
 
@@ -282,7 +316,7 @@ If the errors are enabled by SW, QDMA logs the status of error in the respective
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA Mailbox &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  <title>QDMA Mailbox &mdash; QDMA Linux Driver 2019.2 documentation</title>
   
 
+  
+  
   
   
 
@@ -33,9 +35,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/>
-        <link rel="next" title="QDMA Debug File System Support" href="debugfs.html"/>
+        <link rel="next" title="QDMA Function Level Reset (FLR)" href="flr.html"/>
         <link rel="prev" title="QDMA Queue Resource Management" href="qdma_resmgmt.html"/> 
 
   
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -85,7 +88,10 @@
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
@@ -110,6 +116,10 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#stop-a-queue">Stop a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#delete-a-queue">Delete a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#read-write-from-a-queue">Read/Write from a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#funtion-level-reset">Funtion Level Reset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#qdma-debug-support">QDMA Debug Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#linux-driver-interop-with-dpdk-driver">Linux Driver Interop with DPDK Driver</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
@@ -128,8 +138,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">QDMA Linux Driver</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
       </nav>
 
 
@@ -138,27 +150,44 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="devguide.html">Developers Guide</a> &raquo;</li>
-      
+        
           <li><a href="qdma_design.html">QDMA Linux Driver Design Flow</a> &raquo;</li>
-      
-    <li>QDMA Mailbox</li>
+        
+      <li>QDMA Mailbox</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/qdma_mailbox.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -168,19 +197,17 @@
 <h1>QDMA Mailbox<a class="headerlink" href="#qdma-mailbox" title="Permalink to this headline">¶</a></h1>
 <p>The QDMA Subsystem for PCIe provides an optional feature to support the Single Root I/O
 Virtualization (SR-IOV). SR-IOV classifies the functions as:</p>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt>Physical Functions (PF) :</dt>
-<dd><p class="first last">Full featured PCIe functions which include SR-IOV capabilities among others.</p>
-</dd>
+<dd>Full featured PCIe functions which include SR-IOV capabilities among others.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>Virtual Functions (VF):</dt>
-<dd><p class="first last">PCIe functions featuring configuration space with Base Address
+<dd>PCIe functions featuring configuration space with Base Address
 Registers (BARs) but lacking the full configuration resources and are controlled by the PF
-configuration. The main role of the VF is data transfer.</p>
-</dd>
+configuration. The main role of the VF is data transfer.</dd>
 </dl>
 </li>
 </ul>
@@ -194,7 +221,7 @@ The PF and VF drivers define the message formatting to be exchanged between the 
 <p>The driver enables mailbox interrupt and registers a Rx handler for notification of incoming mailbox message.
 It also creates a Tx thread to send a message and poll for its response from the peer driver.</p>
 <p>Following are the list of messages supported between PF and VF driver</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>enum mbox_msg_op {
+<div class="highlight-none"><div class="highlight"><pre><span></span>enum mbox_msg_op {
         /** @MBOX_OP_BYE: vf off line */
         MBOX_OP_BYE,
         /** @MBOX_OP_HELLO: vf on line */
@@ -266,15 +293,18 @@ It also creates a Tx thread to send a message and poll for its response from the
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="debugfs.html" class="btn btn-neutral float-right" title="QDMA Debug File System Support" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="flr.html" class="btn btn-neutral float-right" title="QDMA Function Level Reset (FLR)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="qdma_resmgmt.html" class="btn btn-neutral" title="QDMA Queue Resource Management" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="qdma_resmgmt.html" class="btn btn-neutral" title="QDMA Queue Resource Management" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -305,10 +335,11 @@ It also creates a Tx thread to send a message and poll for its response from the
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

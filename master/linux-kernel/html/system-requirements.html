@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System Requirements &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  <title>System Requirements &mdash; QDMA Linux Driver 2019.2 documentation</title>
   
 
+  
+  
   
   
 
@@ -33,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
         <link rel="next" title="Building and Installing Software Stack" href="build.html"/>
         <link rel="prev" title="QDMA Features" href="features.html"/> 
 
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -63,7 +66,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -84,7 +87,10 @@
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">System Requirements</a><ul>
@@ -92,8 +98,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#host-platform">Host Platform</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#host-system-configuration">Host System Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#guest-system-configuration">Guest System Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#supported-os-list">Supported OS List</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#supported-kernel-org-version-list">Supported Kernel.org Version List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-linux-distributions">Supported Linux Distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-kernel-versions">Supported Kernel Versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notes-about-gcc-versions">Notes about GCC versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notes-about-iommu">Notes about iommu</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
@@ -113,8 +121,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">QDMA Linux Driver</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
       </nav>
 
 
@@ -123,23 +133,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>System Requirements</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>System Requirements</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/system-requirements.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -151,18 +178,18 @@
 <h2>Xilinx Accelerator Card<a class="headerlink" href="#xilinx-accelerator-card" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>VCU1525</li>
-<li>TULVU9P</li>
+<li>U200</li>
 </ol>
 </div>
 <div class="section" id="host-platform">
 <h2>Host Platform<a class="headerlink" href="#host-platform" title="Permalink to this headline">¶</a></h2>
-<p>x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 32GB RAM
+<p>x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 64GB RAM
 on same CPU node for 2K queues.
 For VM testing, host system must support virtualization and it must be enabled in the BIOS.</p>
 </div>
 <div class="section" id="host-system-configuration">
 <h2>Host System Configuration<a class="headerlink" href="#host-system-configuration" title="Permalink to this headline">¶</a></h2>
-<p>Linux QDMA Driver latest release is verified on following Host system configuration for PF and VF functionality</p>
+<p>Linux QDMA Driver release is verified on following Host system configuration for PF and VF functionality</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="30%" />
@@ -191,11 +218,15 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tr>
 </tbody>
 </table>
-<p>Note: QEMU is a hosted virtual machine monitor which emulates the machine’s processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.</p>
+<p><strong>Notes</strong>:</p>
+<ul class="simple">
+<li>When assigning the 2048 queues to PFs users shall make sure the host system configuration meets the requirement given above. If users want to enable iommu(iommu=on), make sure suffiecient memory available to support the 2048 queues. If the memory is not sufficient, <code class="docutils literal"><span class="pre">dma_alloc_coherent</span></code> kernel call may fail and driver might not work.</li>
+<li>QEMU is a hosted virtual machine monitor which emulates the machine’s processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.</li>
+</ul>
 </div>
 <div class="section" id="guest-system-configuration">
 <h2>Guest System Configuration<a class="headerlink" href="#guest-system-configuration" title="Permalink to this headline">¶</a></h2>
-<p>Linux QDMA VF Driver latest release is verified on following Host system configuration for VF functionality</p>
+<p>Linux QDMA VF Driver release is verified on following Guest system configuration for VF functionality</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="42%" />
@@ -222,31 +253,31 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tbody>
 </table>
 </div>
-<div class="section" id="supported-os-list">
-<h2>Supported OS List<a class="headerlink" href="#supported-os-list" title="Permalink to this headline">¶</a></h2>
-<p>Linux QDMA Driver also supported on following OS and kernel versions</p>
+<div class="section" id="supported-linux-distributions">
+<h2>Supported Linux Distributions<a class="headerlink" href="#supported-linux-distributions" title="Permalink to this headline">¶</a></h2>
+<p>Linux QDMA Driver is supported on the following linux distributions</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="46%" />
-<col width="24%" />
-<col width="30%" />
+<col width="40%" />
+<col width="34%" />
+<col width="26%" />
 </colgroup>
 <thead valign="bottom">
-<tr class="row-odd"><th class="head">Operating System</th>
-<th class="head">OS Version</th>
+<tr class="row-odd"><th class="head">Linux Distribution</th>
+<th class="head">Version</th>
 <th class="head">Kernel Version</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td rowspan="3">CentOS</td>
-<td>7.4-1708</td>
-<td>3.10.0-693</td>
-</tr>
-<tr class="row-odd"><td>7.5-1804</td>
+<td>7.5-1804</td>
 <td>3.10.0-862</td>
 </tr>
-<tr class="row-even"><td>7.6-1810</td>
+<tr class="row-odd"><td>7.6-1810</td>
 <td>3.10.0-957</td>
+</tr>
+<tr class="row-even"><td>7.7-1908</td>
+<td>3.10.0-1062</td>
 </tr>
 <tr class="row-odd"><td rowspan="3">Fedora</td>
 <td>28</td>
@@ -258,28 +289,19 @@ For VM testing, host system must support virtualization and it must be enabled i
 <tr class="row-odd"><td>30</td>
 <td>5.0</td>
 </tr>
-<tr class="row-even"><td rowspan="5">Ubuntu</td>
-<td>14.04.06</td>
-<td>4.4.0-93</td>
-</tr>
-<tr class="row-odd"><td>16.04</td>
+<tr class="row-even"><td rowspan="2">Ubuntu</td>
+<td>16.04</td>
 <td>4.10</td>
 </tr>
-<tr class="row-even"><td>18.04</td>
+<tr class="row-odd"><td>18.04</td>
 <td>4.15.0-23</td>
-</tr>
-<tr class="row-odd"><td>18.04.2</td>
-<td>3.10.0</td>
-</tr>
-<tr class="row-even"><td>18.04.2</td>
-<td>3.10.0</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="supported-kernel-org-version-list">
-<h2>Supported Kernel.org Version List<a class="headerlink" href="#supported-kernel-org-version-list" title="Permalink to this headline">¶</a></h2>
-<p>Linux QDMA Driver verified on following kernel.org versions</p>
+<div class="section" id="supported-kernel-versions">
+<h2>Supported Kernel Versions<a class="headerlink" href="#supported-kernel-versions" title="Permalink to this headline">¶</a></h2>
+<p>Linux QDMA Driver is verified on following kernel.org Linux kernel versions</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="60%" />
@@ -291,43 +313,61 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td rowspan="6">&#160;</td>
+<tr class="row-even"><td rowspan="5">&#160;</td>
 <td>3.16.66</td>
 </tr>
-<tr class="row-odd"><td>4.4.179</td>
-</tr>
-<tr class="row-even"><td>4.19.41</td>
-</tr>
-<tr class="row-odd"><td>4.14.117</td>
+<tr class="row-odd"><td>4.4.196</td>
 </tr>
 <tr class="row-even"><td>4.9.174</td>
 </tr>
-<tr class="row-odd"><td>5.0.14</td>
+<tr class="row-odd"><td>4.14.117</td>
+</tr>
+<tr class="row-even"><td>5.3</td>
 </tr>
 </tbody>
 </table>
-<p>The following kernel functions shall be included in the OS kernel being used. Make sure that these functions are included in the kernel.</p>
+<p>The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.</p>
 <ul class="simple">
 <li>Timer Functions</li>
 <li>PCIe Functions</li>
 <li>Kernel Memory functions</li>
-<li>Kernel threads</li>
 <li>Memory and GFP Functions</li>
 </ul>
 </div>
+<div class="section" id="notes-about-gcc-versions">
+<h2>Notes about GCC versions<a class="headerlink" href="#notes-about-gcc-versions" title="Permalink to this headline">¶</a></h2>
+<p><strong>Issue#1</strong>: For Kernel Images &gt; 4.9.199 with CONFIG_STACK_VALIDATION=y and GCC version &gt; 8 compiler throws spurious warnings
+related to sibling calls and frame pointer save/setup.</p>
+<p><strong>Solution#1</strong>: To suppress these warnings
+enable the OBJECT_FILES_NON_STANDARD option in linux/drv/Makefile</p>
+<p><strong>Issue#2</strong>: Compilation failure on GCC 9</p>
+<p><strong>Solution#2</strong>: GCC 9 release adds the -Wmissing-attributes warnings (enabled by -Wall), which trigger for all the initialization/cleanup_module
+aliases in the kernel (defined by the module_init/exit macros), ending up being very noisy.</p>
+<p>These aliases point to the __init/__exit functions of a module, which are defined as __cold (among other attributes). However, if
+the aliases themselves do not have the __cold attribute, this causes compilation failure for driver if used with Kernel Versions &lt; 3.16.66 mentioned
+in the supported kernels list above or if the Kernel Source doesn’t have the fix for this which are there in the long term releases.</p>
+</div>
+<div class="section" id="notes-about-iommu">
+<h2>Notes about iommu<a class="headerlink" href="#notes-about-iommu" title="Permalink to this headline">¶</a></h2>
+<p>When <code class="docutils literal"><span class="pre">iommu=on</span></code>, adding 2048 queues to the functions on a Host System results in <code class="docutils literal"><span class="pre">dma_alloc_coherent</span></code> API failure. To avoid this issue, allocate piece of physically contiguous reserved memory using the <code class="docutils literal"><span class="pre">cma</span></code> boot arguments.</p>
+<p>Ex: <code class="docutils literal"><span class="pre">cma=4096M&#64;0-6G</span></code></p>
+</div>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="build.html" class="btn btn-neutral float-right" title="Building and Installing Software Stack" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="build.html" class="btn btn-neutral float-right" title="Building and Installing Software Stack" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="features.html" class="btn btn-neutral" title="QDMA Features" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="features.html" class="btn btn-neutral" title="QDMA Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -358,10 +398,11 @@ For VM testing, host system must support virtualization and it must be enabled i
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

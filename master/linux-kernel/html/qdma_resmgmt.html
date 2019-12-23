@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA Queue Resource Management &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  <title>QDMA Queue Resource Management &mdash; QDMA Linux Driver 2019.2 documentation</title>
   
 
+  
+  
   
   
 
@@ -33,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/>
         <link rel="next" title="QDMA Mailbox" href="qdma_mailbox.html"/>
         <link rel="prev" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/> 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -85,7 +88,10 @@
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
@@ -110,6 +116,10 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#stop-a-queue">Stop a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#delete-a-queue">Delete a Queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#read-write-from-a-queue">Read/Write from a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#funtion-level-reset">Funtion Level Reset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#qdma-debug-support">QDMA Debug Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#linux-driver-interop-with-dpdk-driver">Linux Driver Interop with DPDK Driver</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
@@ -128,8 +138,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">QDMA Linux Driver</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
       </nav>
 
 
@@ -138,27 +150,44 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="devguide.html">Developers Guide</a> &raquo;</li>
-      
+        
           <li><a href="qdma_design.html">QDMA Linux Driver Design Flow</a> &raquo;</li>
-      
-    <li>QDMA Queue Resource Management</li>
+        
+      <li>QDMA Queue Resource Management</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/qdma_resmgmt.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -209,15 +238,18 @@ PCIe functions corresponding to each PCIe device are allocated queues from the r
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="qdma_mailbox.html" class="btn btn-neutral float-right" title="QDMA Mailbox" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="qdma_mailbox.html" class="btn btn-neutral float-right" title="QDMA Mailbox" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="qdma_design.html" class="btn btn-neutral" title="QDMA Linux Driver Design Flow" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="qdma_design.html" class="btn btn-neutral" title="QDMA Linux Driver Design Flow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -248,10 +280,11 @@ PCIe functions corresponding to each PCIe device are allocated queues from the r
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

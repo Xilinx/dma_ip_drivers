@@ -286,8 +286,25 @@ a read(C2H) and write(H2C) operations on a queue.
 .. image:: /images/read_write_request.PNG
    :align: center
    
+===================
+Funtion Level Reset
+===================
+
+.. toctree::
+   :maxdepth: 1
+
+   flr.rst
    
+==============
+PF/VF Shutdown
+==============
+
+.. toctree::
+   :maxdepth: 1
+
+   pf_vf_shutdown.rst
    
+==================
 QDMA Debug Support
 ==================
 
@@ -295,3 +312,12 @@ QDMA Debug Support
    :maxdepth: 1
 
    debugfs.rst
+   
+=====================================
+Linux Driver Interop with DPDK Driver
+=====================================
+
+.. toctree::
+   :maxdepth: 1
+
+   linux_dpdk_interop.rst

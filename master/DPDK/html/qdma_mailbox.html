@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA Mailbox &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  <title>QDMA Mailbox &mdash; QDMA DPDK Driver 2019.2 documentation</title>
   
 
   
@@ -35,9 +35,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="Driver Design" href="driver-design.html"/>
-        <link rel="next" title="QDMA DPDK Driver UseCases" href="qdma_usecases.html"/>
+        <link rel="next" title="PF/VF Shutdown" href="pf_vf_shutdown.html"/>
         <link rel="prev" title="QDMA Queue Resource Management" href="qdma_resmgmt.html"/> 
 
   
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -97,10 +97,11 @@
 <li class="toctree-l2 current"><a class="reference internal" href="driver-design.html">Driver Design</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#driver-interfaces-and-callbacks">Driver interfaces and callbacks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#resource-management">Resource Management</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="driver-design.html#mailbox-communication">Mailbox Communication</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="driver-design.html#mailbox-communication-for-vf-configuration">Mailbox Communication for VF configuration</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">QDMA Mailbox</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-debug">DPDK Driver debug</a></li>
 </ul>
@@ -177,7 +178,7 @@ configuration. The main role of the VF is data transfer.</p>
 </dl>
 </li>
 </ul>
-<p>VF can communicate to a PF through mailbox. Each function implements one 128B inbox and 128B outbox message buffer.
+<p>VF can communicate to a PF through mailbox for its queue configuration. Each function implements one 128B inbox and 128B outbox message buffer.
 These mailboxes are accessible to the driver via PCIe BAR of its own function.
 HW also provides ability to interrupt the driver for an incoming mailbox message to a PCIe function.
 For further details on the mailbox internals and mailbox registers, refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
@@ -202,6 +203,8 @@ It also creates a Tx thread to send a message and poll for its response from the
         MBOX_OP_QNOTIFY_ADD,
         /** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
         MBOX_OP_QNOTIFY_DEL,
+        /** @MBOX_OP_QACTIVE_CNT: get active q count */
+        MBOX_OP_GET_QACTIVE_CNT,
         /** @MBOX_OP_QCTXT_WRT: queue context write */
         MBOX_OP_QCTXT_WRT,
         /** @MBOX_OP_QCTXT_RD: queue context read */
@@ -218,6 +221,12 @@ It also creates a Tx thread to send a message and poll for its response from the
         MBOX_OP_INTR_CTXT_CLR,
         /** @MBOX_OP_INTR_CTXT_INV: interrupt context invalidate */
         MBOX_OP_INTR_CTXT_INV,
+        /** @MBOX_OP_RESET_PREPARE: PF to VF message for VF reset*/
+        MBOX_OP_RESET_PREPARE,
+        /** @MBOX_OP_RESET_DONE: PF reset done */
+        MBOX_OP_RESET_DONE,
+        /** @MBOX_OP_PF_BYE: pf offline */
+        MBOX_OP_PF_BYE,
 
         /** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
         MBOX_OP_HELLO_RESP = 0x81,
@@ -231,6 +240,8 @@ It also creates a Tx thread to send a message and poll for its response from the
         MBOX_OP_QNOTIFY_ADD_RESP,
         /** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
         MBOX_OP_QNOTIFY_DEL_RESP,
+        /** @MBOX_OP_QACTIVE_CNT_RESP: get active q count */
+        MBOX_OP_GET_QACTIVE_CNT_RESP,
         /** @MBOX_OP_QCTXT_WRT_RESP: response to @MBOX_OP_QCTXT_WRT */
         MBOX_OP_QCTXT_WRT_RESP,
         /** @MBOX_OP_QCTXT_RD_RESP: response to @MBOX_OP_QCTXT_RD */
@@ -247,6 +258,12 @@ It also creates a Tx thread to send a message and poll for its response from the
         MBOX_OP_INTR_CTXT_CLR_RESP,
         /** @MBOX_OP_INTR_CTXT_INV_RESP: response to @MBOX_OP_INTR_CTXT_INV */
         MBOX_OP_INTR_CTXT_INV_RESP,
+        /** @MBOX_OP_RESET_PREPARE_RESP: response to @MBOX_OP_RESET_PREPARE */
+        MBOX_OP_RESET_PREPARE_RESP,
+        /** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
+        MBOX_OP_RESET_DONE_RESP,
+        /** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
+        MBOX_OP_PF_BYE_RESP,
 
         /** @MBOX_OP_MAX: total mbox opcodes*/
         MBOX_OP_MAX
@@ -264,7 +281,7 @@ It also creates a Tx thread to send a message and poll for its response from the
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="qdma_usecases.html" class="btn btn-neutral float-right" title="QDMA DPDK Driver UseCases" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pf_vf_shutdown.html" class="btn btn-neutral float-right" title="PF/VF Shutdown" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="qdma_resmgmt.html" class="btn btn-neutral" title="QDMA Queue Resource Management" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -298,7 +315,7 @@ It also creates a Tx thread to send a message and poll for its response from the
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

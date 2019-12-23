@@ -34,7 +34,7 @@ application and to interact with the QDMA PCIe device.
 	# mkdir /mnt/huge
 	# mount -t hugetlbfs nodev /mnt/huge
 	# modprobe uio
-	# insmod ../../build/kmod/igb_uio.ko
+	# insmod ../../x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
 
 4. Bind PF ports to the igb_uio module as shown below
 
@@ -348,7 +348,60 @@ Commands supported by the qdma_testapp CLI
 
 	This example closes the port 0. Port 0 can again be re-initialized with `port_init` command after `port_close` command.
 
-3. **dma_to_device**
+3. **port_reset**
+
+	This command resets the DPDK port. This command is supported for VF port only.
+	This command closes the port and re-initializes it with the values provided in this command.
+	Format for this commad is:
+
+	::
+
+		port_reset <port-id> <num-queues> <num-st-queues> <ring-depth> <pkt-buff-size>
+
+	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
+	The first PCIe function that is bound has port id as 0.
+
+	**num-queues** represents the total number of queues to be assigned to the port
+
+	**num-st-queues** represents the total number of queues to be configured in streaming mode.
+	This implies that the (num-queues - num-st-queues) number of queues has to be configured in memory mapped mode.
+
+	**ring-depth** represents the number of entries in C2H and H2C descriptor rings of each queue of the port
+
+	**pkt-buff-size** represents the size of the data that a single C2H or H2C descriptor can support
+
+	Example usage:
+
+	::
+
+		port_reset 4 32 16 1024 4096
+
+	This example command resets the port 4 and re-initializes it with first 16 queues in streaming mode and
+	remaining 16 queues in memory mapped mode. Number of C2H and H2C descriptor ring depth is set to 1024
+	and data buffer of 4KB supported by each descriptor.
+
+4. **port_remove**
+
+	This command frees up all the resources allocated for the port and removes the port from application use.
+	User will need to restart the application to use the port again.
+	Format for this commad is:
+
+	::
+
+		port_remove <port-id>
+
+	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
+	The first PCIe function that is bound has port id as 0.
+
+	Example usage:
+
+	::
+
+		port_remove 4
+
+	This example removes the port 4. Restart the application to use port 4 again.
+
+5. **dma_to_device**
 
 	This command is used to DMA the data from host to card.
 	Format for this commad is:
@@ -382,7 +435,7 @@ Commands supported by the qdma_testapp CLI
 	and transmits the segmented data on each queue starting at destination BRAM offset 0 for 1st queue,
 	offset (1*524288)/2048 for 2nd queue, and so on.
 
-4. **dma_from_device**
+6. **dma_from_device**
 
 	This command is used to DMA the data from card to host.
 	Format for this commad is:
@@ -416,7 +469,7 @@ Commands supported by the qdma_testapp CLI
 	1st queue receives (524288/2048) bytes of data from BRAM offset 0,
 	2nd queue receives (524288/2048) bytes of data from BRAM offset (1*524288)/2048, and so on.
 
-5. **reg_read**
+7. **reg_read**
 
 	This command is used to read the specified register.
 	Format for this commad is:
@@ -432,7 +485,7 @@ Commands supported by the qdma_testapp CLI
 
 	**address** represents offset of the register in the PCIe BAR `bar-num`
 
-6. **reg_write**
+8. **reg_write**
 
 	This command is used to write a 32-bit value to the specified register.
 	Format for this commad is:
@@ -450,7 +503,7 @@ Commands supported by the qdma_testapp CLI
 
 	**value** represents the value to be written at the register offset `address`
 
-7. **reg_dump**
+9. **reg_dump**
 
 	This command dumps important QDMA registers values of the given port on console.
 	Format for this commad is:
@@ -462,7 +515,7 @@ Commands supported by the qdma_testapp CLI
 	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
 	The first PCIe function that is bound has port id as 0.
 
-8. **queue_dump**
+10. **queue_dump**
 
 	This command dumps the queue context of the specified queue number of the given port.
 	Format for this commad is:
@@ -476,7 +529,7 @@ Commands supported by the qdma_testapp CLI
 
 	**queue-id** represents the queue number relative to the port, whose context information needs to be logged
 
-9. **desc_dump**
+11. **desc_dump**
 
 	This command dumps the descriptors of the C2H and H2C rings of the specified queue number of the given port.
 	Format for this commad is:
@@ -490,7 +543,7 @@ Commands supported by the qdma_testapp CLI
 
 	**queue-id** represents the queue number relative to the port, whose C2H and H2C ring descriptors needs to be dumped
 
-10. **load_cmds**
+12. **load_cmds**
 
 	This command executes the list of CLI commands from the given file.
 	Format for this commad is:
@@ -501,7 +554,7 @@ Commands supported by the qdma_testapp CLI
 
 	**file_name** represents path to a valid file containing list of above described CLI commands to be executed in sequence.
 
-11. **help**
+13. **help**
 
 	This command dumps the help menu with supported commands and their format.
 	Format for this commad is:
@@ -510,7 +563,7 @@ Commands supported by the qdma_testapp CLI
 
 		help
 
-12. **ctrl+d**
+14. **ctrl+d**
 
 	The keyboard keys ``Ctrl`` and ``D`` when pressed together quits the application.
 
@@ -519,7 +572,23 @@ Virtual Machine (VM) execution and test
 ---------------------------------------
 Assuming that the VM image has been created with the settings outlined in Table :ref:`guest_system_cfg`, follow below steps to execute qdma_testapp on VM.
 
-1. Enable VF(s) on host system by writing the number of VF(s) to enable in ``max_vfs`` file under ``/sys/bus/pci/devices/0000:<bus>:<device>.<function>``.
+1. 	On host system, update ``/etc/default/grub`` file as below to enable IOMMU.
+
+	::
+
+		GRUB_CMDLINE_LINUX="default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=on intel_iommu=pt"
+
+	Execute the following command to modify the ``/boot/grub/grub.cfg`` with the configuration set in the above step and permanently add them to the kernel command line.
+
+	::
+
+		update-grub
+
+	Reboot host system after making the above modifications.
+
+2. On the host system, insert igb_uio driver and bind the PFs with the igb_uio driver
+
+3. Enable VF(s) on host system by writing the number of VF(s) to enable in ``max_vfs`` file under ``/sys/bus/pci/devices/0000:<bus>:<device>.<function>``.
 
 	::
 
@@ -531,18 +600,24 @@ Assuming that the VM image has been created with the settings outlined in Table 
 
 		81:00.4 Memory controller: Xilinx Corporation Device a03f
 
-2. Start the VM using below command by attaching the VF (81:00.4 in this example)
+4. Start qdma_testapp application on host system
+
+5. Start the VM using below command by attaching the VF (81:00.4 in this example)
 
 	::
 
 		qemu-system-x86_64 -cpu host -enable-kvm -m 4096 -object memory-backend-file,id=mem,size=4096M,mem-path=/mnt/huge,
 		share=on -numa node,memdev=mem -mem-prealloc -smp sockets=2,cores=4 -hda <vm_image.qcow2> -device pci-assign,host=81:00.4
 
-3. On the host system, bind the parent PFs of the VFs being tested on VM with the igb_uio driver and start qdma_testapp application
+6. Copy the DPDK source code in VM by executing below command from VM.
 
-4. Once the VM is launched, execute steps as outlined in section :ref:`build_dpdk` to build DPDK on VM
+	::
 
-5. Bind the VF device in VM to igb_uio driver and execute qdma_testapp in VM as outlined in section :ref:`run_dpdk`.
+		scp -r <username>@<host_ip>:<dpdk_sources> <dpdk_copy_path_in_vm>
+
+7. Once the VM is launched, execute steps as outlined in section :ref:`build_dpdk` to build DPDK on VM
+
+8. Bind the VF device in VM to igb_uio driver and execute qdma_testapp in VM as outlined in section :ref:`run_dpdk`.
 
 Executing with vfio-pci driver in VM using QEMU
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

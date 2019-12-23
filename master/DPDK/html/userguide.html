@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>User Guide &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  <title>User Guide &mdash; QDMA DPDK Driver 2019.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.2 documentation" href="index.html"/>
         <link rel="next" title="Developers Guide" href="dev-guide.html"/>
         <link rel="prev" title="Building QDMA DPDK Software" href="build.html"/> 
 
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -447,6 +447,47 @@ The first PCIe function that is bound has port id as 0.</p>
 <p>This example closes the port 0. Port 0 can again be re-initialized with <cite>port_init</cite> command after <cite>port_close</cite> command.</p>
 </div></blockquote>
 </li>
+<li><p class="first"><strong>port_reset</strong></p>
+<blockquote>
+<div><p>This command resets the DPDK port. This command is supported for VF port only.
+This command closes the port and re-initializes it with the values provided in this command.
+Format for this commad is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>port_reset &lt;port-id&gt; &lt;num-queues&gt; &lt;num-st-queues&gt; &lt;ring-depth&gt; &lt;pkt-buff-size&gt;
+</pre></div>
+</div>
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
+The first PCIe function that is bound has port id as 0.</p>
+<p><strong>num-queues</strong> represents the total number of queues to be assigned to the port</p>
+<p><strong>num-st-queues</strong> represents the total number of queues to be configured in streaming mode.
+This implies that the (num-queues - num-st-queues) number of queues has to be configured in memory mapped mode.</p>
+<p><strong>ring-depth</strong> represents the number of entries in C2H and H2C descriptor rings of each queue of the port</p>
+<p><strong>pkt-buff-size</strong> represents the size of the data that a single C2H or H2C descriptor can support</p>
+<p>Example usage:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>port_reset 4 32 16 1024 4096
+</pre></div>
+</div>
+<p>This example command resets the port 4 and re-initializes it with first 16 queues in streaming mode and
+remaining 16 queues in memory mapped mode. Number of C2H and H2C descriptor ring depth is set to 1024
+and data buffer of 4KB supported by each descriptor.</p>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>port_remove</strong></p>
+<blockquote>
+<div><p>This command frees up all the resources allocated for the port and removes the port from application use.
+User will need to restart the application to use the port again.
+Format for this commad is:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>port_remove &lt;port-id&gt;
+</pre></div>
+</div>
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
+The first PCIe function that is bound has port id as 0.</p>
+<p>Example usage:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>port_remove 4
+</pre></div>
+</div>
+<p>This example removes the port 4. Restart the application to use port 4 again.</p>
+</div></blockquote>
+</li>
 <li><p class="first"><strong>dma_to_device</strong></p>
 <blockquote>
 <div><p>This command is used to DMA the data from host to card.
@@ -591,6 +632,18 @@ Format for this commad is:</p>
 <h2>Virtual Machine (VM) execution and test<a class="headerlink" href="#virtual-machine-vm-execution-and-test" title="Permalink to this headline">¶</a></h2>
 <p>Assuming that the VM image has been created with the settings outlined in Table <a class="reference internal" href="system-requirements.html#guest-system-cfg"><span class="std std-ref">Guest System Configuration</span></a>, follow below steps to execute qdma_testapp on VM.</p>
 <ol class="arabic">
+<li><p class="first">On host system, update <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span></code> file as below to enable IOMMU.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=on intel_iommu=pt&quot;
+</pre></div>
+</div>
+<p>Execute the following command to modify the <code class="docutils literal notranslate"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above step and permanently add them to the kernel command line.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>update-grub
+</pre></div>
+</div>
+<p>Reboot host system after making the above modifications.</p>
+</li>
+<li><p class="first">On the host system, insert igb_uio driver and bind the PFs with the igb_uio driver</p>
+</li>
 <li><p class="first">Enable VF(s) on host system by writing the number of VF(s) to enable in <code class="docutils literal notranslate"><span class="pre">max_vfs</span></code> file under <code class="docutils literal notranslate"><span class="pre">/sys/bus/pci/devices/0000:&lt;bus&gt;:&lt;device&gt;.&lt;function&gt;</span></code>.</p>
 <blockquote>
 <div><div class="highlight-none notranslate"><div class="highlight"><pre># echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.0/max_vfs
@@ -602,6 +655,8 @@ Format for this commad is:</p>
 </div>
 </div></blockquote>
 </li>
+<li><p class="first">Start qdma_testapp application on host system</p>
+</li>
 <li><p class="first">Start the VM using below command by attaching the VF (81:00.4 in this example)</p>
 <blockquote>
 <div><div class="highlight-none notranslate"><div class="highlight"><pre>qemu-system-x86_64 -cpu host -enable-kvm -m 4096 -object memory-backend-file,id=mem,size=4096M,mem-path=/mnt/huge,
@@ -610,7 +665,12 @@ share=on -numa node,memdev=mem -mem-prealloc -smp sockets=2,cores=4 -hda &lt;vm_
 </div>
 </div></blockquote>
 </li>
-<li><p class="first">On the host system, bind the parent PFs of the VFs being tested on VM with the igb_uio driver and start qdma_testapp application</p>
+<li><p class="first">Copy the DPDK source code in VM by executing below command from VM.</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre>scp -r &lt;username&gt;@&lt;host_ip&gt;:&lt;dpdk_sources&gt; &lt;dpdk_copy_path_in_vm&gt;
+</pre></div>
+</div>
+</div></blockquote>
 </li>
 <li><p class="first">Once the VM is launched, execute steps as outlined in section <a class="reference internal" href="build.html#build-dpdk"><span class="std std-ref">Building QDMA DPDK Software</span></a> to build DPDK on VM</p>
 </li>
@@ -694,7 +754,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

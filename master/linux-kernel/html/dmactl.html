@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DMA Control Application &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  <title>DMA Control Application (dmactl) &mdash; QDMA Linux Driver 2019.2 documentation</title>
   
 
+  
+  
   
   
 
@@ -33,9 +35,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="User Applications" href="user-app.html"/>
-        <link rel="next" title="dma_to_device" href="dma_to_device.html"/>
+        <link rel="next" title="DMA to Device (dma_to_device)" href="dma_to_device.html"/>
         <link rel="prev" title="User Applications" href="user-app.html"/> 
 
   
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -85,14 +88,17 @@
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Control Application</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Control Application (dmactl)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#device-management-commands">Device Management Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#list-devices">List devices</a></li>
 </ul>
@@ -125,9 +131,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">dma_to_device</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">dma_from_device</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">DMA to Device (dma_to_device)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">DMA from Device (dma_from_device)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool (dmaperf)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_xfer_app.html">DMA Xfer Application (qdma_xfer_app)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
@@ -144,8 +151,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">QDMA Linux Driver</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
       </nav>
 
 
@@ -154,37 +163,54 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="user-app.html">User Applications</a> &raquo;</li>
-      
-    <li>DMA Control Application</li>
+        
+      <li>DMA Control Application (dmactl)</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/dmactl.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="dma-control-application">
-<h1>DMA Control Application<a class="headerlink" href="#dma-control-application" title="Permalink to this headline">¶</a></h1>
-<p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> to manage the driver.</p>
-<p>The Xilinx QDMA control tool, <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> is a command Line utility which is installed in <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin/</span></code> and allows administration of the Xilinx QDMA queues. Make sure that the installation path <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin/</span></code> is added to the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable.</p>
+  <div class="section" id="dma-control-application-dmactl">
+<h1>DMA Control Application (dmactl)<a class="headerlink" href="#dma-control-application-dmactl" title="Permalink to this headline">¶</a></h1>
+<p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal"><span class="pre">dmactl</span></code> to manage the driver.</p>
+<p>The Xilinx QDMA control tool, <code class="docutils literal"><span class="pre">dmactl</span></code> is a command Line utility which is installed in <code class="docutils literal"><span class="pre">/usr/local/sbin/</span></code> and allows administration of the Xilinx QDMA queues. Make sure that the installation path <code class="docutils literal"><span class="pre">/usr/local/sbin/</span></code> is added to the <code class="docutils literal"><span class="pre">PATH</span></code> variable.</p>
 <p>It can perform the following functions:</p>
 <ul>
-<li><p class="first">Query the list of QDMA driver binded functions</p>
+<li><p class="first">Query the list of functions binded QDMA driver</p>
 </li>
 <li><p class="first">Query control and configuration</p>
 <blockquote>
@@ -217,18 +243,18 @@
 </div></blockquote>
 </li>
 </ul>
-<p>For dmactl help run <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">–h</span></code></p>
+<p>For dmactl help run <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">–h</span></code></p>
 <p>For more details on the dmactl tool commands and options for each command, refer to dmactl man page.</p>
-<p>For dmactl man page, run <code class="docutils literal notranslate"><span class="pre">man</span> <span class="pre">dmactl</span></code></p>
+<p>For dmactl man page, run <code class="docutils literal"><span class="pre">man</span> <span class="pre">dmactl</span></code></p>
 <div class="section" id="device-management-commands">
 <h2>Device Management Commands<a class="headerlink" href="#device-management-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="list-devices">
 <h3>List devices<a class="headerlink" href="#list-devices" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">dev</span> <span class="pre">list</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">dev</span> <span class="pre">list</span></code></p>
 <p>This command lists all the physical and virtual functions available in the system along with the number of queues assigned to each function, queue base and queue max.
-Each qdma device name is listed as <code class="docutils literal notranslate"><span class="pre">qdma&lt;bbddf&gt;</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;bbddf&gt;</span></code> is bus number, device number and function number.</p>
+Each qdma device name is listed as <code class="docutils literal"><span class="pre">qdma&lt;bbddf&gt;</span></code> where <code class="docutils literal"><span class="pre">&lt;bbddf&gt;</span></code> is bus number, device number and function number.</p>
 <p>Initially when the system is started, the queues are not assigned to any of the available functions.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl dev list
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl dev list
 
 qdma01000       0000:01:00.0    max QP: 0, -~-
 qdma01001       0000:01:00.1    max QP: 0, -~-
@@ -261,18 +287,18 @@ qdmavf01004     0000:01:00.4    max QP: 100, 400~499
 <h2>Queue Management Commands<a class="headerlink" href="#queue-management-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="list-version">
 <h3>List Version<a class="headerlink" href="#list-version" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">version</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">cap</span></code></p>
 <p>This command lists hardware and software version details and device capabilities.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 devinfo
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 cap
 =============Hardware Version============
 
 RTL Version         : RTL Base
-Vivado ReleaseID    : vivado 2019.1
+Vivado ReleaseID    : vivado 2019.2
 Everest IP          : Soft IP
 
 ============Software Version============
 
-qdma driver version : 2019.1.121.205.
+qdma driver version : 2019.2.125.213.
 
 =============Hardware Capabilities============
 
@@ -289,9 +315,9 @@ MM completion enabled                  : no
 </div>
 <div class="section" id="list-device-statistics">
 <h3>List Device Statistics<a class="headerlink" href="#list-device-statistics" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">stat</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">stat</span></code></p>
 <p>This command lists the statistics accumulated for this device</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 stat
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 stat
 
 qdma01000:statistics
 Total MM H2C packets processed = 312220
@@ -300,11 +326,11 @@ Total ST H2C packets processed = 64127
 Total ST C2H packets processed = 100954
 </pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">stat</span> <span class="pre">clear</span></code> to clear the statistics collected</p>
+<p>Use <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">stat</span> <span class="pre">clear</span></code> to clear the statistics collected</p>
 </div>
 <div class="section" id="add-a-queue">
 <h3>Add a Queue<a class="headerlink" href="#add-a-queue" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[mode</span> <span class="pre">&lt;st|mm&gt;]</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[mode</span> <span class="pre">&lt;st|mm&gt;]</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to add a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -312,7 +338,7 @@ Total ST C2H packets processed = 100954
 <li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Direction defaults to h2c.</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q add idx 4 mode mm dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q add idx 4 mode mm dir h2c
 
 qdma01000-MM-4 H2C added.
 Added 1 Queues.
@@ -321,7 +347,7 @@ Added 1 Queues.
 </div>
 <div class="section" id="add-a-list-of-queues">
 <h3>Add a List of Queues<a class="headerlink" href="#add-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span>&#160; <span class="pre">[</span> <span class="pre">mode</span> <span class="pre">&lt;st|mm&gt;</span> <span class="pre">]</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span>&#160; <span class="pre">[</span> <span class="pre">mode</span> <span class="pre">&lt;st|mm&gt;</span> <span class="pre">]</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
 <p>This command allows the user to add a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -330,7 +356,7 @@ Added 1 Queues.
 <li>mode : mode of the queue, streaming(st) or memory mapped(mm)</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q add list 1 4 mode mm dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q add list 1 4 mode mm dir h2c
 
 qdma01000-MM-1 H2C added.
 qdma01000-MM-2 H2C added.
@@ -342,40 +368,36 @@ Added 4 Queues.
 </div>
 <div class="section" id="start-a-queue">
 <h3>Start a Queue<a class="headerlink" href="#start-a-queue" title="Permalink to this headline">¶</a></h3>
-<dl class="docutils">
-<dt>command:</dt>
-<dd><dl class="first last docutils">
-<dt>dmactl qdma01000 q start idx &lt;N&gt; [dir &lt;h2c|c2h|bi&gt;] [en_mm_cmpl] [idx_ringsz &lt;0:15&gt;] [idx_bufsz &lt;0:15&gt;] [idx_tmr &lt;0:15&gt;] </dt>
-<dd>[idx_cntr &lt;0:15&gt;] [trigmode &lt;every|usr_cnt|usr|usr_tmr|dis&gt;] [cmptsz &lt;0|1|2|3&gt;] [sw_desc_sz &lt;3&gt;] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [cmpl_ovf_dis] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en]</dd>
-</dl>
-</dd>
-</dl>
 <p>This command allows the user to start a queue.</p>
+<p>command:</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">\</span>
+<span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]\</span>
+<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span> <span class="pre">\</span> <span class="pre">[cmpl_ovf_dis]</span></code></div></blockquote>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
-<li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
-<li>en_mm_cmpl : Enable MM completions. This is valid only for MM Completion example design.</li>
-<li>idx_ringsz: CSR register ring size index</li>
-<li>idx_bufsz : CSR register buffer size index</li>
-<li>idx_tmr : CSR register timer index</li>
-<li>idx_cntr: CSR register counter index</li>
-<li>trigmode: Timer trigger mode (every, user counter, user, user timer, disabled)</li>
+<li>dir : Direction of the queue, host-to-card (h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
+<li>idx_ringsz: CSR register ring size index ( 0 - 15 )</li>
+<li>idx_bufsz : CSR register buffer size index ( 0 - 15 )</li>
+<li>idx_tmr : CSR register timer index ( 0 - 15 )</li>
+<li>idx_cntr: CSR register counter index ( 0 - 15 )</li>
+<li>trigmode: Timer trigger mode (every, usr_cnt, usr, usr_tmr, dis)</li>
 <li>cmptsz : Completion size ( 0: 8 bytes, 1: 16 bytes, 2:32 bytes, 3:64 bytes)</li>
-<li>sw_desc_sz : Descriptor size</li>
+<li>sw_desc_sz : Descriptor size ( 3: 64 bytes)</li>
 <li>desc_bypass_en : Enable descriptor bypass</li>
-<li>pfetch_en : Enable prefetch</li>
-<li>pfetch_bypass_en : Enable prefetch bypass</li>
-<li>dis_cmpl_status : Disable completion status update</li>
-<li>dis_cmpl_status_acc : Disable completion status accumulation</li>
-<li>dis_cmpl_status_pend_chk : Disable completion status pending check</li>
-<li>c2h_udd_en : Enable immediate data(User Defined Data)</li>
-<li>dis_fetch_credit: Disable fetch credit</li>
-<li>dis_cmpt_stat : Disable completion status</li>
-<li>c2h_cmpl_intr_en : Enable c2h completion interval</li>
-<li>cmpl_ovf_dis : Disable completion over flow check</li>
+<li>pfetch_en : Enable prefetch ( 0: Disable, 1: Enable )</li>
+<li>pfetch_bypass_en : Enable prefetch bypass ( 0: Disable, 1: Enable )</li>
+<li>dis_cmpl_status : Disable completion status update ( 1: Disable, 0: Enable )</li>
+<li>dis_cmpl_status_acc : Disable completion status accumulation ( 1: Disable, 0: Enable )</li>
+<li>dis_cmpl_status_pend_chk : Disable completion status pending check ( 1: Disable, 0: Enable )</li>
+<li>c2h_udd_en : Enable immediate data(User Defined Data) ( 0: Disable, 1: Enable )</li>
+<li>dis_fetch_credit: Disable fetch credit ( 1: Disable, 0: Enable )</li>
+<li>dis_cmpt_stat : Disable completion status ( 1: Disable, 0: Enable )</li>
+<li>c2h_cmpl_intr_en : Enable c2h completion interval ( 0: Disable, 1: Enable )</li>
+<li>cmpl_ovf_dis : Disable completion over flow check ( 1: Disable, 0: Enable )</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q start idx 4 dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q start idx 4 dir h2c
 dmactl: Info: Default ring size set to 2048
 
 1 Queues started, idx 4 ~ 4.
@@ -384,35 +406,35 @@ dmactl: Info: Default ring size set to 2048
 </div>
 <div class="section" id="start-a-list-of-queues">
 <h3>Start a List of Queues<a class="headerlink" href="#start-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<dl class="docutils">
-<dt>command:</dt>
-<dd>dmactl qdma01000 q start list &lt;start_idx&gt; &lt;N&gt; [dir &lt;h2c|c2h|bi&gt;]  [en_mm_cmpl] [idx_ringsz &lt;0:15&gt;] [idx_bufsz &lt;0:15&gt;] [idx_tmr &lt;0:15&gt;] [idx_cntr &lt;0:15&gt;] [trigmode &lt;every|usr_cnt|usr|usr_tmr|dis&gt;] [cmptsz &lt;0|1|2|3&gt;] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en][dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] [cmpl_ovf_dis]</dd>
-</dl>
+<p>command:</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">\</span>
+<span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]\</span>
+<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span> <span class="pre">\</span> <span class="pre">[cmpl_ovf_dis]</span></code></div></blockquote>
 <p>This command allows the user to start a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;start_idx&gt; : Starting queue number</li>
-<li>&lt;N&gt; :Number of queues to delete</li>
-<li>dir : direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
-<li>en_mm_cmpl : Enable MM completions. This is valid only for MM Completion example design.</li>
-<li>idx_ringsz: CSR register ring size index</li>
-<li>idx_bufsz : CSR register buffer size index</li>
-<li>idx_tmr : CSR register timer index</li>
-<li>idx_cntr: CSR register counter index</li>
-<li>trigmode: Timer trigger mode (every, user counter, user, user timer, disabled)</li>
+<li>&lt;N&gt; : Number of queues to start</li>
+<li>dir : direction of the queue, host-to-card (h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
+<li>idx_ringsz: CSR register ring size index ( 0 - 15 )</li>
+<li>idx_bufsz : CSR register buffer size index ( 0 - 15 )</li>
+<li>idx_tmr : CSR register timer index ( 0 - 15 )</li>
+<li>idx_cntr: CSR register counter index ( 0 - 15 )</li>
+<li>trigmode: Timer trigger mode (every, usr_cnt, usr, usr_tmr, dis)</li>
 <li>cmptsz : Completion size ( 0: 8 bytes, 1: 16 bytes, 2:32 bytes, 3:64 bytes)</li>
-<li>desc_bypass_en : Enable descriptor bypass</li>
-<li>pfetch_en : Enable prefetch</li>
-<li>pfetch_bypass_en : Enable prefetch bypass</li>
+<li>desc_bypass_en : Enable descriptor bypass ( 0: Disable, 1: Enable )</li>
+<li>pfetch_en : Enable prefetch ( 0: Disable, 1: Enable )</li>
+<li>pfetch_bypass_en : Enable prefetch bypass ( 0: Disable, 1: Enable )</li>
 <li>dis_cmpl_status : Disable completion status update</li>
 <li>dis_cmpl_status_pend_chk : Disable completion status pending check</li>
 <li>c2h_udd_en : Enable immdeiate data(User Defined Data)</li>
-<li>dis_fetch_credit: Disable fetch credit</li>
-<li>dis_cmpt_stat : Disable completion status</li>
-<li>c2h_cmpl_intr_en : Enable c2h completion interval</li>
-<li>cmpl_ovf_dis : Disable completion over flow check</li>
+<li>dis_fetch_credit: Disable fetch credit ( 1: Disable, 0: Enable )</li>
+<li>dis_cmpt_stat : Disable completion status ( 1: Disable, 0: Enable )</li>
+<li>c2h_cmpl_intr_en : Enable c2h completion interval ( 0: Disable, 1: Enable )</li>
+<li>cmpl_ovf_dis : Disable completion over flow check ( 1: Disable, 0: Enable )</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q start list 1 4 dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q start list 1 4 dir h2c
 
 Started Queues 1 -&gt; 4.
 </pre></div>
@@ -420,14 +442,14 @@ Started Queues 1 -&gt; 4.
 </div>
 <div class="section" id="stop-a-queue">
 <h3>Stop a Queue<a class="headerlink" href="#stop-a-queue" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to stop a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q stop idx 4 dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q stop idx 4 dir h2c
 dmactl: Info: Default ring size set to 2048
 
 Stopped Queues 4 -&gt; 4.
@@ -436,7 +458,7 @@ Stopped Queues 4 -&gt; 4.
 </div>
 <div class="section" id="stop-a-list-of-queues">
 <h3>Stop a List of Queues<a class="headerlink" href="#stop-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to stop a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -444,7 +466,7 @@ Stopped Queues 4 -&gt; 4.
 <li>&lt;N&gt; : Number of queues to delete</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q stop list 1 4 dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q stop list 1 4 dir h2c
 
 Stopped Queues 1 -&gt; 4.
 </pre></div>
@@ -452,14 +474,14 @@ Stopped Queues 1 -&gt; 4.
 </div>
 <div class="section" id="delete-a-queue">
 <h3>Delete a Queue<a class="headerlink" href="#delete-a-queue" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to delete a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q del idx 4 mode mm dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q del idx 4 dir h2c
 
 Deleted Queues 4 -&gt; 4.
 </pre></div>
@@ -467,7 +489,7 @@ Deleted Queues 4 -&gt; 4.
 </div>
 <div class="section" id="delete-a-list-of-queues">
 <h3>Delete a List of Queues<a class="headerlink" href="#delete-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
 <p>This command allows the user to delete a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -475,7 +497,7 @@ Deleted Queues 4 -&gt; 4.
 <li>&lt;N&gt; : Number of queues to delete</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q del list 1 4 dir h2c
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q del list 1 4 dir h2c
 
 Deleted Queues 1 -&gt; 4.
 </pre></div>
@@ -483,7 +505,7 @@ Deleted Queues 1 -&gt; 4.
 </div>
 <div class="section" id="dump-queue-information">
 <h3>Dump Queue Information<a class="headerlink" href="#dump-queue-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>Dump the queue information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -491,19 +513,74 @@ Deleted Queues 1 -&gt; 4.
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
 <p>Sample output is given below:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q dump idx 1 dir bi
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q dump idx 1 dir bi
 
-qdma01000-ST-1 C2H online
-        hw_ID 1, thp ?, desc 0xffff880084140000/0x84140000, 1536
-        cmpt desc 0xffff8800842a0000/0x842a0000, 2048
+qdma01000-ST-0 H2C online
+        hw_ID 0, thp ?, desc 0x000000002faff247/0x2a878000, 1536
 
-        cmpl status: 0xffff880084143000, 00000000 00000000
-        CMPT CMPL STATUS: 0xffff8800842a4000, 00000000 00000000
+        cmpl status: 0x00000000377ea451, 00000000 00000000
         SOFTWARE CTXT:
                 Interrupt Aggregation                           0x1        1
                 Ring Index                                      0x0        0
                 Descriptor Ring Base Addr (High)                0x0        0
-                Descriptor Ring Base Addr (Low)                 0x84140000 2215903232
+                Descriptor Ring Base Addr (Low)                 0x2a878000 713523200
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x1        1
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x1        1
+                Writeback Enable                                0x1        1
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x1        1
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x1        1
+                Fetch Credit Enable                             0x0        0
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x1        1
+                PIDX                                            0x0        0
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x2a801000 713035776
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+qdma01000-ST-0 C2H online
+        hw_ID 0, thp ?, desc 0x00000000219f976e/0x2a85c000, 1536
+        cmpt desc 0x0000000086ae1f7a/0x2a870000, 2048
+
+        cmpl status: 0x00000000a17113db, 00000000 00000000
+        CMPT CMPL STATUS: 0x00000000973734af, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x2a85c000 713408512
                 Is Memory Mapped                                0x0        0
                 Marker Disable                                  0x0        0
                 IRQ Request                                     0x0        0
@@ -552,7 +629,7 @@ qdma01000-ST-1 C2H online
                 PIDX                                            0x0        0
                 Descriptor Size                                 0x0        0
                 Base Address (High)                             0x0        0
-                Base Address (Low)                              0x842a0000 2217345024
+                Base Address (Low)                              0x2a870000 713490432
                 Ring Size                                       0x0        0
                 Color                                           0x1        1
                 Interrupt State                                 0x1        1
@@ -578,187 +655,40 @@ qdma01000-ST-1 C2H online
                 pidx                                            0x0        0
                 page_size                                       0x0        0
                 baddr_4k (High)                                 0x0        0
-                baddr_4k (Low)                                  0x8414c000 2215952384
+                baddr_4k (Low)                                  0x2a801000 713035776
                 color                                           0x1        1
                 int_st                                          0x0        0
                 vec                                             0x3        3
                 valid                                           0x1        1
 
         total descriptor processed:    0
-qdma01000-ST-1 H2C online
-        hw_ID 1, thp ?, desc 0xffff880084288000/0x84288000, 1536
-
-        cmpl status: 0xffff88008428e000, 00000000 00000000
-        SOFTWARE CTXT:
-                Interrupt Aggregation                           0x1        1
-                Ring Index                                      0x0        0
-                Descriptor Ring Base Addr (High)                0x0        0
-                Descriptor Ring Base Addr (Low)                 0x84288000 2217246720
-                Is Memory Mapped                                0x0        0
-                Marker Disable                                  0x0        0
-                IRQ Request                                     0x0        0
-                Writeback Error Sent                            0x0        0
-                Error                                           0x0        0
-                Interrupt No Last                               0x0        0
-                Port Id                                         0x0        0
-                Interrupt Enable                                0x1        1
-                Writeback Enable                                0x1        1
-                MM Channel                                      0x0        0
-                Bypass Enable                                   0x0        0
-                Descriptor Size                                 0x1        1
-                Ring Size                                       0x9        9
-                Fetch Max                                       0x0        0
-                Address Translation                             0x0        0
-                Write back/Intr Interval                        0x1        1
-                Write back/Intr Check                           0x1        1
-                Fetch Credit Enable                             0x0        0
-                Queue Enable                                    0x1        1
-                Function Id                                     0x0        0
-                IRQ Arm                                         0x1        1
-                PIDX                                            0x0        0
-
-        HARDWARE CTXT:
-                Fetch Pending                                   0x0        0
-                Eviction Pending                                0x0        0
-                Queue Invalid No Desc Pending                   0x1        1
-                Descriptors Pending                             0x0        0
-                Credits Consumed                                0x0        0
-                CIDX                                            0x0        0
-
-        CREDIT CTXT:
-                Credit                                          0x0        0
-
-        INTR CTXT:
-                at                                              0x0        0
-                pidx                                            0x0        0
-                page_size                                       0x0        0
-                baddr_4k (High)                                 0x0        0
-                baddr_4k (Low)                                  0x8414c000 2215952384
-                color                                           0x1        1
-                int_st                                          0x0        0
-                vec                                             0x3        3
-                valid                                           0x1        1
-
-        total descriptor processed:    0
-Dumped Queues 1 -&gt; 1.
+Dumped Queues 0 -&gt; 0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-multiple-queue-information">
 <h3>Dump Multiple Queue Information<a class="headerlink" href="#dump-multiple-queue-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>Dumps the information for multiple queues</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;start_idx&gt; : Starting queue number</li>
-<li>&lt;N&gt; :Number of queues to add</li>
+<li>&lt;N&gt; : Number of queues to dump</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma01000 q dump list 1 2 dir bi
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma01000 q dump list 1 2 dir bi
 
-qdma01000-ST-1 C2H online
-        hw_ID 1, thp ?, desc 0xffff880084140000/0x84140000, 1536
-        cmpt desc 0xffff8800842a0000/0x842a0000, 2048
-
-        cmpl status: 0xffff880084143000, 00000000 00000000
-        CMPT CMPL STATUS: 0xffff8800842a4000, 00000000 00000000
-        SOFTWARE CTXT:
-                Interrupt Aggregation                           0x1        1
-                Ring Index                                      0x0        0
-                Descriptor Ring Base Addr (High)                0x0        0
-                Descriptor Ring Base Addr (Low)                 0x84140000 2215903232
-                Is Memory Mapped                                0x0        0
-                Marker Disable                                  0x0        0
-                IRQ Request                                     0x0        0
-                Writeback Error Sent                            0x0        0
-                Error                                           0x0        0
-                Interrupt No Last                               0x0        0
-                Port Id                                         0x0        0
-                Interrupt Enable                                0x0        0
-                Writeback Enable                                0x0        0
-                MM Channel                                      0x0        0
-                Bypass Enable                                   0x0        0
-                Descriptor Size                                 0x0        0
-                Ring Size                                       0x9        9
-                Fetch Max                                       0x0        0
-                Address Translation                             0x0        0
-                Write back/Intr Interval                        0x1        1
-                Write back/Intr Check                           0x0        0
-                Fetch Credit Enable                             0x1        1
-                Queue Enable                                    0x1        1
-                Function Id                                     0x0        0
-                IRQ Arm                                         0x0        0
-                PIDX                                            0x5ff      1535
-
-        HARDWARE CTXT:
-                Fetch Pending                                   0x0        0
-                Eviction Pending                                0x0        0
-                Queue Invalid No Desc Pending                   0x1        1
-                Descriptors Pending                             0x0        0
-                Credits Consumed                                0x0        0
-                CIDX                                            0x0        0
-
-        CREDIT CTXT:
-                Credit                                          0x0        0
-
-        CMPT CTXT:
-                Interrupt Aggregation                           0x1        1
-                Ring Index                                      0x0        0
-                Address Translation                             0x0        0
-                Over Flow Check Disable                         0x0        0
-                Full Update                                     0x0        0
-                Timer Running                                   0x0        0
-                Trigger Pending                                 0x0        0
-                Error                                           0x0        0
-                Valid                                           0x1        1
-                CIDX                                            0x0        0
-                PIDX                                            0x0        0
-                Descriptor Size                                 0x0        0
-                Base Address (High)                             0x0        0
-                Base Address (Low)                              0x842a0000 2217345024
-                Ring Size                                       0x0        0
-                Color                                           0x1        1
-                Interrupt State                                 0x1        1
-                Timer Index                                     0x0        0
-                Counter Index                                   0x0        0
-                Function Id                                     0x0        0
-                Trigger Mode                                    0x1        1
-                Enable Interrupt                                0x1        1
-                Enable Status Desc Update                       0x1        1
-
-        PREFETCH CTXT:
-                Valid                                           0x1        1
-                Software Credit                                 0x5ff      1535
-                In Prefetch                                     0x0        0
-                Prefetch Enable                                 0x0        0
-                Error                                           0x0        0
-                Port Id                                         0x0        0
-                Buffer Size Index                               0x0        0
-                Bypass                                          0x0        0
-
-        INTR CTXT:
-                at                                              0x0        0
-                pidx                                            0x0        0
-                page_size                                       0x0        0
-                baddr_4k (High)                                 0x0        0
-                baddr_4k (Low)                                  0x8414c000 2215952384
-                color                                           0x1        1
-                int_st                                          0x0        0
-                vec                                             0x3        3
-                valid                                           0x1        1
-
-        total descriptor processed:    0
 qdma01000-ST-1 H2C online
-        hw_ID 1, thp ?, desc 0xffff880084288000/0x84288000, 1536
+        hw_ID 1, thp ?, desc 0x000000006c71b76a/0x2a890000, 1536
 
-        cmpl status: 0xffff88008428e000, 00000000 00000000
+        cmpl status: 0x00000000ad836574, 00000000 00000000
         SOFTWARE CTXT:
                 Interrupt Aggregation                           0x1        1
                 Ring Index                                      0x0        0
                 Descriptor Ring Base Addr (High)                0x0        0
-                Descriptor Ring Base Addr (Low)                 0x84288000 2217246720
+                Descriptor Ring Base Addr (Low)                 0x2a890000 713621504
                 Is Memory Mapped                                0x0        0
-                Marker Disable                                  0x0        0
+                Marker Disable                                  0x1        1
                 IRQ Request                                     0x0        0
                 Writeback Error Sent                            0x0        0
                 Error                                           0x0        0
@@ -796,24 +726,24 @@ qdma01000-ST-1 H2C online
                 pidx                                            0x0        0
                 page_size                                       0x0        0
                 baddr_4k (High)                                 0x0        0
-                baddr_4k (Low)                                  0x8414c000 2215952384
+                baddr_4k (Low)                                  0x2a801000 713035776
                 color                                           0x1        1
                 int_st                                          0x0        0
                 vec                                             0x3        3
                 valid                                           0x1        1
 
         total descriptor processed:    0
-qdma01000-ST-2 C2H online
-        hw_ID 2, thp ?, desc 0xffff880084274000/0x84274000, 1536
-        cmpt desc 0xffff880084398000/0x84398000, 2048
+qdma01000-ST-1 C2H online
+        hw_ID 1, thp ?, desc 0x000000007d2ed7f0/0x2a880000, 1536
+        cmpt desc 0x000000005e745eb2/0x2a888000, 2048
 
-        cmpl status: 0xffff880084277000, 00000000 00000000
-        CMPT CMPL STATUS: 0xffff88008439c000, 00000000 00000000
+        cmpl status: 0x000000008a822731, 00000000 00000000
+        CMPT CMPL STATUS: 0x00000000b4ec91f7, 00000000 00000000
         SOFTWARE CTXT:
                 Interrupt Aggregation                           0x1        1
                 Ring Index                                      0x0        0
                 Descriptor Ring Base Addr (High)                0x0        0
-                Descriptor Ring Base Addr (Low)                 0x84274000 2217164800
+                Descriptor Ring Base Addr (Low)                 0x2a880000 713555968
                 Is Memory Mapped                                0x0        0
                 Marker Disable                                  0x0        0
                 IRQ Request                                     0x0        0
@@ -862,7 +792,7 @@ qdma01000-ST-2 C2H online
                 PIDX                                            0x0        0
                 Descriptor Size                                 0x0        0
                 Base Address (High)                             0x0        0
-                Base Address (Low)                              0x84398000 2218360832
+                Base Address (Low)                              0x2a888000 713588736
                 Ring Size                                       0x0        0
                 Color                                           0x1        1
                 Interrupt State                                 0x1        1
@@ -888,7 +818,7 @@ qdma01000-ST-2 C2H online
                 pidx                                            0x0        0
                 page_size                                       0x0        0
                 baddr_4k (High)                                 0x0        0
-                baddr_4k (Low)                                  0x8414c000 2215952384
+                baddr_4k (Low)                                  0x2a801000 713035776
                 color                                           0x1        1
                 int_st                                          0x0        0
                 vec                                             0x3        3
@@ -896,16 +826,16 @@ qdma01000-ST-2 C2H online
 
         total descriptor processed:    0
 qdma01000-ST-2 H2C online
-        hw_ID 2, thp ?, desc 0xffff8800843a0000/0x843a0000, 1536
+        hw_ID 2, thp ?, desc 0x000000007167a03d/0x2a8a0000, 1536
 
-        cmpl status: 0xffff8800843a6000, 00000000 00000000
+        cmpl status: 0x000000000d8c788d, 00000000 00000000
         SOFTWARE CTXT:
                 Interrupt Aggregation                           0x1        1
                 Ring Index                                      0x0        0
                 Descriptor Ring Base Addr (High)                0x0        0
-                Descriptor Ring Base Addr (Low)                 0x843a0000 2218393600
+                Descriptor Ring Base Addr (Low)                 0x2a8a0000 713687040
                 Is Memory Mapped                                0x0        0
-                Marker Disable                                  0x0        0
+                Marker Disable                                  0x1        1
                 IRQ Request                                     0x0        0
                 Writeback Error Sent                            0x0        0
                 Error                                           0x0        0
@@ -943,7 +873,99 @@ qdma01000-ST-2 H2C online
                 pidx                                            0x0        0
                 page_size                                       0x0        0
                 baddr_4k (High)                                 0x0        0
-                baddr_4k (Low)                                  0x8414c000 2215952384
+                baddr_4k (Low)                                  0x2a801000 713035776
+                color                                           0x1        1
+                int_st                                          0x0        0
+                vec                                             0x3        3
+                valid                                           0x1        1
+
+        total descriptor processed:    0
+qdma01000-ST-2 C2H online
+        hw_ID 2, thp ?, desc 0x000000009c562437/0x2a884000, 1536
+        cmpt desc 0x000000006c25b118/0x2a898000, 2048
+
+        cmpl status: 0x0000000099bd702f, 00000000 00000000
+        CMPT CMPL STATUS: 0x000000000e1bd43c, 00000000 00000000
+        SOFTWARE CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Descriptor Ring Base Addr (High)                0x0        0
+                Descriptor Ring Base Addr (Low)                 0x2a884000 713572352
+                Is Memory Mapped                                0x0        0
+                Marker Disable                                  0x0        0
+                IRQ Request                                     0x0        0
+                Writeback Error Sent                            0x0        0
+                Error                                           0x0        0
+                Interrupt No Last                               0x0        0
+                Port Id                                         0x0        0
+                Interrupt Enable                                0x0        0
+                Writeback Enable                                0x0        0
+                MM Channel                                      0x0        0
+                Bypass Enable                                   0x0        0
+                Descriptor Size                                 0x0        0
+                Ring Size                                       0x9        9
+                Fetch Max                                       0x0        0
+                Address Translation                             0x0        0
+                Write back/Intr Interval                        0x1        1
+                Write back/Intr Check                           0x0        0
+                Fetch Credit Enable                             0x1        1
+                Queue Enable                                    0x1        1
+                Function Id                                     0x0        0
+                IRQ Arm                                         0x0        0
+                PIDX                                            0x5ff      1535
+
+        HARDWARE CTXT:
+                Fetch Pending                                   0x0        0
+                Eviction Pending                                0x0        0
+                Queue Invalid No Desc Pending                   0x1        1
+                Descriptors Pending                             0x0        0
+                Credits Consumed                                0x0        0
+                CIDX                                            0x0        0
+
+        CREDIT CTXT:
+                Credit                                          0x0        0
+
+        CMPT CTXT:
+                Interrupt Aggregation                           0x1        1
+                Ring Index                                      0x0        0
+                Address Translation                             0x0        0
+                Over Flow Check Disable                         0x0        0
+                Full Update                                     0x0        0
+                Timer Running                                   0x0        0
+                Trigger Pending                                 0x0        0
+                Error                                           0x0        0
+                Valid                                           0x1        1
+                CIDX                                            0x0        0
+                PIDX                                            0x0        0
+                Descriptor Size                                 0x0        0
+                Base Address (High)                             0x0        0
+                Base Address (Low)                              0x2a898000 713654272
+                Ring Size                                       0x0        0
+                Color                                           0x1        1
+                Interrupt State                                 0x1        1
+                Timer Index                                     0x0        0
+                Counter Index                                   0x0        0
+                Function Id                                     0x0        0
+                Trigger Mode                                    0x1        1
+                Enable Interrupt                                0x1        1
+                Enable Status Desc Update                       0x1        1
+
+        PREFETCH CTXT:
+                Valid                                           0x1        1
+                Software Credit                                 0x5ff      1535
+                In Prefetch                                     0x0        0
+                Prefetch Enable                                 0x0        0
+                Error                                           0x0        0
+                Port Id                                         0x0        0
+                Buffer Size Index                               0x0        0
+                Bypass                                          0x0        0
+
+        INTR CTXT:
+                at                                              0x0        0
+                pidx                                            0x0        0
+                page_size                                       0x0        0
+                baddr_4k (High)                                 0x0        0
+                baddr_4k (Low)                                  0x2a801000 713035776
                 color                                           0x1        1
                 int_st                                          0x0        0
                 vec                                             0x3        3
@@ -956,154 +978,154 @@ Dumped Queues 1 -&gt; 2.
 </div>
 <div class="section" id="dump-queue-descriptor-information">
 <h3>Dump Queue Descriptor Information<a class="headerlink" href="#dump-queue-descriptor-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dump the queue descriptor information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
-<li>&lt;x&gt; : Range start</li>
-<li>&lt;y&gt; : Range end</li>
+<li>&lt;x&gt; : Range start index</li>
+<li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 q dump idx 1 dir h2c desc 1 10
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 q dump idx 0 dir h2c desc 1 10
 
-qdma17000-MM-1 H2C online
-1: 0x0000000075e985a1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-2: 0x000000009fa51b7d 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-3: 0x0000000088024b26 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-4: 0x0000000003e7e32a 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-5: 0x0000000017908b59 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-6: 0x000000006010e5f5 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-7: 0x00000000ea16b7aa 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-8: 0x00000000f49eab9e 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-9: 0x000000005867272e 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-CMPL STATUS: 0x000000005a1efda1 00000000 00000000
-Dumped descs of queues 1 -&gt; 1.
+        qdma17000-ST-0 H2C online
+1: 0x00000000cd4d039c 00000000 00000000 00000000 00000000
+2: 0x000000009c6eaedf 00000000 00000000 00000000 00000000
+3: 0x00000000389a56a7 00000000 00000000 00000000 00000000
+4: 0x00000000b26186e9 00000000 00000000 00000000 00000000
+5: 0x0000000005f26fbf 00000000 00000000 00000000 00000000
+6: 0x00000000f887365d 00000000 00000000 00000000 00000000
+7: 0x000000003dbbdb52 00000000 00000000 00000000 00000000
+8: 0x000000007a05453d 00000000 00000000 00000000 00000000
+9: 0x00000000cc734198 00000000 00000000 00000000 00000000
+CMPL STATUS: 0x00000000377ea451 00000000 00000000
+Dumped descs of queues 0 -&gt; 0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-multiple-queue-descriptor-information">
 <h3>Dump Multiple Queue Descriptor Information<a class="headerlink" href="#dump-multiple-queue-descriptor-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dumps the descriptor information for multiple queues</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;start_idx&gt; : Starting queue number</li>
-<li>&lt;N&gt; :Number of queues to add</li>
+<li>&lt;N&gt; : Number of queues to dump</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
-<li>&lt;x&gt; : Range start</li>
-<li>&lt;y&gt; : Range end</li>
+<li>&lt;x&gt; : Range start index</li>
+<li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 q dump list 1 2 dir h2c desc 1 10
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 q dump list 1 2 dir h2c desc 1 10
 
-qdma17000-MM-1 H2C online
-1: 0x0000000075e985a1 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-2: 0x000000009fa51b7d 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-3: 0x0000000088024b26 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-4: 0x0000000003e7e32a 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-5: 0x0000000017908b59 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-6: 0x000000006010e5f5 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-7: 0x00000000ea16b7aa 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-8: 0x00000000f49eab9e 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-9: 0x000000005867272e 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-CMPL STATUS: 0x000000005a1efda1 00000000 00000000
-qdma17000-MM-2 H2C online
-1: 0x0000000088caff6d 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-2: 0x0000000023211cbf 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-3: 0x000000003468cd41 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-4: 0x00000000ad729161 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-5: 0x00000000ee3b9e4b 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-6: 0x000000009d302231 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-7: 0x0000000013d70540 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-8: 0x000000004d2f1fe2 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-9: 0x00000000d59589f0 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-CMPL STATUS: 0x00000000026d0732 00000000 00000000
+qdma17000-ST-1 H2C online
+1: 0x00000000c8f9ad60 00000000 00000000 00000000 00000000
+2: 0x000000007c3c25fb 00000000 00000000 00000000 00000000
+3: 0x000000000cc9e006 00000000 00000000 00000000 00000000
+4: 0x00000000087702c3 00000000 00000000 00000000 00000000
+5: 0x000000007619d32f 00000000 00000000 00000000 00000000
+6: 0x000000002bb74438 00000000 00000000 00000000 00000000
+7: 0x000000004f88c3b3 00000000 00000000 00000000 00000000
+8: 0x0000000047737864 00000000 00000000 00000000 00000000
+9: 0x000000004155d087 00000000 00000000 00000000 00000000
+CMPL STATUS: 0x00000000ad836574 00000000 00000000
+qdma17000-ST-2 H2C online
+1: 0x0000000045751dc6 00000000 00000000 00000000 00000000
+2: 0x00000000dd627761 00000000 00000000 00000000 00000000
+3: 0x000000007f1bccd8 00000000 00000000 00000000 00000000
+4: 0x0000000056d14ea0 00000000 00000000 00000000 00000000
+5: 0x0000000038a8a630 00000000 00000000 00000000 00000000
+6: 0x000000003c0b0083 00000000 00000000 00000000 00000000
+7: 0x000000004a9bfbca 00000000 00000000 00000000 00000000
+8: 0x000000003d056cdd 00000000 00000000 00000000 00000000
+9: 0x00000000108760bc 00000000 00000000 00000000 00000000
+CMPL STATUS: 0x000000000d8c788d 00000000 00000000
 Dumped descs of queues 1 -&gt; 2.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-queue-completion-information">
 <h3>Dump Queue Completion Information<a class="headerlink" href="#dump-queue-completion-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dump the queue completion information. This command is valid only for streaming c2h.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
-<li>&lt;x&gt; : Range start</li>
-<li>&lt;y&gt; : Range end</li>
+<li>&lt;x&gt; : Range start index</li>
+<li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 q dump idx 5 dir c2h cmpt 0 10
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 q dump idx 0 dir c2h cmpt 0 10
 
-qdma17000-ST-5 C2H online
-0: 0x000000006d62f1aa 00000000 00000000
-1: 0x000000007a07b4ba 00000000 00000000
-2: 0x000000000f158857 00000000 00000000
-3: 0x00000000489003ed 00000000 00000000
-4: 0x0000000054d4b084 00000000 00000000
-5: 0x000000001e3d17d8 00000000 00000000
-6: 0x000000001e09b4d9 00000000 00000000
-7: 0x000000002cb94242 00000000 00000000
-8: 0x00000000dd831ff4 00000000 00000000
-9: 0x000000006a4748c3 00000000 00000000
-CMPL STATUS: 0x00000000074d569c 00000000 00000000
-Dumped descs of queues 5 -&gt; 5.
+qdma17000-ST-0 C2H online
+0: 0x0000000086ae1f7a 00000000 00000000
+1: 0x0000000012caf472 00000000 00000000
+2: 0x00000000ce16f6c6 00000000 00000000
+3: 0x0000000030ac515a 00000000 00000000
+4: 0x0000000008a11d76 00000000 00000000
+5: 0x0000000006a465d9 00000000 00000000
+6: 0x00000000cb70afc1 00000000 00000000
+7: 0x00000000ccfe9e7c 00000000 00000000
+8: 0x00000000757eff01 00000000 00000000
+9: 0x000000007ad4593a 00000000 00000000
+CMPL STATUS: 0x00000000973734af 00000000 00000000
+Dumped descs of queues 0 -&gt; 0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-multiple-queue-completion-information">
 <h3>Dump Multiple Queue Completion Information<a class="headerlink" href="#dump-multiple-queue-completion-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dumps the completion information for multiple queues. This command is valid only for streaming c2h.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;start_idx&gt; : Starting queue number</li>
-<li>&lt;N&gt; :Number of queues to add</li>
+<li>&lt;N&gt; : Number of queues to list</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
-<li>&lt;x&gt; : Range start</li>
-<li>&lt;y&gt; : Range end</li>
+<li>&lt;x&gt; : Range start index</li>
+<li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 q dump list 5 2 dir c2h cmpt 0 10
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 q dump list 1 2 dir c2h cmpt 0 10
 
-qdma17000-ST-5 C2H online
-0: 0x000000006d62f1aa 00000000 00000000
-1: 0x000000007a07b4ba 00000000 00000000
-2: 0x000000000f158857 00000000 00000000
-3: 0x00000000489003ed 00000000 00000000
-4: 0x0000000054d4b084 00000000 00000000
-5: 0x000000001e3d17d8 00000000 00000000
-6: 0x000000001e09b4d9 00000000 00000000
-7: 0x000000002cb94242 00000000 00000000
-8: 0x00000000dd831ff4 00000000 00000000
-9: 0x000000006a4748c3 00000000 00000000
-CMPL STATUS: 0x00000000074d569c 00000000 00000000
-qdma17000-ST-6 C2H online
-0: 0x000000004ca5cbb0 00000000 00000000
-1: 0x000000003b6478d7 00000000 00000000
-2: 0x000000007dc4c8a1 00000000 00000000
-3: 0x000000003ad66591 00000000 00000000
-4: 0x00000000aad20103 00000000 00000000
-5: 0x00000000f102be8c 00000000 00000000
-6: 0x0000000046cc60b8 00000000 00000000
-7: 0x000000003dd14944 00000000 00000000
-8: 0x000000004c825f31 00000000 00000000
-9: 0x0000000026f2e4f8 00000000 00000000
-CMPL STATUS: 0x000000007bcad59e 00000000 00000000
-Dumped descs of queues 5 -&gt; 6.
+qdma17000-ST-1 C2H online
+0: 0x000000005e745eb2 00000000 00000000
+1: 0x00000000c10487fb 00000000 00000000
+2: 0x000000002c76c0b0 00000000 00000000
+3: 0x000000005539c512 00000000 00000000
+4: 0x00000000bf8aeb9c 00000000 00000000
+5: 0x000000005ae055c9 00000000 00000000
+6: 0x00000000c8ec4586 00000000 00000000
+7: 0x000000009b833fb5 00000000 00000000
+8: 0x000000001e812b8c 00000000 00000000
+9: 0x0000000036bd937c 00000000 00000000
+CMPL STATUS: 0x00000000b4ec91f7 00000000 00000000
+qdma17000-ST-2 C2H online
+0: 0x000000006c25b118 00000000 00000000
+1: 0x000000004c4292df 00000000 00000000
+2: 0x00000000dd0e4974 00000000 00000000
+3: 0x00000000bf7da6cb 00000000 00000000
+4: 0x000000004e38eef2 00000000 00000000
+5: 0x00000000b5d7a04d 00000000 00000000
+6: 0x000000002758e395 00000000 00000000
+7: 0x00000000701f7830 00000000 00000000
+8: 0x000000000e71a726 00000000 00000000
+9: 0x00000000d45254b5 00000000 00000000
+CMPL STATUS: 0x000000000e1bd43c 00000000 00000000
+Dumped descs of queues 1 -&gt; 2.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-the-interrupt-ring-information">
 <h3>Dump the Interrupt Ring Information<a class="headerlink" href="#dump-the-interrupt-ring-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">intring</span> <span class="pre">dump</span> <span class="pre">vector</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;end_idx&gt;</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">intring</span> <span class="pre">dump</span> <span class="pre">vector</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;end_idx&gt;</span></code></p>
 <p>Dump the interrupt ring information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Vector number</li>
-<li>&lt;start_idx&gt; : Range start</li>
-<li>&lt;end_idx&gt; : Range end</li>
+<li>&lt;start_idx&gt; : Range start index</li>
+<li>&lt;end_idx&gt; : Range end index</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 intring dump vector 3 0 10
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 intring dump vector 3 0 10
 
 intr_ring_entry = 0: 0x00000000 0x00000000
 intr_ring_entry = 1: 0x00000000 0x00000000
@@ -1124,42 +1146,403 @@ intr_ring_entry = 10: 0x00000000 0x00000000
 <h2>Register Commands<a class="headerlink" href="#register-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="read-a-register">
 <h3>Read a Register<a class="headerlink" href="#read-a-register" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">reg</span> <span class="pre">read</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">read</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
 <p>Read a register value.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Bar number</li>
 <li>&lt;addr&gt; : Register address</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 reg read bar 2 0x0
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 reg read bar 2 0x0
 qdma17000, 17:00.00, bar#2, 0x0 = 0x0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="write-a-register">
 <h3>Write a Register<a class="headerlink" href="#write-a-register" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">reg</span> <span class="pre">write</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
-<p>Read a register value.</p>
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">write</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
+<p>Write a value to into the given register.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Bar number</li>
 <li>&lt;addr&gt; : Register address</li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 reg write bar 2 0x0 0
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 reg write bar 2 0x0 0
 qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-the-queue-registers">
 <h3>Dump the Queue registers<a class="headerlink" href="#dump-the-queue-registers" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal notranslate"><span class="pre">dmactl</span> <span class="pre">qdma01000</span> <span class="pre">reg</span> <span class="pre">dump</span> <span class="pre">[dmap</span> <span class="pre">&lt;Q&gt;</span> <span class="pre">&lt;N&gt;]</span></code></p>
-<p>This command allows the user to dump the registers. Only dump dmap registers if dmap is specified. Specify dmap range to dump: Q=queue, N=num of queues.</p>
-<p><strong>Parameters</strong></p>
-<ul class="simple">
-<li>&lt;Q&gt; : Queue number</li>
-<li>&lt;N&gt; : Number of queues</li>
-</ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre>[xilinx@]# dmactl qdma17000 reg dump dmap 1 2
+<p>command: <code class="docutils literal"><span class="pre">dmactl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">dump</span></code></p>
+<p>This command allows the user to dump the DMA BAR and User BAR registers.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dmactl qdma17000 reg dump
+################################################################################
+###             qdma17000, pci 17:00.00, reg dump
+################################################################################
+USER BAR #2
+[      0] ST_C2H_QID                                      0x1        1
+[    0x4] ST_C2H_PKTLEN                                   0x80       128
+[    0x8] ST_C2H_CONTROL                                  0          0
+[    0xc] ST_H2C_CONTROL                                  0          0
+[   0x10] ST_H2C_STATUS                                   0          0
+[   0x14] ST_H2C_XFER_CNT                                 0          0
+[   0x20] ST_C2H_PKT_CNT                                  0x1        1
+[   0x30] ST_C2H_CMPT_DATA_0                              0          0
+[   0x34] ST_C2H_CMPT_DATA_1                              0          0
+[   0x38] ST_C2H_CMPT_DATA_2                              0          0
+[   0x3c] ST_C2H_CMPT_DATA_3                              0          0
+[   0x40] ST_C2H_CMPT_DATA_4                              0          0
+[   0x44] ST_C2H_CMPT_DATA_5                              0          0
+[   0x48] ST_C2H_CMPT_DATA_6                              0          0
+[   0x4c] ST_C2H_CMPT_DATA_7                              0          0
+[   0x50] ST_C2H_CMPT_SIZE                                0          0
+[   0x60] ST_SCRATCH_REG_0                                0          0
+[   0x64] ST_SCRATCH_REG_1                                0          0
+[   0x88] ST_C2H_PKT_DROP                                 0          0
+[   0x8c] ST_C2H_PKT_ACCEPT                               0          0
+[   0x90] DSC_BYPASS_LOOP                                 0          0
+[   0x94] USER_INTERRUPT                                  0          0
+[   0x98] USER_INTERRUPT_MASK                             0          0
+[   0x9c] USER_INTERRUPT_VEC                              0          0
+[   0xa0] DMA_CONTROL                                     0          0
+[   0xa4] VDM_MSG_READ                                    0          0
+
+CONFIG BAR #0
+[    0x0] CFG_BLOCK_ID_0                                  0x1fd30000 533921792
+[    0x4] CFG_BUSDEV_0                                    0x0        0
+[    0x8] CFG_PCIE_MAX_PL_SZ_0                            0x51       81
+[    0xc] CFG_PCIE_MAX_RDRQ_SZ_0                          0x52       82
+[   0x10] CFG_SYS_ID_0                                    0x1234     4660
+[   0x14] CFG_MSI_EN_0                                    0x2020202  33686018
+[   0x18] CFG_PCIE_DATA_WIDTH_0                           0x3        3
+[   0x1c] CFG_PCIE_CTRL_0                                 0x1        1
+[   0x40] CFG_AXI_USR_MAX_PL_SZ_0                         0x55       85
+[   0x44] CFG_AXI_USR_MAX_RDRQ_SZ_0                       0x55       85
+[   0x4c] CFG_MISC_CTRL_0                                 0x10009    65545
+[   0x80] CFG_SCRATCH_REG_0                               0x0        0
+[   0x84] CFG_SCRATCH_REG_1                               0x0        0
+[   0x88] CFG_SCRATCH_REG_2                               0x0        0
+[   0x8c] CFG_SCRATCH_REG_3                               0x0        0
+[   0x90] CFG_SCRATCH_REG_4                               0x0        0
+[   0x94] CFG_SCRATCH_REG_5                               0x0        0
+[   0x98] CFG_SCRATCH_REG_6                               0x0        0
+[   0x9c] CFG_SCRATCH_REG_7                               0x0        0
+[   0xf0] QDMA_RAM_SBE_MSK_A_0                            0xffffff11 4294967057
+[   0xf4] QDMA_RAM_SBE_STS_A_0                            0x0        0
+[   0xf8] QDMA_RAM_DBE_MSK_A_0                            0xffffff11 4294967057
+[   0xfc] QDMA_RAM_DBE_STS_A_0                            0x0        0
+[  0x100] GLBL2_ID_0                                      0x1fd70000 534183936
+[  0x104] GLBL2_PF_BL_INT_0                               0x41041    266305
+[  0x108] GLBL2_PF_VF_BL_INT_0                            0x41041    266305
+[  0x10c] GLBL2_PF_BL_EXT_0                               0x104104   1065220
+[  0x110] GLBL2_PF_VF_BL_EXT_0                            0x104104   1065220
+[  0x114] GLBL2_CHNL_INST_0                               0x30101    196865
+[  0x118] GLBL2_CHNL_QDMA_0                               0x30f0f    200463
+[  0x11c] GLBL2_CHNL_STRM_0                               0x30000    196608
+[  0x120] GLBL2_QDMA_CAP_0                                0x800      2048
+[  0x128] GLBL2_PASID_CAP_0                               0x0        0
+[  0x12c] GLBL2_FUNC_RET_0                                0x0        0
+[  0x130] GLBL2_SYS_ID_0                                  0x0        0
+[  0x134] GLBL2_MISC_CAP_0                                0x1000003  16777219
+[  0x1b8] GLBL2_DBG_PCIE_RQ_0                             0x7f50003  133496835
+[  0x1bc] GLBL2_DBG_PCIE_RQ_1                             0x6024     24612
+[  0x1c0] GLBL2_DBG_AXIMM_WR_0                            0x600021   6291489
+[  0x1c4] GLBL2_DBG_AXIMM_WR_1                            0x0        0
+[  0x1c8] GLBL2_DBG_AXIMM_RD_0                            0x1        1
+[  0x1cc] GLBL2_DBG_AXIMM_RD_1                            0x0        0
+[  0x204] GLBL_RNGSZ_0                                    0x801      2049
+[  0x208] GLBL_RNGSZ_1                                    0x41       65
+[  0x20c] GLBL_RNGSZ_2                                    0x81       129
+[  0x210] GLBL_RNGSZ_3                                    0xc1       193
+[  0x214] GLBL_RNGSZ_4                                    0x101      257
+[  0x218] GLBL_RNGSZ_5                                    0x181      385
+[  0x21c] GLBL_RNGSZ_6                                    0x201      513
+[  0x220] GLBL_RNGSZ_7                                    0x301      769
+[  0x224] GLBL_RNGSZ_8                                    0x401      1025
+[  0x228] GLBL_RNGSZ_9                                    0x601      1537
+[  0x22c] GLBL_RNGSZ_10                                   0xc01      3073
+[  0x230] GLBL_RNGSZ_11                                   0x1001     4097
+[  0x234] GLBL_RNGSZ_12                                   0x1801     6145
+[  0x238] GLBL_RNGSZ_13                                   0x2001     8193
+[  0x23c] GLBL_RNGSZ_14                                   0x3001     12289
+[  0x240] GLBL_RNGSZ_15                                   0x4001     16385
+[  0x248] GLBL_ERR_STAT_0                                 0x0        0
+[  0x24c] GLBL_ERR_MASK_0                                 0x90f      2319
+[  0x250] GLBL_DSC_CFG_0                                  0x35       53
+[  0x254] GLBL_DSC_ERR_STS_0                              0x0        0
+[  0x258] GLBL_DSC_ERR_MSK_0                              0x1f9023f  33096255
+[  0x25c] GLBL_DSC_ERR_LOG_0                              0x0        0
+[  0x260] GLBL_DSC_ERR_LOG_1                              0x0        0
+[  0x264] GLBL_TRQ_ERR_STS_0                              0x0        0
+[  0x268] GLBL_TRQ_ERR_MSK_0                              0xf        15
+[  0x26c] GLBL_TRQ_ERR_LOG_0                              0x0        0
+[  0x270] GLBL_DSC_DBG_DAT_0                              0x0        0
+[  0x274] GLBL_DSC_DBG_DAT_1                              0x8080     32896
+[  0x27c] GLBL_DSC_ERR_LOG2_0                             0x0        0
+[  0x288] GLBL_INTERRUPT_CFG_0                            0x0        0
+[  0x400] TRQ_SEL_FMAP_0                                  0x0        0
+[  0x404] TRQ_SEL_FMAP_1                                  0x0        0
+[  0x408] TRQ_SEL_FMAP_2                                  0x0        0
+[  0x40c] TRQ_SEL_FMAP_3                                  0x0        0
+[  0x804] IND_CTXT_DATA_0                                 0x0        0
+[  0x808] IND_CTXT_DATA_1                                 0x0        0
+[  0x80c] IND_CTXT_DATA_2                                 0x0        0
+[  0x810] IND_CTXT_DATA_3                                 0x0        0
+[  0x814] IND_CTXT_DATA_4                                 0x0        0
+[  0x818] IND_CTXT_DATA_5                                 0x0        0
+[  0x81c] IND_CTXT_DATA_6                                 0x0        0
+[  0x820] IND_CTXT_DATA_7                                 0x0        0
+[  0x824] IND_CTXT_MASK_0                                 0xffffffff 4294967295
+[  0x828] IND_CTXT_MASK_1                                 0xffffffff 4294967295
+[  0x82c] IND_CTXT_MASK_2                                 0xffffffff 4294967295
+[  0x830] IND_CTXT_MASK_3                                 0xffffffff 4294967295
+[  0x834] IND_CTXT_MASK_4                                 0xffffffff 4294967295
+[  0x838] IND_CTXT_MASK_5                                 0xffffffff 4294967295
+[  0x83c] IND_CTXT_MASK_6                                 0xffffffff 4294967295
+[  0x840] IND_CTXT_MASK_7                                 0xffffffff 4294967295
+[  0x844] IND_CTXT_CMD_0                                  0x238      568
+[  0xa00] C2H_TIMER_CNT_0                                 0x1        1
+[  0xa04] C2H_TIMER_CNT_1                                 0x2        2
+[  0xa08] C2H_TIMER_CNT_2                                 0x4        4
+[  0xa0c] C2H_TIMER_CNT_3                                 0x5        5
+[  0xa10] C2H_TIMER_CNT_4                                 0x8        8
+[  0xa14] C2H_TIMER_CNT_5                                 0xa        10
+[  0xa18] C2H_TIMER_CNT_6                                 0xf        15
+[  0xa1c] C2H_TIMER_CNT_7                                 0x14       20
+[  0xa20] C2H_TIMER_CNT_8                                 0x19       25
+[  0xa24] C2H_TIMER_CNT_9                                 0x1e       30
+[  0xa28] C2H_TIMER_CNT_10                                0x32       50
+[  0xa2c] C2H_TIMER_CNT_11                                0x4b       75
+[  0xa30] C2H_TIMER_CNT_12                                0x64       100
+[  0xa34] C2H_TIMER_CNT_13                                0x7d       125
+[  0xa38] C2H_TIMER_CNT_14                                0x96       150
+[  0xa3c] C2H_TIMER_CNT_15                                0xc8       200
+[  0xa40] C2H_CNT_THRESH_0                                0x40       64
+[  0xa44] C2H_CNT_THRESH_1                                0x2        2
+[  0xa48] C2H_CNT_THRESH_2                                0x4        4
+[  0xa4c] C2H_CNT_THRESH_3                                0x8        8
+[  0xa50] C2H_CNT_THRESH_4                                0x10       16
+[  0xa54] C2H_CNT_THRESH_5                                0x18       24
+[  0xa58] C2H_CNT_THRESH_6                                0x20       32
+[  0xa5c] C2H_CNT_THRESH_7                                0x30       48
+[  0xa60] C2H_CNT_THRESH_8                                0x50       80
+[  0xa64] C2H_CNT_THRESH_9                                0x60       96
+[  0xa68] C2H_CNT_THRESH_10                               0x70       112
+[  0xa6c] C2H_CNT_THRESH_11                               0x80       128
+[  0xa70] C2H_CNT_THRESH_12                               0x90       144
+[  0xa74] C2H_CNT_THRESH_13                               0xa0       160
+[  0xa78] C2H_CNT_THRESH_14                               0xb0       176
+[  0xa7c] C2H_CNT_THRESH_15                               0xc0       192
+[  0xa88] C2H_STAT_S_AXIS_C2H_ACCEPTED_0                  0x0        0
+[  0xa8c] C2H_STAT_S_AXIS_CMPT_ACCEPTED_0                 0x0        0
+[  0xa90] C2H_STAT_DESC_RSP_PKT_ACCEPTED_0                0x0        0
+[  0xa94] C2H_STAT_AXIS_PKG_CMP_0                         0x0        0
+[  0xa98] C2H_STAT_DESC_RSP_ACCEPTED_0                    0x0        0
+[  0xa9c] C2H_STAT_DESC_RSP_CMP_0                         0x0        0
+[  0xaa0] C2H_STAT_WRQ_OUT_0                              0x0        0
+[  0xaa4] C2H_STAT_WPL_REN_ACCEPTED_0                     0x0        0
+[  0xaa8] C2H_STAT_TOTAL_WRQ_LEN_0                        0x0        0
+[  0xaac] C2H_STAT_TOTAL_WPL_LEN_0                        0x0        0
+[  0xab0] C2H_BUF_SZ_0                                    0x1000     4096
+[  0xab4] C2H_BUF_SZ_1                                    0x100      256
+[  0xab8] C2H_BUF_SZ_2                                    0x200      512
+[  0xabc] C2H_BUF_SZ_3                                    0x400      1024
+[  0xac0] C2H_BUF_SZ_4                                    0x800      2048
+[  0xac4] C2H_BUF_SZ_5                                    0xf80      3968
+[  0xac8] C2H_BUF_SZ_6                                    0x1000     4096
+[  0xacc] C2H_BUF_SZ_7                                    0x1000     4096
+[  0xad0] C2H_BUF_SZ_8                                    0x1000     4096
+[  0xad4] C2H_BUF_SZ_9                                    0x1000     4096
+[  0xad8] C2H_BUF_SZ_10                                   0x1000     4096
+[  0xadc] C2H_BUF_SZ_11                                   0x1000     4096
+[  0xae0] C2H_BUF_SZ_12                                   0x1000     4096
+[  0xae4] C2H_BUF_SZ_13                                   0x2000     8192
+[  0xae8] C2H_BUF_SZ_14                                   0x233a     9018
+[  0xaec] C2H_BUF_SZ_15                                   0x4000     16384
+[  0xaf0] C2H_ERR_STAT_0                                  0x0        0
+[  0xaf4] C2H_ERR_MASK_0                                  0xfedb     65243
+[  0xaf8] C2H_FATAL_ERR_STAT_0                            0x0        0
+[  0xafc] C2H_FATAL_ERR_MASK_0                            0x7df1b    515867
+[  0xb00] C2H_FATAL_ERR_ENABLE_0                          0x0        0
+[  0xb04] GLBL_ERR_INT_0                                  0x1002000  16785408
+[  0xb08] C2H_PFCH_CFG_0                                  0xc201100  203428096
+[  0xb0c] C2H_INT_TIMER_TICK_0                            0x19       25
+[  0xb10] C2H_STAT_DESC_RSP_DROP_ACCEPTED_0               0x0        0
+[  0xb14] C2H_STAT_DESC_RSP_ERR_ACCEPTED_0                0x0        0
+[  0xb18] C2H_STAT_DESC_REQ_0                             0x0        0
+[  0xb1c] C2H_STAT_DEBUG_DMA_ENG_0                        0x0        0
+[  0xb20] C2H_STAT_DEBUG_DMA_ENG_1                        0x80000000 2147483648
+[  0xb24] C2H_STAT_DEBUG_DMA_ENG_2                        0xc0000000 3221225472
+[  0xb28] C2H_STAT_DEBUG_DMA_ENG_3                        0x100000   1048576
+[  0xb2c] C2H_DBG_PFCH_ERR_CTXT_0                         0x0        0
+[  0xb30] C2H_FIRST_ERR_QID_0                             0x0        0
+[  0xb34] STAT_NUM_CMPT_IN_0                              0x0        0
+[  0xb38] STAT_NUM_CMPT_OUT_0                             0x0        0
+[  0xb3c] STAT_NUM_CMPT_DRP_0                             0x0        0
+[  0xb40] STAT_NUM_STAT_DESC_OUT_0                        0x0        0
+[  0xb44] STAT_NUM_DSC_CRDT_SENT_0                        0x0        0
+[  0xb48] STAT_NUM_FCH_DSC_RCVD_0                         0x0        0
+[  0xb4c] STAT_NUM_BYP_DSC_RCVD_0                         0x0        0
+[  0xb50] C2H_CMPT_COAL_CFG_0                             0x40064014 1074151444
+[  0xb54] C2H_INTR_H2C_REQ_0                              0x0        0
+[  0xb58] C2H_INTR_C2H_MM_REQ_0                           0x0        0
+[  0xb5c] C2H_INTR_ERR_INT_REQ_0                          0x0        0
+[  0xb60] C2H_INTR_C2H_ST_REQ_0                           0x0        0
+[  0xb64] C2H_INTR_H2C_ERR_MM_MSIX_ACK_0                  0x0        0
+[  0xb68] C2H_INTR_H2C_ERR_MM_MSIX_FAIL_0                 0x0        0
+[  0xb6c] C2H_INTR_H2C_ERR_MM_NO_MSIX_0                   0x0        0
+[  0xb70] C2H_INTR_H2C_ERR_MM_CTXT_INVAL_0                0x0        0
+[  0xb74] C2H_INTR_C2H_ST_MSIX_ACK_0                      0x0        0
+[  0xb78] C2H_INTR_C2H_ST_MSIX_FAIL_0                     0x0        0
+[  0xb7c] C2H_INTR_C2H_ST_NO_MSIX_0                       0x0        0
+[  0xb80] C2H_INTR_C2H_ST_CTXT_INVAL_0                    0x0        0
+[  0xb84] C2H_STAT_WR_CMP_0                               0x0        0
+[  0xb88] C2H_STAT_DEBUG_DMA_ENG_4_0                      0x40000000 1073741824
+[  0xb8c] C2H_STAT_DEBUG_DMA_ENG_5_0                      0x0        0
+[  0xb90] C2H_DBG_PFCH_QID_0                              0x0        0
+[  0xb94] C2H_DBG_PFCH_0                                  0x0        0
+[  0xb98] C2H_INT_DEBUG_0                                 0x0        0
+[  0xb9c] C2H_STAT_IMM_ACCEPTED_0                         0x0        0
+[  0xba0] C2H_STAT_MARKER_ACCEPTED_0                      0x0        0
+[  0xba4] C2H_STAT_DISABLE_CMP_ACCEPTED_0                 0x0        0
+[  0xba8] C2H_C2H_PAYLOAD_FIFO_CRDT_CNT_0                 0x0        0
+[  0xbac] C2H_INTR_DYN_REQ_0                              0x0        0
+[  0xbb0] C2H_INTR_DYN_MSIX_0                             0x0        0
+[  0xbb4] C2H_DROP_LEN_MISMATCH_0                         0x0        0
+[  0xbb8] C2H_DROP_DESC_RSP_LEN_0                         0x0        0
+[  0xbbc] C2H_DROP_QID_FIFO_LEN_0                         0x0        0
+[  0xbc0] C2H_DROP_PAYLOAD_CNT_0                          0x0        0
+[  0xbc4] QDMA_C2H_CMPT_FORMAT_0                          0x20001    131073
+[  0xbc8] QDMA_C2H_CMPT_FORMAT_1                          0x0        0
+[  0xbcc] QDMA_C2H_CMPT_FORMAT_2                          0x0        0
+[  0xbd0] QDMA_C2H_CMPT_FORMAT_3                          0x0        0
+[  0xbd4] QDMA_C2H_CMPT_FORMAT_4                          0x0        0
+[  0xbd8] QDMA_C2H_CMPT_FORMAT_5                          0x0        0
+[  0xbdc] QDMA_C2H_CMPT_FORMAT_6                          0x0        0
+[  0xbe0] C2H_PFCH_CACHE_DEPTH_0                          0x10       16
+[  0xbe4] C2H_CMPT_COAL_BUF_DEPTH_0                       0x10       16
+[  0xbe8] C2H_PFCH_CRDT_0                                 0x0        0
+[  0xe00] H2C_ERR_STAT_0                                  0x0        0
+[  0xe04] H2C_ERR_MASK_0                                  0x1f       31
+[  0xe08] H2C_FIRST_ERR_QID_0                             0x0        0
+[  0xe0c] H2C_DBG_REG_0                                   0x0        0
+[  0xe10] H2C_DBG_REG_1                                   0x0        0
+[  0xe14] H2C_DBG_REG_2                                   0x0        0
+[  0xe18] H2C_DBG_REG_3                                   0x44008025 1140883493
+[  0xe1c] H2C_DBG_REG_4                                   0x0        0
+[  0xe20] H2C_FATAL_ERR_EN_0                              0x0        0
+[  0xe24] H2C_REQ_THROT_0                                 0xc14000   12664832
+[  0xe28] H2C_ALN_DBG_REG0_0                              0x0        0
+[ 0x1004] C2H_MM_CONTROL_0                                0x1        1
+[ 0x1008] C2H_MM_CONTROL_1                                0x1        1
+[ 0x100c] C2H_MM_CONTROL_2                                0x1        1
+[ 0x1040] C2H_MM_STATUS_0                                 0x1        1
+[ 0x1044] C2H_MM_STATUS_1                                 0x1        1
+[ 0x1048] C2H_MM_CMPL_DSC_CNT_0                           0x0        0
+[ 0x1054] C2H_MM_ERR_CODE_EN_MASK_0                       0x0        0
+[ 0x1058] C2H_MM_ERR_CODE_0                               0x0        0
+[ 0x105c] C2H_MM_ERR_INFO_0                               0x0        0
+[ 0x10c0] C2H_MM_PERF_MON_CTRL_0                          0x0        0
+[ 0x10c4] C2H_MM_PERF_MON_CY_CNT_0                        0x0        0
+[ 0x10c8] C2H_MM_PERF_MON_CY_CNT_1                        0x0        0
+[ 0x10cc] C2H_MM_PERF_MON_DATA_CNT_0                      0x0        0
+[ 0x10d0] C2H_MM_PERF_MON_DATA_CNT_1                      0x0        0
+[ 0x10e8] C2H_MM_DBG_INFO_0                               0x10002    65538
+[ 0x10ec] C2H_MM_DBG_INFO_1                               0x0        0
+[ 0x1204] H2C_MM_CONTROL_0                                0x1        1
+[ 0x1208] H2C_MM_CONTROL_1                                0x1        1
+[ 0x120c] H2C_MM_CONTROL_2                                0x1        1
+[ 0x1240] H2C_MM_STATUS_0                                 0x1        1
+[ 0x1248] H2C_MM_CMPL_DSC_CNT_0                           0x0        0
+[ 0x1254] H2C_MM_ERR_CODE_EN_MASK_0                       0x0        0
+[ 0x1258] H2C_MM_ERR_CODE_0                               0x0        0
+[ 0x125c] H2C_MM_ERR_INFO_0                               0x0        0
+[ 0x12c0] H2C_MM_PERF_MON_CTRL_0                          0x0        0
+[ 0x12c4] H2C_MM_PERF_MON_CY_CNT_0                        0x0        0
+[ 0x12c8] H2C_MM_PERF_MON_CY_CNT_1                        0x0        0
+[ 0x12cc] H2C_MM_PERF_MON_DATA_CNT_0                      0x0        0
+[ 0x12d0] H2C_MM_PERF_MON_DATA_CNT_1                      0x0        0
+[ 0x12e8] H2C_MM_DBG_INFO_0                               0x10002    65538
+[ 0x12ec] H2C_MM_REQ_THROT_0                              0x8000     32768
+[ 0x2400] FUNC_STATUS_0                                   0x44       68
+[ 0x2404] FUNC_CMD_0                                      0xffffffff 4294967295
+[ 0x2408] FUNC_INTR_VEC_0                                 0x0        0
+[ 0x240c] TARGET_FUNC_0                                   0x4        4
+[ 0x2410] INTR_CTRL_0                                     0x1        1
+[ 0x2420] PF_ACK_0                                        0x10       16
+[ 0x2424] PF_ACK_1                                        0x0        0
+[ 0x2428] PF_ACK_2                                        0x0        0
+[ 0x242c] PF_ACK_3                                        0x0        0
+[ 0x2430] PF_ACK_4                                        0x0        0
+[ 0x2434] PF_ACK_5                                        0x0        0
+[ 0x2438] PF_ACK_6                                        0x0        0
+[ 0x243c] PF_ACK_7                                        0x0        0
+[ 0x2500] FLR_CTRL_STATUS_0                               0x0        0
+[ 0x2800] MSG_IN_0                                        0xffffffff 4294967295
+[ 0x2804] MSG_IN_1                                        0xffffffff 4294967295
+[ 0x2808] MSG_IN_2                                        0xffffffff 4294967295
+[ 0x280c] MSG_IN_3                                        0xffffffff 4294967295
+[ 0x2810] MSG_IN_4                                        0xffffffff 4294967295
+[ 0x2814] MSG_IN_5                                        0xffffffff 4294967295
+[ 0x2818] MSG_IN_6                                        0xffffffff 4294967295
+[ 0x281c] MSG_IN_7                                        0xffffffff 4294967295
+[ 0x2820] MSG_IN_8                                        0xffffffff 4294967295
+[ 0x2824] MSG_IN_9                                        0xffffffff 4294967295
+[ 0x2828] MSG_IN_10                                       0xffffffff 4294967295
+[ 0x282c] MSG_IN_11                                       0xffffffff 4294967295
+[ 0x2830] MSG_IN_12                                       0xffffffff 4294967295
+[ 0x2834] MSG_IN_13                                       0xffffffff 4294967295
+[ 0x2838] MSG_IN_14                                       0xffffffff 4294967295
+[ 0x283c] MSG_IN_15                                       0xffffffff 4294967295
+[ 0x2840] MSG_IN_16                                       0xffffffff 4294967295
+[ 0x2844] MSG_IN_17                                       0xffffffff 4294967295
+[ 0x2848] MSG_IN_18                                       0xffffffff 4294967295
+[ 0x284c] MSG_IN_19                                       0xffffffff 4294967295
+[ 0x2850] MSG_IN_20                                       0xffffffff 4294967295
+[ 0x2854] MSG_IN_21                                       0xffffffff 4294967295
+[ 0x2858] MSG_IN_22                                       0xffffffff 4294967295
+[ 0x285c] MSG_IN_23                                       0xffffffff 4294967295
+[ 0x2860] MSG_IN_24                                       0xffffffff 4294967295
+[ 0x2864] MSG_IN_25                                       0xffffffff 4294967295
+[ 0x2868] MSG_IN_26                                       0xffffffff 4294967295
+[ 0x286c] MSG_IN_27                                       0xffffffff 4294967295
+[ 0x2870] MSG_IN_28                                       0xffffffff 4294967295
+[ 0x2874] MSG_IN_29                                       0xffffffff 4294967295
+[ 0x2878] MSG_IN_30                                       0xffffffff 4294967295
+[ 0x287c] MSG_IN_31                                       0xffffffff 4294967295
+[ 0x2c00] MSG_OUT_0                                       0x0        0
+[ 0x2c04] MSG_OUT_1                                       0x0        0
+[ 0x2c08] MSG_OUT_2                                       0x0        0
+[ 0x2c0c] MSG_OUT_3                                       0x0        0
+[ 0x2c10] MSG_OUT_4                                       0x0        0
+[ 0x2c14] MSG_OUT_5                                       0x0        0
+[ 0x2c18] MSG_OUT_6                                       0x0        0
+[ 0x2c1c] MSG_OUT_7                                       0x0        0
+[ 0x2c20] MSG_OUT_8                                       0x0        0
+[ 0x2c24] MSG_OUT_9                                       0x0        0
+[ 0x2c28] MSG_OUT_10                                      0x0        0
+[ 0x2c2c] MSG_OUT_11                                      0x0        0
+[ 0x2c30] MSG_OUT_12                                      0x0        0
+[ 0x2c34] MSG_OUT_13                                      0x0        0
+[ 0x2c38] MSG_OUT_14                                      0x0        0
+[ 0x2c3c] MSG_OUT_15                                      0x0        0
+[ 0x2c40] MSG_OUT_16                                      0x0        0
+[ 0x2c44] MSG_OUT_17                                      0x0        0
+[ 0x2c48] MSG_OUT_18                                      0x0        0
+[ 0x2c4c] MSG_OUT_19                                      0x0        0
+[ 0x2c50] MSG_OUT_20                                      0x0        0
+[ 0x2c54] MSG_OUT_21                                      0x0        0
+[ 0x2c58] MSG_OUT_22                                      0x0        0
+[ 0x2c5c] MSG_OUT_23                                      0x0        0
+[ 0x2c60] MSG_OUT_24                                      0x0        0
+[ 0x2c64] MSG_OUT_25                                      0x0        0
+[ 0x2c68] MSG_OUT_26                                      0x0        0
+[ 0x2c6c] MSG_OUT_27                                      0x0        0
+[ 0x2c70] MSG_OUT_28                                      0x0        0
+[ 0x2c74] MSG_OUT_29                                      0x0        0
+[ 0x2c78] MSG_OUT_30                                      0x0        0
+[ 0x2c7c] MSG_OUT_31                                      0x0        0
 </pre></div>
 </div>
 </div>
@@ -1168,15 +1551,18 @@ qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="dma_to_device.html" class="btn btn-neutral float-right" title="dma_to_device" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="dma_to_device.html" class="btn btn-neutral float-right" title="DMA to Device (dma_to_device)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="user-app.html" class="btn btn-neutral" title="User Applications" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="user-app.html" class="btn btn-neutral" title="User Applications" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1207,10 +1593,11 @@ qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

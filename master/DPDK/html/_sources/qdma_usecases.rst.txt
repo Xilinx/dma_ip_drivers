@@ -6,7 +6,6 @@ QDMA IP is released with five example designs in the Vivado® Design Suite. They
 
 #. AXI4 Memory Mapped And AXI-Stream with Completion
 #. AXI Memory Mapped
-#. AXI Memory Mapped with Completion
 #. AXI Stream with Completion
 #. AXI Stream Loopback
 #. Descriptor Bypass In/Out Loopback
@@ -60,11 +59,11 @@ For MM (H2C and C2H) bypass mode, application needs to enable the bypass mode on
 Application can enable C2H/H2C bypass using device arguments (``c2h_byp_mode`` and ``h2c_byp_mode``) during application launch or
 by invoking ``rte_pmd_qdma_configure_rx_bypass() / rte_pmd_qdma_configure_tx_bypass()`` APIs from application on the required queues.
 
-The MM descriptor format used by the example design is defined in QDMA Driver code base at ``drivers/net/qdma/qdma.h``
+The MM descriptor format used by the example design is defined in QDMA Driver code base at ``drivers/net/qdma/qdma_user.h``
 
 ::
 
-	struct __attribute__ ((packed)) qdma_mm_desc
+	struct __attribute__ ((packed)) qdma_ul_mm_desc
 	{
 		volatile uint64_t	src_addr;
 		volatile uint64_t	len:28;
@@ -78,7 +77,8 @@ The MM descriptor format used by the example design is defined in QDMA Driver co
 	};
 
 Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the data flow functionality in ``qdma_xmit_pkts_mm() / qdma_recv_pkts_mm()`` functions in ``drivers/net/qdma/qdma_rxtx.c``.
+Accordingly, update the descriptor processing functions ``qdma_ul_update_mm_h2c_desc() / qdma_ul_update_mm_c2h_desc()`` in ``qdma_user.c`` file.
+Refer the data flow functionality in ``qdma_xmit_pkts_mm() / qdma_recv_pkts_mm()`` functions in ``drivers/net/qdma/qdma_rxtx.c``.
 
 MM C2H(Card-to-Host)
 --------------------
@@ -134,11 +134,11 @@ For ST H2C bypass mode, application needs to enable the bypass mode on the requi
 Application can enable H2C bypass using device argument (``h2c_byp_mode``) during application launch or
 by invoking ``rte_pmd_qdma_configure_tx_bypass()`` API from application on the required queues.
 
-The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at ``drivers/net/qdma/qdma.h``
+The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at ``drivers/net/qdma/qdma_user.h``
 
 ::
 
-	struct __attribute__ ((packed)) qdma_h2c_desc
+	struct __attribute__ ((packed)) qdma_ul_st_h2c_desc
 	{
 		volatile uint16_t	cdh_flags;
 		volatile uint16_t	pld_len;
@@ -148,7 +148,8 @@ The ST H2C descriptor format used by the example design is defined in QDMA Drive
 	};
 
 Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the data flow functionality in ``qdma_xmit_pkts_st()`` function in ``drivers/net/qdma/qdma_rxtx.c``.
+Accordingly, update the ST H2C descriptor processing function ``qdma_ul_update_st_h2c_desc()`` in ``qdma_user.c`` file.
+Refer the ST H2C data flow functionality in ``qdma_xmit_pkts_st()`` function in ``drivers/net/qdma/qdma_rxtx.c``.
 
 ST C2H(Card-to-Host)
 --------------------
@@ -198,7 +199,7 @@ The completion entry format used by the example design is defined in QDMA Driver
 
 ::
 
-	struct __attribute__ ((packed)) c2h_cmpt_ring
+	struct __attribute__ ((packed)) qdma_ul_st_cmpt_ring
 	{
 		/* For 2018.2 IP, this field determines the
 		 * Standard or User format of completion entry
@@ -232,9 +233,10 @@ The completion entry format used by the example design is defined in QDMA Driver
 		volatile uint8_t	user_def[];
 	};
 
-Completion entry is processed in ``qdma_recv_pkts_st()`` function which is part of ``drivers/net/qdma/qdma_rxtx.c``.
+Completion entry is processed in ``qdma_ul_extract_st_cmpt_info()`` function in ``drivers/net/qdma/qdma_user.c``.
 If a different example design is used, the QDMA driver code in ``drivers/net/qdma/qdma_user.h`` and
-``drivers/net/qdma/qdma_rxtx.c`` must be updated to suit to the descriptor format defined by the new example design.
+``drivers/net/qdma/qdma_user.c`` must be updated as per the descriptor format defined by the new example design.
+Refer the ST C2H data flow functionality in ``qdma_recv_pkts_st()`` function in ``drivers/net/qdma/qdma_rxtx.c``.
 
 
 For ST C2H bypass mode, application needs to enable the bypass mode on the required queues.
@@ -254,24 +256,3 @@ The ST C2H descriptor format used by the example design is defined in QDMA Drive
 Update this structure if any changes required in the descriptor format for bypass mode.
 Accordingly, update the data flow functionality in ``qdma_recv_pkts_st()`` function in ``drivers/net/qdma/qdma_rxtx.c``.
 
-
-==================================
-AXI4 Memory Mapped with Completion
-==================================
-
-This example design is generated when the DMA Interface Selection option is set to ``AXIMM
-with Completion`` in the Basic tab.
-Refer to QDMA Product Guide for more details on the example design and its registers.
-
-The complete flow between the Host SW components and HW components for MM completion is depicted in below sequence diagram.
-
-- Application needs to configure the queue in MM mode
-- Application calls ``rte_pmd_qdma_dev_cmptq_setup()`` API to allocate resources for Completion ring
-- Application calls ``rte_pmd_qdma_dev_cmptq_start()`` API to program the completion ring context
-- Application programs the Example design registers to generate completions in the completion ring
-- Application calls ``rte_pmd_qdma_mm_cmpt_process()`` API to process completion ring and receive the completion data in the application provided buffers
-- Application can call MM H2C and C2H flow for data transfers along with the completions processing
-- When done, application can call ``rte_pmd_qdma_dev_cmptq_stop()`` API to disable the completion context
-
-.. image:: /images/MM_CMPT_Flow.png
-   :align: center

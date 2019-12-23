@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA DPDK Driver UseCases &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  <title>QDMA DPDK Driver UseCases &mdash; QDMA DPDK Driver 2019.2 documentation</title>
   
 
   
@@ -35,10 +35,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="Developers Guide" href="dev-guide.html"/>
         <link rel="next" title="QDMA DPDK Performance" href="perf.html"/>
-        <link rel="prev" title="QDMA Mailbox" href="qdma_mailbox.html"/> 
+        <link rel="prev" title="PF/VF Shutdown" href="pf_vf_shutdown.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -103,7 +103,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#st-c2h-card-to-host">ST C2H(Card-to-Host)</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#axi4-memory-mapped-with-completion">AXI4 Memory Mapped with Completion</a></li>
 </ul>
 </li>
 </ul>
@@ -161,7 +160,6 @@
 <ol class="arabic simple">
 <li>AXI4 Memory Mapped And AXI-Stream with Completion</li>
 <li>AXI Memory Mapped</li>
-<li>AXI Memory Mapped with Completion</li>
 <li>AXI Stream with Completion</li>
 <li>AXI Stream Loopback</li>
 <li>Descriptor Bypass In/Out Loopback</li>
@@ -200,8 +198,8 @@ QDMA driver takes care of HW configuration and data processing.</p>
 <p>For MM (H2C and C2H) bypass mode, application needs to enable the bypass mode on the required queues.
 Application can enable C2H/H2C bypass using device arguments (<code class="docutils literal notranslate"><span class="pre">c2h_byp_mode</span></code> and <code class="docutils literal notranslate"><span class="pre">h2c_byp_mode</span></code>) during application launch or
 by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_configure_rx_bypass()</span> <span class="pre">/</span> <span class="pre">rte_pmd_qdma_configure_tx_bypass()</span></code> APIs from application on the required queues.</p>
-<p>The MM descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma.h</span></code></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct __attribute__ ((packed)) qdma_mm_desc
+<p>The MM descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>struct __attribute__ ((packed)) qdma_ul_mm_desc
 {
         volatile uint64_t       src_addr;
         volatile uint64_t       len:28;
@@ -216,7 +214,8 @@ by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd
 </pre></div>
 </div>
 <p>Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_xmit_pkts_mm()</span> <span class="pre">/</span> <span class="pre">qdma_recv_pkts_mm()</span></code> functions in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
+Accordingly, update the descriptor processing functions <code class="docutils literal notranslate"><span class="pre">qdma_ul_update_mm_h2c_desc()</span> <span class="pre">/</span> <span class="pre">qdma_ul_update_mm_c2h_desc()</span></code> in <code class="docutils literal notranslate"><span class="pre">qdma_user.c</span></code> file.
+Refer the data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_xmit_pkts_mm()</span> <span class="pre">/</span> <span class="pre">qdma_recv_pkts_mm()</span></code> functions in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 </div>
 <div class="section" id="mm-c2h-card-to-host">
 <h3>MM C2H(Card-to-Host)<a class="headerlink" href="#mm-c2h-card-to-host" title="Permalink to this headline">¶</a></h3>
@@ -263,8 +262,8 @@ The CLI command <code class="docutils literal notranslate"><span class="pre">dma
 <p>For ST H2C bypass mode, application needs to enable the bypass mode on the required queues.
 Application can enable H2C bypass using device argument (<code class="docutils literal notranslate"><span class="pre">h2c_byp_mode</span></code>) during application launch or
 by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_configure_tx_bypass()</span></code> API from application on the required queues.</p>
-<p>The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma.h</span></code></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct __attribute__ ((packed)) qdma_h2c_desc
+<p>The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>struct __attribute__ ((packed)) qdma_ul_st_h2c_desc
 {
         volatile uint16_t       cdh_flags;
         volatile uint16_t       pld_len;
@@ -275,7 +274,8 @@ by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd
 </pre></div>
 </div>
 <p>Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_xmit_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
+Accordingly, update the ST H2C descriptor processing function <code class="docutils literal notranslate"><span class="pre">qdma_ul_update_st_h2c_desc()</span></code> in <code class="docutils literal notranslate"><span class="pre">qdma_user.c</span></code> file.
+Refer the ST H2C data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_xmit_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 </div>
 <div class="section" id="st-c2h-card-to-host">
 <h3>ST C2H(Card-to-Host)<a class="headerlink" href="#st-c2h-card-to-host" title="Permalink to this headline">¶</a></h3>
@@ -313,7 +313,7 @@ every packet. This allows the driver to reclaim the descriptors.</p>
 <p>The Streaming C2H functionality implemented in QDMA driver is tightly coupled with the Example Design
 because the completion entry descriptor is defined by the user logic in the example design.</p>
 <p>The completion entry format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct __attribute__ ((packed)) c2h_cmpt_ring
+<div class="highlight-none notranslate"><div class="highlight"><pre>struct __attribute__ ((packed)) qdma_ul_st_cmpt_ring
 {
         /* For 2018.2 IP, this field determines the
          * Standard or User format of completion entry
@@ -348,9 +348,10 @@ because the completion entry descriptor is defined by the user logic in the exam
 };
 </pre></div>
 </div>
-<p>Completion entry is processed in <code class="docutils literal notranslate"><span class="pre">qdma_recv_pkts_st()</span></code> function which is part of <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.
+<p>Completion entry is processed in <code class="docutils literal notranslate"><span class="pre">qdma_ul_extract_st_cmpt_info()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.c</span></code>.
 If a different example design is used, the QDMA driver code in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code> and
-<code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code> must be updated to suit to the descriptor format defined by the new example design.</p>
+<code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.c</span></code> must be updated as per the descriptor format defined by the new example design.
+Refer the ST C2H data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_recv_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 <p>For ST C2H bypass mode, application needs to enable the bypass mode on the required queues.
 Application can enable C2H bypass using device argument (<code class="docutils literal notranslate"><span class="pre">c2h_byp_mode</span></code>) during application launch or
 by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_configure_rx_bypass()</span></code> API from application on the required queues.</p>
@@ -365,23 +366,6 @@ by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd
 Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_recv_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 </div>
 </div>
-<div class="section" id="axi4-memory-mapped-with-completion">
-<h2>AXI4 Memory Mapped with Completion<a class="headerlink" href="#axi4-memory-mapped-with-completion" title="Permalink to this headline">¶</a></h2>
-<p>This example design is generated when the DMA Interface Selection option is set to <code class="docutils literal notranslate"><span class="pre">AXIMM</span>
-<span class="pre">with</span> <span class="pre">Completion</span></code> in the Basic tab.
-Refer to QDMA Product Guide for more details on the example design and its registers.</p>
-<p>The complete flow between the Host SW components and HW components for MM completion is depicted in below sequence diagram.</p>
-<ul class="simple">
-<li>Application needs to configure the queue in MM mode</li>
-<li>Application calls <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dev_cmptq_setup()</span></code> API to allocate resources for Completion ring</li>
-<li>Application calls <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dev_cmptq_start()</span></code> API to program the completion ring context</li>
-<li>Application programs the Example design registers to generate completions in the completion ring</li>
-<li>Application calls <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_mm_cmpt_process()</span></code> API to process completion ring and receive the completion data in the application provided buffers</li>
-<li>Application can call MM H2C and C2H flow for data transfers along with the completions processing</li>
-<li>When done, application can call <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dev_cmptq_stop()</span></code> API to disable the completion context</li>
-</ul>
-<img alt="_images/MM_CMPT_Flow.png" class="align-center" src="_images/MM_CMPT_Flow.png" />
-</div>
 </div>
 
 
@@ -394,7 +378,7 @@ Refer to QDMA Product Guide for more details on the example design and its regis
         <a href="perf.html" class="btn btn-neutral float-right" title="QDMA DPDK Performance" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="qdma_mailbox.html" class="btn btn-neutral" title="QDMA Mailbox" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pf_vf_shutdown.html" class="btn btn-neutral" title="PF/VF Shutdown" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -425,7 +409,7 @@ Refer to QDMA Product Guide for more details on the example design and its regis
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DPDK Callback APIs &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  <title>DPDK Callback APIs &mdash; QDMA DPDK Driver 2019.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="Driver Design" href="driver-design.html"/>
         <link rel="next" title="QDMA DPDK PMD Exported APIs" href="qdma_pmd_export.html"/>
         <link rel="prev" title="Driver Design" href="driver-design.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -101,7 +101,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#resource-management">Resource Management</a></li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#mailbox-communication">Mailbox Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#mailbox-communication-for-vf-configuration">Mailbox Communication for VF configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-debug">DPDK Driver debug</a></li>
 </ul>
@@ -508,6 +509,26 @@ int <code class="descname">eth_qdma_dev_uninit</code><span class="sig-paren">(</
 </dl>
 <p><strong>Return</strong></p>
 <p>0 on success, &lt; 0 on failure.</p>
+<dl class="function">
+<dt id="c.qdma_vf_dev_reset">
+int <code class="descname">qdma_vf_dev_reset</code><span class="sig-paren">(</span>struct rte_eth_dev *<em>&nbsp;dev</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_vf_dev_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>DPDK callback to reset an Ethernet device.</p>
+</dd></dl>
+
+<p><strong>Parameters</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">rte_eth_dev</span> <span class="pre">*</span> <span class="pre">dev</span></code></dt>
+<dd>Pointer to Ethernet device structure.</dd>
+</dl>
+<p><strong>Description</strong></p>
+<p>This callback is invoked when applcation calls <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_reset()</span></code> API to reset a device.
+This callback is supported for VF driver only.</p>
+<p>As part of this callback, all the resources allocated for the port are freed and port is reset to unconfigured state.
+Application should reconfigure the port after a call to reset the device.</p>
+<p>The following sequence diagrams shows the reset process for VF.</p>
+<img alt="_images/vf_device_reset.png" class="align-center" src="_images/vf_device_reset.png" />
+<p><strong>Return</strong></p>
+<p>0 on success, &lt; 0 on failure.</p>
 </div>
 
 
@@ -551,7 +572,7 @@ int <code class="descname">eth_qdma_dev_uninit</code><span class="sig-paren">(</
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

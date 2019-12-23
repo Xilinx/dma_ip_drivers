@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>QDMA DPDK PMD Exported APIs &mdash; QDMA DPDK Driver 2019.1 documentation</title>
+  <title>QDMA DPDK PMD Exported APIs &mdash; QDMA DPDK Driver 2019.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA DPDK Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA DPDK Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="Driver Design" href="driver-design.html"/>
         <link rel="next" title="QDMA Queue Resource Management" href="qdma_resmgmt.html"/>
         <link rel="prev" title="DPDK Callback APIs" href="dpdk-callbacks.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -101,7 +101,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#resource-management">Resource Management</a></li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#mailbox-communication">Mailbox Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#mailbox-communication-for-vf-configuration">Mailbox Communication for VF configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
 <li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-debug">DPDK Driver debug</a></li>
 </ul>
@@ -330,11 +331,12 @@ enum <code class="descname">rte_pmd_qdma_xdebug_type</code><a class="headerlink"
 <dl class="docutils">
 <dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_QDMA_GLOBAL_CSR</span></code></dt>
 <dd>Dump QDMA Global CSR registers</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_QUEUE_CONTEXT</span></code></dt>
-<dd>Dump a queue’s contexts</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_QUEUE_STRUCT</span></code></dt>
-<dd>Dump a queue specific
-software information</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_QDMA_DEVICE_STRUCT</span></code></dt>
+<dd>Dump QDMA device structure
+maintained by driver</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_QUEUE_INFO</span></code></dt>
+<dd>Dump queue contexts maintained
+by HW and queue specific software information</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_QUEUE_DESC_DUMP</span></code></dt>
 <dd>Dump descriptor information
 of a queue</dd>
@@ -357,6 +359,38 @@ enum <code class="descname">rte_pmd_qdma_xdebug_desc_type</code><a class="header
 <dd>Dump completion queue’s descriptor</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_XDEBUG_DESC_MAX</span></code></dt>
 <dd>Unsupported value</dd>
+</dl>
+<dl class="type">
+<dt id="c.rte_pmd_qdma_device_type">
+enum <code class="descname">rte_pmd_qdma_device_type</code><a class="headerlink" href="#c.rte_pmd_qdma_device_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates the type of QDMA device</p>
+</dd></dl>
+
+<p><strong>Constants</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_DEVICE_SOFT</span></code></dt>
+<dd>Soft IP on Ultrascale+ device</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_DEVICE_VERSAL</span></code></dt>
+<dd>VERSAL device</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_DEVICE_VERSAL_CPM5</span></code></dt>
+<dd>VERSAL CPM5 device</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_DEVICE_NONE</span></code></dt>
+<dd>Not a valid QDMA device</dd>
+</dl>
+<dl class="type">
+<dt id="c.rte_pmd_qdma_versal_ip_type">
+enum <code class="descname">rte_pmd_qdma_versal_ip_type</code><a class="headerlink" href="#c.rte_pmd_qdma_versal_ip_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates the type of QDMA Versal IP</p>
+</dd></dl>
+
+<p><strong>Constants</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_VERSAL_HARD_IP</span></code></dt>
+<dd>Hard IP</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_VERSAL_SOFT_IP</span></code></dt>
+<dd>Soft IP</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">RTE_PMD_QDMA_VERSAL_NONE</span></code></dt>
+<dd>Not a versal device</dd>
 </dl>
 <dl class="type">
 <dt id="c.rte_pmd_qdma_xdebug_desc_param">
@@ -384,33 +418,125 @@ struct <code class="descname">rte_pmd_qdma_xdebug_desc_param</code><a class="hea
 <dt><code class="docutils literal notranslate"><span class="pre">type</span></code></dt>
 <dd>Type of queue descriptor ring to dump</dd>
 </dl>
+<dl class="type">
+<dt id="c.rte_pmd_qdma_dev_attributes">
+struct <code class="descname">rte_pmd_qdma_dev_attributes</code><a class="headerlink" href="#c.rte_pmd_qdma_dev_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>QDMA device attributes</p>
+</dd></dl>
+
+<p><strong>Definition</strong></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre>struct rte_pmd_qdma_dev_attributes {
+  uint8_t num_pfs;
+  uint16_t num_qs;
+  uint8_t flr_present:1;
+  uint8_t st_en:1;
+  uint8_t mm_en:1;
+  uint8_t mm_cmpt_en:1;
+  uint8_t mailbox_en:1;
+  uint8_t mm_channel_max;
+  uint8_t cmpt_ovf_chk_dis:1;
+  uint8_t sw_desc_64b:1;
+  uint8_t cmpt_desc_64b:1;
+  uint8_t cmpt_trig_count_timer:1;
+  enum rte_pmd_qdma_device_type device_type;
+  enum rte_pmd_qdma_versal_ip_type versal_ip_type;
+};
+</pre></div>
+</div>
+<p><strong>Members</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">num_pfs</span></code></dt>
+<dd>Number of PFs</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">num_qs</span></code></dt>
+<dd>Number of Queues supported</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">flr_present</span></code></dt>
+<dd>Indicates FLR support present or not</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">st_en</span></code></dt>
+<dd>Indicates ST mode support present or not</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mm_en</span></code></dt>
+<dd>Indicates MM mode support present or not</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mm_cmpt_en</span></code></dt>
+<dd>Indicates MM with Completions supported or not</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mailbox_en</span></code></dt>
+<dd>Indicates Mailbox supported or not</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mm_channel_max</span></code></dt>
+<dd>Number of MM channels</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">cmpt_ovf_chk_dis</span></code></dt>
+<dd>Indicates support of
+overflow check disable in CMPT ring</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">sw_desc_64b</span></code></dt>
+<dd>Indicates support of 64 bytes
+C2H/H2C descriptor format</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">cmpt_desc_64b</span></code></dt>
+<dd>Indicates support of 64 bytes
+CMPT descriptor format</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">cmpt_trig_count_timer</span></code></dt>
+<dd>Indicates support of
+counter + timer trigger mode</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">device_type</span></code></dt>
+<dd>QDMA Device Type</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">versal_ip_type</span></code></dt>
+<dd>Versal IP Type</dd>
+</dl>
 <dl class="function">
-<dt id="c.rte_pmd_qdma_xdebug">
-int <code class="descname">rte_pmd_qdma_xdebug</code><span class="sig-paren">(</span>uint8_t<em>&nbsp;port_id</em>, enum <a class="reference internal" href="#c.rte_pmd_qdma_xdebug_type" title="rte_pmd_qdma_xdebug_type">rte_pmd_qdma_xdebug_type</a><em>&nbsp;type</em>, void *<em>&nbsp;params</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_xdebug" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dumps the debug information for the specified debug type</p>
+<dt id="c.rte_pmd_qdma_dbg_regdump">
+int <code class="descname">rte_pmd_qdma_dbg_regdump</code><span class="sig-paren">(</span>uint8_t<em>&nbsp;portid</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_dbg_regdump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps the QDMA configuration registers for the given port.</p>
 </dd></dl>
 
 <p><strong>Parameters</strong></p>
 <dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">port_id</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">portid</span></code></dt>
 <dd>Port ID</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">rte_pmd_qdma_xdebug_type</span> <span class="pre">type</span></code></dt>
-<dd>Debug Type</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span> <span class="pre">params</span></code></dt>
-<dd><p class="first">It has different significance based on debug type.
-Below is the meaning of params for different debug types.</p>
-<blockquote class="last">
-<div><ul class="simple">
-<li>RTE_PMD_QDMA_XDEBUG_QDMA_GLOBAL_CSR : Not used</li>
-<li>RTE_PMD_QDMA_XDEBUG_QUEUE_CONTEXT   : Pointer to variable specifying
-Queue Id</li>
-<li>RTE_PMD_QDMA_XDEBUG_QUEUE_STRUCT    : Pointer to variable specifying
-Queue Id</li>
-<li>RTE_PMD_QDMA_XDEBUG_QUEUE_DESC_DUMP : Pointer to variable of type
-struct rte_pmd_qdma_xdebug_desc_param</li>
-</ul>
-</div></blockquote>
-</dd>
+</dl>
+<p><strong>Return</strong></p>
+<p>‘0’ on success, ‘&lt; 0’ on failure</p>
+<dl class="function">
+<dt id="c.rte_pmd_qdma_dbg_qdevice">
+int <code class="descname">rte_pmd_qdma_dbg_qdevice</code><span class="sig-paren">(</span>uint8_t<em>&nbsp;portid</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_dbg_qdevice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps the device specific SW structure for the given port.</p>
+</dd></dl>
+
+<p><strong>Parameters</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">portid</span></code></dt>
+<dd>Port ID</dd>
+</dl>
+<p><strong>Return</strong></p>
+<p>‘0’ on success, ‘&lt; 0’ on failure</p>
+<dl class="function">
+<dt id="c.rte_pmd_qdma_dbg_qinfo">
+int <code class="descname">rte_pmd_qdma_dbg_qinfo</code><span class="sig-paren">(</span>uint8_t<em>&nbsp;portid</em>, uint16_t<em>&nbsp;queue</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_dbg_qinfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps the queue contexts and queue specific SW structures for the given queue ID.</p>
+</dd></dl>
+
+<p><strong>Parameters</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">portid</span></code></dt>
+<dd>Port ID</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">queue</span></code></dt>
+<dd>Queue ID relative to the Port</dd>
+</dl>
+<p><strong>Return</strong></p>
+<p>‘0’ on success, ‘&lt; 0’ on failure</p>
+<dl class="function">
+<dt id="c.rte_pmd_qdma_dbg_qdesc">
+int <code class="descname">rte_pmd_qdma_dbg_qdesc</code><span class="sig-paren">(</span>uint8_t<em>&nbsp;portid</em>, uint16_t<em>&nbsp;queue</em>, int<em>&nbsp;start</em>, int<em>&nbsp;end</em>, enum <a class="reference internal" href="#c.rte_pmd_qdma_xdebug_desc_type" title="rte_pmd_qdma_xdebug_desc_type">rte_pmd_qdma_xdebug_desc_type</a><em>&nbsp;type</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_dbg_qdesc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps the Queue descriptors.</p>
+</dd></dl>
+
+<p><strong>Parameters</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">uint8_t</span> <span class="pre">portid</span></code></dt>
+<dd>Port ID</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">uint16_t</span> <span class="pre">queue</span></code></dt>
+<dd>Queue ID relative to the Port</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">start</span></code></dt>
+<dd>start index of the descriptor to dump</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">end</span></code></dt>
+<dd>end index of the descriptor to dump</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">enum</span> <span class="pre">rte_pmd_qdma_xdebug_desc_type</span> <span class="pre">type</span></code></dt>
+<dd>Descriptor type</dd>
 </dl>
 <p><strong>Return</strong></p>
 <p>‘0’ on success, ‘&lt; 0’ on failure</p>
@@ -532,7 +658,9 @@ int <code class="descname">rte_pmd_qdma_set_immediate_data_state</code><span cla
 <p>‘0’ on success, ‘&lt; 0’ on failure</p>
 <p><strong>Note</strong></p>
 <p>Application can call this API after
-successful call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code> API.
+successful call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_configure()</span></code> API. Application can
+also call this API after successful call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code>
+only if rx queue is not in start state.
 This API is applicable for streaming queues only.</p>
 <dl class="function">
 <dt id="c.rte_pmd_qdma_set_cmpt_overflow_check">
@@ -553,8 +681,10 @@ int <code class="descname">rte_pmd_qdma_set_cmpt_overflow_check</code><span clas
 <p>‘0’ on success, ‘&lt; 0’ on failure</p>
 <p><strong>Note</strong></p>
 <p>Application can call this API after
-successful call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code> API,
-but before calling <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_start()</span></code> or <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_start()</span></code> API.</p>
+successful call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_configure()</span></code> API.
+Application can also call this API after successful call to
+<code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code>/ <a class="reference internal" href="#c.rte_pmd_qdma_dev_cmptq_setup" title="rte_pmd_qdma_dev_cmptq_setup"><code class="xref c c-func docutils literal notranslate"><span class="pre">rte_pmd_qdma_dev_cmptq_setup()</span></code></a> API only if
+rx/cmpt queue is not in start state.</p>
 <dl class="function">
 <dt id="c.rte_pmd_qdma_set_cmpt_descriptor_size">
 int <code class="descname">rte_pmd_qdma_set_cmpt_descriptor_size</code><span class="sig-paren">(</span>int<em>&nbsp;portid</em>, uint32_t<em>&nbsp;qid</em>, enum <a class="reference internal" href="#c.rte_pmd_qdma_cmpt_desc_len" title="rte_pmd_qdma_cmpt_desc_len">rte_pmd_qdma_cmpt_desc_len</a><em>&nbsp;size</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_set_cmpt_descriptor_size" title="Permalink to this definition">¶</a></dt>
@@ -597,9 +727,11 @@ int <code class="descname">rte_pmd_qdma_set_cmpt_trigger_mode</code><span class=
 <p><strong>Return</strong></p>
 <p>‘0’ on success, ‘&lt; 0’ on failure</p>
 <p><strong>Note</strong></p>
-<p>Application can call this API
-before calling <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_start()</span></code> or <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_start()</span></code> API.
-By default, trigger mode is set to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT.</p>
+<p>Application can call this API after successful
+call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_configure()</span></code> API. Application can
+also call this API after successful call to
+<code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code>/<a class="reference internal" href="#c.rte_pmd_qdma_dev_cmptq_setup" title="rte_pmd_qdma_dev_cmptq_setup"><code class="xref c c-func docutils literal notranslate"><span class="pre">rte_pmd_qdma_dev_cmptq_setup()</span></code></a>
+API only if rx/cmpt queue is not in start state.</p>
 <dl class="function">
 <dt id="c.rte_pmd_qdma_set_cmpt_timer">
 int <code class="descname">rte_pmd_qdma_set_cmpt_timer</code><span class="sig-paren">(</span>int<em>&nbsp;portid</em>, uint32_t<em>&nbsp;qid</em>, uint32_t<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_set_cmpt_timer" title="Permalink to this definition">¶</a></dt>
@@ -618,8 +750,11 @@ int <code class="descname">rte_pmd_qdma_set_cmpt_timer</code><span class="sig-pa
 <p><strong>Return</strong></p>
 <p>‘0’ on success, ‘&lt; 0’ on failure</p>
 <p><strong>Note</strong></p>
-<p>Application can call this API
-before calling <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_start()</span></code> or <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_start()</span></code> API.</p>
+<p>Application can call this API after successful
+call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_configure()</span></code> API. Application can
+also call this API after successful call to
+<code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code>/<a class="reference internal" href="#c.rte_pmd_qdma_dev_cmptq_setup" title="rte_pmd_qdma_dev_cmptq_setup"><code class="xref c c-func docutils literal notranslate"><span class="pre">rte_pmd_qdma_dev_cmptq_setup()</span></code></a> API
+only if rx/cmpt queue is not in start state.</p>
 <dl class="function">
 <dt id="c.rte_pmd_qdma_set_c2h_descriptor_prefetch">
 int <code class="descname">rte_pmd_qdma_set_c2h_descriptor_prefetch</code><span class="sig-paren">(</span>int<em>&nbsp;portid</em>, uint32_t<em>&nbsp;qid</em>, uint8_t<em>&nbsp;enable</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_set_c2h_descriptor_prefetch" title="Permalink to this definition">¶</a></dt>
@@ -638,9 +773,11 @@ int <code class="descname">rte_pmd_qdma_set_c2h_descriptor_prefetch</code><span 
 <p><strong>Return</strong></p>
 <p>‘0’ on success, ‘&lt; 0’ on failure</p>
 <p><strong>Note</strong></p>
-<p>Application can call this API
-after successful call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code> API,
-but before calling <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_start()</span></code> or <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_start()</span></code> API.</p>
+<p>Application can call this API after successful
+call to <code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_dev_configure()</span></code> API. Application can
+also call this API after successful call to
+<code class="xref c c-func docutils literal notranslate"><span class="pre">rte_eth_rx_queue_setup()</span></code> API, only if rx queue
+is not in start state.</p>
 <dl class="function">
 <dt id="c.rte_pmd_qdma_set_mm_endpoint_addr">
 int <code class="descname">rte_pmd_qdma_set_mm_endpoint_addr</code><span class="sig-paren">(</span>int<em>&nbsp;portid</em>, uint32_t<em>&nbsp;qid</em>, enum <a class="reference internal" href="#c.rte_pmd_qdma_dir_type" title="rte_pmd_qdma_dir_type">rte_pmd_qdma_dir_type</a><em>&nbsp;dir</em>, uint32_t<em>&nbsp;addr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_set_mm_endpoint_addr" title="Permalink to this definition">¶</a></dt>
@@ -715,6 +852,21 @@ before calling <code class="xref c c-func docutils literal notranslate"><span cl
 By default, all queues are configured in internal mode i.e. bypass disabled.
 If size is specified zero, then the bypass descriptor size
 is set to the one used in internal mode.</p>
+<dl class="function">
+<dt id="c.rte_pmd_qdma_get_device_capabilities">
+int <code class="descname">rte_pmd_qdma_get_device_capabilities</code><span class="sig-paren">(</span>int<em>&nbsp;portid</em>, struct <a class="reference internal" href="#c.rte_pmd_qdma_dev_attributes" title="rte_pmd_qdma_dev_attributes">rte_pmd_qdma_dev_attributes</a> *<em>&nbsp;dev_attr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_get_device_capabilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrive the device capabilities</p>
+</dd></dl>
+
+<p><strong>Parameters</strong></p>
+<dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">portid</span></code></dt>
+<dd>Port ID.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">rte_pmd_qdma_dev_attributes</span> <span class="pre">*</span> <span class="pre">dev_attr</span></code></dt>
+<dd>Pointer to the device capabilities structure</dd>
+</dl>
+<p><strong>Return</strong></p>
+<p>‘0’ on success, ‘&lt; 0’ on failure.</p>
 <dl class="function">
 <dt id="c.rte_pmd_qdma_dev_cmptq_setup">
 int <code class="descname">rte_pmd_qdma_dev_cmptq_setup</code><span class="sig-paren">(</span>int<em>&nbsp;portid</em>, uint32_t<em>&nbsp;qid</em>, uint16_t<em>&nbsp;nb_cmpt_desc</em>, unsigned int<em>&nbsp;socket_id</em><span class="sig-paren">)</span><a class="headerlink" href="#c.rte_pmd_qdma_dev_cmptq_setup" title="Permalink to this definition">¶</a></dt>
@@ -844,7 +996,7 @@ uint16_t <code class="descname">rte_pmd_qdma_mm_cmpt_process</code><span class="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

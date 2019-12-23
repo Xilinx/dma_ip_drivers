@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Xilinx QDMA Linux Driver &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  <title>Xilinx QDMA Linux Driver &mdash; QDMA Linux Driver 2019.2 documentation</title>
   
 
+  
+  
   
   
 
@@ -33,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="#"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="#"/>
         <link rel="next" title="QDMA Features" href="features.html"/> 
 
   
@@ -43,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -62,7 +65,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -83,7 +86,10 @@
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
@@ -104,8 +110,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="#">QDMA Linux Driver</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">QDMA Linux Driver</a>
+        
       </nav>
 
 
@@ -114,23 +122,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="#">Docs</a> &raquo;</li>
-      
-    <li>Xilinx QDMA Linux Driver</li>
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Xilinx QDMA Linux Driver</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -140,7 +165,7 @@
 <h1>Xilinx QDMA Linux Driver<a class="headerlink" href="#xilinx-qdma-linux-driver" title="Permalink to this headline">¶</a></h1>
 <p>Xilinx QDMA Subsystem for PCIe example design is implemented on a Xilinx FPGA,
 which is connected to an X86 host system through PCI Express.
-Xilinx QDMA Linux Driver is implemented as a combination of user space and
+Xilinx QDMA Linux Driver package consists of user space applications and
 kernel driver components to control and configure the QDMA subsystem.</p>
 <p>QDMA Linux Driver consists of the following four major components:</p>
 <ul>
@@ -159,15 +184,15 @@ kernel driver components to control and configure the QDMA subsystem.</p>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><strong>Driver Interface</strong>: This layer create a simple linux pci_driver interface and a character driver interface to demonstrate the QDMA IP functionalities using the Linux QDMA IP driver. It creates a NL interface to facilitate the user applications to interact with the <code class="docutils literal notranslate"><span class="pre">Libqdma</span></code> module. It also creates <code class="docutils literal notranslate"><span class="pre">sysfs</span></code> interface to enable users to configure and control various QDMA IP parameters.</p>
+<li><p class="first"><strong>Driver Interface</strong>: This layer create a simple linux pci_driver ( struct pci_driver ) interface and a character driver interface ( struct file_operations ) to demonstrate the QDMA IP functionalities using the Linux QDMA IP driver. It creates a netlink ( NL ) interface to facilitate the user applications to interact with the <code class="docutils literal"><span class="pre">Libqdma</span></code> module. It also creates <code class="docutils literal"><span class="pre">sysfs</span></code> interface to enable users to configure and control various QDMA IP parameters.</p>
 </li>
 <li><p class="first"><strong>Applications</strong>: QDMA IP Driver provides the following sample applications.</p>
 <blockquote>
 <div><ul class="simple">
-<li>Dmactl : This application provides set of commands to configure and control the queues in the system</li>
-<li>dma_to_device : This application enables the users to perform Host to Card(H2C) transfer</li>
-<li>dma_from_device : This application enables the users to perform Card to Host(C2H) transfer</li>
-<li>Dmaperf : This application provides interfaces to extract performance numbers for QDMA IP in MM and ST modes</li>
+<li>dmactl : This application provides set of commands to configure and control the queues in the system</li>
+<li>dma_to_device : This application enables the users to perform Host to Card (H2C) transfer</li>
+<li>dma_from_device : This application enables the users to perform Card to Host (C2H) transfer</li>
+<li>dmaperf : This application provides commands to measure performance numbers for QDMA IP in MM and ST modes</li>
 </ul>
 </div></blockquote>
 </li>
@@ -190,12 +215,15 @@ kernel driver components to control and configure the QDMA subsystem.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="features.html" class="btn btn-neutral float-right" title="QDMA Features" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="features.html" class="btn btn-neutral float-right" title="QDMA Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -227,10 +255,11 @@ kernel driver components to control and configure the QDMA subsystem.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

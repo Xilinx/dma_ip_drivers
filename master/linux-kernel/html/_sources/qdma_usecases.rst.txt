@@ -11,6 +11,9 @@ QDMA IP is released with five example designs in the Vivado® Design Suite. They
 #. AXI Stream Loopback
 #. Descriptor Bypass In/Out Loopback
 
+**Note**: AXI Memory Mapped with Completion is not supported.
+
+
 Refer to QDMA_Product_Guide_ for more details on these example designs.
 
 .. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf
@@ -219,22 +222,4 @@ The ST C2H descriptor format described above shall be changed as per example des
 Update this structure if any changes required in the descriptor format for bypass mode.
 
 Accordingly, update the data flow functionality in ``descq_process_completion_st_c2h ()`` functions in ``linux-kernel/libqdma/qdma_st_c2h.c``.
-
-==================================
-AXI4 Memory Mapped with Completion
-==================================
-
-This example design is generated when the DMA Interface Selection option is set to ``AXIMM with Completion`` in the Basic tab. Refer to QDMA Product Guide for more details on the example design and its registers.
-
-The complete flow between the Host SW components and HW components for MM completion is depicted in below sequence diagram.
-
-- Application add a queue in MM Mode and start the queue with MM Completions enabled
-- Driver identifies the MM completion request from the Application provides flags and creates the completion ring along with Queue's H2C or C2H rings.
-- Driver allocates the resources for the rings created and programs the contexts
-- Application configures the user logic to generate the completions and  calls the command to read the completions
-- Driver reads the completion ring based on the HW generated PIDX in completion status descriptors and updates CIDX
-- Driver send the completion entries to the Application
-
-.. image:: /images/MM_CMPT_Flow.PNG
-   :align: center
 

@@ -8,9 +8,11 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DMA Performance Tool &mdash; QDMA Linux Driver 2019.1 documentation</title>
+  <title>DMA Performance Tool (dmaperf) &mdash; QDMA Linux Driver 2019.2 documentation</title>
   
 
+  
+  
   
   
 
@@ -33,10 +35,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.1 documentation" href="index.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
         <link rel="up" title="User Applications" href="user-app.html"/>
-        <link rel="next" title="Developers Guide" href="devguide.html"/>
-        <link rel="prev" title="dma_from_device" href="dma_from_device.html"/> 
+        <link rel="next" title="DMA Xfer Application (qdma_xfer_app)" href="dma_xfer_app.html"/>
+        <link rel="prev" title="DMA from Device (dma_from_device)" href="dma_from_device.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                2019.1
+                2019.2
               </div>
             
           
@@ -85,17 +88,21 @@
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="dmactl.html">DMA Control Application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">dma_to_device</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">dma_from_device</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Performance Tool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmactl.html">DMA Control Application (dmactl)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">DMA to Device (dma_to_device)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">DMA from Device (dma_from_device)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Performance Tool (dmaperf)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_xfer_app.html">DMA Xfer Application (qdma_xfer_app)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
@@ -112,8 +119,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">QDMA Linux Driver</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
       </nav>
 
 
@@ -122,53 +131,68 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="user-app.html">User Applications</a> &raquo;</li>
-      
-    <li>DMA Performance Tool</li>
+        
+      <li>DMA Performance Tool (dmaperf)</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/dmaperf.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="dma-performance-tool">
-<h1>DMA Performance Tool<a class="headerlink" href="#dma-performance-tool" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="dma-performance-tool-dmaperf">
+<h1>DMA Performance Tool (dmaperf)<a class="headerlink" href="#dma-performance-tool-dmaperf" title="Permalink to this headline">¶</a></h1>
 <p>Xilinx-developed custom tool``dmaperf`` is used to collect the performance metrics for unidirectional and bidirectional traffic.</p>
-<p>The QDMA Linux kernel reference driver is a PCIe device driver, it manages the QDMA queues in the HW. The driver creates a character device for each queue pair configured.</p>
-<p>Standard IO tools such as <code class="docutils literal notranslate"><span class="pre">fio</span></code> can be used for performing IO operations using the char device interface.</p>
+<p>Standard IO tools such as <code class="docutils literal"><span class="pre">fio</span></code> can be used for performing IO operations using the char device interface.</p>
 <p>However, most of the tools are limited to sending / receiving 1 packet at a time and wait for the processing of the packet to complete, so they are not able to keep the driver/ HW busy enough for performance measurement. Although fio also supports asynchronous interfaces, it does not continuously submit IO requests while polling for the completion in parallel.</p>
 <p>To overcome this limitation, Xilinx developed dmaperf tool. It leverages the asynchronous functionality provided by libaio library. Using libaio, an application can submit IO request to the driver and the driver returns the control to the caller immediately (i.e., non-blocking). The completion notification is sent separately, so the application can then poll for the completion and free the buffer upon receiving the completion.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>usage: dmaperf [OPTIONS]
+<div class="highlight-none"><div class="highlight"><pre><span></span>usage: dmaperf [OPTIONS]
 
   -c (--config) config file that has configuration for IO
 </pre></div>
 </div>
 <p>dmaperf tool takes a configuration file as input. The configuration file format is as below.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>name=mm_1_1
+<div class="highlight-none"><div class="highlight"><pre><span></span>name=mm_1_1
 mode=mm #mode
 dir=bi #dir
 pf_range=0:0 #no spaces
 q_range=0:0 #no spaces
-flags= #no spaces
 wb_acc=5
 tmr_idx=9
 cntr_idx=0
-trig_mode=cntr_tmr
+trig_mode=usr_cnt
 rngidx=9
 ram_width=15 #31 bits - 2^31 = 2GB
 runtime=30 #secs
@@ -183,17 +207,17 @@ pkt_sz=64
 <li>name : name of the configuration</li>
 <li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi).</li>
-<li>pf_range : Range of the PFs from 0-3 on which the performance metrics to be collected.</li>
-<li>q_range : Range of the Queues from 0-2047 on which the performance metrics to be collected.</li>
+<li>pf_range : Range of the PFs from 0-3 on which the performance metrics are to be collected.</li>
+<li>q_range : Range of the Queues from 0-2047 on which the performance metrics are to be collected.</li>
 <li>flags : queue flags</li>
-<li>wb_acc : write back accumulation index from CSR register</li>
-<li>tmr_idx : timer index from CSR register</li>
-<li>cntr_idx : Counter index from CSR register</li>
-<li>trig_mode : trigger mode</li>
-<li>rngidx : Ring index from CSR register</li>
+<li>wb_acc : write back accumulation index from CSR register ( 0 - 15 )</li>
+<li>tmr_idx : timer index from CSR register ( 0 - 15 )</li>
+<li>cntr_idx : Counter index from CSR register ( 0 - 15 )</li>
+<li>trig_mode : trigger mode (every, usr_cnt, usr, usr_tmr, dis)</li>
+<li>rngidx : Ring index from CSR register ( 0 - 15 )</li>
 <li>runtime : Duration of the performance runs, time in seconds.</li>
 <li>num_threads : number of threads to be used in dmaperf application to pump the traffic to queues</li>
-<li>bidir_en : Enable the bi-direction or not</li>
+<li>bidir_en : Enable or Disable the bi-direction mode ( 0: Disable, 1: Enable )</li>
 <li>num_pkt : number of packets</li>
 <li>pkt_sz : Packet size</li>
 </ul>
@@ -201,15 +225,18 @@ pkt_sz=64
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="devguide.html" class="btn btn-neutral float-right" title="Developers Guide" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="dma_xfer_app.html" class="btn btn-neutral float-right" title="DMA Xfer Application (qdma_xfer_app)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="dma_from_device.html" class="btn btn-neutral" title="dma_from_device" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="dma_from_device.html" class="btn btn-neutral" title="DMA from Device (dma_from_device)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -240,10 +267,11 @@ pkt_sz=64
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2019.1',
+            VERSION:'2019.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
