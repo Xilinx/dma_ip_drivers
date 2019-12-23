@@ -55,7 +55,7 @@ SUPPORTED FEATURES:
 - Support PF device removal when its VF device is active
 - Split user logic related data path handling code to qdma_user.c and qdma_user.h
 - Bug Fixes
-	- Correct the PF and VF function Ids used in the driver in accordance with HW
+	- Correct the PF and VF function ID used in the driver in accordance with HW
 	- Fix dma_from_device command in qdma_testapp application that requests more data from user logic than specified
 	- Fix memory offset calculation in dma_from_device and dma_to_device command in qdma_testapp application for MM mode
 
