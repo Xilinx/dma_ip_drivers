@@ -58,6 +58,14 @@ $(info EXTRA_FLAGS = $(EXTRA_FLAGS).)
 $(info ccflags-y = $(ccflags-y).)
 #EXTRA_CFLAGS += -DDEBUG
 
+#For Kernel Images > 4.9.199 with CONFIG_STACK_VALIDATION=y and GCC version > 8 compiler throws spurious warnings
+#related to sibling calls and frame pointer save/setup. To supress these warnings
+#enable the OBJECT_FILES_NON_STANDARD option below
+#If in case, the flag name changes in future linux kernel releases, please refer
+#https://github.com/torvalds/linux/blob/master/tools/objtool/Documentation/stack-validation.txt
+#to get the correct flag name
+#OBJECT_FILES_NON_STANDARD := y
+
 ifneq ($(modulesymfile),)
   override symverfile = symverfile="$(topdir)/$(modulesymfile) \
 					-o $(drvdir)/$(modulesymfile)"

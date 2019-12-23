@@ -45,7 +45,7 @@
  * @param[in]	forced:	whether to force set the value
  *
  *
- * @return	QDMA_OPERATION_SUCCESSFUL on success
+ * @return	0 on success
  * @return	< 0 on failure
  *****************************************************************************/
 int qdma_set_qmax(unsigned long dev_hndl, int qbase, u32 qsets_max)
@@ -56,32 +56,32 @@ int qdma_set_qmax(unsigned long dev_hndl, int qbase, u32 qsets_max)
 	/**
 	 *  If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 
 	/* update the device with requested qmax and qbase */
 	rv = qdma_dev_update(xdev->conf.pdev->bus->number,
 			     xdev->func_id, qsets_max, &qbase);
-	if (unlikely(rv < 0)) {
-		pr_err("Failed to update dev entry with error = %d", rv);
+	if (rv < 0) {
+		pr_err("Failed to update dev entry, err = %d", rv);
 		return -EINVAL;
 	}
-
 	qdma_device_cleanup(xdev);
 
 	rv = qdma_dev_qinfo_get(xdev->conf.pdev->bus->number,
 			     xdev->func_id, &qbase, &qsets_max);
-	if (unlikely(rv < 0)) {
-		pr_err("Failed to get qinfo with error = %d", rv);
+	if (rv < 0) {
+		pr_err("Failed to get qinfo, err = %d", rv);
 		return -EINVAL;
 	}
-
 	xdev->conf.qsets_max = qsets_max;
 	xdev->conf.qsets_base = qbase;
 	rv = qdma_device_init(xdev);
-	if (unlikely(rv < 0)) {
-		pr_warn("qdma_init failed with error = %d.\n", rv);
+	if (rv < 0) {
+		pr_warn("qdma_init failed, err = %d", rv);
 		qdma_device_cleanup(xdev);
 		return -EINVAL;
 	}
@@ -104,8 +104,10 @@ unsigned int qdma_get_qmax(unsigned long dev_hndl)
 	/**
 	 * If xdev is NULL return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/**
 	 * Return the current qsets_max value of the device
@@ -120,7 +122,7 @@ unsigned int qdma_get_qmax(unsigned long dev_hndl)
  * @param[in]	dev_hndl:		qdma device handle
  * @param[in]	intr_rngsz:		interrupt aggregation ring size
  *
- * @return	QDMA_OPERATION_SUCCESSFUL on success
+ * @return	0 on success
  * @return	<0 on failure
  *****************************************************************************/
 int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz)
@@ -131,8 +133,10 @@ int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz)
 	/**
 	 *  If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/** If the input intr_rngsz is same as the
 	 *  current xdev->conf.intr_rngsz,
@@ -198,8 +202,10 @@ unsigned int qdma_get_intr_rngsz(unsigned long dev_hndl)
 	/**
 	 * If xdev is NULL return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/** If interrupt aggregation is not enabled, then return 0
 	 *  As the intr_rngsz value is irrelevant in this case
@@ -227,7 +233,7 @@ unsigned int qdma_get_intr_rngsz(unsigned long dev_hndl)
  * @param[in]	dev_hndl:		qdma device handle
  * @param[in]	buf_sz:		interrupt aggregation ring size
  *
- * @return	QDMA_OPERATION_SUCCESSFUL on success
+ * @return	0 on success
  * @return	<0 on failure
  *****************************************************************************/
 int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
@@ -238,8 +244,10 @@ int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	/**
 	 *  If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 
 	/** If qdma_get_active_queue_count() > 0,
@@ -254,18 +262,16 @@ int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	/**
 	 * Write the given buf sizes to the registers
 	 */
-	rv = qdma_set_global_buffer_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
-			buf_sz);
-	if (unlikely(rv < 0)) {
-		pr_err("set global buffer size failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			buf_sz, QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_WRITE);
+	if (rv < 0) {
+		pr_err("set global buffer size failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
-	rv = qdma_csr_read(xdev, &xdev->csr_info);
-	if (unlikely(rv < 0))
-		return rv;
+	qdma_csr_read(xdev, &xdev->csr_info);
 
-	return 0;
+	return rv;
 }
 #endif
 
@@ -286,11 +292,13 @@ unsigned int qdma_get_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
-	if (qdma_get_global_buffer_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
-			buf_sz))
+	if (xdev->hw.qdma_global_csr_conf(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			buf_sz, QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_READ))
 		return -EINVAL;
 
 	return 0;
@@ -304,7 +312,7 @@ unsigned int qdma_get_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
  * @param[in]	dev_hndl:		qdma device handle
  * @param[in]	buf_sz:		interrupt aggregation ring size
  *
- * @return	QDMA_OPERATION_SUCCESSFUL on success
+ * @return	0 on success
  * @return	<0 on failure
  *****************************************************************************/
 int qdma_set_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
@@ -315,8 +323,10 @@ int qdma_set_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 	/**
 	 *  If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 
 	/** If qdma_get_active_queue_count() > 0,
@@ -331,14 +341,18 @@ int qdma_set_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 	/**
 	 * Write the given ring sizes to the registers
 	 */
-	rv = qdma_set_ring_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
-			glbl_rng_sz);
-	if (unlikely(rv < 0))
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			glbl_rng_sz, QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_WRITE);
+	if (rv < 0) {
+		pr_err("Failed to write glbl rng size, err = %d", rv);
 		return -EINVAL;
+	}
 
 	rv = qdma_csr_read(xdev, &xdev->csr_info);
 	if (unlikely(rv < 0))
+		pr_err("Failed to read glbl csr, err = %d", rv);
 		return rv;
+	}
 
 	return 0;
 }
@@ -361,11 +375,13 @@ unsigned int qdma_get_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
-	if (qdma_get_ring_sizes(xdev,  0, QDMA_GLOBAL_CSR_ARRAY_SZ,
-			glbl_rng_sz))
+	if (xdev->hw.qdma_global_csr_conf(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			glbl_rng_sz, QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ))
 		return -EINVAL;
 
 	return 0;
@@ -379,7 +395,7 @@ unsigned int qdma_get_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
  * @param[in]	dev_hndl:		qdma device handle
  * @param[in]	tmr_cnt:		Array of 16 timer count values
  *
- * @return	QDMA_OPERATION_SUCCESSFUL on success
+ * @return	0 on success
  * @return	<0 on failure
  *****************************************************************************/
 int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
@@ -387,8 +403,10 @@ int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 	int rv = -1;
 
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/** If qdma_get_active_queue_count() > 0,
 	 *  tmr_cnt is not allowed to change.
@@ -400,11 +418,11 @@ int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 	}
 
 
-	rv = qdma_set_global_timer_count(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
-			tmr_cnt);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			tmr_cnt, QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_WRITE);
 	if (unlikely(rv < 0)) {
-		pr_err("global timer set failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("global timer set failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
 	rv = qdma_csr_read(xdev, &xdev->csr_info);
@@ -433,14 +451,16 @@ unsigned int qdma_get_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
-	rv = qdma_get_global_timer_count(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
-			tmr_cnt);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
+			tmr_cnt, QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
-		pr_err("get global timer failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("get global timer failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
 	return 0;
@@ -462,8 +482,10 @@ int qdma_set_cnt_thresh(unsigned long dev_hndl, unsigned int *cnt_th)
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 	int rv = -1;
 
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/** If qdma_get_active_queue_count() > 0,
 	 *  cnt_th is not allowed to change.
@@ -474,11 +496,12 @@ int qdma_set_cnt_thresh(unsigned long dev_hndl, unsigned int *cnt_th)
 		return rv;
 	}
 
-	rv = qdma_set_global_counter_threshold(xdev, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0,
+			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th,
+			QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_WRITE);
 	if (unlikely(rv < 0)) {
-		pr_err("set global counter failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("set global counter failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
 	rv = qdma_csr_read(xdev, &xdev->csr_info);
@@ -507,14 +530,17 @@ unsigned int qdma_get_cnt_thresh(unsigned long dev_hndl, u32 *cnt_th)
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
-	rv = qdma_get_global_counter_threshold(xdev, 0,
-			QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th);
+	rv = xdev->hw.qdma_global_csr_conf(xdev, 0,
+					QDMA_GLOBAL_CSR_ARRAY_SZ, cnt_th,
+					QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
-		pr_err("get global counter failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("get global counter failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
 	return 0;
@@ -540,8 +566,10 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/** If qdma_get_active_queue_count() > 0,
 	 *  cmpl_status_acc is not allowed to change.
@@ -554,10 +582,11 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 	/**
 	 * Write the given cmpl_status_acc value to the register
 	 */
-	rv = qdma_set_global_writeback_interval(xdev, cmpl_status_acc);
+	rv = xdev->hw.qdma_global_writeback_interval_conf(xdev, cmpl_status_acc,
+							QDMA_HW_ACCESS_WRITE);
 	if (unlikely(rv < 0)) {
-		pr_err("set global writeback intvl failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("set global writeback intvl failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
 	rv = qdma_csr_read(xdev, &xdev->csr_info);
@@ -590,16 +619,19 @@ unsigned int qdma_get_wb_intvl(unsigned long dev_hndl)
 	/**
 	 * If xdev is NULL, return error as Invalid parameter
 	 */
-	if (!xdev)
+	if (!xdev) {
+		pr_err("xdev is invalid");
 		return -EINVAL;
+	}
 
 	/**
 	 * Read the current cmpl_status_acc value from the register and return
 	 */
-	rv = qdma_get_global_writeback_interval(xdev, &wb_intvl);
+	rv = xdev->hw.qdma_global_writeback_interval_conf(xdev, &wb_intvl,
+							QDMA_HW_ACCESS_READ);
 	if (unlikely(rv < 0)) {
-		pr_err("get global writeback intvl failed with error = %d", rv);
-		return qdma_get_error_code(rv);
+		pr_err("read global writeback intvl failed, err = %d", rv);
+		return xdev->hw.qdma_get_error_code(rv);
 	}
 
 	return wb_intvl;

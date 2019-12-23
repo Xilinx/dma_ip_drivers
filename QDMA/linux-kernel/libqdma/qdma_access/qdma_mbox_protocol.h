@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #ifndef QDMA_MBOX_PROTOCOL_H_
@@ -14,12 +26,16 @@
 
 #include "qdma_platform_env.h"
 #include "qdma_access.h"
+#include "qdma_resource_mgmt.h"
+
+#define QDMA_MBOX_VF_ONLINE			(1)
+#define QDMA_MBOX_VF_OFFLINE		(-1)
+#define QDMA_MBOX_VF_RESET			(2)
+#define QDMA_MBOX_PF_RESET_DONE		(3)
+#define QDMA_MBOX_PF_BYE			(4)
 
 /** mailbox register max */
 #define MBOX_MSG_REG_MAX		32
-
-#define QDMA_MBOX_VF_ONLINE                  (19)
-#define QDMA_MBOX_VF_OFFLINE                   (20)
 
 #define mbox_invalidate_msg(m)	{ (m)->hdr.op = MBOX_OP_NOOP; }
 
@@ -177,6 +193,45 @@ int qdma_mbox_compose_vf_offline(uint16_t func_id,
 
 /*****************************************************************************/
 /**
+ * qdma_mbox_compose_vf_reset_message(): compose VF reset message
+ *
+ * @raw_data:   output raw message to be sent
+ * @src_funcid: own function id
+ * @dest_funcid: destination function id
+ *
+ * Return:	0  : success and < 0: failure
+ *****************************************************************************/
+int qdma_mbox_compose_vf_reset_message(uint32_t *raw_data, uint8_t src_funcid,
+				uint8_t dest_funcid);
+
+/*****************************************************************************/
+/**
+ * qdma_mbox_compose_pf_reset_done_message(): compose PF reset done message
+ *
+ * @raw_data:   output raw message to be sent
+ * @src_funcid: own function id
+ * @dest_funcid: destination function id
+ *
+ * Return:	0  : success and < 0: failure
+ *****************************************************************************/
+int qdma_mbox_compose_pf_reset_done_message(uint32_t *raw_data,
+				uint8_t src_funcid, uint8_t dest_funcid);
+
+/*****************************************************************************/
+/**
+ * qdma_mbox_compose_pf_offline(): compose PF offline message
+ *
+ * @raw_data:   output raw message to be sent
+ * @src_funcid: own function id
+ * @dest_funcid: destination function id
+ *
+ * Return:	0  : success and < 0: failure
+ *****************************************************************************/
+int qdma_mbox_compose_pf_offline(uint32_t *raw_data, uint8_t src_funcid,
+				uint8_t dest_funcid);
+
+/*****************************************************************************/
+/**
  * qdma_mbox_compose_vf_qreq(): compose message to request queues
  *
  * @func_id:   destination function id
@@ -193,27 +248,47 @@ int qdma_mbox_compose_vf_qreq(uint16_t func_id,
 /**
  * qdma_mbox_compose_vf_notify_qadd(): compose message to notify queue add
  *
- * @func_id:   destination function id
- * @qid_hw: number of queues being requested
- * @raw_data: output raw message to be sent
+ * @func_id:	destination function id
+ * @qid_hw:	number of queues being requested
+ * @q_type:	direction of the of queue
+ * @raw_data:	output raw message to be sent
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
 int qdma_mbox_compose_vf_notify_qadd(uint16_t func_id,
-				     uint16_t qid_hw, uint32_t *raw_data);
+				     uint16_t qid_hw,
+				     enum qdma_dev_q_type q_type,
+				     uint32_t *raw_data);
 
 /*****************************************************************************/
 /**
  * qdma_mbox_compose_vf_notify_qdel(): compose message to notify queue delete
  *
- * @func_id:   destination function id
- * @qid_hw: number of queues being requested
- * @raw_data: output raw message to be sent
+ * @func_id:	destination function id
+ * @qid_hw:	number of queues being requested
+ * @q_type:	direction of the of queue
+ * @raw_data:	output raw message to be sent
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
 int qdma_mbox_compose_vf_notify_qdel(uint16_t func_id,
-				     uint16_t qid_hw, uint32_t *raw_data);
+				     uint16_t qid_hw,
+				     enum qdma_dev_q_type q_type,
+				     uint32_t *raw_data);
+
+/*****************************************************************************/
+/**
+ * qdma_mbox_compose_vf_notify_qdel(): compose message to get the active
+ * queue count
+ *
+ * @func_id:	destination function id
+ * @raw_data:	output raw message to be sent
+ *
+ * Return:	0  : success and < 0: failure
+ *****************************************************************************/
+int qdma_mbox_compose_vf_get_device_active_qcnt(uint16_t func_id,
+		uint32_t *raw_data);
+
 /*****************************************************************************/
 /**
  * qdma_mbox_compose_vf_fmap_prog(): handles the raw message received
@@ -404,10 +479,14 @@ int qdma_mbox_vf_response_status(uint32_t *rcv_data);
  * qdma_mbox_vf_func_id_get(): return the vf function id
  *
  * @rcv_data: mbox message recieved
+ * @is_vf:  is VF mbox
  *
  * Return:	vf function id
  *****************************************************************************/
-uint8_t qdma_mbox_vf_func_id_get(uint32_t *rcv_data);
+uint8_t qdma_mbox_vf_func_id_get(uint32_t *rcv_data, uint8_t is_vf);
+
+int qdma_mbox_vf_active_queues_get(uint32_t *rcv_data,
+		enum qdma_dev_q_type q_type);
 
 /*****************************************************************************/
 /**
@@ -541,5 +620,27 @@ void qdma_mbox_enable_interrupts(void *dev_hndl, uint8_t is_vf);
  * @return	none
  *****************************************************************************/
 void qdma_mbox_disable_interrupts(void *dev_hndl, uint8_t is_vf);
+
+/*****************************************************************************/
+/**
+ * qdma_mbox_vf_rcv_msg_handler(): handles the raw message received in VF
+ *
+ * @rcv_msg:   received raw message
+ * @resp_msg:  raw response message
+ *
+ * Return:	0  : success and < 0: failure
+ *****************************************************************************/
+int qdma_mbox_vf_rcv_msg_handler(uint32_t *rcv_msg, uint32_t *resp_msg);
+
+/*****************************************************************************/
+/**
+ * qdma_mbox_out_status():
+ *
+ * @dev_hndl: pointer to xlnx_dma_dev
+ * @is_vf: Whether PF or VF
+ *
+ * Return:	0 if MBOX outbox is empty, 1 if MBOX is not empty
+ *****************************************************************************/
+uint8_t qdma_mbox_out_status(void *dev_hndl, uint8_t is_vf);
 
 #endif /* QDMA_MBOX_PROTOCOL_H_ */

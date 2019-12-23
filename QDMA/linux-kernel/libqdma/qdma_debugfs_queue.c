@@ -164,7 +164,7 @@ static ssize_t cmpt_q_dbg_file_read(struct file *fp,
 					&buf, &buf_len, DBGFS_DESC_TYPE_CMPT);
 		}
 
-		if (unlikely(rv < 0))
+		if (rv < 0)
 			goto cmpt_q_dbg_file_read_exit;
 
 		qpriv->datalen = rv;
@@ -398,7 +398,7 @@ static int q_dbg_file_open(struct inode *inode, struct file *fp)
 
 	/* convert this string as integer */
 	rv = kstrtoint((const char *)qid_dir->d_iname, 0, &qidx);
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		rv = -ENODEV;
 		return rv;
 	}
@@ -416,7 +416,7 @@ static int q_dbg_file_open(struct inode *inode, struct file *fp)
 
 	/* convert this string as hex integer */
 	rv = kstrtoint((const char *)dev_name, 16, &dev_id);
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		rv = -ENODEV;
 		return rv;
 	}
@@ -501,9 +501,8 @@ static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
 	memset(&ctxt, 0, sizeof(struct qdma_descq_context));
 	/** read the descq context for the given qid */
 	rv = qdma_descq_context_read(descq->xdev, descq->qidx_hw,
-			descq->conf.st, descq->conf.c2h,
-			descq->mm_cmpt_ring_crtd, &ctxt);
-	if (unlikely(rv < 0)) {
+			descq->conf.st, descq->conf.q_type, &ctxt);
+	if (rv < 0) {
 		len += sprintf(buf + len, "%s read context failed %d.\n",
 				descq->conf.name, rv);
 		buf[len] = '\0';
@@ -523,6 +522,7 @@ static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
 			qdma_fill_cmpt_ctxt(&ctxt.cmpt_ctxt, 0);
 
 		len += qdma_parse_ctxt_to_buf(QDMA_CMPT_CNTXT,
+				&xdev->version_info,
 				buf + len, buflen - len);
 	} else {
 		/** convert SW context to human readable text */
@@ -533,20 +533,23 @@ static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
 		else
 			qdma_fill_sw_ctxt(&ctxt.sw_ctxt, 0);
 		len += qdma_parse_ctxt_to_buf(QDMA_SW_CNTXT,
+				&xdev->version_info,
 				buf + len, buflen - len);
 
 		/** convert hardware context to human readable text */
 		len += snprintf(buf + len, buflen - len, "HARDWARE CTXT:\n");
 		qdma_fill_hw_ctxt(&ctxt.hw_ctxt);
 		len += qdma_parse_ctxt_to_buf(QDMA_HW_CNTXT,
+				&xdev->version_info,
 				buf + len, buflen - len);
-		if (!(descq->conf.st && descq->conf.c2h))
+		if (!(descq->conf.st && descq->conf.q_type))
 			goto cntxt_exit;
 
 		/** convert credit context to human readable text */
 		len += snprintf(buf + len, buflen - len, "CREDIT CTXT:\n");
 		qdma_fill_credit_ctxt(&ctxt.cr_ctxt);
 		len += qdma_parse_ctxt_to_buf(QDMA_CR_CNTXT,
+				&xdev->version_info,
 				buf + len, buflen - len);
 
 		if (type == DBGFS_DESC_TYPE_C2H) {
@@ -555,6 +558,7 @@ static int qdbg_cntxt_read(unsigned long dev_hndl, unsigned long id,
 							"PREFETCH CTXT:\n");
 			qdma_fill_pfetch_ctxt(&ctxt.pfetch_ctxt);
 			len += qdma_parse_ctxt_to_buf(QDMA_PFETCH_CNTXT,
+					&xdev->version_info,
 					buf + len, buflen - len);
 		}
 	}
@@ -696,7 +700,7 @@ static ssize_t q_dbg_file_read(struct file *fp, char __user *user_buffer,
 					&buf, &buf_len, DBGFS_DESC_TYPE_C2H);
 		}
 
-		if (unlikely(rv < 0))
+		if (rv < 0)
 			goto q_dbg_file_read_exit;
 
 		qpriv->datalen = rv;
@@ -930,10 +934,12 @@ int dbgfs_queue_init(struct qdma_queue_conf *conf,
 	}
 
 	/* create a directory for direction */
-	if (conf->c2h)
+	if (conf->q_type == Q_C2H)
 		snprintf(qdir, 8, "%s", "c2h");
-	else
+	else if (conf->q_type == Q_H2C)
 		snprintf(qdir, 8, "%s", "h2c");
+	else
+		snprintf(qdir, 8, "%s", "cmpt");
 
 	dbgfs_queue_root = debugfs_create_dir(qdir,
 			dbgfs_qidx_root);
@@ -943,7 +949,7 @@ int dbgfs_queue_init(struct qdma_queue_conf *conf,
 		goto dbgfs_queue_init_fail;
 	}
 
-	if (conf->c2h && conf->st) {
+	if ((conf->q_type == Q_C2H) && conf->st) {
 		/* create a directory for the cmpt in debugfs */
 		dbgfs_cmpt_queue_root = debugfs_create_dir("cmpt",
 				dbgfs_qidx_root);
@@ -956,7 +962,7 @@ int dbgfs_queue_init(struct qdma_queue_conf *conf,
 
 	/* intialize fops and create all the files */
 	rv = create_q_dbg_files(descq, dbgfs_queue_root);
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		pr_err("Failed to create qdbg files, removing %s dir\n",
 				qdir);
 		debugfs_remove_recursive(dbgfs_queue_root);
@@ -965,7 +971,7 @@ int dbgfs_queue_init(struct qdma_queue_conf *conf,
 
 	if (dbgfs_cmpt_queue_root) {
 		rv = create_cmpt_q_dbg_files(descq, dbgfs_cmpt_queue_root);
-		if (unlikely(rv < 0)) {
+		if (rv < 0) {
 			pr_err("Failed to create cmptq dbg files,removing cmpt dir\n");
 			debugfs_remove_recursive(dbgfs_cmpt_queue_root);
 			goto dbgfs_queue_init_fail;

@@ -9,6 +9,9 @@
  * LICENSE file in the root directory of this source tree)
  */
 
+#include <stddef.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
@@ -17,13 +20,14 @@
 #include <string.h>
 
 #include "cmd_parse.h"
-#include "nl_user.h"
+#include "../../include/qdma_nl.h"
 #include "version.h"
 
 static int read_range(int argc, char *argv[], int i, unsigned int *v1,
 			unsigned int *v2);
 
 static const char *progname;
+#define DESC_SIZE_64B		3
 
 #define Q_ADD_ATTR_IGNORE_MASK ~((1 << QPARM_IDX)  | \
 				(1 << QPARM_MODE)  | \
@@ -50,18 +54,18 @@ static const char *progname;
 				      (1 << QPARM_DIR))
 #define Q_ADD_FLAG_IGNORE_MASK ~(XNL_F_QMODE_ST | \
 				XNL_F_QMODE_MM | \
-				XNL_F_QDIR_BOTH)
+				XNL_F_QDIR_BOTH | XNL_F_Q_CMPL)
 #define Q_START_FLAG_IGNORE_MASK (XNL_F_QMODE_ST | \
 				XNL_F_QMODE_MM)
 #define Q_STOP_FLAG_IGNORE_MASK ~(XNL_F_QMODE_ST | \
 					XNL_F_QMODE_MM | \
-					XNL_F_QDIR_BOTH)
+					XNL_F_QDIR_BOTH | XNL_F_Q_CMPL)
 #define Q_DEL_FLAG_IGNORE_MASK  ~(XNL_F_QMODE_ST | \
 					XNL_F_QMODE_MM | \
-					XNL_F_QDIR_BOTH)
+					XNL_F_QDIR_BOTH | XNL_F_Q_CMPL)
 #define Q_DUMP_FLAG_IGNORE_MASK  ~(XNL_F_QMODE_ST | \
 					XNL_F_QMODE_MM | \
-					XNL_F_QDIR_BOTH)
+					XNL_F_QDIR_BOTH | XNL_F_Q_CMPL)
 #define Q_DUMP_PKT_FLAG_IGNORE_MASK ~(XNL_F_QMODE_ST | \
 					XNL_F_QMODE_MM | \
 					XNL_F_QDIR_C2H)
@@ -70,7 +74,7 @@ static const char *progname;
 
 #define Q_CMPT_READ_FLAG_IGNORE_MASK  ~(XNL_F_QMODE_ST | \
 					XNL_F_QMODE_MM | \
-					XNL_F_QDIR_BOTH)
+					XNL_F_QDIR_BOTH | XNL_F_Q_CMPL)
 
 #ifdef ERR_DEBUG
 char *qdma_err_str[qdma_errs] = {
@@ -197,35 +201,35 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 	fprintf(fp,
 		"\tqdma[N] [operation]: per QDMA FPGA operations\n");
 	fprintf(fp,
-		"\t\tdevinfo                 lists the Hardware and Software version and capabilities\n"
+		"\t\tcap....                 lists the Hardware and Software version and capabilities\n"
 		"\t\tstat                    statistics of qdma[N] device\n"
 		"\t\tstat clear              clear all statistics data of qdma[N} device\n"
 		"\t\tq list                  list all queues\n"
-		"\t\tq add idx <N> [mode <mm|st>] [dir <h2c|c2h|bi>] - add a queue\n"
+		"\t\tq add idx <N> [mode <mm|st>] [dir <h2c|c2h|bi|cmpt>] - add a queue\n"
 		"\t\t                                                  *mode default to mm\n"
 		"\t\t                                                  *dir default to h2c\n"
-	        "\t\tq add list <start_idx> <num_Qs> [mode <mm|st>] [dir <h2c|c2h|bi>] - add multiple queues at once\n"
-	        "\t\tq start idx <N> [dir <h2c|c2h|bi>] [en_mm_cmpl] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
+	        "\t\tq add list <start_idx> <num_Qs> [mode <mm|st>] [dir <h2c|c2h|bi|cmpt>] - add multiple queues at once\n"
+	        "\t\tq start idx <N> [dir <h2c|c2h|bi|cmpt>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
 		"                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
-	        "                                    [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
+	        "                                [mm_chn <0|1>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
 	        "                                    [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en]\n"
 	        "                                    [cmpl_ovf_dis] [dis_fetch_credit] [dis_cmpl_status] [c2h_cmpl_intr_en] - start a single queue\n"
-	        "\t\tq start list <start_idx> <num_Qs> [en_mm_cmpl] [dir <h2c|c2h|bi>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
+	        "\t\tq start list <start_idx> <num_Qs> [dir <h2c|c2h|bi|cmpt>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
 		"                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
-	        "                                    [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
+	        "                                    [mm_chn <0|1>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
 	        "                                    [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [cmpl_ovf_dis]\n"
 	        "                                    [dis_fetch_credit] [dis_cmpl_status] [c2h_cmpl_intr_en] - start multiple queues at once\n"
-	        "\t\tq stop idx <N> dir [<h2c|c2h|bi>] - stop a single queue\n"
-	        "\t\tq stop list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] - stop list of queues at once\n"
-	        "\t\tq del idx <N> dir [<h2c|c2h|bi>] - delete a queue\n"
-	        "\t\tq del list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] - delete list of queues at once\n"
-		"\t\tq dump idx <N> dir [<h2c|c2h|bi>]   dump queue param\n"
-		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] - dump queue param\n"
+	        "\t\tq stop idx <N> dir [<h2c|c2h|bi|cmpt>] - stop a single queue\n"
+	        "\t\tq stop list <start_idx> <num_Qs> dir [<h2c|c2h|bi|cmpt>] - stop list of queues at once\n"
+	        "\t\tq del idx <N> dir [<h2c|c2h|bi|cmpt>] - delete a queue\n"
+	        "\t\tq del list <start_idx> <num_Qs> dir [<h2c|c2h|bi|cmpt>] - delete list of queues at once\n"
+		"\t\tq dump idx <N> dir [<h2c|c2h|bi|cmpt>]   dump queue param\n"
+		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi|cmpt>] - dump queue param\n"
 		"\t\tq dump idx <N> dir [<h2c|c2h|bi>] desc <x> <y> - dump desc ring entry x ~ y\n"
 		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] desc <x> <y> - dump desc ring entry x ~ y\n"
-		"\t\tq dump idx <N> dir [<h2c|c2h|bi>] cmpt <x> <y> - dump cmpt ring entry x ~ y\n"
-		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi>] cmpt <x> <y> - dump cmpt ring entry x ~ y\n"
-		"\t\tq cmpt_read idx <N> dir [<h2c|c2h|bi>] - read the completion data\n"
+		"\t\tq dump idx <N> dir [<h2c|c2h|bi|cmpt>] cmpt <x> <y> - dump cmpt ring entry x ~ y\n"
+		"\t\tq dump list <start_idx> <num_Qs> dir [<h2c|c2h|bi|cmpt>] cmpt <x> <y> - dump cmpt ring entry x ~ y\n"
+		"\t\tq cmpt_read idx <N> - read the completion data\n"
 #ifdef ERR_DEBUG
 		"\t\tq err help - help to induce errors  \n"
 		"\t\tq err idx <N> [<err <[1|0]>>] dir <[h2c|c2h|bi]> - induce errors on q idx <N>  \n"
@@ -358,14 +362,6 @@ static int validate_regcmd(enum xnl_op_t qcmd, struct xcmd_reg	*regcmd)
 				invalid = -EINVAL;
 				break;
 			}
-#if 0
-			if ((regcmd->bar == 0) &&
-				!is_valid_addr(regcmd->bar, regcmd->reg)) {
-				printf("dmactl: Invalid address 0x%x in bar %u\n",
-				       regcmd->reg, regcmd->bar);
-				invalid = -EINVAL;
-			}
-#endif
 			break;
 		default:
 			invalid = -EINVAL;
@@ -377,7 +373,7 @@ static int validate_regcmd(enum xnl_op_t qcmd, struct xcmd_reg	*regcmd)
 
 static int parse_reg_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 {
-	struct xcmd_reg	*regcmd = &xcmd->u.reg;
+	struct xcmd_reg	*regcmd = &xcmd->req.reg;
 	int rv;
 	int args_valid;
 
@@ -432,12 +428,12 @@ static int parse_reg_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 			regcmd->sflags |= XCMD_REG_F_BAR_SET;
 			get_next_arg(argc, argv, &i);
 		}
-		rv = arg_read_int(argv[i], &xcmd->u.reg.reg);
+		rv = arg_read_int(argv[i], &xcmd->req.reg.reg);
 		if (rv < 0)
 			return rv;
 		regcmd->sflags |= XCMD_REG_F_REG_SET;
 
-		rv = next_arg_read_int(argc, argv, &i, &xcmd->u.reg.val);
+		rv = next_arg_read_int(argc, argv, &i, &xcmd->req.reg.val);
 		if (rv < 0)
 			return rv;
 		regcmd->sflags |= XCMD_REG_F_VAL_SET;
@@ -487,10 +483,6 @@ static char *qparm_type_str[QPARM_MAX] = {
 	"idx_tmr",
 	"idx_cntr",
 	"trigmode",
-	"pip_gl_max",
-	"pip_flow_id",
-	"pipe_slr_id",
-	"pipe_tdest",
 #ifdef ERR_DEBUG
 	"err_no"
 #endif
@@ -594,28 +586,6 @@ static int validate_qcmd(enum xnl_op_t qcmd, struct xcmd_q_parm *qparm)
 			print_ignored_params(qparm->sflags &
 						Q_START_ATTR_IGNORE_MASK,
 						0, NULL);
-
-			if (!(qparm->flags & XNL_F_EN_MM_CMPL)) {
-				if ((qparm->flags & XNL_F_QDIR_H2C) == 
-					(qparm->flags &
-					  (XNL_F_QDIR_H2C | XNL_F_QDIR_C2H))) {
-				  print_ignored_params(qparm->sflags &
-						  Q_H2C_ATTR_IGNORE_MASK,
-						  0, NULL);
-				  print_ignored_params(qparm->flags &
-						  Q_H2C_FLAG_IGNORE_MASK,
-						  1, NULL);
-				} else if((qparm->flags & 
-					(XNL_F_QDIR_H2C | XNL_F_QDIR_C2H)) ==
-					  (XNL_F_QDIR_H2C | XNL_F_QDIR_C2H)) {
-				  print_ignored_params(qparm->sflags &
-						  Q_H2C_ATTR_IGNORE_MASK,
-						  0, "H2C");
-				  print_ignored_params(qparm->flags &
-						  Q_H2C_FLAG_IGNORE_MASK,
-						  1, "H2C");
-				}
-			}
 
 			if ((qparm->sflags & (1 << QPARM_SW_DESC_SZ))) {
 				/* TODO: in 2018.3 RTL1 , only 64B sw_desc_size is supported */
@@ -806,6 +776,8 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 				qparm->flags |= XNL_F_QDIR_C2H;
 			} else if (!strcmp(argv[i], "bi")) {
 				qparm->flags |= XNL_F_QDIR_BOTH;
+			} else if (!strcmp(argv[i], "cmpt")) {
+				qparm->flags |= XNL_F_Q_CMPL;
 			} else {
 				warnx("unknown q dir %s.\n", argv[i]);
 				return -EINVAL;
@@ -847,34 +819,13 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 			qparm->cmpt_cntr_idx = v1;
 			f_arg_set |= 1 << QPARM_CMPT_CNTR_IDX;
 			i++;
-		} else if (!strcmp(argv[i], "pipe_gl_max")) {
+		} else if (!strcmp(argv[i], "mm_chn")) {
 			rv = next_arg_read_int(argc, argv, &i, &v1);
 			if (rv < 0)
 				return rv;
-			qparm->pipe_gl_max = v1;
-			f_arg_set |= 1 << QPARM_PIPE_GL_MAX;
-			i++;
 
-		} else if (!strcmp(argv[i], "pipe_flow_id")) {
-			rv = next_arg_read_int(argc, argv, &i, &v1);
-			if (rv < 0)
-				return rv;
-			qparm->pipe_flow_id = v1;
-			f_arg_set |= 1 << QPARM_PIPE_FLOW_ID;
-			i++;
-		} else if (!strcmp(argv[i], "pipe_slr_id")) {
-			rv = next_arg_read_int(argc, argv, &i, &v1);
-			if (rv < 0)
-				return rv;
-			qparm->pipe_slr_id = v1;
-			f_arg_set |= 1 << QPARM_PIPE_SLR_ID;
-			i++;
-		} else if (!strcmp(argv[i], "pipe_tdest")) {
-			rv = next_arg_read_int(argc, argv, &i, &v1);
-			if (rv < 0)
-				return rv;
-			qparm->pipe_tdest = v1;
-			f_arg_set |= 1 << QPARM_PIPE_TDEST;
+			qparm->mm_channel = v1;
+			f_arg_set |= 1 << QPARM_MM_CHANNEL;
 			i++;
 		} else if (!strcmp(argv[i], "cmpl_ovf_dis")) {
 			qparm->flags |= XNL_F_CMPT_OVF_CHK_DIS;
@@ -959,9 +910,6 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 		} else if (!strcmp(argv[i], "c2h_udd_en")) {
 			qparm->flags |= XNL_F_CMPL_UDD_EN;
 			i++;
-		} else if (!strcmp(argv[i], "en_mm_cmpl")) {
-			qparm->flags |= XNL_F_EN_MM_CMPL;
-			i++;
 		} else {
 			warnx("unknown q parameter %s.\n", argv[i]);
 			return -EINVAL;
@@ -989,7 +937,8 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 		}
 	}
 
-	if (!(f_arg_set & 1 << QPARM_DIR)) {
+
+	if (!(f_arg_set & 1 << QPARM_DIR) && !(qparm->flags & XNL_F_Q_CMPL)) {
 		/* default to H2C */
 		warnx("Warn: Default dir set to \'h2c\'");
 		f_arg_set |= 1 << QPARM_DIR;
@@ -1003,7 +952,7 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 
 static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 {
-	struct xcmd_q_parm *qparm = &xcmd->u.qparm;
+	struct xcmd_q_parm *qparm = &xcmd->req.qparm;
 	int rv;
 	int args_valid;
 
@@ -1045,11 +994,11 @@ static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 	} else if (!strcmp(argv[i], "start")) {
 		xcmd->op = XNL_CMD_Q_START;
 		get_next_arg(argc, argv, &i);
-		rv = read_qparm(argc, argv, i, qparm, ((1 << QPARM_IDX) |
-				(1 << QPARM_RNGSZ_IDX)));
 		qparm->flags |= (XNL_F_CMPL_STATUS_EN | XNL_F_CMPL_STATUS_ACC_EN |
 				XNL_F_CMPL_STATUS_PEND_CHK | XNL_F_CMPL_STATUS_DESC_EN |
 				XNL_F_FETCH_CREDIT);
+		rv = read_qparm(argc, argv, i, qparm, ((1 << QPARM_IDX) |
+				(1 << QPARM_RNGSZ_IDX)));
 		if (qparm->flags & (XNL_F_QDIR_C2H | XNL_F_QMODE_ST) ==
 				(XNL_F_QDIR_C2H | XNL_F_QMODE_ST)) {
 			if (!(qparm->sflags & (1 << QPARM_CMPTSZ))) {
@@ -1078,6 +1027,7 @@ static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 		rv = read_qparm(argc, argv, i, qparm, (1 << QPARM_IDX));
 	} else if (!strcmp(argv[i], "cmpt_read")) {
 		xcmd->op = XNL_CMD_Q_CMPT_READ;
+		qparm->flags |= XNL_F_Q_CMPL;
 		get_next_arg(argc, argv, &i);
 		rv = read_qparm(argc, argv, i, qparm, (1 << QPARM_IDX));
 #ifdef ERR_DEBUG
@@ -1142,7 +1092,7 @@ static int parse_stat_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 
 static int parse_intr_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 {
-	struct xcmd_intr	*intrcmd = &xcmd->u.intr;
+	struct xcmd_intr	*intrcmd = &xcmd->req.intr;
 	int rv;
 
 	/*
@@ -1225,9 +1175,12 @@ int parse_cmd(int argc, char *argv[], struct xcmd_info *xcmd)
 		rv = parse_q_cmd(argc, argv, i, xcmd);
 	} else if (!strcmp(argv[2], "intring")){
 		rv = parse_intr_cmd(argc, argv, i, xcmd);
-	} else if (!strcmp(argv[2], "devinfo")){
+	} else if (!strcmp(argv[2], "cap")) {
 		rv = 3;
 		xcmd->op = XNL_CMD_DEV_CAP;
+	} else if (!strcmp(argv[2], "info")) { /* not exposed. only for debug */
+		rv = 3;
+		xcmd->op = XNL_CMD_DEV_INFO;
 	} else {
 		warnx("bad parameter \"%s\".\n", argv[2]);
 		return -EINVAL;

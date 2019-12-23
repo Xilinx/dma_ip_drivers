@@ -34,17 +34,20 @@
 #endif
 #include "qdma_ul_ext.h"
 
-
-enum q_state_t {
-	/** Queue is not taken */
-	Q_STATE_DISABLED = 0,
-	/** Assigned/taken. Partial config is done */
-	Q_STATE_ENABLED,
-	/** Resource/context is initialized for the queue and is available for
-	 *  data consumption
-	 */
-	Q_STATE_ONLINE,
+/**
+ * struct q_state_name - Structure to hold the q state and name
+ *
+ * A queue can be in one of these states
+ *
+ */
+struct q_state_name {
+	/** @q_state : Current state of the queue. */
+	enum q_state_t q_state;
+	/** @state     : Q state Name */
+	char name[20];
 };
+
+extern struct q_state_name q_state_list[];
 
 #define QDMA_FLQ_SIZE 80
 
@@ -137,8 +140,6 @@ struct qdma_descq {
 	unsigned int cidx_cmpt;
 	/** number of packets processed in q */
 	unsigned long long total_cmpl_descs;
-	/** @mm_cmpt_ring_crtd: CMPT ring created for MM */
-	u8 mm_cmpt_ring_crtd;
 	/** descriptor writeback, data type depends on the cmpt_entry_len */
 	void *desc_cmpt_cur;
 	/* descriptor list to be provided for ul extenstion call */
@@ -153,7 +154,16 @@ struct qdma_descq {
 	struct qdma_q_pidx_reg_info pidx_info;
 	/** cmpt cidx info to be written to CMPT CIDX regiser*/
 	struct qdma_q_cmpt_cidx_reg_info cmpt_cidx_info;
-
+	/** @c2h_pend_pkt_moving_avg: average rate of packets received */
+	unsigned int c2h_pend_pkt_moving_avg;
+	/** @c2h_pend_pkt_avg_thr_hi: higher average threshold */
+	unsigned int c2h_pend_pkt_avg_thr_hi;
+	/** @c2h_pend_pkt_avg_thr_lo: lower average threshold */
+	unsigned int c2h_pend_pkt_avg_thr_lo;
+	/** @sorted_c2h_cntr_idx: sorted c2h counter index */
+	unsigned char sorted_c2h_cntr_idx;
+	/** @c2h_cntr_monitor_cnt: c2h counter stagnant monitor count */
+	unsigned char c2h_cntr_monitor_cnt;
 #ifdef ERR_DEBUG
 	/** flag to indicate error inducing */
 	u64 induce_err;
@@ -468,34 +478,42 @@ void cmpt_next(struct qdma_descq *descq);
 /* CIDX/PIDX update macros */
 #ifndef __QDMA_VF__
 #define queue_pidx_update(xdev, qid, is_c2h, pidx_info) \
-	qdma_queue_pidx_update(xdev, QDMA_DEV_PF, qid, is_c2h, pidx_info)
+	(xdev->hw.qdma_queue_pidx_update(xdev, QDMA_DEV_PF, qid, is_c2h,\
+					pidx_info))
 #else
 #define queue_pidx_update(xdev, qid, is_c2h, pidx_info) \
-	qdma_queue_pidx_update(xdev, QDMA_DEV_VF, qid, is_c2h, pidx_info)
+	(xdev->hw.qdma_queue_pidx_update(xdev, QDMA_DEV_VF, qid, is_c2h, \
+					pidx_info))
 #endif
 
 #ifndef __QDMA_VF__
 #define queue_cmpt_cidx_update(xdev, qid, cmpt_cidx_info) \
-	qdma_queue_cmpt_cidx_update(xdev, QDMA_DEV_PF, qid, cmpt_cidx_info)
+	(xdev->hw.qdma_queue_cmpt_cidx_update(xdev, QDMA_DEV_PF, qid, \
+						cmpt_cidx_info))
 #else
 #define queue_cmpt_cidx_update(xdev, qid, cmpt_cidx_info) \
-	qdma_queue_cmpt_cidx_update(xdev, QDMA_DEV_VF, qid, cmpt_cidx_info)
+	(xdev->hw.qdma_queue_cmpt_cidx_update(xdev, QDMA_DEV_VF, qid, \
+					     cmpt_cidx_info))
 #endif
 
 #ifndef __QDMA_VF__
 #define queue_cmpt_cidx_read(xdev, qid, cmpt_cidx_info) \
-	qdma_queue_cmpt_cidx_read(xdev, QDMA_DEV_PF, qid, cmpt_cidx_info)
+	(xdev->hw.qdma_queue_cmpt_cidx_read(xdev, QDMA_DEV_PF, qid, \
+					   cmpt_cidx_info))
 #else
 #define queue_cmpt_cidx_read(xdev, qid, cmpt_cidx_info) \
-	qdma_queue_cmpt_cidx_read(xdev, QDMA_DEV_VF, qid, cmpt_cidx_info)
+	(xdev->hw.qdma_queue_cmpt_cidx_read(xdev, QDMA_DEV_VF, qid, \
+					   cmpt_cidx_info))
 #endif
 
 #ifndef __QDMA_VF__
 #define queue_intr_cidx_update(xdev, qid, intr_cidx_info) \
-	qdma_queue_intr_cidx_update(xdev, QDMA_DEV_PF, qid, intr_cidx_info)
+	(xdev->hw.qdma_queue_intr_cidx_update(xdev, QDMA_DEV_PF, qid, \
+						intr_cidx_info))
 #else
 #define queue_intr_cidx_update(xdev, qid, intr_cidx_info) \
-	qdma_queue_intr_cidx_update(xdev, QDMA_DEV_VF, qid, intr_cidx_info)
+	(xdev->hw.qdma_queue_intr_cidx_update(xdev, QDMA_DEV_VF, qid, \
+						intr_cidx_info))
 #endif
 
 

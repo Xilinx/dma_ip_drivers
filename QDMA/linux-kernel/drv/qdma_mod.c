@@ -154,7 +154,7 @@ static ssize_t set_intr_rngsz(struct device *dev,
 
 	err = kstrtouint(buf, 0, &rngsz);
 	if (err < 0) {
-		pr_info("failed to set interrupt ring size\n");
+		pr_err("failed to set interrupt ring size\n");
 		return err;
 	}
 
@@ -210,7 +210,7 @@ static ssize_t set_qmax(struct device *dev,
 		return -EINVAL;
 	err = kstrtouint(buf, 0, &qmax);
 	if (err < 0) {
-		pr_info("failed to set qmax to %d\n", qmax);
+		pr_err("failed to set qmax to %d\n", qmax);
 		return err;
 	}
 	err = qdma_set_qmax(xpdev->dev_hndl, -1, qmax);
@@ -1084,7 +1084,7 @@ struct xlnx_pci_dev *xpdev_find_by_idx(unsigned int idx, char *buf, int buflen)
 }
 
 struct xlnx_qdata *xpdev_queue_get(struct xlnx_pci_dev *xpdev,
-			unsigned int qidx, bool c2h, bool check_qhndl,
+			unsigned int qidx, u8 q_type, bool check_qhndl,
 			char *ebuf, int ebuflen)
 {
 	struct xlnx_qdata *qdata;
@@ -1100,8 +1100,10 @@ struct xlnx_qdata *xpdev_queue_get(struct xlnx_pci_dev *xpdev,
 	}
 
 	qdata = xpdev->qdata + qidx;
-	if (c2h)
+	if (q_type == Q_C2H)
 		qdata += xpdev->qmax;
+	if (q_type == Q_CMPT)
+		qdata += (2 * xpdev->qmax);
 
 	if (check_qhndl && (!qdata->qhndl && !qdata->xcdev)) {
 		pr_debug("qdma%05x QID %u NOT configured.\n", xpdev->idx, qidx);
@@ -1116,33 +1118,37 @@ struct xlnx_qdata *xpdev_queue_get(struct xlnx_pci_dev *xpdev,
 	return qdata;
 }
 
-int xpdev_queue_delete(struct xlnx_pci_dev *xpdev, unsigned int qidx, bool c2h,
+int xpdev_queue_delete(struct xlnx_pci_dev *xpdev, unsigned int qidx, u8 q_type,
 			char *ebuf, int ebuflen)
 {
-	struct xlnx_qdata *qdata = xpdev_queue_get(xpdev, qidx, c2h, 1, ebuf,
+	struct xlnx_qdata *qdata = xpdev_queue_get(xpdev, qidx, q_type, 1, ebuf,
 						ebuflen);
 	int rv = 0;
 
 	if (!qdata)
 		return -EINVAL;
 
-	if (!qdata->xcdev)
-		return -EINVAL;
+	if (q_type != Q_CMPT) {
+		if (!qdata->xcdev)
+			return -EINVAL;
+	}
 
 	if (qdata->qhndl != QDMA_QUEUE_IDX_INVALID)
 		rv = qdma_queue_remove(xpdev->dev_hndl, qdata->qhndl,
 					ebuf, ebuflen);
 	else
-		pr_debug("qidx %u/%u, c2h %d, qhndl invalid.\n",
-			qidx, xpdev->qmax, c2h);
+		pr_err("qidx %u/%u, type %d, qhndl invalid.\n",
+			qidx, xpdev->qmax, q_type);
 	if (rv < 0)
 		goto exit;
 
-	spin_lock(&xpdev->cdev_lock);
-	qdata->xcdev->dir_init &= ~(1 << (c2h ? 1 : 0));
-	if (qdata->xcdev && !qdata->xcdev->dir_init)
-		qdma_cdev_destroy(qdata->xcdev);
-	spin_unlock(&xpdev->cdev_lock);
+	if (q_type != Q_CMPT) {
+		spin_lock(&xpdev->cdev_lock);
+		qdata->xcdev->dir_init &= ~(1 << (q_type ? 1 : 0));
+		if (qdata->xcdev && !qdata->xcdev->dir_init)
+			qdma_cdev_destroy(qdata->xcdev);
+		spin_unlock(&xpdev->cdev_lock);
+	}
 
 	memset(qdata, 0, sizeof(*qdata));
 exit:
@@ -1176,37 +1182,42 @@ int xpdev_queue_add(struct xlnx_pci_dev *xpdev, struct qdma_queue_conf *qconf,
 	if (rv < 0)
 		return rv;
 
-	pr_debug("qdma%05x idx %u, st %d, c2h %d, added, qhndl 0x%lx.\n",
-		xpdev->idx, qconf->qidx, qconf->st, qconf->c2h, qhndl);
+	pr_debug("qdma%05x idx %u, st %d, q_type %s, added, qhndl 0x%lx.\n",
+		xpdev->idx, qconf->qidx, qconf->st,
+		q_type_list[qconf->q_type].name, qhndl);
 
-	qdata = xpdev_queue_get(xpdev, qconf->qidx, qconf->c2h, 0, ebuf,
+	qdata = xpdev_queue_get(xpdev, qconf->qidx, qconf->q_type, 0, ebuf,
 				ebuflen);
 	if (!qdata) {
-		pr_info("q added 0x%lx, get failed, idx 0x%x.\n",
+		pr_err("q added 0x%lx, get failed, idx 0x%x.\n",
 			qhndl, qconf->qidx);
 		return rv;
 	}
 
-	dir = qconf->c2h ? 0 : 1;
-	spin_lock(&xpdev->cdev_lock);
-	qdata_tmp = xpdev_queue_get(xpdev, qconf->qidx, dir, 0, NULL, 0);
-	if (qdata_tmp) {
-		/* only 1 cdev per queue pair */
-		if (qdata_tmp->xcdev) {
-			unsigned long *priv_data;
+	if (qconf->q_type != Q_CMPT) {
+		dir = (qconf->q_type == Q_C2H) ? 0 : 1;
+		spin_lock(&xpdev->cdev_lock);
+		qdata_tmp = xpdev_queue_get(xpdev, qconf->qidx,
+				dir, 0, NULL, 0);
+		if (qdata_tmp) {
+			/* only 1 cdev per queue pair */
+			if (qdata_tmp->xcdev) {
+				unsigned long *priv_data;
 
-			qdata->qhndl = qhndl;
-			qdata->xcdev = qdata_tmp->xcdev;
-			priv_data = qconf->c2h ? &qdata->xcdev->c2h_qhndl :
-					&qdata->xcdev->h2c_qhndl;
-			*priv_data = qhndl;
-			qdata->xcdev->dir_init |= (1 << qconf->c2h);
+				qdata->qhndl = qhndl;
+				qdata->xcdev = qdata_tmp->xcdev;
+				priv_data = (qconf->q_type == Q_C2H) ?
+						&qdata->xcdev->c2h_qhndl :
+						&qdata->xcdev->h2c_qhndl;
+				*priv_data = qhndl;
+				qdata->xcdev->dir_init |= (1 << qconf->q_type);
 
-			spin_unlock(&xpdev->cdev_lock);
-			return 0;
+				spin_unlock(&xpdev->cdev_lock);
+				return 0;
+			}
 		}
+		spin_unlock(&xpdev->cdev_lock);
 	}
-	spin_unlock(&xpdev->cdev_lock);
 
 	rv = qdma_device_get_config(xpdev->dev_hndl, &dev_config, NULL, 0);
 	if (rv < 0) {
@@ -1218,12 +1229,15 @@ int xpdev_queue_add(struct xlnx_pci_dev *xpdev, struct qdma_queue_conf *qconf,
 	/* always create the cdev
 	 * Give HW QID as minor number with qsets_base calculation
 	 */
-	rv = qdma_cdev_create(&xpdev->cdev_cb, xpdev->pdev, qconf,
-			(dev_config.qsets_base + qconf->qidx),
-			qhndl, &xcdev, ebuf, ebuflen);
+	if (qconf->q_type != Q_CMPT) {
+		rv = qdma_cdev_create(&xpdev->cdev_cb, xpdev->pdev, qconf,
+				(dev_config.qsets_base + qconf->qidx),
+				qhndl, &xcdev, ebuf, ebuflen);
+
+		qdata->xcdev = xcdev;
+	}
 
 	qdata->qhndl = qhndl;
-	qdata->xcdev = xcdev;
 
 	return rv;
 }
@@ -1236,7 +1250,7 @@ static void nl_work_handler_q_start(struct work_struct *work)
 	struct xlnx_nl_work_q_ctrl *qctrl = &nl_work->qctrl;
 	unsigned int qidx = qctrl->qidx;
 	u8 is_qp = qctrl->is_qp;
-	u8 c2h = qctrl->is_c2h;
+	u8 q_type = qctrl->q_type;
 	int i;
 	char *ebuf = nl_work->buf;
 	int rv = 0;
@@ -1245,33 +1259,37 @@ static void nl_work_handler_q_start(struct work_struct *work)
 		struct xlnx_qdata *qdata;
 
 q_start:
-		qdata = xpdev_queue_get(xpdev, qidx, c2h, 1, ebuf,
+		qdata = xpdev_queue_get(xpdev, qidx, q_type, 1, ebuf,
 					nl_work->buflen);
 		if (!qdata) {
-			pr_info("%s, idx %u, c2h %u, get failed.\n",
-				dev_name(&xpdev->pdev->dev), qidx, c2h);
+			pr_err("%s, idx %u, q_type %s, get failed.\n",
+				dev_name(&xpdev->pdev->dev), qidx,
+				q_type_list[q_type].name);
 			snprintf(ebuf, nl_work->buflen,
-				"Q idx %u, c2h %u, get failed.\n", qidx, c2h);
+				"Q idx %u, q_type %s, get failed.\n",
+				qidx, q_type_list[q_type].name);
 			goto send_resp;
 		}
 
 		rv = qdma_queue_start(xpdev->dev_hndl, qdata->qhndl, ebuf,
 				      nl_work->buflen);
 		if (rv < 0) {
-			pr_info("%s, idx %u, c2h %u, start failed %d.\n",
-				dev_name(&xpdev->pdev->dev), qidx, c2h, rv);
+			pr_err("%s, idx %u, q_type %s, start failed %d.\n",
+				dev_name(&xpdev->pdev->dev), qidx,
+				q_type_list[q_type].name, rv);
 			snprintf(ebuf, nl_work->buflen,
-				"Q idx %u, c2h %u, start failed %d.\n",
-				qidx, c2h, rv);
+				"Q idx %u, q_type %s, start failed %d.\n",
+				qidx, q_type_list[q_type].name, rv);
 			goto send_resp;
 		}
+		if (qctrl->q_type != Q_CMPT) {
+			if (is_qp && q_type == qctrl->q_type) {
+				q_type = !qctrl->q_type;
+				goto q_start;
+			}
 
-		if (is_qp && c2h == qctrl->is_c2h) {
-			c2h = !qctrl->is_c2h;
-			goto q_start;
+			q_type = qctrl->q_type;
 		}
-
-		c2h = qctrl->is_c2h;
 	}
 
 	snprintf(ebuf, nl_work->buflen,
@@ -1291,7 +1309,7 @@ static struct xlnx_nl_work *xpdev_nl_work_alloc(struct xlnx_pci_dev *xpdev)
 	/* allocate work struct */
 	nl_work = kzalloc(sizeof(*nl_work), GFP_ATOMIC);
 	if (!nl_work) {
-		pr_info("qdma%05x %s: OOM.\n",
+		pr_err("qdma%05x %s: OOM.\n",
 			xpdev->idx, dev_name(&xpdev->pdev->dev));
 		return NULL;
 	}
@@ -1302,7 +1320,7 @@ static struct xlnx_nl_work *xpdev_nl_work_alloc(struct xlnx_pci_dev *xpdev)
 }
 
 int xpdev_nl_queue_start(struct xlnx_pci_dev *xpdev, void *nl_info, u8 is_qp,
-			u8 is_c2h, unsigned short qidx, unsigned short qcnt)
+			u8 q_type, unsigned short qidx, unsigned short qcnt)
 {
 	struct xlnx_nl_work *nl_work = xpdev_nl_work_alloc(xpdev);
 	struct xlnx_nl_work_q_ctrl *qctrl;
@@ -1314,7 +1332,7 @@ int xpdev_nl_queue_start(struct xlnx_pci_dev *xpdev, void *nl_info, u8 is_qp,
 
 	qctrl = &nl_work->qctrl;
 	qctrl->is_qp = is_qp;
-	qctrl->is_c2h = is_c2h;
+	qctrl->q_type = q_type;
 	qctrl->qidx = qidx;
 	qctrl->qcnt = qcnt;
 
@@ -1350,7 +1368,7 @@ static int xpdev_qdata_realloc(struct xlnx_pci_dev *xpdev, unsigned int qmax)
 	}
 	if (!qmax)
 		return 0;
-	xpdev->qdata = kzalloc(qmax * 2 * sizeof(struct xlnx_qdata),
+	xpdev->qdata = kzalloc(qmax * 3 * sizeof(struct xlnx_qdata),
 			       GFP_KERNEL);
 	if (!xpdev->qdata) {
 		pr_err("OMM, xpdev->qdata, sz %u.\n", qmax);
@@ -1374,7 +1392,7 @@ static struct xlnx_pci_dev *xpdev_alloc(struct pci_dev *pdev, unsigned int qmax)
 	}
 
 	if (!xpdev) {
-		pr_info("OMM, qmax %u, sz %u.\n", qmax, sz);
+		pr_err("OMM, qmax %u, sz %u.\n", qmax, sz);
 		return NULL;
 	}
 	spin_lock_init(&xpdev->cdev_lock);
@@ -1387,7 +1405,8 @@ static struct xlnx_pci_dev *xpdev_alloc(struct pci_dev *pdev, unsigned int qmax)
 	snprintf(name, 80, "qdma_%s_nl_wq", dev_name(&pdev->dev));
 	xpdev->nl_task_wq = create_singlethread_workqueue(name);
 	if (!xpdev->nl_task_wq) {
-		pr_info("%s OOM, nl_task_wq.\n", dev_name(&pdev->dev));
+		pr_err("%s failed to allocate nl_task_wq.\n",
+				dev_name(&pdev->dev));
 		goto free_xpdev;
 	}
 
@@ -1563,7 +1582,6 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 	memset(&conf, 0, sizeof(conf));
 	conf.qdma_drv_mode = (enum qdma_drv_mode)extract_mod_param(pdev,
 			DRV_MODE);
-	pr_info("Current device is in %d mode\n", conf.qdma_drv_mode);
 	conf.vf_max = 0;	/* enable via sysfs */
 
 #ifndef __QDMA_VF__
@@ -1575,8 +1593,9 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 				PCI_FUNC(pdev->devfn));
 
 #endif /* #ifdef __QDMA_VF__ */
-	pr_info("Driver is loaded in %s mode\n",
-				mode_name_list[conf.qdma_drv_mode].name);
+	pr_info("Driver is loaded in %s(%d) mode\n",
+				mode_name_list[conf.qdma_drv_mode].name,
+				conf.qdma_drv_mode);
 
 	if (conf.qdma_drv_mode == LEGACY_INTR_MODE)
 		intr_legacy_init();
@@ -1592,6 +1611,12 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 	conf.bar_num_config = extract_mod_param(pdev, CONFIG_BAR);
 	conf.qsets_max = 0;
 	conf.qsets_base = -1;
+	conf.msix_qvec_max = 32;
+	conf.user_msix_qvec_max = 1;
+	if (conf.master_pf)
+		conf.data_msix_qvec_max = 5;
+	else
+		conf.data_msix_qvec_max = 6;
 
 	rv = qdma_device_open(DRV_MODULE_NAME, &conf, &dev_hndl);
 	if (rv < 0)
@@ -1772,20 +1797,31 @@ static void qdma_error_resume(struct pci_dev *pdev)
 #if KERNEL_VERSION(4, 13, 0) <= LINUX_VERSION_CODE
 static void qdma_reset_prepare(struct pci_dev *pdev)
 {
-	struct qdma_hw_version_info info;
 	struct xlnx_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
+	struct xlnx_dma_dev *xdev = NULL;
 
+	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 	pr_info("%s pdev 0x%p, xdev 0x%p, hndl 0x%lx, qdma%05x.\n",
 		dev_name(&pdev->dev), pdev, xpdev, xpdev->dev_hndl, xpdev->idx);
 
-#ifndef __QDMA_VF__
-	qdma_get_version((struct xlnx_dma_dev *)(xpdev->dev_hndl), 0, &info);
-#else
-	qdma_get_version((struct xlnx_dma_dev *)(xpdev->dev_hndl), 1, &info);
-#endif
+	qdma_device_offline(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);
 
-	qdma_device_offline(pdev, xpdev->dev_hndl);
+	/* FLR setting is required for Versal Hard IP */
+	if ((xdev->version_info.device_type ==
+			QDMA_DEVICE_VERSAL) &&
+		(xdev->version_info.versal_ip_type ==
+			QDMA_VERSAL_HARD_IP))
+		qdma_device_flr_quirk_set(pdev, xpdev->dev_hndl);
 	xpdev_queue_delete_all(xpdev);
+	xpdev_device_cleanup(xpdev);
+	xdev->conf.qsets_max = 0;
+	xdev->conf.qsets_base = -1;
+
+	if ((xdev->version_info.device_type ==
+			QDMA_DEVICE_VERSAL) &&
+		(xdev->version_info.versal_ip_type ==
+			QDMA_VERSAL_HARD_IP))
+		qdma_device_flr_quirk_check(pdev, xpdev->dev_hndl);
 }
 
 static void qdma_reset_done(struct pci_dev *pdev)
@@ -1794,30 +1830,41 @@ static void qdma_reset_done(struct pci_dev *pdev)
 
 	pr_info("%s pdev 0x%p, xdev 0x%p, hndl 0x%lx, qdma%05x.\n",
 		dev_name(&pdev->dev), pdev, xpdev, xpdev->dev_hndl, xpdev->idx);
-	qdma_device_online(pdev, xpdev->dev_hndl);
+	qdma_device_online(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);
 }
 
 #elif KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static void qdma_reset_notify(struct pci_dev *pdev, bool prepare)
 {
-	struct qdma_hw_version_info info;
 	struct xlnx_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
+	struct xlnx_dma_dev *xdev = NULL;
+
+	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 
 	pr_info("%s prepare %d, pdev 0x%p, xdev 0x%p, hndl 0x%lx, qdma%05x.\n",
 		dev_name(&pdev->dev), prepare, pdev, xpdev, xpdev->dev_hndl,
 		xpdev->idx);
 
-#ifndef __QDMA_VF__
-	qdma_get_version((struct xlnx_dma_dev *)(xpdev->dev_hndl), 0, &info);
-#else
-	qdma_get_version((struct xlnx_dma_dev *)(xpdev->dev_hndl), 1, &info);
-#endif
-
 	if (prepare) {
-		qdma_device_offline(pdev, xpdev->dev_hndl);
+		qdma_device_offline(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);
+		/* FLR setting is not required for 2018.3 IP */
+		if ((xdev->version_info.device_type ==
+				QDMA_DEVICE_VERSAL) &&
+			(xdev->version_info.versal_ip_type ==
+				QDMA_VERSAL_HARD_IP))
+			qdma_device_flr_quirk_set(pdev, xpdev->dev_hndl);
 		xpdev_queue_delete_all(xpdev);
+		xpdev_device_cleanup(xpdev);
+		xdev->conf.qsets_max = 0;
+		xdev->conf.qsets_base = -1;
+
+		if ((xdev->version_info.device_type ==
+				QDMA_DEVICE_VERSAL) &&
+			(xdev->version_info.versal_ip_type ==
+				QDMA_VERSAL_HARD_IP))
+			qdma_device_flr_quirk_check(pdev, xpdev->dev_hndl);
 	} else
-		qdma_device_online(pdev, xpdev->dev_hndl);
+		qdma_device_online(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);
 }
 #endif
 static const struct pci_error_handlers qdma_err_handler = {

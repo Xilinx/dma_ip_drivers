@@ -38,8 +38,8 @@
 
 #define SEC2NSEC           1000000000
 #define SEC2USEC           1000000
-#define DEFAULT_PAGE_SIZE  4096
-#define PAGE_SHIFT         12
+#define DMAPERF_PAGE_SIZE  4096
+#define DMAPERF_PAGE_SHIFT         12
 
 #define DATA_VALIDATION 0
 
@@ -378,7 +378,7 @@ static struct mempool_handle datahandle;
 static void mempool_create(struct mempool_handle *mpool, unsigned int entry_size, unsigned int max_entries)
 {
 #ifdef USE_MEMPOOL
-	if (posix_memalign((void **)&mpool->mempool, DEFAULT_PAGE_SIZE,
+	if (posix_memalign((void **)&mpool->mempool, DMAPERF_PAGE_SIZE,
 			   max_entries * (entry_size + sizeof(struct dma_meminfo)))) {
 		printf("OOM\n");
 		exit(1);
@@ -660,6 +660,8 @@ static void parse_config_file(const char *cfg_fname)
 		numread--;
 		linenum++;
 		linebuf = strip_comments(linebuf);
+		if (linebuf == NULL)
+			continue;
 		realbuf = strip_blanks(linebuf, &numblanks);
 		linelen -= numblanks;
 		if (0 == linelen)
@@ -1244,9 +1246,9 @@ static void *io_thread(void *argp)
 		io_sz = _info->pkt_burst * _info->pkt_sz;
 		burst_cnt = 1;
 	}
-	num_desc = (io_sz + DEFAULT_PAGE_SIZE - 1) >> PAGE_SHIFT;
+	num_desc = (io_sz + DMAPERF_PAGE_SIZE - 1) >> DMAPERF_PAGE_SHIFT;
 	max_reqs = glbl_rng_sz[idx_rngsz];
-	mempool_create(&datahandle, num_desc*DEFAULT_PAGE_SIZE,  max_reqs + (burst_cnt * num_desc));
+	mempool_create(&datahandle, num_desc*DMAPERF_PAGE_SIZE,  max_reqs + (burst_cnt * num_desc));
 	mempool_create(&ctxhandle, sizeof(struct list_head), max_reqs);
 	mempool_create(&iocbhandle, sizeof(struct iocb) + (burst_cnt * sizeof(struct iovec)), max_reqs + (burst_cnt * num_desc));
 #ifdef DEBUG
@@ -1649,7 +1651,7 @@ int main(int argc, char *argv[])
 	snprintf(aio_max_nr_cmd, 100, "echo %u > /proc/sys/fs/aio-max-nr", aio_max_nr);
 	system(aio_max_nr_cmd);
 
-	printf("dmaperf(%u) threads\n", num_thrds);
+	printf("dmautils(%u) threads\n", num_thrds);
 	child_pid_lst = calloc(num_thrds, sizeof(int));
 	base_pid = getpid();
 	child_pid_lst[0] = base_pid;

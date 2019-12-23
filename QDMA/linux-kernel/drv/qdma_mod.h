@@ -61,7 +61,7 @@ struct xlnx_nl_work_q_ctrl {
 	unsigned short qidx;
 	unsigned short qcnt;
 	u8 is_qp:1;
-	u8 is_c2h:1;
+	u8 q_type:2;
 };
 
 struct xlnx_nl_work {
@@ -138,7 +138,7 @@ struct xlnx_pci_dev *xpdev_find_by_idx(unsigned int idx, char *ebuf,
  * @return	NULL: failure
  *****************************************************************************/
 struct xlnx_qdata *xpdev_queue_get(struct xlnx_pci_dev *xpdev,
-			unsigned int qidx, bool c2h, bool check_qhndl,
+			unsigned int qidx, u8 q_type, bool check_qhndl,
 			char *ebuf, int ebuflen);
 
 /*****************************************************************************/
@@ -171,8 +171,8 @@ int xpdev_queue_add(struct xlnx_pci_dev *xpdev, struct qdma_queue_conf *qconf,
  * @return	0: success
  * @return	<0: failure
  *****************************************************************************/
-int xpdev_queue_delete(struct xlnx_pci_dev *xpdev, unsigned int qidx, bool c2h,
-			char *ebuf, int ebuflen);
+int xpdev_queue_delete(struct xlnx_pci_dev *xpdev, unsigned int qidx,
+		u8 q_type, char *ebuf, int ebuflen);
 
 int xpdev_nl_queue_start(struct xlnx_pci_dev *xpdev, void *nl_info, u8 is_qp,
 			u8 is_c2h, unsigned short qidx, unsigned short qcnt);

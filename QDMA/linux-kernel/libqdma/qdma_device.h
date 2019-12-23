@@ -52,14 +52,12 @@ struct qdma_dev {
 	unsigned short qbase;
 	/** qdma_dev lock */
 	spinlock_t lock;
-	/** number of h2c queues for this function */
-	unsigned short h2c_qcnt;
-	/** number of c2h queues for this function */
-	unsigned short c2h_qcnt;
 	/** h2c descq list */
 	struct qdma_descq *h2c_descq;
 	/** c2h descq list */
 	struct qdma_descq *c2h_descq;
+	/** cmpt descq list */
+	struct qdma_descq *cmpt_descq;
 };
 
 /**
@@ -250,4 +248,19 @@ int qdma_set_ring_sizes(struct xlnx_dma_dev *xdev, u8 index,
 int qdma_get_ring_sizes(struct xlnx_dma_dev *xdev, u8 index,
 		u8 count, u32 *glbl_rng_sz);
 
+
+/*****************************************************************************/
+/**
+ * qdma_pf_trigger_vf_reset() - Function to trigger FLR of all the VFs on PF
+ *
+ * @param[in]	dev_hndl:	Handle of the xdev
+ *****************************************************************************/
+void qdma_pf_trigger_vf_reset(unsigned long dev_hndl);
+
+/**
+ * qdma_pf_trigger_vf_offline() - Function to trigger offline of all the VFs
+ *
+ * @param[in]	dev_hndl:	Handle of the xdev
+ *****************************************************************************/
+void qdma_pf_trigger_vf_offline(unsigned long dev_hndl);
 #endif /* LIBQDMA_QDMA_DEVICE_H_ */

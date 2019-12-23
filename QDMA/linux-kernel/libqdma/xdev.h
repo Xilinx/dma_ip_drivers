@@ -30,13 +30,15 @@
 #include <linux/pci.h>
 
 #include "libqdma_export.h"
-#include "qdma_access_errors.h"
 #include "qdma_mbox.h"
+#include "qdma_access_errors.h"
 #ifdef DEBUGFS
 #include "qdma_debugfs.h"
 
 extern struct dentry *qdma_debugfs_root;
 #endif
+
+#define DEFAULT_USER_BAR			2
 
 /**
  * QDMA bars
@@ -71,12 +73,15 @@ extern struct dentry *qdma_debugfs_root;
 #define VF_PF_IDENTIFIER_MASK	0xF
 #define VF_PF_IDENTIFIER_SHIFT  8
 
+#define QDMA_MAGIC_DEVICE		0xEEEEEEEEUL
+
 enum qdma_pf_devices {
 	PF_DEVICE_0 = 0,
 	PF_DEVICE_1,
 	PF_DEVICE_2,
 	PF_DEVICE_3
 };
+
 /**
  * number of bits to describe the DMA transfer descriptor
  */
@@ -115,6 +120,14 @@ struct xlnx_dma_dev;
 #define XDEV_NUM_IRQ_MAX	8
 
 /**
+ * Macro to indicate FLR flow is active
+ */
+#define XDEV_FLR_ACTIVE 1
+/**
+ * Macro to indicate FLR flow is not active
+ */
+#define XDEV_FLR_INACTIVE 0
+/**
  * interrupt call back function handlers
  */
 typedef irqreturn_t (*f_intr_handler)(int irq_index, int irq, void *dev_id);
@@ -130,7 +143,7 @@ struct intr_coal_conf {
 	u16 intr_rng_num_entries;
 	/**< interrupt ring base address */
 	dma_addr_t intr_ring_bus;
-	struct qdma_intr_ring *intr_ring_base;
+	union qdma_intr_ring *intr_ring_base;
 	/**< color value indicates the valid entry in the interrupt ring */
 	u8 color;
 	/**< Interrupt cidx info to be written to INTR CIDX register */
@@ -144,8 +157,6 @@ struct intr_coal_conf {
 #define RTL2_VERSION                      1
 #define VIVADO_RELEASE_2018_3             0
 #define VIVADO_RELEASE_2018_2             1
-#define EVEREST_SOFT_IP                   0
-#define EVEREST_HARD_IP                   1
 
 /**
  * intr_type_list - interrupt types
@@ -157,6 +168,20 @@ enum intr_type_list {
 	INTR_TYPE_MBOX,		/**< mail box interrupt */
 	INTR_TYPE_MAX		/**< max interrupt */
 };
+
+/**
+ * reset_state - Keep track of state during FLR
+ */
+enum reset_state_t {
+	RESET_STATE_IDLE,
+	RESET_STATE_RECV_PF_RESET_REQ,
+	RESET_STATE_PF_WAIT_FOR_BYES,
+	RESET_STATE_RECV_PF_RESET_DONE,
+	RESET_STATE_RECV_PF_OFFLINE_REQ,
+	RESET_STATE_PF_OFFLINE_REQ_PROCESSING,
+	RESET_STATE_INVALID,
+};
+
 
 /**
  * @struct - intr_vec_map_type
@@ -187,12 +212,15 @@ struct intr_info_t {
  * @brief	Xilinx DMA device details
  */
 struct xlnx_dma_dev {
+	unsigned long magic;	/* structure ID for sanity checks */
 	/**< Xilinx DMA device name */
 	char mod_name[QDMA_DEV_NAME_MAXLEN];
 	/**< DMA device configuration */
 	struct qdma_dev_conf conf;
 	/**< csr info */
 	struct global_csr_conf csr_info;
+	/**< sorted c2h counter indexes */
+	uint8_t sorted_c2h_cntr_idx[QDMA_GLOBAL_CSR_ARRAY_SZ];
 	/**< DMA device list */
 	struct list_head list_head;
 	/**< DMA device lock to protects concurrent access */
@@ -207,6 +235,16 @@ struct xlnx_dma_dev {
 	void *vf_info;
 	/**< number of virtual functions */
 	u8 vf_count;
+	/**< number of online virtual functions */
+	u8 vf_count_online;
+#ifdef __QDMA_VF__
+	/** work queue */
+	struct workqueue_struct *workq;
+	/** work_struct to pass work to reset thread */
+	struct work_struct reset_work;
+#endif
+	/** Reset state */
+	enum reset_state_t reset_state;
 	/**< wait q for vf offline */
 	qdma_wait_queue wq;
 	/**< function id */
@@ -259,6 +297,18 @@ struct xlnx_dma_dev {
 	unsigned long long total_st_c2h_pkts;
 	/**< for upper layer calling function */
 	unsigned int dev_ulf_extra[0];
+
+	/* qdma_hw_access structure */
+	struct qdma_hw_access hw;
+	/* qdma_hw_version_info structure */
+	struct qdma_hw_version_info version_info;
+};
+
+struct qdma_vf_info {
+	unsigned short func_id;
+	unsigned short qbase;
+	unsigned short qmax;
+	unsigned short filler;
 };
 
 /*****************************************************************************/

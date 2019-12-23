@@ -125,6 +125,10 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 	int rv;
 	char *buf = NULL;
 	int buflen = qdma_reg_dump_buf_len() + BANNER_LEN;
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+
+	if (!xdev)
+		return -EINVAL;
 
 	/** allocate memory */
 	buf = (char *) kzalloc(buflen, GFP_KERNEL);
@@ -133,22 +137,23 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 
 	/* print the banner with device info */
 	rv = dump_banner(dev_name, buf + len, buflen - len);
-	if (unlikely(rv < 0)) {
-		pr_warn("insufficient space to dump register banner\n");
+	if (rv < 0) {
+		pr_warn("insufficient space to dump register banner, err =%d\n",
+				rv);
 		kfree(buf);
 		return len;
 	}
 	len += rv;
 #ifndef __QDMA_VF__
-	rv = qdma_dump_config_regs((void *)dev_hndl, 0,
+	rv = xdev->hw.qdma_dump_config_regs((void *)dev_hndl, 0,
 			buf + len, buflen - len);
 #else
-	rv = qdma_dump_config_regs((void *)dev_hndl, 1,
+	rv = xdev->hw.qdma_dump_config_regs((void *)dev_hndl, 1,
 			buf + len, buflen - len);
 #endif
-	if (unlikely(rv < 0)) {
-		pr_warn("Not able to dump Config Bar register values with error = %d\n",
-								rv);
+	if (rv < 0) {
+		pr_warn("Not able to dump Config Bar register values, err = %d\n",
+					rv);
 		*data = buf;
 		*data_len = buflen;
 		return len;
@@ -256,10 +261,10 @@ static int dbgfs_dump_intr_cntx(unsigned long dev_hndl, char *dev_name,
 						xdev,
 						ring_index,
 						&intr_ctxt);
-			if (unlikely(rv < 0)) {
+			if (rv < 0) {
 				len += sprintf(buf + len,
-							   "%s read intr context failed %d.\n",
-							   xdev->conf.name, rv);
+					"%s read intr context failed %d.\n",
+					xdev->conf.name, rv);
 				*data = buf;
 				*data_len = buflen;
 				return rv;
@@ -268,6 +273,7 @@ static int dbgfs_dump_intr_cntx(unsigned long dev_hndl, char *dev_name,
 							"\tINTR CTXT:\n");
 			qdma_fill_intr_ctxt(&intr_ctxt);
 			len += qdma_parse_ctxt_to_buf(QDMA_INTR_CNTXT,
+					&xdev->version_info,
 					buf + len, buflen - len);
 		}
 	}
@@ -311,7 +317,7 @@ static int dbgfs_dump_intr_ring(unsigned long dev_hndl, char *dev_name,
 
 	rv = qdma_intr_ring_dump(dev_hndl, vector_idx, 0,
 		 num_entries - 1, buf, buflen);
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		len += sprintf(buf + len,
 					   "%s read intr context failed %d.\n",
 					   xdev->conf.name, rv);
@@ -366,7 +372,7 @@ static int dev_dbg_file_open(struct inode *inode, struct file *fp)
 
 	/* convert this string as hex integer */
 	rv = kstrtoint((const char *)dev_name, 16, &dev_id);
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		rv = -ENODEV;
 		return rv;
 	}
@@ -437,7 +443,7 @@ static ssize_t dev_dbg_file_read(struct file *fp, char __user *user_buffer,
 					dev_priv->dev_name, &buf, &buf_len);
 		}
 
-		if (unlikely(rv < 0))
+		if (rv < 0)
 			goto dev_dbg_file_read_exit;
 
 		dev_priv->datalen = rv;
@@ -508,7 +514,7 @@ static ssize_t dev_intr_file_read(struct file *fp, char __user *user_buffer,
 					dev_priv->dev_name, &buf, &buf_len);
 		}
 
-		if (unlikely(rv < 0))
+		if (rv < 0)
 			goto dev_intr_file_read_exit;
 
 		dev_priv->datalen = rv;
@@ -818,7 +824,7 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 
 	/* create debug files for qdma device */
 	rv = create_dev_dbg_files(xdev, xdev->dbgfs_dev_root);
-	if (unlikely(rv < 0)) {
+	if (rv < 0) {
 		pr_err("Failed to create device debug files\n");
 		goto dbgfs_dev_init_fail;
 	}
@@ -841,7 +847,7 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 
 		/* create debug files for intr */
 		rv = create_dev_intr_files(xdev, dbgfs_intr_root);
-		if (unlikely(rv < 0)) {
+		if (rv < 0) {
 			pr_err("Failed to create intr ring files\n");
 			goto dbgfs_dev_init_fail;
 		}

@@ -25,8 +25,12 @@
  * DOC: Xilinx QDMA Library Interface Definitions
  *
  * Header file *libqdma_export.h* defines data structures and function
- * signatures exported by Xilinx QDMA(libqdma) Library.
+ * signatures exported by Xilinx QDMA (libqdma) Library.
  * libqdma is part of Xilinx QDMA Linux Driver.
+ *
+ * libqdma exports the configuration and control APIs for device and
+ * queue management and data processing APIs. Configuration APIs
+ * shall not be invoked in interrupt context by upper layers.
  */
 
 #include <linux/types.h>
@@ -34,21 +38,59 @@
 #include "libqdma_config.h"
 #include "qdma_access_export.h"
 
-/** Invalid QDMA function number */
+/**
+ * Invalid QDMA function number
+ */
 #define QDMA_FUNC_ID_INVALID	(QDMA_PF_MAX + QDMA_VF_MAX)
 
 /**
- * enum qdma_q_mode - mode in which Q is initialized
+ * QDMA_DEV_NAME_MAXLEN - Maxinum length of the QDMA device name
+ */
+#define QDMA_DEV_NAME_MAXLEN	32
+
+/**
+ * DEVICE_VERSION_INFO_STR_LENGTH - QDMA HW version string array length,
+ * change this if QDMA_HW_VERSION_STRING_LEN is changed in access code
+ */
+#define DEVICE_VERSION_INFO_STR_LENGTH         (34)
+
+/**
+ * QDMA_QUEUE_NAME_MAXLEN - Maximum queue name length
+ */
+#define QDMA_QUEUE_NAME_MAXLEN	32
+
+/**
+ * QDMA_QUEUE_IDX_INVALID - Invalid queue index
+ */
+#define QDMA_QUEUE_IDX_INVALID	0xFFFF
+
+/**
+ * QDMA_QUEUE_VEC_INVALID - Invalid MSIx vector index
+ */
+#define QDMA_QUEUE_VEC_INVALID	0xFF
+
+/**
+ * QDMA_REQ_OPAQUE_SIZE - Maximum request length
+ */
+#define QDMA_REQ_OPAQUE_SIZE	80
+
+/**
+ * QDMA_UDD_MAXLEN - Maximum length of the user defined data
+ */
+#define QDMA_UDD_MAXLEN		32
+
+/**
+ * enum qdma_q_mode - per queue DMA AXI Interface option
  */
 enum qdma_q_mode {
-	/** @QDMA_Q_MODE_MM: MM mode */
+	/** @QDMA_Q_MODE_MM: AXI Memory Mapped Mode */
 	QDMA_Q_MODE_MM,
-	/** @QDMA_Q_MODE_ST: ST mode */
+	/** @QDMA_Q_MODE_ST: AXI Stream Mode */
 	QDMA_Q_MODE_ST
 };
 
 /**
- * enum qdma_q_dir - direction in which Q is initialized
+ * enum qdma_q_dir - Direction of the queue
  */
 enum qdma_q_dir {
 	/** @QDMA_Q_DIR_H2C: host to card */
@@ -57,9 +99,9 @@ enum qdma_q_dir {
 	QDMA_Q_DIR_C2H
 };
 
+
 /**
- * enum qdma_drv_mode - Indicates whether PF/VF qdma driver is loaded in
- *                      poll or interrupt mode
+ * enum qdma_drv_mode - PF/VF qdma driver modes
  *
  * QDMA PF/VF drivers can be loaded in one of these modes.
  * Mode options is exposed as a user configurable module parameter
@@ -67,83 +109,53 @@ enum qdma_q_dir {
  */
 enum qdma_drv_mode {
 	/**
-	 *  @AUTO_MODE : auto mode decided automatically,
-	 *  mix of poll and interrupt mode
+	 *  @AUTO_MODE : Auto mode is mix of Poll and Interrupt Aggregation
+	 *  mode. Driver polls for the write back status updates. Interrupt
+	 *  aggregation is used for processing the completion ring
 	 */
 	AUTO_MODE,
-	/** @POLL_MODE : driver is inserted in poll mode */
+	/**
+	 *  @POLL_MODE : In Poll Mode, Software polls for the write back
+	 *  completions (Status Descriptor Write Back)
+	 */
 	POLL_MODE,
-	/** @DIRECT_INTR_MODE : driver is inserted in direct interrupt mode */
+	/**
+	 *  @DIRECT_INTR_MODE : Direct Interrupt mode, each queue is
+	 *  assigned to one of the available interrupt vectors in a round robin
+	 *  fashion to service the requests. Interrupt is raised by the HW upon
+	 *  receiving the completions and software reads the completion status.
+	 */
 	DIRECT_INTR_MODE,
 	/**
-	 *  @INDIRECT_INTR_MODE : driver is inserted in
-	 *  indirect interrupt mode
+	 *  @INDIRECT_INTR_MODE : In Indirect Interrupt mode or Interrupt
+	 *  Aggregation mode, each vector has an associated Interrupt
+	 *  Aggregation Ring. The QID and status of queues requiring service
+	 *  are written into the Interrupt Aggregation Ring. When a PCIe MSI-X
+	 *  interrupt is received by the Host, the software reads the Interrupt
+	 *  Aggregation Ring to determine which queue needs service. Mapping of
+	 *  queues to vectors is programmable
 	 */
 	INDIRECT_INTR_MODE,
-	/** @LEGACY_INTR_MODE : driver is inserted in legacy interrupt mode */
+	/**
+	 *  @LEGACY_INTR_MODE : Driver is inserted in legacy interrupt mode
+	 *  Software serves status updates upon receiving the legacy interrupt
+	 */
 	LEGACY_INTR_MODE
 };
 
 /**
- * struct drv_mode_name - Structure to hold the driver name and mode
- *
- * QDMA PF/VF drivers can be loaded in one of these modes.
- * This structure holds the driver mode and name of the driver
+ * enum queue_dir_t: queue direction types
  *
  */
-struct drv_mode_name {
-	/** @drv_mode : mode of the driver in which it it loaded. */
-	enum qdma_drv_mode drv_mode;
-	/** @name     : Driver Name */
-	char name[20];
+enum queue_type_t {
+	/** @Q_H2C: host to card */
+	Q_H2C,
+	/** @Q_C2H: card to host */
+	Q_C2H,
+	/** @Q_CMPT: cmpt queue*/
+	Q_CMPT
 };
 
-struct qdma_ul_cmpt_info {
-	/* cmpl entry stat bits */
-	union {
-		u8 fbits;
-		struct cmpl_flag {
-			u8 format:1;
-			u8 color:1;
-			u8 err:1;
-			u8 desc_used:1;
-			u8 eot:1;
-			u8 filler:3;
-		} f;
-	};
-	u8 rsvd;
-	u16 len;
-	/* for tracking */
-	unsigned int pidx;
-	__be64 *entry;
-};
-
-extern struct drv_mode_name mode_name_list[];
-
-struct pci_dev;
-
-/*****************************************************************************/
-/**
- * libqdma_init() - initializes the QDMA core library
- *
- * @num_threads: number of threads to be created each for request
- *  processing and writeback processing
- *
- * @debugfs_root: root path for debugfs
- *
- * Return: 0:	success <0:	error
- *
- *****************************************************************************/
-int libqdma_init(unsigned int num_threads, void *debugfs_root);
-
-/*****************************************************************************/
-/**
- * libqdma_exit() - cleanup the QDMA core library before exiting
- *
- * cleanup the QDMA core library before exiting
- *
- *****************************************************************************/
-void libqdma_exit(void);
 
 /**
  * enum intr_ring_size_sel - qdma interrupt ring size selection
@@ -173,35 +185,165 @@ enum intr_ring_size_sel {
 };
 
 /**
- * enum qdma_dev_qmax_state: qdma queue states
+ * enum qdma_dev_qmax_state: qdma function states
  *
  * Each PF/VF device can be configured with 0 or more number of queues.
- * When the queue is not assigned to any device, device is in unfonfigured
- * state. When PF/VF is instatiated, it has the default number of queues
- * assigned and the device is in initial state. Sysfs interface enables the
- * users to alter the default number of queues assigned to a device and
- * it moves to user configured state.
+ * When the queue is not assigned to any function, function is in unfonfigured
+ * state. Sysfs interface enables the users to configure the number of
+ * queues to different functions. Upon adding the queues, function moves to
+ * user configured state.
  *
  */
 enum qdma_dev_qmax_state {
-	/** @QMAX_CFG_UNCONFIGURED : device qmax not configured */
+	/** @QMAX_CFG_UNCONFIGURED : queue max not configured */
 	QMAX_CFG_UNCONFIGURED,
 	/**
-	 *  @QMAX_CFG_INITIAL : device qmax configured with
+	 *  @QMAX_CFG_INITIAL : queue max configured with
 	 *  initial default values
 	 */
 	QMAX_CFG_INITIAL,
 	/**
-	 *  @QMAX_CFG_USER: device qmax configured from
+	 *  @QMAX_CFG_USER: queue max configured from
 	 *  sysfs as per user choice
 	 */
 	QMAX_CFG_USER,
 };
 
 /**
- *	Maxinum length of the QDMA device name
+ * enum cmpt_desc_sz_t: descriptor sizes
+ *
  */
-#define QDMA_DEV_NAME_MAXLEN	32
+enum cmpt_desc_sz_t {
+	/** @CMPT_DESC_SZ_8B: completion size 8B */
+	CMPT_DESC_SZ_8B = 0,
+	/** @CMPT_DESC_SZ_16B: completion size 16B */
+	CMPT_DESC_SZ_16B,
+	/** @CMPT_DESC_SZ_32B: completion size 32B */
+	CMPT_DESC_SZ_32B,
+	/** @CMPT_DESC_SZ_64B: completion size 64B */
+	CMPT_DESC_SZ_64B
+};
+
+/**
+ * enum desc_sz_t: descriptor sizes
+ *
+ */
+enum desc_sz_t {
+	/** @DESC_SZ_8B:  descriptor size 8B */
+	DESC_SZ_8B = 0,
+	/** @DESC_SZ_16B: descriptor size 16B */
+	DESC_SZ_16B,
+	/** @DESC_SZ_32B: descriptor size 32B */
+	DESC_SZ_32B,
+	/** @DESC_SZ_64B: descriptor size 64B */
+	DESC_SZ_64B
+};
+
+/**
+ * enum tigger_mode_t: trigger modes
+ *
+ */
+enum tigger_mode_t {
+	/** @TRIG_MODE_DISABLE: disable trigger mode */
+	TRIG_MODE_DISABLE,
+	/** @TRIG_MODE_ANY:     any trigger mode */
+	TRIG_MODE_ANY,
+	/** @TRIG_MODE_COUNTER: counter trigger mode */
+	TRIG_MODE_COUNTER,
+	/** @TRIG_MODE_USER:    trigger mode of user choice */
+	TRIG_MODE_USER,
+	/** @TRIG_MODE_TIMER:   timer trigger mode */
+	TRIG_MODE_TIMER,
+	/** @TRIG_MODE_COMBO:   timer and counter combo trigger mode */
+	TRIG_MODE_COMBO,
+};
+
+/**
+ * enum q_state_t: Queue can be in one of the following states
+ *
+ */
+enum q_state_t {
+	/** @Q_STATE_DISABLED: Queue is not taken */
+	Q_STATE_DISABLED = 0,
+	/** @Q_STATE_ENABLED: Assigned/taken. Partial config is done */
+	Q_STATE_ENABLED,
+	/**
+	 *  @Q_STATE_ONLINE: Resource/context is initialized for the queue
+	 *  and is available for data consumption
+	 */
+	Q_STATE_ONLINE,
+};
+
+/**
+ * struct drv_mode_name - Structure to hold the driver name and mode
+ *
+ * Mode can be set for each PF or VF group using module parameters
+ * Refer enum qdma_drv_mode for different mode options
+ *
+ */
+struct drv_mode_name {
+	/** @drv_mode : Mode of the function */
+	enum qdma_drv_mode drv_mode;
+	/** @name: Driver Name */
+	char name[20];
+};
+
+
+/**
+ * struct qdma_q_type - Queue type
+ *
+ * Look up table for name of the queue type and enum
+ *
+ */
+struct qdma_q_type {
+	/** @name: Queue type name */
+	const char *name;
+	/** @q_type: Queue type */
+	enum queue_type_t q_type;
+};
+
+
+/**
+ * struct qdma_ul_cmpt_info - Completion entry format
+ *
+ * Completion Entry is user logic dependent
+ * Current SW supported the following completion entry format
+ *
+ */
+struct qdma_ul_cmpt_info {
+	union {
+		/** @fbits: Flag bits */
+		u8 fbits;
+		struct cmpl_flag {
+			/** @format: Format of the entry */
+			u8 format:1;
+			/** @color: Indicates the validity of the entry */
+			u8 color:1;
+			/** @err: Indicates the error status */
+			u8 err:1;
+			/** @desc_used: Indicates the descriptor used status */
+			u8 desc_used:1;
+			/** @eot: Indicates the end of transfer */
+			u8 eot:1;
+			/** @filler: Filler bits */
+			u8 filler:3;
+		} f;
+	};
+	/** @rsvd: Reserved filed added for structure alignment */
+	u8 rsvd;
+	/** @len: Length of the completion entry */
+	u16 len;
+	/** @pidx: Producer Index */
+	unsigned int pidx;
+	/** @entry: Completion entry */
+	__be64 *entry;
+};
+
+
+extern struct drv_mode_name mode_name_list[];
+extern struct qdma_q_type q_type_list[];
+
+struct pci_dev;
 
 /**
  * struct qdma_dev_conf defines the per-device qdma property.
@@ -226,6 +368,10 @@ struct qdma_dev_conf {
 	 *  is master_pf or not
 	 */
 	u8 master_pf:1;
+	/**
+	 * @intr_moderation: moderate interrupt generation
+	 */
+	u8 intr_moderation:1;
 	/**	@rsvd1: Reserved1 */
 	u8 rsvd1:5;
 	/**
@@ -239,7 +385,7 @@ struct qdma_dev_conf {
 	 * @msix_qvec_max:
 	 * interrupt:
 	 * - MSI-X only
-	 * max of QDMA_DEV_MSIX_VEC_MAX per function, 32 in Everest
+	 * max of QDMA_DEV_MSIX_VEC_MAX per function, 32 in Versal
 	 * - 1 vector is reserved for user interrupt
 	 * - 1 vector is reserved mailbox
 	 * - 1 vector on pf0 is reserved for error interrupt
@@ -250,7 +396,11 @@ struct qdma_dev_conf {
 	 *  @msix_qvec_max: max. of vectors used for queues.
 	 *  libqdma update w/ actual #
 	 */
-	u8 msix_qvec_max;
+	u16 msix_qvec_max;
+	/** @user_msix_qvec_max: Max user msix vectors */
+	u16 user_msix_qvec_max;
+	/** @data_msix_qvec_max: Max data msix vectors */
+	u16 data_msix_qvec_max;
 	/** @uld: upper layer data, i.e. callback data */
 	unsigned long uld;
 	/** @qdma_drv_mode: qdma driver mode */
@@ -261,14 +411,6 @@ struct qdma_dev_conf {
 	 */
 	char name[QDMA_DEV_NAME_MAXLEN];
 
-#ifdef RTL2_FEATURE_CONFIGURABLE_BAR
-	/** @bar_num_config: dma config bar #, < 0 not present */
-	char bar_num_config;
-	/** @bar_num_user: user bar */
-	char bar_num_user;
-	/**	@bar_num_bypass: bypass bar */
-	char bar_num_bypass;
-#endif
 	/** @bar_num_config: dma config bar #, < 0 not present */
 	char bar_num_config;
 	/** @bar_num_user: user bar */
@@ -298,6 +440,335 @@ struct qdma_dev_conf {
 	void *debugfs_dev_root;
 };
 
+/**
+ * struct qdma_version_info - defines the per-device version information
+ *
+ */
+struct qdma_version_info {
+	/** @rtl_version_str:	Version string */
+	char rtl_version_str[DEVICE_VERSION_INFO_STR_LENGTH];
+	/** @vivado_release_str: Release string */
+	char vivado_release_str[DEVICE_VERSION_INFO_STR_LENGTH];
+	/** @versal_ip_str:	Versal IP version string */
+	char versal_ip_str[DEVICE_VERSION_INFO_STR_LENGTH];
+	/** @device_type_str:	Qdma device type string */
+	char device_type_str[DEVICE_VERSION_INFO_STR_LENGTH];
+};
+
+/**
+ * struct global_csr_conf: global CSR configuration
+ *
+ */
+struct global_csr_conf {
+	/** @ring_sz: Descriptor ring size ie. queue depth */
+	unsigned int ring_sz[QDMA_GLOBAL_CSR_ARRAY_SZ];
+	/** @c2h_timer_cnt: C2H timer count  list */
+	unsigned int c2h_timer_cnt[QDMA_GLOBAL_CSR_ARRAY_SZ];
+	/** @c2h_cnt_th: C2H counter threshold list*/
+	unsigned int c2h_cnt_th[QDMA_GLOBAL_CSR_ARRAY_SZ];
+	/** @c2h_buf_sz: C2H buffer size list */
+	unsigned int c2h_buf_sz[QDMA_GLOBAL_CSR_ARRAY_SZ];
+	/** @wb_intvl: Writeback interval */
+	unsigned int wb_intvl;
+};
+
+
+/**
+ * struct qdma_sw_sg - qdma scatter gather request
+ *
+ */
+struct qdma_sw_sg {
+	/** @next: pointer to next page */
+	struct qdma_sw_sg *next;
+	/** @pg: pointer to current page */
+	struct page *pg;
+	/** @offset: offset in current page */
+	unsigned int offset;
+	/** @len: length of the page */
+	unsigned int len;
+	/** @dma_addr: dma address of the allocated page */
+	dma_addr_t dma_addr;
+};
+
+/** struct qdma_request forward declaration*/
+struct qdma_request;
+
+/**
+ * struct qdma_queue_conf - qdma configuration parameters
+ *
+ * qdma_queue_conf defines the per-dma Q property.
+ * if any of the max requested is less than supported, the value will
+ * be updated
+ *
+ */
+struct qdma_queue_conf {
+	/**
+	 *  @qidx: 0xFFFF: libqdma choose the queue idx 0 ~
+	 *  (qdma_dev_conf.qsets_max - 1) the calling function choose the
+	 *   queue idx
+	 */
+	u32 qidx:24;
+	/** config flags: byte #1 */
+	/** @st: Indicates the streaming mode */
+	u32 st:1;
+	/** @q_type: queue_type_t */
+	u32 q_type:2;
+	/** @pipe: SDx only: inter-kernel communication pipe */
+	u32 pipe:1;
+	/** @irq_en: poll or interrupt */
+	u32 irq_en:1;
+
+	/** descriptor ring	 */
+	/** @desc_rng_sz_idx: global_csr_conf.ringsz[N] */
+	u32 desc_rng_sz_idx:4;
+
+	/** config flags: byte #2 */
+	/** @wb_status_en: writeback enable, disabled for ST C2H */
+	u8 wb_status_en:1;
+	/** @cmpl_status_acc_en: sw context.cmpl_status_acc_en */
+	u8 cmpl_status_acc_en:1;
+	/** @cmpl_status_pend_chk: sw context.cmpl_stauts_pend_chk */
+	u8 cmpl_status_pend_chk:1;
+	/** @desc_bypass: send descriptor to bypass out */
+	u8 desc_bypass:1;
+	/** @pfetch_en: descriptor prefetch enable control */
+	u8 pfetch_en:1;
+	/** @fetch_credit: sw context.frcd_en[32] */
+	u8 fetch_credit:1;
+	/**
+	 *  @st_pkt_mode: SDx only: ST packet mode
+	 *  (i.e., with TLAST to identify the packet boundary)
+	 */
+	u8 st_pkt_mode:1;
+
+	/** config flags: byte #3 */
+	/** @c2h_buf_sz_idx: global_csr_conf.c2h_buf_sz[N] */
+	u8 c2h_buf_sz_idx:4;
+
+	/**  ST C2H Completion/Writeback ring */
+	/** @cmpl_rng_sz_idx: global_csr_conf.ringsz[N] */
+	u8 cmpl_rng_sz_idx:4;
+
+	/** config flags: byte #4 */
+	/** @cmpl_desc_sz: C2H ST cmpt + immediate data, desc_sz_t */
+	u8 cmpl_desc_sz:2;
+	/** @cmpl_stat_en: enable status desc. for CMPT */
+	u8 cmpl_stat_en:1;
+	/** @cmpl_udd_en: C2H Completion entry user-defined data */
+	u8 cmpl_udd_en:1;
+	/** @cmpl_timer_idx: global_csr_conf.c2h_timer_cnt[N] */
+	u8 cmpl_timer_idx:4;
+
+	/** config flags: byte #5 */
+	/** @cmpl_cnt_th_idx: global_csr_conf.c2h_cnt_th[N] */
+	u8 cmpl_cnt_th_idx:4;
+	/** @cmpl_trig_mode: tigger_mode_t */
+	u8 cmpl_trig_mode:3;
+	/** @cmpl_en_intr: enable interrupt for CMPT */
+	u8 cmpl_en_intr:1;
+
+	/** config flags: byte #6 */
+	/** @sw_desc_sz: SW Context desc size, desc_sz_t */
+	u8 sw_desc_sz:2;
+	/** @pfetch_bypass: prefetch bypass en */
+	u8 pfetch_bypass:1;
+	/** @cmpl_ovf_chk_dis: OVF_DIS C2H ST over flow disable */
+	u8 cmpl_ovf_chk_dis:1;
+	/** @port_id: Port ID */
+	u8 port_id:3;
+	/** @at: Address Translation */
+	u8 at:1;
+	/** @adaptive_rx: Adaptive rx counter threshold */
+	u8 adaptive_rx:1;
+	/** @latency_optimize: optimize for latency */
+	u8 latency_optimize:1;
+	/** @init_pidx_dis : Disable pidx initialiaztion for ST C2H */
+	u8 init_pidx_dis:1;
+
+	/** @mm_channel: MM Channel */
+	u8 mm_channel:1;
+
+	/*
+	 * TODO: for Platform streaming DSA
+	 */
+
+	/** @quld: user provided per-Q irq handler */
+	unsigned long quld;		/* set by user for per Q data */
+
+	/**
+	 *  @fp_descq_isr_top: Q interrupt top, per-queue additional handling
+	 *  code for example, network rx napi_schedule(&Q->napi)
+	 */
+	void (*fp_descq_isr_top)(unsigned long qhndl, unsigned long quld);
+
+	/**
+	 * @fp_descq_c2h_packet:
+	 * optional rx packet handler:
+	 *	 called from irq BH (i.e.qdma_queue_service_bh())
+	 *
+	 * udd: user defined data in the completion entry
+	 * sgcnt / sgl: packet data in scatter-gather list
+	 *
+	 *   NOTE: a. do NOT modify any field of sgl
+	 *	   b. if zero copy, do a get_page() to prevent page freeing
+	 *	   c. do loop through the sgl with sg->next and stop
+	 *	      at sgcnt. the last sg may not have sg->next = NULL
+	 *
+	 * Returns:
+	 *	0 to allow libqdma free/re-task the sgl
+	 *	< 0, libqdma will keep the packet for processing again
+	 *
+	 * A single packet could contain:
+	 * in the case of c2h_udd_en = 1:
+	 *
+	 * udd only (udd valid, sgcnt = 0, sgl = NULL), or
+	 * udd + packet data in the case of c2h_udd_en = 0:
+	 * packet data (udd = NULL, sgcnt > 0 and sgl valid)
+	 *
+	 */
+	int (*fp_descq_c2h_packet)(unsigned long qhndl, unsigned long quld,
+				unsigned int len, unsigned int sgcnt,
+				struct qdma_sw_sg *sgl, void *udd);
+	/**
+	 * @fp_bypass_desc_fill: fill the all the descriptors required for
+	 *                        transfer
+	 * q_hndl: handle with which bypass module can request back info from
+	 *          libqdma
+	 *
+	 * q_mode: mode in which q is initialized
+	 * q_dir: direction in which q is initialized
+	 * sgcnt: number of scatter gather entries for this request
+	 * sgl: list of scatter gather entries
+	 *
+	 *  On calling this API, bypass module can request for descriptor using
+	 *  qdma_q_desc_get and set up as many descriptors as required for each
+	 *  scatter gather entry. If descriptors required are not available,
+	 *  it can return the number of sgcnt addressed till now and return <0
+	 *  in case of any failure
+	 */
+	int (*fp_bypass_desc_fill)(void *q_hndl, enum qdma_q_mode q_mode,
+			enum qdma_q_dir, struct qdma_request *req);
+	/**
+	 * @fp_proc_ul_cmpt_entry: parse cmpt entry in bypass mode
+	 *
+	 * q_mode: mode in which q is initialized
+	 * cmpt_entry: cmpt entry descriptor
+	 * cmpt_info: parsed bypass related info from cmpt_entry
+	 *
+	 */
+	int (*fp_proc_ul_cmpt_entry)(void *cmpt_entry,
+			struct qdma_ul_cmpt_info *cmpt_info);
+
+	/** fill in by libqdma */
+	/** @name: name of the qdma device */
+	char name[QDMA_QUEUE_NAME_MAXLEN];
+	/** @rngsz: ring size of the queue */
+	unsigned int rngsz;
+	/** @rngsz_cmpt: completion ring size of the queue */
+	unsigned int rngsz_cmpt;
+	/** @c2h_bufsz: C2H buffer size */
+	unsigned int c2h_bufsz;
+};
+
+/**
+ * struct qdma_q_state - display queue state in a string buffer
+ *
+ */
+struct qdma_q_state {
+	/** @qstate: current q state */
+	enum q_state_t qstate;
+	/**
+	 *  @qidx: 0xFFFF: libqdma choose the queue idx 0 ~
+	 *  (qdma_dev_conf.qsets_max - 1) the calling function choose the
+	 *   queue idx
+	 */
+	u32 qidx:24;
+	/** @st: Indicates the streaming mode */
+	u32 st:1;
+	/** @q_type: queue type */
+	enum queue_type_t q_type;
+};
+
+
+/**
+ * struct qdma_request - qdma request for read or write
+ *
+ */
+struct qdma_request {
+	/** @opaque: private to the dma driver, do NOT touch */
+	unsigned char opaque[QDMA_REQ_OPAQUE_SIZE];
+	/**
+	 *  @uld_data: filled in by the calling function
+	 *  for the calling function
+	 */
+	unsigned long uld_data;
+	/** @fp_done: set fp_done for non-blocking mode */
+	int (*fp_done)(struct qdma_request *req, unsigned int bytes_done,
+			int err);
+	/** @timeout_ms: timeout in mili-seconds, 0 - no timeout */
+	unsigned int timeout_ms;
+	/** @count: total data size */
+	unsigned int count;
+	/** @ep_addr: MM only, DDR/BRAM memory addr */
+	u64 ep_addr;
+	/** @no_memcpy:  flag to indicate if memcpy is required */
+	u8 no_memcpy:1;
+	/** @write: if write to the device */
+	u8 write:1;
+	/** @dma_mapped: if sgt is already dma mapped */
+	u8 dma_mapped:1;
+	/** @h2c_eot: user defined data present */
+	u8 h2c_eot:1;
+	/** @udd_len: indicates end of transfer towards user kernel */
+	u8 udd_len;
+	/** @sgcnt: # of scatter-gather entries < 64K */
+	unsigned int sgcnt;
+	/** @sgl: scatter-gather list of data bufs */
+	struct qdma_sw_sg *sgl;
+	/** @udd: udd data */
+	u8 udd[QDMA_UDD_MAXLEN];
+};
+
+/**
+ * struct qdma_cmpl_ctrl - completion control
+ */
+struct qdma_cmpl_ctrl {
+	/** @cnt_th_idx: global_csr_conf.c2h_cnt_th[N] */
+	u8 cnt_th_idx:4;
+	/** @timer_idx: global_csr_conf.c2h_timer_cnt[N] */
+	u8 timer_idx:4;
+	/** @trigger_mode: tigger_mode_t */
+	u8 trigger_mode:3;
+	/** @en_stat_desc: enable status desc. for CMPT */
+	u8 en_stat_desc:1;
+	/** @cmpl_en_intr: enable interrupt for CMPT */
+	u8 cmpl_en_intr:1;
+};
+
+/*****************************************************************************/
+/**
+ * libqdma_init() - initializes the QDMA core library
+ *
+ * @num_threads: number of threads to be created each for request
+ *  processing and writeback processing
+ *
+ * @debugfs_root: root path for debugfs
+ *
+ * Return: 0:	success <0:	error
+ *
+ *****************************************************************************/
+int libqdma_init(unsigned int num_threads, void *debugfs_root);
+
+/*****************************************************************************/
+/**
+ * libqdma_exit() - cleanup the QDMA core library before exiting
+ *
+ * cleanup the QDMA core library before exiting
+ *
+ *****************************************************************************/
+void libqdma_exit(void);
+
+
 /*****************************************************************************/
 /**
  * intr_legacy_init() - legacy interrupt init
@@ -316,7 +787,7 @@ void intr_legacy_init(void);
  * @conf:		device configuration
  * @dev_hndl:	an opaque handle for libqdma to identify the device
  *
- * Return:QDMA_OPERATION_SUCCESSFUL in case of success and <0 in case of error
+ * Return: 0 in case of success and <0 in case of error
  *
  *****************************************************************************/
 int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
@@ -330,8 +801,10 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
  * @pdev:		ptr to struct pci_dev
  * @dev_hndl:	dev_hndl retured from qdma_device_open()
  *
+ * Return: 0 in case of success and <0 in case of error
+ *
  *****************************************************************************/
-void qdma_device_close(struct pci_dev *pdev, unsigned long dev_hndl);
+int qdma_device_close(struct pci_dev *pdev, unsigned long dev_hndl);
 
 /*****************************************************************************/
 /**
@@ -339,11 +812,13 @@ void qdma_device_close(struct pci_dev *pdev, unsigned long dev_hndl);
  *
  * @pdev:		ptr to struct pci_dev
  * @dev_hndl:	dev_hndl retured from qdma_device_open()
+ ** @reset:		0/1 function level reset active or not
  *
  * Return:	0 for success and <0 for error
  *
  *****************************************************************************/
-void qdma_device_offline(struct pci_dev *pdev, unsigned long dev_hndl);
+int qdma_device_offline(struct pci_dev *pdev, unsigned long dev_hndl,
+						 int reset);
 
 /*****************************************************************************/
 /**
@@ -351,11 +826,12 @@ void qdma_device_offline(struct pci_dev *pdev, unsigned long dev_hndl);
  *
  * @pdev:		ptr to struct pci_dev
  * @dev_hndl:	dev_hndl retured from qdma_device_open()
- *
+ * @reset:		0/1 function level reset active or not
  * Return:	0 for success and <0 for error
  *
  *****************************************************************************/
-int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl);
+int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl,
+					   int reset);
 
 /*****************************************************************************/
 /**
@@ -492,14 +968,16 @@ int qdma_device_sriov_config(struct pci_dev *pdev, unsigned long dev_hndl,
  *
  * @dev_hndl:	dev_hndl returned from qdma_device_open()
  * @reg_addr:	register address
+ * @value:      pointer to hold the read value
  *
- * Return:	value of the config register
+ * Return:	0 for success and <0 for error
  *
  * reads dma config register
  *
  *****************************************************************************/
-unsigned int qdma_device_read_config_register(unsigned long dev_hndl,
-					unsigned int reg_addr);
+int qdma_device_read_config_register(unsigned long dev_hndl,
+					unsigned int reg_addr,
+					unsigned int *value);
 
 /*****************************************************************************/
 /**
@@ -509,11 +987,13 @@ unsigned int qdma_device_read_config_register(unsigned long dev_hndl,
  * @reg_addr:	register address
  * @value:		register value to be writen
  *
+ * Return:	0 for success and <0 for error
  * writes dma config register
  *
  *****************************************************************************/
-void qdma_device_write_config_register(unsigned long dev_hndl,
-					unsigned int reg_addr, u32 value);
+int qdma_device_write_config_register(unsigned long dev_hndl,
+					unsigned int reg_addr,
+					unsigned int value);
 
 /*****************************************************************************/
 /**
@@ -528,32 +1008,17 @@ void qdma_device_write_config_register(unsigned long dev_hndl,
 int qdma_device_capabilities_info(unsigned long dev_hndl,
 		struct qdma_dev_attributes *dev_attr);
 
-#define DEVICE_VERSION_INFO_STR_LENGTH            20
-
-/**
- * struct qdma_version_info - defines the per-device version information
- *
- */
-struct qdma_version_info {
-	/** @rtl_version_str:    Version string */
-	char rtl_version_str[DEVICE_VERSION_INFO_STR_LENGTH];
-	/** @vivado_release_str: Release string */
-	char vivado_release_str[DEVICE_VERSION_INFO_STR_LENGTH];
-	/** @everest_ip_str:     Everest IP version string */
-	char everest_ip_str[DEVICE_VERSION_INFO_STR_LENGTH];
-};
-
 /*****************************************************************************/
 /**
  * qdma_device_version_info() - retrieve the RTL version , Vivado Release ID
- *				and Everest IP info
+ *				and Versal IP info
  *
  * @dev_hndl:	handle returned from qdma_device_open()
  * @version_info: pointer to hold all the version details
  *
  * Return:	0 for success and <0 for error
  *
- * retrieves the RTL version , Vivado Release ID and Everest IP info
+ * retrieves the RTL version , Vivado Release ID and Versal IP info
  *
  *****************************************************************************/
 int qdma_device_version_info(unsigned long dev_hndl,
@@ -572,23 +1037,6 @@ int qdma_device_version_info(unsigned long dev_hndl,
  *****************************************************************************/
 int qdma_software_version_info(char *software_version);
 
-/**
- * struct global_csr_conf: global CSR configuration
- *
- */
-struct global_csr_conf {
-	/** @ring_sz: Descriptor ring size ie. queue depth */
-	unsigned int ring_sz[QDMA_GLOBAL_CSR_ARRAY_SZ];
-	/** @c2h_timer_cnt: C2H timer count  list */
-	unsigned int c2h_timer_cnt[QDMA_GLOBAL_CSR_ARRAY_SZ];
-	/** @c2h_cnt_th: C2H counter threshold list*/
-	unsigned int c2h_cnt_th[QDMA_GLOBAL_CSR_ARRAY_SZ];
-	/** @c2h_buf_sz: C2H buffer size list */
-	unsigned int c2h_buf_sz[QDMA_GLOBAL_CSR_ARRAY_SZ];
-	/** @wb_intvl: Writeback interval */
-	unsigned int wb_intvl;
-};
-
 /*****************************************************************************/
 /**
  * qdma_global_csr_get() - retrieve the global csr settings
@@ -605,266 +1053,6 @@ struct global_csr_conf {
  *****************************************************************************/
 int qdma_global_csr_get(unsigned long dev_hndl, u8 index, u8 count,
 		struct global_csr_conf *csr);
-
-/**
- * enum cmpt_desc_sz_t: descriptor sizes
- *
- */
-enum cmpt_desc_sz_t {
-	/** @CMPT_DESC_SZ_8B: completion size 8B */
-	CMPT_DESC_SZ_8B = 0,
-	/** @CMPT_DESC_SZ_16B: completion size 16B */
-	CMPT_DESC_SZ_16B,
-	/** @CMPT_DESC_SZ_32B: completion size 32B */
-	CMPT_DESC_SZ_32B,
-	/** @CMPT_DESC_SZ_64B: completion size 64B */
-	CMPT_DESC_SZ_64B
-};
-
-/**
- * enum desc_sz_t: descriptor sizes
- *
- */
-enum desc_sz_t {
-	/** @DESC_SZ_8B:  descriptor size 8B */
-	DESC_SZ_8B = 0,
-	/** @DESC_SZ_16B: descriptor size 16B */
-	DESC_SZ_16B,
-	/** @DESC_SZ_32B: descriptor size 32B */
-	DESC_SZ_32B,
-	/** @DESC_SZ_64B: descriptor size 64B */
-	DESC_SZ_64B
-};
-
-/**
- * enum tigger_mode_t: trigger modes
- *
- */
-enum tigger_mode_t {
-	/** @TRIG_MODE_DISABLE: disable trigger mode */
-	TRIG_MODE_DISABLE,
-	/** @TRIG_MODE_ANY:     any trigger mode */
-	TRIG_MODE_ANY,
-	/** @TRIG_MODE_COUNTER: counter trigger mode */
-	TRIG_MODE_COUNTER,
-	/** @TRIG_MODE_USER:    trigger mode of user choice */
-	TRIG_MODE_USER,
-	/** @TRIG_MODE_TIMER:   timer trigger mode */
-	TRIG_MODE_TIMER,
-	/** @TRIG_MODE_COMBO:   timer and counter combo trigger mode */
-	TRIG_MODE_COMBO,
-};
-
-/**
- * struct qdma_sw_sg - qdma scatter gather request
- *
- */
-struct qdma_sw_sg {
-	/** @next: pointer to next page */
-	struct qdma_sw_sg *next;
-	/** @pg: pointer to current page */
-	struct page *pg;
-	/** @offset: offset in current page */
-	unsigned int offset;
-	/** @len: length of the page */
-	unsigned int len;
-	/** @dma_addr: dma address of the allocated page */
-	dma_addr_t dma_addr;
-};
-
-/** maximum queue name length  */
-#define QDMA_QUEUE_NAME_MAXLEN	32
-
-/** invalid queue index */
-#define QDMA_QUEUE_IDX_INVALID	0xFFFF
-
-/** invalid MSI-x vector index */
-#define QDMA_QUEUE_VEC_INVALID	0xFF
-
-/** struct qdma_request forward declaration*/
-struct qdma_request;
-
-/**
- * struct qdma_queue_conf - qdma configuration parameters
- *
- * qdma_queue_conf defines the per-dma Q property.
- * if any of the max requested is less than supported, the value will
- * be updated
- *
- */
-struct qdma_queue_conf {
-	/**
-	 *  @qidx: 0xFFFF: libqdma choose the queue idx 0 ~
-	 *  (qdma_dev_conf.qsets_max - 1) the calling function choose the
-	 *   queue idx
-	 */
-	u32 qidx:24;
-	/** config flags: byte #1 */
-	/** @st: Indicates the streaming mode */
-	u32 st:1;
-	/** @c2h: c2h direction */
-	u32 c2h:1;
-	/** @pipe: SDx only: inter-kernel communication pipe */
-	u32 pipe:1;
-	/** @irq_en: poll or interrupt */
-	u32 irq_en:1;
-
-	/** descriptor ring	 */
-	/** @desc_rng_sz_idx: global_csr_conf.ringsz[N] */
-	u32 desc_rng_sz_idx:4;
-
-	/** config flags: byte #2 */
-	/** @wb_status_en: writeback enable, disabled for ST C2H */
-	u8 wb_status_en:1;
-	/** @cmpl_status_acc_en: sw context.cmpl_status_acc_en */
-	u8 cmpl_status_acc_en:1;
-	/** @cmpl_status_pend_chk: sw context.cmpl_stauts_pend_chk */
-	u8 cmpl_status_pend_chk:1;
-	/** @desc_bypass: send descriptor to bypass out */
-	u8 desc_bypass:1;
-	/** @pfetch_en: descriptor prefetch enable control */
-	u8 pfetch_en:1;
-	/** @fetch_credit: sw context.frcd_en[32] */
-	u8 fetch_credit:1;
-	/**
-	 *  @st_pkt_mode: SDx only: ST packet mode
-	 *  (i.e., with TLAST to identify the packet boundary)
-	 */
-	u8 st_pkt_mode:1;
-
-	/** config flags: byte #3 */
-	/** @c2h_buf_sz_idx: global_csr_conf.c2h_buf_sz[N] */
-	u8 c2h_buf_sz_idx:4;
-
-	/**  ST C2H Completion/Writeback ring */
-	/** @cmpl_rng_sz_idx: global_csr_conf.ringsz[N] */
-	u8 cmpl_rng_sz_idx:4;
-
-	/** config flags: byte #4 */
-	/** @cmpl_desc_sz: C2H ST cmpt + immediate data, desc_sz_t */
-	u8 cmpl_desc_sz:2;
-	/** @cmpl_stat_en: enable status desc. for CMPT */
-	u8 cmpl_stat_en:1;
-	/** @cmpl_udd_en: C2H Completion entry user-defined data */
-	u8 cmpl_udd_en:1;
-	/** @cmpl_timer_idx: global_csr_conf.c2h_timer_cnt[N] */
-	u8 cmpl_timer_idx:4;
-
-	/** config flags: byte #5 */
-	/** @cmpl_cnt_th_idx: global_csr_conf.c2h_cnt_th[N] */
-	u8 cmpl_cnt_th_idx:4;
-	/** @cmpl_trig_mode: tigger_mode_t */
-	u8 cmpl_trig_mode:3;
-	/** @cmpl_en_intr: enable interrupt for CMPT */
-	u8 cmpl_en_intr:1;
-
-	/** config flags: byte #6 */
-	/** @sw_desc_sz: SW Context desc size, desc_sz_t */
-	u8 sw_desc_sz:2;
-	/** @pfetch_bypass: prefetch bypass en */
-	u8 pfetch_bypass:1;
-	/** @cmpl_ovf_chk_dis: OVF_DIS C2H ST over flow disable */
-	u8 cmpl_ovf_chk_dis:1;
-	/** @port_id: Port ID */
-	u8 port_id:3;
-	/** @at: Address Translation */
-	u8 at:1;
-	/** @init_pidx_dis : Disable pidx initialiaztion for ST C2H */
-	u8 init_pidx_dis:1;
-
-	/** @en_mm_cmpt: MM Completions enabled? */
-	u8 en_mm_cmpt;
-	/*
-	 * TODO: for Platform streaming DSA
-	 */
-	/** only if pipe = 1 */
-	/** @cdh_max: max 16. CDH length per packet */
-	u8 cdh_max;
-	/** @pipe_gl_max: <= 7, max # gather buf. per packet */
-	u8 pipe_gl_max;
-	/** @pipe_flow_id: pipe flow id */
-	u8 pipe_flow_id;
-	/** @pipe_slr_id: pipe SLR id */
-	u8 pipe_slr_id;
-	/** @pipe_tdest: pipe route id */
-	u16 pipe_tdest;
-
-	/** @quld: user provided per-Q irq handler */
-	unsigned long quld;		/* set by user for per Q data */
-
-	/**
-	 *  @fp_descq_isr_top: Q interrupt top, per-queue additional handling
-	 *  code for example, network rx napi_schedule(&Q->napi)
-	 */
-	void (*fp_descq_isr_top)(unsigned long qhndl, unsigned long quld);
-
-	/**
-	 * @fp_descq_c2h_packet:
-	 * optional rx packet handler:
-	 *	 called from irq BH (i.e.qdma_queue_service_bh())
-	 *
-	 * udd: user defined data in the completion entry
-	 * sgcnt / sgl: packet data in scatter-gather list
-	 *
-	 *   NOTE: a. do NOT modify any field of sgl
-	 *	   b. if zero copy, do a get_page() to prevent page freeing
-	 *	   c. do loop through the sgl with sg->next and stop
-	 *	      at sgcnt. the last sg may not have sg->next = NULL
-	 *
-	 * Returns:
-	 *	0 to allow libqdma free/re-task the sgl
-	 *	< 0, libqdma will keep the packet for processing again
-	 *
-	 * A single packet could contain:
-	 * in the case of c2h_udd_en = 1:
-	 *
-	 * udd only (udd valid, sgcnt = 0, sgl = NULL), or
-	 * udd + packdet data in the case of c2h_udd_en = 0:
-	 * packet data (udd = NULL, sgcnt > 0 and sgl valid)
-	 *
-	 */
-	int (*fp_descq_c2h_packet)(unsigned long qhndl, unsigned long quld,
-				unsigned int len, unsigned int sgcnt,
-				struct qdma_sw_sg *sgl, void *udd);
-	/**
-	 * @fp_bypass_desc_fill: fill the all the descriptors required for
-	 *                        transfer
-	 *
-	 * q_hndl: handle with which bypass module can request back info from libqdma
-	 * q_mode: mode in which q is initialized
-	 * q_dir: diretion in which q is intialized
-	 * sgcnt: number of sctter gather entries for this request
-	 * sgl: lsit of scatter gather entries
-	 *
-	 *
-	 *  On calling this API, bypass module can request for descriptor using
-	 *  qdma_q_desc_get and set up as many descriptors as required for each
-	 *  scatter gather entry. If descriptors required are not available,
-	 *  it can return the number of sgcnt addressed till now and return <0
-	 *  in case of any failure
-	 */
-	int (*fp_bypass_desc_fill)(void *q_hndl, enum qdma_q_mode q_mode,
-			enum qdma_q_dir, struct qdma_request *req);
-	/**
-	 * @fp_proc_ul_cmpt_entry: parse cmpt entry in bypass mode
-	 * q_mode: mode in which q is initialized
-	 * cmpt_entry: cmpt entry descriptor
-	 * cmpt_info: parsed bypass releated info from cmpt_entry
-	 *
-	 */
-	int (*fp_proc_ul_cmpt_entry)(void *cmpt_entry,
-			struct qdma_ul_cmpt_info *cmpt_info);
-
-	/** fill in by libqdma */
-	/** @name: name of the qdma device */
-	char name[QDMA_QUEUE_NAME_MAXLEN];
-	/** @rngsz: ring size of the queue */
-	unsigned int rngsz;
-	/** @rngsz_cmpt: completion ring size of the queue */
-	unsigned int rngsz_cmpt;
-	/** @c2h_bufsz: C2H buffer size */
-	unsigned int c2h_bufsz;
-};
 
 /*****************************************************************************/
 /**
@@ -926,28 +1114,20 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
  *****************************************************************************/
 int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 				int buflen);
+
+/*****************************************************************************/
 /**
- * struct qdma_q_state - display queue state in a string buffer
+ * qdma_get_queue_state() - Get the state of the queue
  *
- */
-struct qdma_q_state {
-	/** @qstate: current q state */
-	u32 qstate;
-	/**
-	 *  @qidx: 0xFFFF: libqdma choose the queue idx 0 ~
-	 *  (qdma_dev_conf.qsets_max - 1) the calling function choose the
-	 *   queue idx
-	 */
-	u32 qidx:24;
-	/** @st: Indicates the streaming mode */
-	u32 st:1;
-	/** @c2h: c2h direction */
-	u32 c2h:1;
-	/** @reserved: reserved */
-	u32 reserved:6;
-};
-
-
+ * @dev_hndl:	dev_hndl returned from qdma_device_open()
+ * @id:			the opaque qhndl
+ * @qstate:		state of the queue
+ * @buflen:		length of the input buffer
+ * @buf:		message buffer
+ *
+ * Return:	0 for success and <0 for error
+ *
+ *****************************************************************************/
 int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
 		struct qdma_q_state *qstate, char *buf, int buflen);
 
@@ -957,8 +1137,8 @@ int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
  *
  * @dev_hndl:	dev_hndl returned from qdma_device_open()
  * @id:		the opaque qhndl
- * @buflen:		length of the input buffer
- * @buf:		message buffer
+ * @buflen:	length of the input buffer
+ * @buf:	message buffer
  *
  * Return:	0 for success and <0 for error
  *
@@ -966,22 +1146,23 @@ int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
 int qdma_queue_remove(unsigned long dev_hndl, unsigned long id, char *buf,
 				int buflen);
 
-
 /*****************************************************************************/
 /**
  * qdma_queue_get_config() - retrieve the configuration of a queue
  *
  * @dev_hndl:	dev_hndl returned from qdma_device_open()
  * @id:		an opaque queue handle of type unsigned long
- * @buflen:		length of the input buffer
- * @buf:		message buffer
+ * @qconf:	pointer to hold the qdma_queue_conf structure.
+ * @buflen:	length of the input buffer
+ * @buf:	message buffer
  *
- * Return: if optional message buffer used then strlen of buf,
- *	 otherwise QDMA_OPERATION_SUCCESSFUL and <0 for error
+ * @return	0: success
+ * @return	<0: error
  *
  *****************************************************************************/
-struct qdma_queue_conf *qdma_queue_get_config(unsigned long dev_hndl,
-				unsigned long id, char *buf, int buflen);
+int qdma_queue_get_config(unsigned long dev_hndl, unsigned long id,
+		struct qdma_queue_conf *qconf,
+		char *buf, int buflen);
 
 /*****************************************************************************/
 /**
@@ -996,6 +1177,21 @@ struct qdma_queue_conf *qdma_queue_get_config(unsigned long dev_hndl,
  *
  *****************************************************************************/
 int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen);
+
+/*****************************************************************************/
+/**
+ * qdma_config_reg_dump() - display a config registers in a string buffer
+ *
+ * @dev_hndl:	dev_hndl returned from qdma_device_open()
+ * @buflen:		length of the input buffer
+ * @buf:		message buffer
+ *
+ * Return	success: if optional message buffer used then strlen of buf,
+ *	otherwise 0 and <0: error
+ *
+ *****************************************************************************/
+int qdma_config_reg_dump(unsigned long dev_hndl, char *buf,
+		int buflen);
 
 /*****************************************************************************/
 /**
@@ -1072,52 +1268,6 @@ int qdma_queue_set_err_induction(unsigned long dev_hndl, unsigned long id,
 				 u32 err, char *buf, int buflen);
 #endif
 
-
-/** maximum request length */
-#define QDMA_REQ_OPAQUE_SIZE	80
-
-/** Max length of the user defined data */
-#define QDMA_UDD_MAXLEN		32
-
-/**
- * struct qdma_request - qdma request for read or write
- *
- */
-struct qdma_request {
-	/** @opaque: private to the dma driver, do NOT touch */
-	unsigned char opaque[QDMA_REQ_OPAQUE_SIZE];
-	/**
-	 *  @uld_data: filled in by the calling function
-	 *  for the calling function
-	 */
-	unsigned long uld_data;
-	/** @fp_done: set fp_done for non-blocking mode */
-	int (*fp_done)(struct qdma_request *req, unsigned int bytes_done,
-			int err);
-	/** @timeout_ms: timeout in mili-seconds, 0 - no timeout */
-	unsigned int timeout_ms;
-	/** @count: total data size */
-	unsigned int count;
-	/** @ep_addr: MM only, DDR/BRAM memory addr */
-	u64 ep_addr;
-	/** @no_memcpy:  flag to indicate if memcpy is required */
-	u8 no_memcpy:1;
-	/** @write: if write to the device */
-	u8 write:1;
-	/** @dma_mapped: if sgt is already dma mapped */
-	u8 dma_mapped:1;
-	/** @h2c_eot: user defined data present */
-	u8 h2c_eot:1;
-	/** @udd_len: indicates end of transfer towards user kernel */
-	u8 udd_len;
-	/** @sgcnt: # of scatter-gather entries < 64K */
-	unsigned int sgcnt;
-	/** @sgl: scatter-gather list of data bufs */
-	struct qdma_sw_sg *sgl;
-	/** @udd: udd data */
-	u8 udd[QDMA_UDD_MAXLEN];
-};
-
 /*****************************************************************************/
 /**
  * qdma_request_submit() - submit a scatter-gather list of data for dma
@@ -1181,23 +1331,6 @@ int qdma_queue_avail_desc(unsigned long dev_hndl, unsigned long qhndl);
 
 /** packet/streaming interfaces  */
 
-/**
- * struct qdma_cmpl_ctrl - completion control
- */
-struct qdma_cmpl_ctrl {
-	/** @cnt_th_idx: global_csr_conf.c2h_cnt_th[N] */
-	u8 cnt_th_idx:4;
-	/** @timer_idx: global_csr_conf.c2h_timer_cnt[N] */
-	u8 timer_idx:4;
-	/** @trigger_mode: tigger_mode_t */
-	u8 trigger_mode:3;
-	/** @en_stat_desc: enable status desc. for CMPT */
-	u8 en_stat_desc:1;
-	/** @cmpl_en_intr: enable interrupt for CMPT */
-	u8 cmpl_en_intr:1;
-};
-
-
 /*****************************************************************************/
 /**
  * qdma_queue_cmpl_ctrl() - read/set the c2h Q's completion control
@@ -1223,7 +1356,7 @@ int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long qhndl,
  * @cctrl:		completion control, if no change is desired,
  *                      set it to NULL
  *
- * Return:	0 for success or <0 for error
+ * Return:	# of bytes transferred for success and  <0 for error
  *
  *****************************************************************************/
 int qdma_queue_packet_read(unsigned long dev_hndl, unsigned long qhndl,
@@ -1231,13 +1364,13 @@ int qdma_queue_packet_read(unsigned long dev_hndl, unsigned long qhndl,
 
 /*****************************************************************************/
 /**
- * qdma_queue_packet_write() - submit data for h2c dma operation
+ * qdma_queue_packet_write() - submit data for ST H2C dma operation
  *
  * @dev_hndl:	hndl returned from qdma_device_open()
  * @qhndl:		hndl returned from qdma_queue_add()
  * @req:		pointer to the list of packet data
  *
- * Return:	0 for success or <0 for error
+ * Return:	# of bytes transferred for success and  <0 for error
  *
  *****************************************************************************/
 int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long qhndl,
@@ -1257,6 +1390,16 @@ int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long qhndl,
  *****************************************************************************/
 void qdma_queue_service(unsigned long dev_hndl, unsigned long qhndl,
 			int budget, bool c2h_upd_cmpl);
+
+/*****************************************************************************/
+/**
+ * qdma_queue_update_pointers() - update queue pointers
+ *
+ * @dev_hndl:	dev_hndl returned from qdma_device_open()
+ * @qhndl:		hndl returned from qdma_queue_add()
+ *
+ *****************************************************************************/
+void qdma_queue_update_pointers(unsigned long dev_hndl, unsigned long qhndl);
 
 /*****************************************************************************/
 /**
@@ -1289,7 +1432,6 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
  *****************************************************************************/
 int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long qhndl,
 		char *buf, int buflen);
-
 
 /*****************************************************************************/
 /**
