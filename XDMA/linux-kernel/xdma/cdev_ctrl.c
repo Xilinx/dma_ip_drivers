@@ -24,6 +24,12 @@
 #include "xdma_cdev.h"
 #include "cdev_ctrl.h"
 
+#if KERNEL_VERSION(5, 0, 0) <= LINUX_VERSION_CODE
+#define xlx_access_ok(X,Y,Z) access_ok(Y,Z)
+#else
+#define xlx_access_ok(X,Y,Z) access_ok(X,Y,Z)
+#endif
+
 /*
  * character device file operations for control bus (through control bridge)
  */
@@ -144,10 +150,10 @@ long char_ctrl_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 
 	if (_IOC_DIR(cmd) & _IOC_READ)
-		result = !access_ok(VERIFY_WRITE, (void __user *)arg,
+		result = !xlx_access_ok(VERIFY_WRITE, (void __user *)arg,
 				_IOC_SIZE(cmd));
 	else if (_IOC_DIR(cmd) & _IOC_WRITE)
-		result =  !access_ok(VERIFY_READ, (void __user *)arg,
+		result =  !xlx_access_ok(VERIFY_READ, (void __user *)arg,
 				_IOC_SIZE(cmd));
 
 	if (result) {
