@@ -38,45 +38,29 @@
 #include "libqdma_config.h"
 #include "qdma_access_export.h"
 
-/**
- * Invalid QDMA function number
- */
+/** @QDMA_FUNC_ID_INVALID: Invalid QDMA function number */
 #define QDMA_FUNC_ID_INVALID	(QDMA_PF_MAX + QDMA_VF_MAX)
 
-/**
- * QDMA_DEV_NAME_MAXLEN - Maxinum length of the QDMA device name
- */
+/** @QDMA_DEV_NAME_MAXLEN: Maxinum length of the QDMA device name */
 #define QDMA_DEV_NAME_MAXLEN	32
 
-/**
- * DEVICE_VERSION_INFO_STR_LENGTH - QDMA HW version string array length,
- * change this if QDMA_HW_VERSION_STRING_LEN is changed in access code
- */
+/** @DEVICE_VERSION_INFO_STR_LENGTH: QDMA HW version string array length */
+/* change this if QDMA_HW_VERSION_STRING_LEN is changed in access code */
 #define DEVICE_VERSION_INFO_STR_LENGTH         (34)
 
-/**
- * QDMA_QUEUE_NAME_MAXLEN - Maximum queue name length
- */
+/** @QDMA_QUEUE_NAME_MAXLEN: Maximum queue name length */
 #define QDMA_QUEUE_NAME_MAXLEN	32
 
-/**
- * QDMA_QUEUE_IDX_INVALID - Invalid queue index
- */
+/** @QDMA_QUEUE_IDX_INVALID: Invalid queue index */
 #define QDMA_QUEUE_IDX_INVALID	0xFFFF
 
-/**
- * QDMA_QUEUE_VEC_INVALID - Invalid MSIx vector index
- */
+/** @QDMA_QUEUE_VEC_INVALID: Invalid MSIx vector index */
 #define QDMA_QUEUE_VEC_INVALID	0xFF
 
-/**
- * QDMA_REQ_OPAQUE_SIZE - Maximum request length
- */
+/** @QDMA_REQ_OPAQUE_SIZE: Maximum request length */
 #define QDMA_REQ_OPAQUE_SIZE	80
 
-/**
- * QDMA_UDD_MAXLEN - Maximum length of the user defined data
- */
+/** @QDMA_UDD_MAXLEN: Maximum length of the user defined data */
 #define QDMA_UDD_MAXLEN		32
 
 /**
