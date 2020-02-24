@@ -3518,7 +3518,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 
 	sg = sgt->sgl;
 	nents = req->sw_desc_cnt;
-	spin_lock(&engine->desc_lock);
+	mutex_lock(&engine->desc_lock);
 
 	while (nents) {
 		unsigned long flags;
@@ -3527,7 +3527,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 		/* build transfer */
 		rv = transfer_init(engine, req, &req->tfer[0]);
 		if (rv < 0) {
-			spin_unlock(&engine->desc_lock);
+			mutex_unlock(&engine->desc_lock);
 			goto unmap_sgl;
 		}
 		xfer = &req->tfer[0];
@@ -3551,7 +3551,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 
 		rv = transfer_queue(engine, xfer);
 		if (rv < 0) {
-			spin_unlock(&engine->desc_lock);
+			mutex_unlock(&engine->desc_lock);
 			pr_info("unable to submit %s, %d.\n", engine->name, rv);
 			goto unmap_sgl;
 		}
@@ -3570,7 +3570,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 				desc_count);
 			rv = engine_service_poll(engine, desc_count);
 			if (rv < 0) {
-				spin_unlock(&engine->desc_lock);
+				mutex_unlock(&engine->desc_lock);
 				pr_err("Failed to service polling\n");
 				goto unmap_sgl;
 			}
@@ -3660,11 +3660,11 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 		tfer_idx++;
 
 		if (rv < 0) {
-			spin_unlock(&engine->desc_lock);
+			mutex_unlock(&engine->desc_lock);
 			goto unmap_sgl;
 		}
 	} /* while (sg) */
-	spin_unlock(&engine->desc_lock);
+	mutex_unlock(&engine->desc_lock);
 
 unmap_sgl:
 	if (!dma_mapped && sgt->nents) {
@@ -4142,7 +4142,7 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 	engine = xdev->engine_h2c;
 	for (i = 0; i < XDMA_CHANNEL_NUM_MAX; i++, engine++) {
 		spin_lock_init(&engine->lock);
-		spin_lock_init(&engine->desc_lock);
+		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
 #if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
 		init_swait_queue_head(&engine->shutdown_wq);
@@ -4156,7 +4156,7 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 	engine = xdev->engine_c2h;
 	for (i = 0; i < XDMA_CHANNEL_NUM_MAX; i++, engine++) {
 		spin_lock_init(&engine->lock);
-		spin_lock_init(&engine->desc_lock);
+		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
 #if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
 		init_swait_queue_head(&engine->shutdown_wq);
