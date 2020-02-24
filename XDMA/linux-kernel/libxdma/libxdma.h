@@ -66,7 +66,7 @@
 #define XDMA_OFS_CONFIG		(0x3000UL)
 
 /* maximum number of desc per transfer request */
-#define XDMA_TRANSFER_MAX_DESC (2048)
+#define XDMA_TRANSFER_MAX_DESC (512)
 
 /* maximum size of a single DMA transfer descriptor */
 #define XDMA_DESC_BLEN_BITS	28
@@ -160,6 +160,11 @@
 /* upper 16-bits of engine identifier register */
 #define XDMA_ID_H2C 0x1fc0U
 #define XDMA_ID_C2H 0x1fc1U
+
+/* x86 assumptions needed for other architectures */
+#define PAGE_SIZE_X86 0x1000
+#define PAGE_SHIFT_X86 12
+#define PAGE_MASK_X86 0xfff
 
 /* for C2H AXI-ST mode */
 #define CYCLIC_RX_PAGES_MAX	256

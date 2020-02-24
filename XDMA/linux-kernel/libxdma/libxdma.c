@@ -686,7 +686,9 @@ static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 
 	if (transfer->desc_adjacent > 0) {
 		u64 next_page_addr;
-		next_page_addr = ((transfer->desc_bus >> PAGE_SHIFT) + 1) << PAGE_SHIFT;
+		next_page_addr =
+			((transfer->desc_bus >> PAGE_SHIFT_X86) + 1) <<
+			  PAGE_SHIFT_X86;
 		extra_adj = (next_page_addr - transfer->desc_bus) /
 			sizeof (struct xdma_desc) - 1;
 		if (extra_adj > transfer->desc_adjacent - 1)
@@ -2546,9 +2548,8 @@ static void xdma_desc_adjacent(struct xdma_desc *desc, int next_adjacent)
 		extra_adj = next_adjacent - 1;
 		if (extra_adj > MAX_EXTRA_ADJ)
 			extra_adj = MAX_EXTRA_ADJ;
-		max_adj_4k =
-			(0x1000 - ((le32_to_cpu(desc->next_lo)) & 0xFFF)) / 32 -
-			1;
+		max_adj_4k = (PAGE_SIZE_X86 - ((le32_to_cpu(desc->next_lo)) &
+			PAGE_MASK_X86)) / sizeof(struct xdma_desc) - 1;
 		if (extra_adj > max_adj_4k)
 			extra_adj = max_adj_4k;
 		if (extra_adj < 0) {
@@ -2557,7 +2558,7 @@ static void xdma_desc_adjacent(struct xdma_desc *desc, int next_adjacent)
 		}
 	}
 	/* merge adjacent and control field */
-	control |= 0xAD4B0000UL | (extra_adj << 8);
+	control |= DESC_MAGIC | (extra_adj << 8);
 	/* write control and next_adjacent */
 	desc->control = cpu_to_le32(control);
 }
@@ -3237,7 +3238,7 @@ static int transfer_init(struct xdma_engine *engine, struct xdma_request_cb *req
 
 	/* Contiguous descriptors cannot cross PAGE boundry. Adjust max accordingly */
 	desc_align = engine->desc_idx + desc_max - 1;
-	desc_align = desc_align % (PAGE_SIZE / sizeof(struct xdma_desc));
+	desc_align = desc_align % (PAGE_SIZE_X86 / sizeof(struct xdma_desc));
 	if (desc_align < desc_max)
 		desc_align = desc_max - desc_align - 1;
 	else
