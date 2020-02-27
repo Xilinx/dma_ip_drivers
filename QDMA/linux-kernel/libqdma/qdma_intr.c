@@ -532,7 +532,7 @@ int intr_setup(struct xlnx_dma_dev *xdev)
 	pr_debug("dev %s, xdev->num_vecs = %d\n",
 			dev_name(&xdev->conf.pdev->dev), xdev->num_vecs);
 
-	if (num_vecs == 0) {
+	if (num_vecs <= 0) {
 		pr_warn("MSI-X not supported, running in polled mode\n");
 		return 0;
 	}
