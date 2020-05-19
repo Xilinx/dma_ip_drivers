@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DMA Xfer Application (qdma_xfer_app) &mdash; QDMA Linux Driver 2019.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
+        <link rel="up" title="User Applications" href="user-app.html"/>
+        <link rel="next" title="Developers Guide" href="devguide.html"/>
+        <link rel="prev" title="DMA Performance Tool (dmaperf)" href="dmaperf.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QDMA Linux Driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2019.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmactl.html">DMA Control Application (dmactl)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">DMA to Device (dma_to_device)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">DMA from Device (dma_from_device)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool (dmaperf)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Xfer Application (qdma_xfer_app)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="user-app.html">User Applications</a> &raquo;</li>
+        
+      <li>DMA Xfer Application (qdma_xfer_app)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dma_xfer_app.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dma-xfer-application-qdma-xfer-app">
+<h1>DMA Xfer Application (qdma_xfer_app)<a class="headerlink" href="#dma-xfer-application-qdma-xfer-app" title="Permalink to this headline">¶</a></h1>
+<p>Xilinx-developed custom application <code class="docutils literal"><span class="pre">qdma_xfer_app</span></code> is an example application provided along with QDMA Linux Driver to demonstrate
+QDMA configuration and transfer functionality.</p>
+<p><code class="docutils literal"><span class="pre">qdma_xfer_app</span></code> application internally takes care of Queues creation/destruction and performs DMA transfers on each queue one by one. If any failure occurs during the initial creation of queues or performing dma transfers on queues, application reports corresponding error and cleans up all the allocated resources then exits.</p>
+<p>The following diagram illustrates the design flow of application.</p>
+<img alt="_images/qdma_xfer_app_design_flow.png" class="align-center" src="_images/qdma_xfer_app_design_flow.png" />
+<p><strong>Prerequisites</strong>:</p>
+<ul>
+<li><p class="first">QDMA Linux kernel driver has to be loaded.</p>
+</li>
+<li><p class="first">Proper QMAX value need to set for corresponding Function.</p>
+<p>Example:</p>
+<p>echo &lt;queue_count&gt;  &gt; /sys/bus/pci/devices/0000:BB:DD.FF/qdma/qmax</p>
+<p>&lt;queue_count&gt; is a valid positive number 1 – 2048</p>
+</li>
+</ul>
+<p><strong>Note</strong>:</p>
+<p>Testing/Creation of cmpt queues is outside the scope of this application as transfers are not involved in cmpt queue.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>usage: qdma_xfer_app [OPTIONS]
+
+  -c (--config) config file that has configuration for IO
+  -v (--version), to print version name
+</pre></div>
+</div>
+<p>qdma_xfer_app application takes a configuration file as input. The configuration file format is as below.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>name=mm_sample
+pci_bus=08 #pci bus id
+pci_device=00 #pci device id
+function=0 #fun_id
+is_vf=0 #IS VF ?
+mode=mm #mode
+dir=bi #dir
+q_range=0:0 #no spaces
+tmr_idx=6
+cntr_idx=6
+cmptsz=0
+trig_mode=cntr_tmr
+pfetch_en=0
+rngidx=0
+pkt_sz=1024
+io_type=io_async #type of DMA transfer
+inputfile=INPUT
+outputfile=OUTPUT
+</pre></div>
+</div>
+<p><strong>Parameters</strong>:</p>
+<ul class="simple">
+<li>name : name of the configuration.</li>
+<li>pci_bus : value as it appears in lspci.</li>
+<li>pci_device: value as it appears in lspci.</li>
+<li>function_id: value as it appears in lspci.</li>
+<li>is_vf: To indicate the target function is PF or VF &lt;0, 1&gt;.</li>
+<li>mode : mode of the queue, streaming or memory mapped &lt;st, mm&gt;.</li>
+<li>dir : Direction of the queue, host-to-card, card-to-host or both &lt;h2c, c2h, bi&gt;.</li>
+<li>q_range : Range of the Queues from 0-2047.</li>
+<li>tmr_idx : Range of index from 0 – 15.</li>
+<li>cntr_idx : Range of index from 0 – 15.</li>
+<li>cmptsz : size of completions, Set 0 to use default value.</li>
+<li>trig_mode : trigger mode &lt;every, usr_cnt, usr, usr_tmr, cntr_tmr, dis&gt;.</li>
+<li>pfetch_en: prefetch mode enable/disable &lt;1 - 0&gt;.</li>
+<li>rngidx : Ring index of CSR register from 0 - 15.</li>
+<li>pkt_sz : packet size, MM mode: &lt;1 – 512MB&gt; ST mode: &lt;1 – 28KB&gt;.</li>
+<li>io_type:  synchronous or asynchronous DMA transfers &lt;io_sync, io_async&gt;.</li>
+<li>inputfile: input file name from where Host to Card dma data taken from &lt;file name of length upto 127&gt;.</li>
+<li>Outputfile: output file name to where Card to Host dma data to be written &lt;file name of length upto 127&gt;.</li>
+</ul>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="devguide.html" class="btn btn-neutral float-right" title="Developers Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dmaperf.html" class="btn btn-neutral" title="DMA Performance Tool (dmaperf)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018-2019, Xilinx, Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2019.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
