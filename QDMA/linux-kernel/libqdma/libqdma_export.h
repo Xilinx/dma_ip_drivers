@@ -765,8 +765,6 @@ void intr_legacy_init(void);
  * qdma_device_open()- read the pci bars and configure the fpga
  * This API should be called from probe()
  *
- * User interrupt will not be enabled until qdma_user_isr_enable() is called
- *
  * @mod_name:	the module name, used for request_irq
  * @conf:		device configuration
  * @dev_hndl:	an opaque handle for libqdma to identify the device
