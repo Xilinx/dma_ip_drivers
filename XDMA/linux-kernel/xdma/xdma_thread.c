@@ -142,6 +142,7 @@ static int xthread_main(void *data)
 int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 {
 	int len;
+	int node;
 
 	if (thp->task) {
 		pr_warn("kthread %s task already running?\n", thp->name);
@@ -158,8 +159,11 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 	INIT_LIST_HEAD(&thp->work_list);
 	init_waitqueue_head(&thp->waitq);
 
+	node = cpu_to_node(thp->cpu);
+	pr_debug("node : %d\n", node);
+
 	thp->task = kthread_create_on_node(xthread_main, (void *)thp,
-					cpu_to_node(thp->cpu), "%s", thp->name);
+					node, "%s", thp->name);
 	if (IS_ERR(thp->task)) {
 		pr_err("kthread %s, create task failed: 0x%lx\n",
 			thp->name, (unsigned long)IS_ERR(thp->task));
@@ -277,8 +281,8 @@ void xdma_thread_add_work(struct xdma_engine *engine)
 int xdma_threads_create(unsigned int num_threads)
 {
 	struct xdma_kthread *thp;
-	int i;
 	int rv;
+	int cpu;
 
 	if (thread_cnt) {
 		pr_warn("threads already created!");
@@ -287,23 +291,27 @@ int xdma_threads_create(unsigned int num_threads)
 
 	pr_info("xdma_threads_create\n");
 
-	thread_cnt = num_threads;
-
-	cs_threads = kzalloc(thread_cnt * sizeof(struct xdma_kthread),
+	cs_threads = kzalloc(num_threads * sizeof(struct xdma_kthread),
 					GFP_KERNEL);
 	if (!cs_threads)
 		return -ENOMEM;
 
 	/* N dma writeback monitoring threads */
 	thp = cs_threads;
-	for (i = 0; i < thread_cnt; i++, thp++) {
-		thp->cpu = i;
+	for_each_online_cpu(cpu) {
+		pr_debug("index %d cpu %d online\n", thread_cnt, cpu);
+		thp->cpu = cpu;
 		thp->timeout = 0;
 		thp->fproc = xdma_thread_cmpl_status_proc;
 		thp->fpending = xdma_thread_cmpl_status_pend;
-		rv = xdma_kthread_start(thp, "cmpl_status_th", i);
+		rv = xdma_kthread_start(thp, "cmpl_status_th", thread_cnt);
 		if (rv < 0)
 			goto cleanup_threads;
+
+		thread_cnt++;
+		if (thread_cnt == num_threads)
+			break;
+		thp++;
 	}
 
 	return 0;
