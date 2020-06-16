@@ -1588,7 +1588,7 @@ static irqreturn_t xdma_isr(int irq, void *dev_id)
 	if (user_irq) {
 		int user = 0;
 		u32 mask = 1;
-		int max = xdev->h2c_channel_max;
+		int max = xdev->user_max;
 
 		for (; user < max && user_irq; user++, mask <<= 1) {
 			if (user_irq & mask) {
