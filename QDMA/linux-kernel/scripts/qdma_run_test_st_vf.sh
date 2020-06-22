@@ -71,29 +71,29 @@ function randomize_tx_params() {
 
 function queue_start() {
 	echo "---- Queue Start $2 ----"
-	dmactl qdma$1 q add idx $2 dir h2c mode $3 
-	dmactl qdma$1 q start idx $2 dir h2c 
-	dmactl qdma$1 q add idx $2 dir c2h mode $3
-	dmactl qdma$1 q start idx $2 dir c2h 
+	dma-ctl qdma$1 q add idx $2 dir h2c mode $3 
+	dma-ctl qdma$1 q start idx $2 dir h2c 
+	dma-ctl qdma$1 q add idx $2 dir c2h mode $3
+	dma-ctl qdma$1 q start idx $2 dir c2h 
 }
 
 function cleanup_queue() {
 	echo "---- Queue Clean up $2 ----"
-	dmactl qdma$1 q stop idx $2 dir h2c 
-	dmactl qdma$1 q del idx $2 dir h2c 
-	dmactl qdma$1 q stop idx $2 dir c2h 
-	dmactl qdma$1 q del idx $2 dir c2h 
+	dma-ctl qdma$1 q stop idx $2 dir h2c 
+	dma-ctl qdma$1 q del idx $2 dir h2c 
+	dma-ctl qdma$1 q stop idx $2 dir c2h 
+	dma-ctl qdma$1 q del idx $2 dir c2h 
 }
 
 # Get a list of available devices
-vfs="$(dmactl dev list | grep qdmavf | cut -d '	' -f1)"
+vfs="$(dma-ctl dev list | grep qdmavf | cut -d '	' -f1)"
 echo "############################# AXI-ST Start #################################"
 
 for vfsdev in $vfs; do
 
 	vf="${vfsdev#*f}"
-	q_per_vf="$(dmactl dev list |grep qdmavf$vf | cut -d ' ' -f 3 | cut -d ',' -f 1 | xargs)"
-	hw_qbase="$(dmactl dev list |grep qdmavf$vf|cut -d',' -f 2 | cut -d '~' -f 1|xargs)"
+	q_per_vf="$(dma-ctl dev list |grep qdmavf$vf | cut -d ' ' -f 3 | cut -d ',' -f 1 | xargs)"
+	hw_qbase="$(dma-ctl dev list |grep qdmavf$vf|cut -d',' -f 2 | cut -d '~' -f 1|xargs)"
 
 	for ((i=0; i<$q_per_vf; i++)) do
 
@@ -127,16 +127,16 @@ for vfsdev in $vfs; do
 			echo "########################################################################################"
 
 			#clear match bit before each H2C ST transfer
-			dmactl qdmavf$vf reg write bar $usr_bar 0x0c 0x01
+			dma-ctl qdmavf$vf reg write bar $usr_bar 0x0c 0x01
 
 			# H2C transfer 
-			dma_to_device -d $dev_st_h2c -f $infile -s $tsize -o $hst_adr1 &
+			dma-to-device -d $dev_st_h2c -f $infile -s $tsize -o $hst_adr1 &
 			re=$?
 
 			wait
 
 			# Check match bit and QID
-			hwqid_match=$(dmactl qdmavf$vf reg read bar $usr_bar 0x10 | grep "0x10" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1)
+			hwqid_match=$(dma-ctl qdmavf$vf reg read bar $usr_bar 0x10 | grep "0x10" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1)
 			code=`echo $hwqid_match | tr 'a-z' 'A-Z'`
 			val=`echo "obase=2; ibase=16; $code" | bc`
 			if [ $(($val & 0x1)) -ne 1 ];then
@@ -158,12 +158,12 @@ for vfsdev in $vfs; do
 			echo "#############               transfer_size=$tsize pkt_size=$size pkt_count=$num_pkt hst_adr=$hst_adr1"
 			echo "########################################################################################"
 
-		  dmactl qdmavf$vf reg write bar $usr_bar 0x0 $hw_qid  # for Queue 0
-		  dmactl qdmavf$vf reg write bar $usr_bar 0x4 $size
-		  dmactl qdmavf$vf reg write bar $usr_bar 0x20 $num_pkt #number of packets
-		  dmactl qdmavf$vf reg write bar $usr_bar 0x08 2 # Must set C2H start before starting transfer
+		  dma-ctl qdmavf$vf reg write bar $usr_bar 0x0 $hw_qid  # for Queue 0
+		  dma-ctl qdmavf$vf reg write bar $usr_bar 0x4 $size
+		  dma-ctl qdmavf$vf reg write bar $usr_bar 0x20 $num_pkt #number of packets
+		  dma-ctl qdmavf$vf reg write bar $usr_bar 0x08 2 # Must set C2H start before starting transfer
 
-			dma_from_device -d $dev_st_c2h -f $out -o $hst_adr1 -s $tsize &
+			dma-from-device -d $dev_st_c2h -f $out -o $hst_adr1 -s $tsize &
 
 			wait
 
@@ -189,8 +189,8 @@ for vfsdev in $vfs; do
 		  if [ $? -eq 1 ]; then
 			  echo "#### Test ERROR. Queue $qid data did not match ####" 
 			  echo "#### Test ERROR. Queue $qid data did not match ####" >> $logfile
-			  dmactl qdmavf$vf q dump idx $qid mode st dir c2h
-			  dmactl qdmavf$vf reg dump
+			  dma-ctl qdmavf$vf q dump idx $qid mode st dir c2h
+			  dma-ctl qdmavf$vf reg dump
 			  cleanup_queue vf$vf $qid st
 			  exit -1
 		  else

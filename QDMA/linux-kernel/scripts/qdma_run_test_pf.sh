@@ -94,7 +94,7 @@ declare -a bypass_mode_lst=(NO_BYPASS_MODE DESC_BYPASS_MODE CACHE_BYPASS_MODE SI
 
 
 function get_dev () {
-	pf_list="$(dmactl dev list | grep qdma | grep -v qdmavf)"
+	pf_list="$(dma-ctl dev list | grep qdma | grep -v qdmavf)"
 	echo "$pf_list"
 	while read -r line; do
 		IFS=$'\t ,~' read -r -a array <<< "$line"	
@@ -206,7 +206,7 @@ function set_bypass_mode() {
 				;;
 		esac
 	fi
-    dmactl qdma$dev reg write bar 2 0x90 $reg_val
+    dma-ctl qdma$dev reg write bar 2 0x90 $reg_val
 }
 
 function get_bypass_mode() {
@@ -227,7 +227,7 @@ function get_bypass_mode() {
 
 function queue_start() {
 	echo "setting up qdma$1-$3-$2"
-	dmactl qdma$1 q add idx $2 mode $3 dir $4 >> ./run_pf.log 2>&1
+	dma-ctl qdma$1 q add idx $2 mode $3 dir $4 >> ./run_pf.log 2>&1
 	if [ $? -ne 0 ]; then
 		echo "q add failed for qdma$1-$3-$2"
 		return
@@ -236,44 +236,44 @@ function queue_start() {
 	set_bypass_mode $1 $3 $4 ${bypass_mode_lst[${bypass_mode}]}
 	if [ $3 == mm -o $4 == h2c ]; then
 		if [ $desc_byp -eq 1 ]; then
-			dmactl qdma$1 q start idx $2 dir $4 desc_bypass_en >> ./run_pf.log 2>&1
+			dma-ctl qdma$1 q start idx $2 dir $4 desc_bypass_en >> ./run_pf.log 2>&1
 		else
-			dmactl qdma$1 q start idx $2 dir $4 >> ./run_pf.log 2>&1
+			dma-ctl qdma$1 q start idx $2 dir $4 >> ./run_pf.log 2>&1
 		fi
 	else
 		if [ $desc_byp -eq 1 ] && [ $pftch -eq 0 ]; then
 			if [ $pftch_byp -eq 0 ]; then
-				dmactl qdma$1 q start idx $2 dir $4 desc_bypass_en >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q start idx $2 dir $4 desc_bypass_en >> ./run_pf.log 2>&1
 			else
-				dmactl qdma$1 q start idx $2 dir $4 desc_bypass_en pfetch_bypass_en >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q start idx $2 dir $4 desc_bypass_en pfetch_bypass_en >> ./run_pf.log 2>&1
 			fi
 		elif [ $desc_byp -eq 1 ] && [ $pftch -eq 1 ]; then
 			if [ $pftch_byp -eq 0 ]; then
-				dmactl qdma$1 q start idx $2 dir $4 desc_bypass_en pfetch_en >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q start idx $2 dir $4 desc_bypass_en pfetch_en >> ./run_pf.log 2>&1
 			else
-				dmactl qdma$1 q start idx $2 dir $4 desc_bypass_en pfetch_en pfetch_bypass_en >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q start idx $2 dir $4 desc_bypass_en pfetch_en pfetch_bypass_en >> ./run_pf.log 2>&1
 			fi
 		elif [ $desc_byp -eq 0 ] && [ $pftch -eq 1 ] ; then #
 			if [ $pftch_byp -eq 0 ]; then
-				dmactl qdma$1 q start idx $2 dir $4 pfetch_en >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q start idx $2 dir $4 pfetch_en >> ./run_pf.log 2>&1
 			else
 				echo "Invalid case of bypass mode" >> ./run_pf.log 2>&1
-				dmactl qdma$1 q del idx $2 dir bi >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q del idx $2 dir bi >> ./run_pf.log 2>&1
 				return 1
 			fi
 		else
 			if [ $pftch_byp -eq 0 ]; then
-				dmactl qdma$1 q start idx $2 dir $4>> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q start idx $2 dir $4>> ./run_pf.log 2>&1
 			else
 				echo "Invalid case of bypass mode" >> ./run_pf.log 2>&1
-				dmactl qdma$1 q del idx $2 dir bi >> ./run_pf.log 2>&1
+				dma-ctl qdma$1 q del idx $2 dir bi >> ./run_pf.log 2>&1
 				return 1
 			fi	
 		fi
 	fi
 	if [ $? -ne 0 ]; then
 		echo "q start failed for qdma$1-$3-$2-$4"
-		dmactl qdma$1 q del idx $2 dir bi >> ./run_pf.log 2>&1
+		dma-ctl qdma$1 q del idx $2 dir bi >> ./run_pf.log 2>&1
 		return $?
 	fi
 	
@@ -283,8 +283,8 @@ function queue_start() {
 
 function cleanup_queue() {
 	echo "cleaning up qdma$1-$3-$2"
-        dmactl qdma$1 q stop idx $2 dir $4 >> ./run_pf.log 2>&1
-        dmactl qdma$1 q del idx $2 dir $4 >> ./run_pf.log 2>&1
+        dma-ctl qdma$1 q stop idx $2 dir $4 >> ./run_pf.log 2>&1
+        dma-ctl qdma$1 q del idx $2 dir $4 >> ./run_pf.log 2>&1
 
 }
 
@@ -292,7 +292,7 @@ function cleanup_queue() {
 # Find user bar
 function get_user_bar () {
         local pf_bdf=$1
-	tmp=`dmactl qdma$pf_bdf reg read bar 0 0x10C | grep "0x10c" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1`
+	tmp=`dma-ctl qdma$pf_bdf reg read bar 0 0x10C | grep "0x10c" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1`
 	bar_ext=$(printf '%x\n' "$(( 0x$tmp & 0x00000f ))")
 
 	if [ $bar_ext -eq 2 ]; then
@@ -323,17 +323,17 @@ function run_mm_h2c_c2h () {
 			fi
 			echo "setup for qdma$pf_bdf-MM-$qid done"
 			# H2C transfer 
-			dma_to_device -d $dev_mm_h2c -f $infile -s $size >> ./run_pf.log 2>&1
+			dma-to-device -d $dev_mm_h2c -f $infile -s $size >> ./run_pf.log 2>&1
 
 			# C2H transfer
-			dma_from_device -d $dev_mm_c2h -f $out_mm -s $size >> ./run_pf.log 2>&1
+			dma-from-device -d $dev_mm_c2h -f $out_mm -s $size >> ./run_pf.log 2>&1
 			
 			# Compare file for correctness
 			cmp $out_mm $infile -n $size
 			if [ $? -eq 1 ]; then
 				echo "#### Test ERROR. Queue $qid data did not match ####"
-				dmactl qdma$pf_bdf q dump idx $qid >> ./run_pf.log 2>&1
-				dmactl qdma$pf_bdf reg dump >> ./run_pf.log 2>&1
+				dma-ctl qdma$pf_bdf q dump idx $qid >> ./run_pf.log 2>&1
+				dma-ctl qdma$pf_bdf reg dump >> ./run_pf.log 2>&1
 			else
 				echo "**** Test pass. Queue $qid"
 			fi
@@ -364,10 +364,10 @@ function run_st_h2c () {
 
 			# Clear H2C match from previous runs. this register is in card side.
 			# MAtch clear register is on offset 0x0C 
-			dmactl qdma$pf_bdf reg write bar $usr_bar 0x0C 0x1 >> ./run_pf.log 2>&1 # clear h2c Match register.
+			dma-ctl qdma$pf_bdf reg write bar $usr_bar 0x0C 0x1 >> ./run_pf.log 2>&1 # clear h2c Match register.
 
 			# do H2C Transfer
-			dma_to_device -d $dev_st_h2c -f $infile -s $size >> ./run_pf.log 2>&1
+			dma-to-device -d $dev_st_h2c -f $infile -s $size >> ./run_pf.log 2>&1
 
 			if [ $? -ne 0 ]; then
 				echo "#### ERROR Test failed. Transfer failed ####"
@@ -375,7 +375,7 @@ function run_st_h2c () {
 				continue
 			fi
 			# check for H2C data match. MAtch register is in offset 0x10.
-			pass=`dmactl qdma$pf_bdf reg read bar $usr_bar 0x10 | grep "0x10" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1`
+			pass=`dma-ctl qdma$pf_bdf reg read bar $usr_bar 0x10 | grep "0x10" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1`
 			# convert hex to bin
 			code=`echo $pass | tr 'a-z' 'A-Z'`
  	 		val=`echo "obase=2; ibase=16; $code" | bc`
@@ -384,8 +384,8 @@ function run_st_h2c () {
 				echo "*** Test passed for Queue $qid"
 			else
 				echo "#### ERROR Test failed. pattern did not match ####"
-				dmactl qdma$pf_bdf q dump idx $qid >> ./run_pf.log 2>&1
-				dmactl qdma$pf_bdf reg dump >> ./run_pf.log 2>&1
+				dma-ctl qdma$pf_bdf q dump idx $qid >> ./run_pf.log 2>&1
+				dma-ctl qdma$pf_bdf reg dump >> ./run_pf.log 2>&1
 			fi
 			cleanup_queue $pf_bdf $qid st h2c
 			echo "-----------------------------------------------"
@@ -414,7 +414,7 @@ function run_st_c2h () {
 			# Each PF is assigned with 32 Queues. PF0 has queue 0 to 31, PF1 has 32 to 63 
 			# Write QID in offset 0x00 
 			hw_qid=$(($qid + ${qbase_array[$pf]} ))
-			dmactl qdma$pf_bdf reg write bar $usr_bar 0x0 $hw_qid  >> ./run_pf.log 2>&1
+			dma-ctl qdma$pf_bdf reg write bar $usr_bar 0x0 $hw_qid  >> ./run_pf.log 2>&1
 
 			# open the Queue for AXI-ST streaming interface.
 			queue_start $pf_bdf $qid st c2h
@@ -423,16 +423,16 @@ function run_st_c2h () {
 			let "tsize= $size*$num_pkt" # if more packets are requested.
 
 			# Write transfer size to offset 0x04
-			dmactl qdma$pf_bdf reg write bar $usr_bar 0x4 $size >> ./run_pf.log 2>&1
+			dma-ctl qdma$pf_bdf reg write bar $usr_bar 0x4 $size >> ./run_pf.log 2>&1
 	
 			# Write number of packets to offset 0x20
-			dmactl qdma$pf_bdf reg write bar $usr_bar 0x20 $num_pkt >> ./run_pf.log 2>&1 
+			dma-ctl qdma$pf_bdf reg write bar $usr_bar 0x20 $num_pkt >> ./run_pf.log 2>&1 
 
 			# Write to offset 0x80 bit [1] to trigger C2H data generator. 
-			dmactl qdma$pf_bdf reg write bar $usr_bar 0x08 2 >> ./run_pf.log 2>&1
+			dma-ctl qdma$pf_bdf reg write bar $usr_bar 0x08 2 >> ./run_pf.log 2>&1
 
 			# do C2H transfer 
-			dma_from_device -d $dev_st_c2h -f $out_st -s $tsize >> ./run_pf.log 2>&1
+			dma-from-device -d $dev_st_c2h -f $out_st -s $tsize >> ./run_pf.log 2>&1
 			if [ $? -ne 0 ]; then
 				echo "#### ERROR Test failed. Transfer failed ####"
 				cleanup_queue $pf_bdf $qid st c2h
@@ -442,12 +442,25 @@ function run_st_c2h () {
 			cmp $out_st $infile -n $tsize
 			if [ $? -ne 0 ]; then
 				echo "#### Test ERROR. Queue $2 data did not match ####" 
-				dmactl qdma$pf_bdf q dump idx $qid dir c2h >> ./run_pf.log 2>&1
-				dmactl qdma$pf_bdf reg dump >> ./run_pf.log 2>&1
+				dma-ctl qdma$pf_bdf q dump idx $qid dir c2h >> ./run_pf.log 2>&1
+				dma-ctl qdma$pf_bdf reg dump >> ./run_pf.log 2>&1
 			else
 				echo "**** Test pass. Queue $qid"
 			fi
 			# Close the Queues
+			dma-ctl qdma$pf_bdf reg write bar $usr_bar 0x08 0x22 >> ./run_pf.log 2>&1
+			var=`dma-ctl qdma$pf_bdf reg read bar $usr_bar 0x18 | sed 's/.*= //' | sed 's/.*x//' | cut -d. -f1`
+			j=0
+			while [ "$j" -lt "2" ]
+			do
+				j=$[$j+1]
+				if [ $var -eq "1" ]
+				then 
+					break
+				else
+					sleep 1
+				fi
+			done
 			cleanup_queue $pf_bdf $qid st c2h
 			echo "-----------------------------------------------"
 		done

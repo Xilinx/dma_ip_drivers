@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,7 +37,7 @@
 #include <rte_cycles.h>
 #include <rte_kvargs.h>
 #include "qdma.h"
-#include "qdma_access.h"
+#include "qdma_access_common.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -64,14 +64,14 @@ uint32_t qdma_pci_read_reg(struct rte_eth_dev *dev, uint32_t bar, uint32_t reg)
 	uint32_t val;
 
 	if (bar >= (QDMA_NUM_BARS - 1)) {
-		printf("Error: PCI BAR number:%d not supported\n"
+		printf("Error: PCI BAR number:%u not supported\n"
 			"Please enter valid BAR number\n", bar);
 		return -1;
 	}
 
 	baseaddr = (uint64_t)qdma_dev->bar_addr[bar];
 	if (!baseaddr) {
-		printf("Error: PCI BAR number:%d not mapped\n", bar);
+		printf("Error: PCI BAR number:%u not mapped\n", bar);
 		return -1;
 	}
 	val = *((volatile uint32_t *)(baseaddr + reg));
@@ -86,14 +86,14 @@ void qdma_pci_write_reg(struct rte_eth_dev *dev, uint32_t bar,
 	uint64_t baseaddr;
 
 	if (bar >= (QDMA_NUM_BARS - 1)) {
-		printf("Error: PCI BAR index:%d not supported\n"
+		printf("Error: PCI BAR index:%u not supported\n"
 			"Please enter valid BAR index\n", bar);
 		return;
 	}
 
 	baseaddr = (uint64_t)qdma_dev->bar_addr[bar];
 	if (!baseaddr) {
-		printf("Error: PCI BAR number:%d not mapped\n", bar);
+		printf("Error: PCI BAR number:%u not mapped\n", bar);
 		return;
 	}
 	*((volatile uint32_t *)(baseaddr + reg)) = val;
@@ -546,11 +546,10 @@ int qdma_identify_bars(struct rte_eth_dev *dev)
 
 	/* Find user bar*/
 	ret = dma_priv->hw_access->qdma_get_user_bar(dev,
-			dma_priv->is_vf, &usr_bar);
+			dma_priv->is_vf, dma_priv->func_id, &usr_bar);
 	if ((ret != QDMA_SUCCESS) ||
 			(pci_dev->mem_resource[usr_bar].len == 0)) {
-		if ((dma_priv->device_type == QDMA_DEVICE_VERSAL) &&
-			(dma_priv->versal_ip_type == QDMA_VERSAL_HARD_IP)) {
+		if (dma_priv->ip_type == QDMA_VERSAL_HARD_IP) {
 			if (pci_dev->mem_resource[1].len == 0)
 				dma_priv->user_bar_idx = 2;
 			else
@@ -597,7 +596,7 @@ int qdma_get_hw_version(struct rte_eth_dev *dev)
 	dma_priv->rtl_version = version_info.rtl_version;
 	dma_priv->vivado_rel = version_info.vivado_release;
 	dma_priv->device_type = version_info.device_type;
-	dma_priv->versal_ip_type = version_info.versal_ip_type;
+	dma_priv->ip_type = version_info.ip_type;
 
 	PMD_DRV_LOG(INFO, "QDMA RTL VERSION : %s\n",
 		version_info.qdma_rtl_version_str);
@@ -605,9 +604,9 @@ int qdma_get_hw_version(struct rte_eth_dev *dev)
 		version_info.qdma_device_type_str);
 	PMD_DRV_LOG(INFO, "QDMA VIVADO RELEASE ID : %s\n",
 		version_info.qdma_vivado_release_id_str);
-	if (version_info.device_type == QDMA_DEVICE_VERSAL) {
+	if (version_info.ip_type == QDMA_VERSAL_HARD_IP) {
 		PMD_DRV_LOG(INFO, "QDMA VERSAL IP TYPE : %s\n",
-			version_info.qdma_versal_ip_type_str);
+			version_info.qdma_ip_type_str);
 	}
 
 	return 0;

@@ -1,11 +1,11 @@
-RELEASE: 2019.2
+RELEASE: 2020.1
 ===============
 
-This release is based on DPDK v18.11 and contains QDMA poll mode driver and
-QDMA test application. This release is validated on QDMA 2019.2 patch based
-example design and QDMA 2019.1 based example design.
+This release is based on DPDK v19.11 in IOVA=PA mode and contains QDMA poll mode driver and
+QDMA test application. This release is validated on QDMA4.0 2020.1 based example design
+and QDMA3.1 2019.2 patch based example design.
 
-This release includes a patch file for dpdk-pktgen v3.6.1 that extends
+This release includes a patch file for dpdk-pktgen v19.12.0 that extends
 dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
 and it disables the packet size classification logic in dpdk-pktgen to remove
 application overhead in performance measurement.
@@ -59,12 +59,24 @@ SUPPORTED FEATURES:
 	- Fix dma_from_device command in qdma_testapp application that requests more data from user logic than specified
 	- Fix memory offset calculation in dma_from_device and dma_to_device command in qdma_testapp application for MM mode
 
+2020.1 Updates
+---------------
+- Support DPDK v19.11 LTS
+- Support QDMA4.0 context and register changes
+- Common driver to support QDMA3.1 and QDMA4.0 designs
+- Updated and validated the example design with marker changes for QDMA4.0 and without marker changes for QDMA3.1
+- Added support for more than 256 functions 
+- Support multiple bus numbers on single card
+- CPU resource optimization in Tx and Rx data path
+
 KNOWN ISSUES:
 =============
-- Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+- On QDMA3.1 2019.2 design, sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+- On QDMA4.0 2020.1 design, HW errors are observed in dmesg console while validating the MM only design.
 - Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
 
 DRIVER LIMITATIONS:
 ===================
 - Big endian systems are not supported
 - For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
+- QDMA DPDK 2020.1 software is verified with IOVA=PA mode only

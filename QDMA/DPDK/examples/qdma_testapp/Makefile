@@ -49,6 +49,11 @@ SRCS-y := testapp.c pcierw.c commands.c
 CFLAGS += -O3 -DDPDK=1 -DBRAM_SIZE=$(BRAM_SIZE)
 CFLAGS += $(WERROR_FLAGS)
 
+ifeq ($(CONFIG_RTE_LIBRTE_QDMA_GCOV),y)
+  CFLAGS += -g -ftest-coverage -fprofile-arcs
+  LDFLAGS += -lgcov
+endif
+
 # PERF benchmarking may be enabled by uncommenting following
 #CFLAGS += -DPERF_BENCHMARK
 

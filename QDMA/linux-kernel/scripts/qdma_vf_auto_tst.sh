@@ -48,7 +48,7 @@ prep_test_env () {
 	echo PF=$2, VF=$3, qmax_vfs=$qmax_vfs
 	echo module_param=$1
 	echo 
-	dmactl dev list
+	dma-ctl dev list
 
 	return $ret
 }

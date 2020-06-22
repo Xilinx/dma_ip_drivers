@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -71,12 +71,17 @@ static void qdma_mbox_process_msg_from_vf(void *arg)
 		return;
 
 	rv = qdma_mbox_pf_rcv_msg_handler(dev,
-					  pci_dev->addr.bus,
+					  qdma_dev->dma_device_index,
 					  qdma_dev->func_id,
 					  qdma_dev->mbox.rx_data,
 					  mbox_msg_rsp->raw_data);
-	if (rv != QDMA_MBOX_VF_OFFLINE)
+	if (rv != QDMA_MBOX_VF_OFFLINE &&
+			rv != QDMA_MBOX_VF_RESET &&
+			rv != QDMA_MBOX_PF_RESET_DONE &&
+			rv != QDMA_MBOX_PF_BYE)
 		qdma_mbox_msg_send(dev, mbox_msg_rsp, 0);
+	else
+		qdma_mbox_msg_free(mbox_msg_rsp);
 
 	if (rv == QDMA_MBOX_VF_ONLINE) {
 		vf_func_id = qdma_mbox_vf_func_id_get(qdma_dev->mbox.rx_data,
@@ -99,15 +104,16 @@ static void qdma_mbox_process_msg_from_vf(void *arg)
 
 		qdma_dev->vf_online_count++;
 	} else if (rv == QDMA_MBOX_VF_OFFLINE) {
-		vf_func_id =
-			qdma_mbox_vf_func_id_get(qdma_dev->mbox.rx_data,
-				qdma_dev->is_vf);
-		vf_index = qdma_get_internal_vf_index(dev, vf_func_id);
-		if (vf_index != QDMA_FUNC_ID_INVALID) {
-			qdma_dev->vfinfo[vf_index].func_id =
-				QDMA_FUNC_ID_INVALID;
-			qdma_dev->vf_online_count--;
+		if (!qdma_dev->reset_in_progress) {
+			vf_func_id =
+				qdma_mbox_vf_func_id_get(qdma_dev->mbox.rx_data,
+					qdma_dev->is_vf);
+			vf_index = qdma_get_internal_vf_index(dev, vf_func_id);
+			if (vf_index != QDMA_FUNC_ID_INVALID)
+				qdma_dev->vfinfo[vf_index].func_id =
+					QDMA_FUNC_ID_INVALID;
 		}
+		qdma_dev->vf_online_count--;
 	}
 }
 
@@ -159,8 +165,10 @@ static void qdma_mbox_process_msg_from_pf(void *arg)
 					  mbox_msg_rsp->raw_data);
 	if (rv)
 		qdma_mbox_msg_send(dev, mbox_msg_rsp, 0);
-	else
+	else {
+		qdma_mbox_msg_free(mbox_msg_rsp);
 		return;
+	}
 
 	if (rv == QDMA_MBOX_VF_RESET) {
 		qdma_dev->reset_state = RESET_STATE_RECV_PF_RESET_REQ;
@@ -208,7 +216,8 @@ static void qdma_mbox_process_rsp_from_pf(void *arg)
 {
 	struct rte_eth_dev *dev = (struct rte_eth_dev *)arg;
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct qdma_list_head *entry, *tmp;
+	struct qdma_list_head *entry = NULL;
+	struct qdma_list_head *tmp = NULL;
 
 	if (!qdma_dev)
 		return;
@@ -270,7 +279,8 @@ static void qdma_mbox_send_task(void *arg)
 {
 	struct rte_eth_dev *dev = (struct rte_eth_dev *)arg;
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct qdma_list_head *entry, *tmp;
+	struct qdma_list_head *entry = NULL;
+	struct qdma_list_head *tmp = NULL;
 	int rv;
 
 	rte_spinlock_lock(&qdma_dev->mbox.list_lock);

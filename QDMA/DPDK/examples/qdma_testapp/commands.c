@@ -374,10 +374,6 @@ static void cmd_obj_port_reset_parsed(void *parsed_result,
 	if (result < 0)
 		cmdline_printf(cl, "Error: Port reset on "
 				"port-id:%d failed\n", port_id);
-	else
-		cmdline_printf(cl, "Port reset done "
-				"successfully on port-id:%d\n",
-				port_id);
 }
 
 cmdline_parse_token_string_t cmd_obj_action_port_reset =
@@ -436,9 +432,12 @@ static void cmd_obj_port_remove_parsed(void *parsed_result,
 		return;
 	}
 
-	port_remove(port_id);
+	int result = port_remove(port_id);
 	pinfo[port_id].num_queues = 0;
-	cmdline_printf(cl, "Port-id:%d removed successfully\n", port_id);
+
+	if (result < 0)
+		cmdline_printf(cl, "Error: Port remove on "
+				"port-id:%d failed\n", port_id);
 }
 
 cmdline_parse_token_string_t cmd_obj_action_port_remove =
@@ -696,10 +695,14 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 				dst_addr += q_data_size;
 				dst_addr %= BRAM_SIZE;
 
-				if ((unsigned int)i >= pinfo[port_id].st_queues) {
+				if ((unsigned int)i >=
+						pinfo[port_id].st_queues) {
 					ret =
-					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
-							RTE_PMD_QDMA_TX, dst_addr);
+					rte_pmd_qdma_set_mm_endpoint_addr(
+							port_id,
+							i,
+							RTE_PMD_QDMA_TX,
+							dst_addr);
 					if (ret < 0) {
 						close(ifd);
 						return;
@@ -710,7 +713,7 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 					q_data_size = pinfo[port_id].buff_size;
 				else if (total_size == (r_size + size)) {
 					q_data_size = total_size;
-					total_size -= total_size;
+					total_size = 0;
 				} else {
 					q_data_size = size;
 					total_size -= size;
@@ -909,10 +912,14 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 				src_addr += q_data_size;
 				src_addr %= BRAM_SIZE;
 
-				if ((unsigned int)i >= pinfo[port_id].st_queues) {
+				if ((unsigned int)i >=
+						pinfo[port_id].st_queues) {
 					ret =
-					rte_pmd_qdma_set_mm_endpoint_addr(port_id, i,
-							RTE_PMD_QDMA_RX, src_addr);
+					rte_pmd_qdma_set_mm_endpoint_addr(
+							port_id,
+							i,
+							RTE_PMD_QDMA_RX,
+							src_addr);
 					if (ret < 0) {
 						close(ofd);
 						return;
@@ -921,7 +928,7 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 
 				if (total_size == (r_size + size)) {
 					q_data_size = total_size;
-					total_size -= total_size;
+					total_size = 0;
 				} else {
 					q_data_size = size;
 					total_size -= size;

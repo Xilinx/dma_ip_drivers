@@ -40,17 +40,17 @@
 
 #include "pcierw.h"
 
-unsigned int PciRead(unsigned int Bar, unsigned int Offset, int portid)
+unsigned int PciRead(unsigned int bar, unsigned int offset, int port_id)
 {
 
-	return qdma_pci_read_reg(&rte_eth_devices[portid], Bar, Offset);
+	return qdma_pci_read_reg(&rte_eth_devices[port_id], bar, offset);
 }
 
 
-void PciWrite(unsigned int Bar, unsigned int Offset, unsigned int RegVal,
-				int portid)
+void PciWrite(unsigned int bar, unsigned int offset, unsigned int reg_val,
+				int port_id)
 {
 
-	qdma_pci_write_reg(&rte_eth_devices[portid], Bar, Offset, RegVal);
+	qdma_pci_write_reg(&rte_eth_devices[port_id], bar, offset, reg_val);
 
 }

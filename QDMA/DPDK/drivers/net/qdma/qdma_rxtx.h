@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,42 +33,12 @@
 #define QDMA_DPDK_RXTX_H_
 
 #include "qdma_access_export.h"
- /**
-  * C2H Completion entry structure
-  * This structure is specific for the example design.
-  * Processing of this ring happens in qdma_rxtx.c.
-  */
-struct c2h_cmpt_info {
-	/* For 2018.2 IP, this field
-	 * determines the Standard or User
-	 * format of completion entry
-	 */
-	uint32_t	data_frmt:1;
-	/* This field inverts every time
-	 * PIDX wraps the completion ring
-	 */
-	uint32_t	color:1;
-	/* Indicates that C2H engine
-	 * encountered a descriptor
-	 * error
-	 */
-	uint32_t	err:1;
-	/* Indicates that the completion
-	 * packet consumes descriptor in
-	 * C2H ring
-	 */
-	uint32_t	desc_used:1;
-	/* Indicates length of the data
-	 * packet
-	 */
-	uint32_t	length:16;
-};
 
 /*Supporting functions for user logic pluggability*/
 uint16_t qdma_get_rx_queue_id(void *queue_hndl);
 void qdma_get_device_info(void *queue_hndl,
 		enum qdma_device_type *device_type,
-		enum qdma_versal_ip_type *ip_type);
+		enum qdma_ip_type *ip_type);
 struct qdma_ul_st_h2c_desc *get_st_h2c_desc(void *queue_hndl);
 struct qdma_ul_mm_desc *get_mm_h2c_desc(void *queue_hndl);
 uint32_t get_mm_c2h_ep_addr(void *queue_hndl);

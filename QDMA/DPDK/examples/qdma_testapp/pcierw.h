@@ -33,9 +33,9 @@
 #ifndef __PCIERW_H__
 #define __PCIERW_H__
 
-unsigned int PciRead(unsigned int Bar, unsigned int Offset, int SockFD);
-void PciWrite(unsigned int Bar, unsigned int Offset, unsigned int RegVal,
-				int SockFD);
+unsigned int PciRead(unsigned int bar, unsigned int offset, int port_id);
+void PciWrite(unsigned int bar, unsigned int offset, unsigned int reg_val,
+				int port_id);
 void qdma_pci_write_reg(struct rte_eth_dev *dev, uint32_t bar, uint32_t reg,
 				uint32_t val);
 uint32_t qdma_pci_read_reg(struct rte_eth_dev *dev, uint32_t bar, uint32_t reg);

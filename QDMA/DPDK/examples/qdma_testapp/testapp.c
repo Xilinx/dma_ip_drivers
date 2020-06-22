@@ -66,8 +66,6 @@ char *filename;
 
 struct port_info pinfo[QDMA_MAX_PORTS];
 
-static rte_spinlock_t port_update_lock = RTE_SPINLOCK_INITIALIZER;
-
 int do_recv_mm(int port_id, int fd, int queueid, int ld_size, int tot_num_desc)
 {
 	struct rte_mbuf *pkts[NUM_RX_PKTS] = { NULL };
@@ -83,18 +81,18 @@ int do_recv_mm(int port_id, int fd, int queueid, int ld_size, int tot_num_desc)
 		return -1;
 	}
 
-	rte_spinlock_lock(&port_update_lock);
+	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 
 	dev = rte_eth_devices[port_id].device;
 	if (dev == NULL) {
 		printf("Port id %d already removed. "
 			"Relaunch application to use the port again\n",
 			port_id);
-		rte_spinlock_unlock(&port_update_lock);
+		rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 		return -1;
 	}
 
-	printf("recv start num-desc: %d, with data-len: %d, "
+	printf("recv start num-desc: %d, with data-len: %u, "
 			"last-desc-size:%d\n",
 			tot_num_desc, pinfo[port_id].buff_size, ld_size);
 	tdesc = tot_num_desc;
@@ -120,7 +118,7 @@ int do_recv_mm(int port_id, int fd, int queueid, int ld_size, int tot_num_desc)
 		if (nb_rx == 0) {
 			printf("Error: dma_from_device failed to "
 					"receive packets\n");
-			rte_spinlock_unlock(&port_update_lock);
+			rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 			return -1;
 		}
 #ifdef PERF_BENCHMARK
@@ -170,11 +168,12 @@ int do_recv_mm(int port_id, int fd, int queueid, int ld_size, int tot_num_desc)
 	}
 	fsync(fd);
 
-	rte_spinlock_unlock(&port_update_lock);
+	rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
+	ret = 0;
 
 	printf("DMA received number of packets: %d, on queue-id:%d\n",
 							nb_rx, queueid);
-	return 0;
+	return ret;
 }
 
 int do_recv_st(int port_id, int fd, int queueid, int input_size)
@@ -188,20 +187,21 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 	struct rte_device *dev;
 	int qbase = pinfo[port_id].queue_base, diag;
 	unsigned int max_completion_size, last_pkt_size = 0, total_rcv_pkts = 0;
-	unsigned int max_rx_retry, rcv_count = 0, num_pkts_recv = 0, i = 0, only_pkt = 0;
+	unsigned int max_rx_retry, rcv_count = 0, num_pkts_recv = 0;
+	unsigned int i = 0, only_pkt = 0;
 
 #ifdef DUMP_MEMPOOL_USAGE_STATS
 	struct rte_mempool *mp;
 #endif //DUMP_MEMPOOL_USAGE_STATS
 
-	rte_spinlock_lock(&port_update_lock);
+	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 
 	dev = rte_eth_devices[port_id].device;
 	if (dev == NULL) {
 		printf("Port id %d already removed. "
 			"Relaunch application to use the port again\n",
 			port_id);
-		rte_spinlock_unlock(&port_update_lock);
+		rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 		return -1;
 	}
 
@@ -212,7 +212,7 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 	if (mp == NULL) {
 		printf("Could not find mempool with name %s\n",
 			pinfo[port_id].mem_pool);
-		rte_spinlock_unlock(&port_update_lock);
+		rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 		return -1;
 	}
 #endif //DUMP_MEMPOOL_USAGE_STATS
@@ -240,11 +240,10 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 	else if (input_size % max_completion_size != 0) {
 		num_pkts = input_size / max_completion_size;
 		last_pkt_size = input_size % max_completion_size;
-	}
-	else
+	} else
 		num_pkts = input_size / max_completion_size;
 
-	if((num_pkts == 0) && last_pkt_size){
+	if ((num_pkts == 0) && last_pkt_size) {
 		num_pkts = 1;
 		only_pkt = 1;
 	}
@@ -300,7 +299,8 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 			if (diag < 0) {
 				printf("rte_pmd_qdma_set_immediate_data_state : "
 						"failed\n");
-				rte_spinlock_unlock(&port_update_lock);
+				rte_spinlock_unlock(
+					&pinfo[port_id].port_update_lock);
 				return -1;
 			}
 
@@ -314,7 +314,8 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 			if (diag < 0) {
 				printf("rte_pmd_qdma_set_immediate_data_state : "
 						"failed\n");
-				rte_spinlock_unlock(&port_update_lock);
+				rte_spinlock_unlock(
+					&pinfo[port_id].port_update_lock);
 				return -1;
 			}
 		} else {
@@ -341,8 +342,9 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 			if ((max_rx_retry == 0) && (num_pkts_recv == 0)) {
 				printf("ERROR: rte_eth_rx_burst failed for "
 						"port %d queue id %d, Expected pkts = %d "
-						"Received pkts = %d\n",
-						port_id, queueid, nb_pkts, num_pkts_recv);
+						"Received pkts = %u\n",
+						port_id, queueid,
+						nb_pkts, num_pkts_recv);
 				break;
 			}
 		}
@@ -366,38 +368,46 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 			mb = pkts[i];
 			rte_pktmbuf_free(mb);
 #ifndef PERF_BENCHMARK
-			printf("recv count: %d, with data-len: %d\n", i + rcv_count, ret);
+			printf("recv count: %u, with data-len: %d\n",
+					i + rcv_count, ret);
 #endif
 			ret = 0;
 		}
 		rcv_count += i;
 #ifdef DUMP_MEMPOOL_USAGE_STATS
 		printf("%s(): %d: queue id = %d, mbuf_avail_count = %d, "
-				"mbuf_in_use_count = %d, num_pkts_recv = %d\n",
+				"mbuf_in_use_count = %d, num_pkts_recv = %u\n",
 				__func__, __LINE__, queueid,
 				rte_mempool_avail_count(mp),
 				rte_mempool_in_use_count(mp), num_pkts_recv);
 #endif //DUMP_MEMPOOL_USAGE_STATS
 		num_pkts = num_pkts - num_pkts_recv;
 		total_rcv_pkts += num_pkts_recv;
-		if((num_pkts == 0) && last_pkt_size) {
+		if ((num_pkts == 0) && last_pkt_size) {
 			num_pkts = 1;
 			if (!loopback_en) {
 				/* Stop the C2H Engine */
-				reg_val = PciRead(user_bar_idx, C2H_CONTROL_REG, port_id);
+				reg_val = PciRead(user_bar_idx,
+							C2H_CONTROL_REG,
+							port_id);
 				reg_val &= C2H_CONTROL_REG_MASK;
 				reg_val &= ~(ST_C2H_START_VAL);
 				PciWrite(user_bar_idx, C2H_CONTROL_REG, reg_val,
 				port_id);
 
-				/*update number of packets as 1 and packet size as last packet length*/
-				PciWrite(user_bar_idx, C2H_PACKET_COUNT_REG, num_pkts, port_id);
+				/* Update number of packets as 1 and
+				 * packet size as last packet length
+				 */
+				PciWrite(user_bar_idx, C2H_PACKET_COUNT_REG,
+					num_pkts, port_id);
 
-				PciWrite(user_bar_idx, C2H_ST_LEN_REG, last_pkt_size,
-										port_id);
+				PciWrite(user_bar_idx, C2H_ST_LEN_REG,
+					last_pkt_size, port_id);
 
 				/* Start the C2H Engine */
-				reg_val = PciRead(user_bar_idx, C2H_CONTROL_REG, port_id);
+				reg_val = PciRead(user_bar_idx,
+							C2H_CONTROL_REG,
+							port_id);
 				reg_val &= C2H_CONTROL_REG_MASK;
 				reg_val |= ST_C2H_START_VAL;
 				PciWrite(user_bar_idx, C2H_CONTROL_REG, reg_val,
@@ -415,10 +425,10 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 		PciWrite(user_bar_idx, C2H_CONTROL_REG, reg_val,
 				port_id);
 	}
-	printf("DMA received number of packets: %d, on queue-id:%d\n",
+	printf("DMA received number of packets: %u, on queue-id:%d\n",
 			total_rcv_pkts, queueid);
 	fsync(fd);
-	rte_spinlock_unlock(&port_update_lock);
+	rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 	return 0;
 }
 
@@ -437,14 +447,14 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 	uint64_t prev_tsc, cur_tsc, diff_tsc;
 #endif
 
-	rte_spinlock_lock(&port_update_lock);
+	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 
 	dev = rte_eth_devices[port_id].device;
 	if (dev == NULL) {
 		printf("Port id %d already removed. "
 			"Relaunch application to use the port again\n",
 			port_id);
-			rte_spinlock_unlock(&port_update_lock);
+			rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 		return -1;
 	}
 
@@ -453,7 +463,7 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 	if (mp == NULL) {
 		printf("Could not find mempool with name %s\n",
 				pinfo[port_id].mem_pool);
-		rte_spinlock_unlock(&port_update_lock);
+		rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 		return -1;
 	}
 
@@ -482,7 +492,8 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 			if (mb[i] == NULL) {
 				printf(" #####Cannot "
 						"allocate mbuf packet\n");
-				rte_spinlock_unlock(&port_update_lock);
+				rte_spinlock_unlock(
+					&pinfo[port_id].port_update_lock);
 				return -1;
 			}
 
@@ -492,7 +503,8 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 			if (ret < 0) {
 				printf("Error: Could not the read "
 						"input-file\n");
-				rte_spinlock_unlock(&port_update_lock);
+				rte_spinlock_unlock(
+					&pinfo[port_id].port_update_lock);
 				return -1;
 			}
 			mb[i]->nb_segs = 1;
@@ -580,13 +592,13 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 		if (mb[0] == NULL) {
 			printf(" #####Cannot allocate mbuf "
 						"packet\n");
-			rte_spinlock_unlock(&port_update_lock);
+			rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 			return -1;
 		}
 		ret = read(fd, rte_pktmbuf_mtod(mb[0], void *), ld_size);
 		if (ret < 0) {
 			printf("Error: Could not read the input-file\n");
-			rte_spinlock_unlock(&port_update_lock);
+			rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 			return -1;
 		}
 		mb[0]->nb_segs = 1;
@@ -610,7 +622,7 @@ int do_xmit(int port_id, int fd, int queueid, int ld_size, int tot_num_desc,
 		PciWrite(user_bar_idx, H2C_CONTROL_REG, 0x1, port_id);
 	}
 
-	rte_spinlock_unlock(&port_update_lock);
+	rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 	return 0;
 }
 
@@ -634,18 +646,18 @@ static int dev_reset_callback(uint16_t port_id,
 			pinfo[port_id].st_queues,
 			pinfo[port_id].nb_descs,
 			pinfo[port_id].buff_size);
-	if (ret < 0) {
+	if (ret < 0)
 		printf("Error: Failed to reset port: %d\n", port_id);
-		return -1;
-	}
 
-	return 0;
+	return ret;
 }
 
 static int dev_remove_callback(uint16_t port_id,
 				enum rte_eth_event_type type,
 				void *param __rte_unused, void *ret_param)
 {
+	int ret = 0;
+
 	RTE_SET_USED(ret_param);
 	printf("%s is received\n", __func__);
 
@@ -656,7 +668,9 @@ static int dev_remove_callback(uint16_t port_id,
 		return -ENOMSG;
 	}
 
-	port_remove(port_id);
+	ret = port_remove(port_id);
+	if (ret < 0)
+		printf("Error: Failed to remove port: %d\n", port_id);
 
 	return 0;
 }
@@ -665,6 +679,10 @@ void port_close(int port_id)
 {
 	struct rte_mempool *mp;
 	struct rte_device  *dev;
+	struct rte_pmd_qdma_dev_attributes dev_attr;
+	int user_bar_idx;
+	int reg_val;
+	int ret = 0;
 
 	dev = rte_eth_devices[port_id].device;
 	if (dev == NULL) {
@@ -674,7 +692,35 @@ void port_close(int port_id)
 		return;
 	}
 
+	user_bar_idx = pinfo[port_id].user_bar_idx;
+	ret = rte_pmd_qdma_get_device_capabilities(port_id, &dev_attr);
+	if (ret < 0) {
+		printf("rte_pmd_qdma_get_device_capabilities failed for port: %d\n",
+			port_id);
+		return;
+	}
+
+	if ((dev_attr.device_type == RTE_PMD_QDMA_DEVICE_SOFT)
+			&& (dev_attr.ip_type == RTE_PMD_EQDMA_SOFT_IP)) {
+		PciWrite(user_bar_idx, C2H_CONTROL_REG,
+				C2H_STREAM_MARKER_PKT_GEN_VAL,
+				port_id);
+		unsigned int retry = 50;
+		while (retry) {
+			usleep(500);
+			reg_val = PciRead(user_bar_idx,
+				C2H_STATUS_REG, port_id);
+			if (reg_val & MARKER_RESPONSE_COMPLETION_BIT)
+				break;
+
+			printf("Failed to receive c2h marker completion, retry count = %u\n",
+					(50 - (retry-1)));
+			retry--;
+		}
+	}
+
 	rte_eth_dev_stop(port_id);
+
 	rte_eth_dev_close(port_id);
 
 	pinfo[port_id].num_queues = 0;
@@ -701,31 +747,35 @@ int port_reset(int port_id, int num_queues, int st_queues,
 		return -1;
 	}
 
-	rte_spinlock_lock(&port_update_lock);
+	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 
 	port_close(port_id);
 
 	ret = rte_eth_dev_reset(port_id);
 	if (ret < 0) {
 		printf("Error: Failed to reset device for port: %d\n", port_id);
+		rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 		return -1;
 	}
 
 	ret = port_init(port_id, num_queues, st_queues,
 				nb_descs, buff_size);
-	if (ret < 0) {
+	if (ret < 0)
 		printf("Error: Failed to initialize port: %d\n", port_id);
-		return -1;
-	}
 
-	rte_spinlock_unlock(&port_update_lock);
+	rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
 
-	return 0;
+	if (!ret)
+		printf("Port reset done successfully on port-id: %d\n",
+			port_id);
+
+	return ret;
 }
 
-void port_remove(int port_id)
+int port_remove(int port_id)
 {
 	struct rte_device *dev;
+	int ret = 0;
 
 	printf("%s is received\n", __func__);
 
@@ -734,17 +784,24 @@ void port_remove(int port_id)
 	dev = rte_eth_devices[port_id].device;
 	if (dev == NULL) {
 		printf("Port id %d already removed\n", port_id);
-		return;
+		return 0;
 	}
 
-	rte_spinlock_lock(&port_update_lock);
+	rte_spinlock_lock(&pinfo[port_id].port_update_lock);
 
 	port_close(port_id);
 
-	if (rte_dev_remove(dev))
-		printf("Failed to detach port '%d'\n", port_id);
+	ret = rte_dev_remove(dev);
+	if (ret < 0)
+		printf("Failed to remove device on port_id: %d\n", port_id);
 
-	rte_spinlock_unlock(&port_update_lock);
+	rte_spinlock_unlock(&pinfo[port_id].port_update_lock);
+
+	if (!ret)
+		printf("Port remove done successfully on port-id: %d\n",
+			port_id);
+
+	return ret;
 }
 
 static struct option const long_opts[] = {
@@ -773,6 +830,9 @@ int parse_cmdline(int argc, char **argv)
 			break;
 		case 'w':
 			/* eal option */
+			break;
+		case '?':
+			/* Long eal options */
 			break;
 		case 0:
 			if (!strncmp(long_opts[option_index].name,
@@ -833,7 +893,7 @@ int port_init(int port_id, int num_queues, int st_queues,
 #ifdef DUMP_MEMPOOL_USAGE_STATS
 	printf("%s(): %d: mpool = %p, mbuf_avail_count = %d,"
 			" mbuf_in_use_count = %d,"
-			"nb_buff = %d\n", __func__, __LINE__, mbuf_pool,
+			"nb_buff = %u\n", __func__, __LINE__, mbuf_pool,
 			rte_mempool_avail_count(mbuf_pool),
 			rte_mempool_in_use_count(mbuf_pool), nb_buff);
 #endif //DUMP_MEMPOOL_USAGE_STATS
@@ -845,8 +905,10 @@ int port_init(int port_id, int num_queues, int st_queues,
 	memset(&port_conf, 0x0, sizeof(struct rte_eth_conf));
 	memset(&tx_conf, 0x0, sizeof(struct rte_eth_txconf));
 	memset(&rx_conf, 0x0, sizeof(struct rte_eth_rxconf));
-	diag = rte_pmd_qdma_get_bar_details(port_id, &(pinfo[port_id].config_bar_idx),
-			&(pinfo[port_id].user_bar_idx), &(pinfo[port_id].bypass_bar_idx));
+	diag = rte_pmd_qdma_get_bar_details(port_id,
+				&(pinfo[port_id].config_bar_idx),
+				&(pinfo[port_id].user_bar_idx),
+				&(pinfo[port_id].bypass_bar_idx));
 
 	if (diag < 0)
 		rte_exit(EXIT_FAILURE, "rte_pmd_qdma_get_bar_details failed\n");
@@ -874,13 +936,15 @@ int port_init(int port_id, int num_queues, int st_queues,
 
 	for (x = 0; x < num_queues; x++) {
 		if (x < st_queues) {
-			diag = rte_pmd_qdma_set_queue_mode(port_id, x, RTE_PMD_QDMA_STREAMING_MODE);
+			diag = rte_pmd_qdma_set_queue_mode(port_id, x,
+					RTE_PMD_QDMA_STREAMING_MODE);
 			if (diag < 0)
 				rte_exit(EXIT_FAILURE, "rte_pmd_qdma_set_queue_mode : "
 						"Passing of QUEUE_MODE "
 						"failed\n");
 		} else {
-			diag = rte_pmd_qdma_set_queue_mode(port_id, x, RTE_PMD_QDMA_MEMORY_MAPPED_MODE);
+			diag = rte_pmd_qdma_set_queue_mode(port_id, x,
+					RTE_PMD_QDMA_MEMORY_MAPPED_MODE);
 			if (diag < 0)
 				rte_exit(EXIT_FAILURE, "rte_pmd_qdma_set_queue_mode : "
 						"Passing of QUEUE_MODE "
@@ -971,12 +1035,16 @@ int main(int argc, char **argv)
 		rte_exit(EXIT_FAILURE, "No Ethernet devices found."
 			" Try updating the FPGA image.\n");
 
+	for (port_id = 0; port_id < num_ports; port_id++)
+		rte_spinlock_init(&pinfo[port_id].port_update_lock);
+
 	ret = rte_eth_dev_callback_register(RTE_ETH_ALL, RTE_ETH_EVENT_INTR_RMV,
 				dev_remove_callback, NULL);
 	if (ret < 0)
 		rte_exit(EXIT_FAILURE, "Failed to register dev_remove_callback\n");
 
-	ret = rte_eth_dev_callback_register(RTE_ETH_ALL, RTE_ETH_EVENT_INTR_RESET,
+	ret = rte_eth_dev_callback_register(RTE_ETH_ALL,
+			RTE_ETH_EVENT_INTR_RESET,
 			dev_reset_callback, NULL);
 	if (ret < 0)
 		rte_exit(EXIT_FAILURE, "Failed to register dev_reset_callback\n");
@@ -992,6 +1060,8 @@ int main(int argc, char **argv)
 
 	mz = rte_memzone_reserve_aligned("eth_devices", RTE_MAX_ETHPORTS *
 					  sizeof(*rte_eth_devices), 0, 0, 4096);
+	if (mz == NULL)
+		rte_exit(EXIT_FAILURE, "Failed to allocate aligned memzone\n");
 
 	memcpy(mz->addr, &rte_eth_devices[0], RTE_MAX_ETHPORTS *
 					sizeof(*rte_eth_devices));
@@ -1029,7 +1099,9 @@ int main(int argc, char **argv)
 				printf("Port id %d already removed\n", port_id);
 				continue;
 			}
-			/*Detach the port, it will invoke device remove/uninit */
+			/* Detach the port, it will invoke
+			 * device remove/uninit
+			 */
 			if (rte_dev_remove(dev))
 				printf("Failed to detach port '%d'\n", port_id);
 		}

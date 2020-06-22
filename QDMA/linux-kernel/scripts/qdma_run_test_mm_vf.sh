@@ -78,22 +78,22 @@ function randomize_tx_params() {
 
 function queue_start() {
 	echo "---- Queue Start $2 ----"
-	dmactl qdma$1 q add idx $2 mode $3 dir bi
-	dmactl qdma$1 q start idx $2 dir bi
+	dma-ctl qdma$1 q add idx $2 mode $3 dir bi
+	dma-ctl qdma$1 q start idx $2 dir bi
 }
 
 function cleanup_queue() {
 	echo "---- Queue Clean up $2 ----"
-        dmactl qdma$1 q stop idx $2 dir bi
-        dmactl qdma$1 q del idx $2 dir bi
+        dma-ctl qdma$1 q stop idx $2 dir bi
+        dma-ctl qdma$1 q del idx $2 dir bi
 }
 
-vfs=`dmactl dev list | grep qdmavf | cut -d'	' -f1`;
+vfs=`dma-ctl dev list | grep qdmavf | cut -d'	' -f1`;
 
 echo "**** AXI-MM Start ****"
 for vfsdev in $vfs;do
 	vf="${vfsdev#*f}"
-	q_per_vf="$(dmactl dev list |grep qdmavf$vf | cut -d ' ' -f 3 | cut -d ',' -f 1 | xargs)"
+	q_per_vf="$(dma-ctl dev list |grep qdmavf$vf | cut -d ' ' -f 3 | cut -d ',' -f 1 | xargs)"
 
 	for ((i=0; i< $q_per_vf; i++)) do
 	# Setup for Queues
@@ -116,10 +116,10 @@ for vfsdev in $vfs;do
 			fi
 
 			# H2C transfer 
-			dma_to_device -d $dev_mm_h2c -f $infile -s $size -o $hst_adr1
+			dma-to-device -d $dev_mm_h2c -f $infile -s $size -o $hst_adr1
 
 			# C2H transfer
-			dma_from_device -d $dev_mm_c2h -f $out_mm -s $size -o $hst_adr1
+			dma-from-device -d $dev_mm_c2h -f $out_mm -s $size -o $hst_adr1
 
 			# Compare file for correctness
 			cmp $out_mm $infile -n $size

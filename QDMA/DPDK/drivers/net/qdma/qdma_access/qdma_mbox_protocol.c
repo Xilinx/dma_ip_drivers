@@ -1,44 +1,10 @@
 /*
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * BSD LICENSE
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   * Neither the name of the copyright holder nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  */
 
 #include "qdma_mbox_protocol.h"
 #include "qdma_platform.h"
 #include "qdma_resource_mgmt.h"
-
-/**
- * mailbox registers
- */
-#define MBOX_BASE_VF		0x1000
-#define MBOX_BASE_PF		0x2400
 
 /** mailbox function status */
 #define MBOX_FN_STATUS			0x0
@@ -136,8 +102,8 @@
  */
 #define MBOX_MSG_OP_RSP_OFFSET	0x80
 enum mbox_msg_op {
-	/** @MBOX_OP_BYE: vf offline */
-	MBOX_OP_BYE,
+	/** @MBOX_OP_BYE: vf offline, response not required*/
+	MBOX_OP_VF_BYE,
 	/** @MBOX_OP_HELLO: vf online */
 	MBOX_OP_HELLO,
 	/** @: FMAP programming request */
@@ -172,8 +138,12 @@ enum mbox_msg_op {
 	MBOX_OP_RESET_PREPARE,
 	/** @MBOX_OP_RESET_DONE: PF reset done */
 	MBOX_OP_RESET_DONE,
-	/** @MBOX_OP_PF_BYE: pf offline */
+	/** @MBOX_OP_REG_LIST_READ: Read the register list */
+	MBOX_OP_REG_LIST_READ,
+	/** @MBOX_OP_PF_BYE: pf offline, response required */
 	MBOX_OP_PF_BYE,
+	/** @MBOX_OP_PF_RESET_VF_BYE: VF reset BYE, response required*/
+	MBOX_OP_PF_RESET_VF_BYE,
 
 	/** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
 	MBOX_OP_HELLO_RESP = 0x81,
@@ -209,8 +179,14 @@ enum mbox_msg_op {
 	MBOX_OP_RESET_PREPARE_RESP,
 	/** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
 	MBOX_OP_RESET_DONE_RESP,
+	/** @MBOX_OP_REG_LIST_READ_RESP: response to @MBOX_OP_REG_LIST_READ */
+	MBOX_OP_REG_LIST_READ_RESP,
 	/** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
 	MBOX_OP_PF_BYE_RESP,
+	/** @MBOX_OP_PF_RESET_VF_BYE_RESP:
+	 * response to @MBOX_OP_PF_RESET_VF_BYE
+	 */
+	MBOX_OP_PF_RESET_VF_BYE_RESP,
 	/** @MBOX_OP_MAX: total mbox opcodes*/
 	MBOX_OP_MAX
 };
@@ -241,6 +217,8 @@ struct mbox_msg_hello {
 	uint32_t qmax;
 	/** @dev_cap: device capability */
 	struct qdma_dev_attributes dev_cap;
+	/** @dma_device_index: dma_device_index */
+	uint32_t dma_device_index;
 };
 
 /**
@@ -328,6 +306,21 @@ struct mbox_intr_ctxt {
 	struct mbox_msg_intr_ctxt ctxt;
 };
 
+/**
+ * @struct - mbox_read_reg_list
+ * @brief read register mailbox message header
+ */
+struct mbox_read_reg_list {
+	/** @hdr: mailbox message header*/
+	struct mbox_msg_hdr hdr;
+	/** @group_num: reg group to read */
+	uint16_t group_num;
+	/** @num_regs: number of registers to read */
+	uint16_t num_regs;
+	/** @reg_list: register list */
+	struct qdma_reg_data reg_list[QDMA_MAX_REGISTER_DUMP];
+};
+
 union qdma_mbox_txrx {
 		/** mailbox message header*/
 		struct mbox_msg_hdr hdr;
@@ -345,16 +338,30 @@ union qdma_mbox_txrx {
 		struct mbox_msg_active_qcnt qcnt;
 		/** q add/del notify message */
 		struct mbox_msg_q_nitfy q_notify;
+		/** reg list mailbox message */
+		struct mbox_read_reg_list reg_read_list;
 		/** buffer to hold raw data between pf and vf */
 		uint32_t raw[MBOX_MSG_REG_MAX];
 };
 
-static inline void mbox_pf_hw_clear_func_ack(void *dev_hndl,
-						 uint8_t func_id)
+
+static inline uint32_t get_mbox_offset(void *dev_hndl, uint8_t is_vf)
+{
+	uint32_t mbox_base;
+	struct qdma_hw_access *hw = NULL;
+
+	qdma_get_hw_access(dev_hndl, &hw);
+	mbox_base = (is_vf) ?
+		hw->mbox_base_vf : hw->mbox_base_pf;
+
+	return mbox_base;
+}
+
+static inline void mbox_pf_hw_clear_func_ack(void *dev_hndl, uint16_t func_id)
 {
 	int idx = func_id / 32; /* bitmask, uint32_t reg */
 	int bit = func_id % 32;
-	uint32_t mbox_base = MBOX_BASE_PF;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, 0);
 
 	/* clear the function's ack status */
 	qdma_reg_write(dev_hndl,
@@ -612,7 +619,7 @@ static int mbox_compose_cmpt_context(void *dev_hndl,
 	return QDMA_SUCCESS;
 }
 
-static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
+static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t dma_device_index,
 			      uint16_t func_id, uint16_t qid_hw, uint8_t st,
 			      uint8_t c2h,
 			      enum mbox_cmpt_ctxt_type cmpt_ctxt_type)
@@ -634,14 +641,15 @@ static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 			return rv;
 		}
 	} else {
-		rv = qdma_dev_qinfo_get(pci_bus_num, func_id, &qbase, &qmax);
+		rv = qdma_dev_qinfo_get(dma_device_index,
+				func_id, &qbase, &qmax);
 		if (rv < 0) {
 			qdma_log_error("%s: failed to get qinfo, err:%d\n",
 					__func__, rv);
 			return rv;
 		}
 
-		q_range = qdma_dev_is_queue_in_range(pci_bus_num,
+		q_range = qdma_dev_is_queue_in_range(dma_device_index,
 						func_id, qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE) {
 			qdma_log_error("%s: q_range invalid, err:%d\n",
@@ -700,10 +708,10 @@ static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	return QDMA_SUCCESS;
 }
 
-static int mbox_invalidate_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
-			      uint16_t func_id, uint16_t qid_hw, uint8_t st,
-			      uint8_t c2h,
-			      enum mbox_cmpt_ctxt_type cmpt_ctxt_type)
+static int mbox_invalidate_queue_contexts(void *dev_hndl,
+		uint8_t dma_device_index, uint16_t func_id,
+		uint16_t qid_hw, uint8_t st,
+		uint8_t c2h, enum mbox_cmpt_ctxt_type cmpt_ctxt_type)
 {
 	int rv;
 	int qbase;
@@ -722,14 +730,15 @@ static int mbox_invalidate_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 			return rv;
 		}
 	} else {
-		rv = qdma_dev_qinfo_get(pci_bus_num, func_id, &qbase, &qmax);
+		rv = qdma_dev_qinfo_get(dma_device_index, func_id,
+				&qbase, &qmax);
 		if (rv < 0) {
 			qdma_log_error("%s: failed to get qinfo, err:%d\n",
 						__func__, rv);
 			return rv;
 		}
 
-		q_range = qdma_dev_is_queue_in_range(pci_bus_num,
+		q_range = qdma_dev_is_queue_in_range(dma_device_index,
 						func_id, qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE) {
 			qdma_log_error("%s: Invalid qrange, err:%d\n",
@@ -788,7 +797,7 @@ static int mbox_invalidate_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 	return QDMA_SUCCESS;
 }
 
-static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
+static int mbox_write_queue_contexts(void *dev_hndl, uint8_t dma_device_index,
 				     struct mbox_msg_qctxt *qctxt)
 {
 	int rv;
@@ -801,12 +810,12 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
-	rv = qdma_dev_qinfo_get(pci_bus_num, qctxt->descq_conf.func_id,
+	rv = qdma_dev_qinfo_get(dma_device_index, qctxt->descq_conf.func_id,
 				&qbase, &qmax);
 	if (rv < 0)
 		return rv;
 
-	q_range = qdma_dev_is_queue_in_range(pci_bus_num,
+	q_range = qdma_dev_is_queue_in_range(dma_device_index,
 					     qctxt->descq_conf.func_id,
 					     qctxt->qid_hw);
 	if (q_range != QDMA_DEV_Q_IN_RANGE) {
@@ -860,7 +869,7 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t pci_bus_num,
 				return rv;
 		}
 
-		rv = mbox_clear_queue_contexts(dev_hndl, pci_bus_num,
+		rv = mbox_clear_queue_contexts(dev_hndl, dma_device_index,
 					qctxt->descq_conf.func_id,
 					qctxt->qid_hw,
 					qctxt->st,
@@ -963,7 +972,7 @@ static int mbox_read_queue_contexts(void *dev_hndl, uint16_t qid_hw,
 	return QDMA_SUCCESS;
 }
 
-int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
+int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t dma_device_index,
 				 uint16_t func_id, uint32_t *rcv_msg,
 				 uint32_t *resp_msg)
 {
@@ -983,7 +992,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 	qdma_get_hw_access(dev_hndl, &hw);
 
 	switch (rcv->hdr.op) {
-	case MBOX_OP_BYE:
+	case MBOX_OP_VF_BYE:
 	{
 		struct qdma_fmap_cfg fmap;
 
@@ -992,10 +1001,23 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		rv = hw->qdma_fmap_conf(dev_hndl, hdr->src_func_id, &fmap,
 					QDMA_HW_ACCESS_WRITE);
 
-		qdma_dev_entry_destroy(pci_bus_num,
-				hdr->src_func_id);
+		qdma_dev_entry_destroy(dma_device_index, hdr->src_func_id);
 
 		ret = QDMA_MBOX_VF_OFFLINE;
+	}
+	break;
+	case MBOX_OP_PF_RESET_VF_BYE:
+	{
+		struct qdma_fmap_cfg fmap;
+
+		fmap.qbase = 0;
+		fmap.qmax = 0;
+		rv = hw->qdma_fmap_conf(dev_hndl, hdr->src_func_id, &fmap,
+					QDMA_HW_ACCESS_WRITE);
+
+		qdma_dev_entry_destroy(dma_device_index, hdr->src_func_id);
+
+		ret = QDMA_MBOX_VF_RESET_BYE;
 	}
 	break;
 	case MBOX_OP_HELLO:
@@ -1004,17 +1026,16 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		struct qdma_fmap_cfg fmap_cfg;
 		struct mbox_msg_hello *rsp_hello = &resp->hello;
 
-		rv = qdma_dev_qinfo_get(pci_bus_num,
-					hdr->src_func_id,
-					&fmap->qbase,
-					&fmap->qmax);
-		if (rv < 0) {
-			rv = qdma_dev_entry_create(pci_bus_num,
-						   hdr->src_func_id);
-		}
+		rv = qdma_dev_qinfo_get(dma_device_index, hdr->src_func_id,
+				&fmap->qbase, &fmap->qmax);
+		if (rv < 0)
+			rv = qdma_dev_entry_create(dma_device_index,
+					hdr->src_func_id);
+
 		if (!rv) {
 			rsp_hello->qbase = fmap->qbase;
 			rsp_hello->qmax = fmap->qmax;
+			rsp_hello->dma_device_index = dma_device_index;
 			hw->qdma_get_device_attributes(dev_hndl,
 						       &rsp_hello->dev_cap);
 		}
@@ -1107,11 +1128,11 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 	{
 		struct mbox_msg_fmap *fmap = &rcv->fmap;
 
-		rv = qdma_dev_update(pci_bus_num,
+		rv = qdma_dev_update(dma_device_index,
 					  hdr->src_func_id,
 					  fmap->qmax, &fmap->qbase);
 		if (rv == 0)
-			rv = qdma_dev_qinfo_get(pci_bus_num,
+			rv = qdma_dev_qinfo_get(dma_device_index,
 						hdr->src_func_id,
 						&resp->fmap.qbase,
 						&resp->fmap.qmax);
@@ -1133,14 +1154,14 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		enum qdma_dev_q_range q_range;
 
 		q_range = qdma_dev_is_queue_in_range(
-				pci_bus_num,
+				dma_device_index,
 				q_notify->hdr.src_func_id,
 				q_notify->qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
 			rv = -QDMA_ERR_MBOX_INV_QID;
 		else
 			rv = qdma_dev_increment_active_queue(
-					pci_bus_num,
+					dma_device_index,
 					q_notify->hdr.src_func_id,
 					q_notify->q_type);
 	}
@@ -1151,14 +1172,14 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		enum qdma_dev_q_range q_range;
 
 		q_range = qdma_dev_is_queue_in_range(
-				pci_bus_num,
+				dma_device_index,
 				q_notify->hdr.src_func_id,
 				q_notify->qid_hw);
 		if (q_range != QDMA_DEV_Q_IN_RANGE)
 			rv = -QDMA_ERR_MBOX_INV_QID;
 		else
 			rv = qdma_dev_decrement_active_queue(
-					pci_bus_num,
+					dma_device_index,
 					q_notify->hdr.src_func_id,
 					q_notify->q_type);
 	}
@@ -1166,21 +1187,21 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 	case MBOX_OP_GET_QACTIVE_CNT:
 	{
 		rv = qdma_get_device_active_queue_count(
-				pci_bus_num,
+				dma_device_index,
 				rcv->hdr.src_func_id,
 				QDMA_DEV_Q_TYPE_H2C);
 
 		resp->qcnt.h2c_queues = rv;
 
 		rv = qdma_get_device_active_queue_count(
-				pci_bus_num,
+				dma_device_index,
 				rcv->hdr.src_func_id,
 				QDMA_DEV_Q_TYPE_C2H);
 
 		resp->qcnt.c2h_queues = rv;
 
 		rv = qdma_get_device_active_queue_count(
-				pci_bus_num,
+				dma_device_index,
 				rcv->hdr.src_func_id,
 				QDMA_DEV_Q_TYPE_CMPT);
 
@@ -1267,7 +1288,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		struct mbox_msg_qctxt *qctxt = &rcv->qctxt;
 
 		rv = mbox_invalidate_queue_contexts(dev_hndl,
-							pci_bus_num,
+							dma_device_index,
 							hdr->src_func_id,
 							qctxt->qid_hw,
 							qctxt->st,
@@ -1280,7 +1301,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		struct mbox_msg_qctxt *qctxt = &rcv->qctxt;
 
 		rv = mbox_clear_queue_contexts(dev_hndl,
-						pci_bus_num,
+						dma_device_index,
 						hdr->src_func_id,
 						qctxt->qid_hw,
 						qctxt->st,
@@ -1304,18 +1325,34 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
 		struct mbox_msg_qctxt *qctxt = &rcv->qctxt;
 
 		qctxt->descq_conf.func_id = hdr->src_func_id;
-		rv = mbox_write_queue_contexts(dev_hndl, pci_bus_num,
-					       qctxt);
+		rv = mbox_write_queue_contexts(dev_hndl,
+				dma_device_index, qctxt);
 	}
 	break;
 	case MBOX_OP_RESET_PREPARE_RESP:
-		mbox_pf_hw_clear_func_ack(dev_hndl, hdr->src_func_id);
 		return QDMA_MBOX_VF_RESET;
 	case MBOX_OP_RESET_DONE_RESP:
-		mbox_pf_hw_clear_func_ack(dev_hndl, hdr->src_func_id);
 		return QDMA_MBOX_PF_RESET_DONE;
+	case MBOX_OP_REG_LIST_READ:
+	{
+		struct mbox_read_reg_list *rcv_read_reg_list =
+						&rcv->reg_read_list;
+		struct mbox_read_reg_list *rsp_read_reg_list =
+						&resp->reg_read_list;
+
+		rv = hw->qdma_read_reg_list((void *)dev_hndl, 1,
+				 rcv_read_reg_list->group_num,
+				&rsp_read_reg_list->num_regs,
+				rsp_read_reg_list->reg_list);
+
+		if (rv < 0 || rsp_read_reg_list->num_regs == 0) {
+			rv = -QDMA_ERR_MBOX_REG_READ_FAILED;
+			goto exit_func;
+		}
+
+	}
+	break;
 	case MBOX_OP_PF_BYE_RESP:
-		mbox_pf_hw_clear_func_ack(dev_hndl, hdr->src_func_id);
 		return QDMA_MBOX_PF_BYE;
 	default:
 		qdma_log_error("%s: op=%d invalid, err:%d\n",
@@ -1370,11 +1407,32 @@ int qdma_mbox_compose_vf_offline(uint16_t func_id,
 	}
 
 	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
-	msg->hdr.op = MBOX_OP_BYE;
+	msg->hdr.op = MBOX_OP_VF_BYE;
 	msg->hdr.src_func_id = func_id;
 
 	return QDMA_SUCCESS;
 }
+
+int qdma_mbox_compose_vf_reset_offline(uint16_t func_id,
+				 uint32_t *raw_data)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
+
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
+	msg->hdr.op = MBOX_OP_PF_RESET_VF_BYE;
+	msg->hdr.src_func_id = func_id;
+
+	return QDMA_SUCCESS;
+}
+
+
 
 int qdma_mbox_compose_vf_qreq(uint16_t func_id,
 			      uint16_t qmax, int qbase, uint32_t *raw_data)
@@ -1607,6 +1665,27 @@ int qdma_mbox_compose_csr_read(uint16_t func_id,
 	return QDMA_SUCCESS;
 }
 
+int qdma_mbox_compose_reg_read(uint16_t func_id,
+					uint16_t group_num,
+					uint32_t *raw_data)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
+
+	if (!raw_data) {
+		qdma_log_error("%s: raw_data=%p, err:%d\n",
+						__func__, raw_data,
+						-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	qdma_mbox_memset(raw_data, 0, sizeof(union qdma_mbox_txrx));
+	msg->hdr.op = MBOX_OP_REG_LIST_READ;
+	msg->hdr.src_func_id = func_id;
+	msg->reg_read_list.group_num = group_num;
+
+	return QDMA_SUCCESS;
+}
+
 int qdma_mbox_compose_vf_intr_ctxt_write(uint16_t func_id,
 					 struct mbox_msg_intr_ctxt *intr_ctxt,
 					 uint32_t *raw_data)
@@ -1751,11 +1830,12 @@ uint8_t qdma_mbox_vf_parent_func_id_get(uint32_t *rcv_data)
 }
 
 int qdma_mbox_vf_dev_info_get(uint32_t *rcv_data,
-			struct qdma_dev_attributes *dev_cap)
+	struct qdma_dev_attributes *dev_cap, uint32_t *dma_device_index)
 {
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)rcv_data;
 
 	*dev_cap = msg->hello.dev_cap;
+	*dma_device_index = msg->hello.dma_device_index;
 
 	return msg->hdr.status;
 }
@@ -1775,6 +1855,19 @@ int qdma_mbox_vf_csr_get(uint32_t *rcv_data, struct qdma_csr_info *csr)
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)rcv_data;
 
 	qdma_mbox_memcpy(csr, &msg->csr.csr_info, sizeof(struct qdma_csr_info));
+
+	return msg->hdr.status;
+
+}
+
+int qdma_mbox_vf_reg_list_get(uint32_t *rcv_data,
+		uint16_t *num_regs, struct qdma_reg_data *reg_list)
+{
+	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)rcv_data;
+
+	*num_regs = msg->reg_read_list.num_regs;
+	qdma_mbox_memcpy(reg_list, &(msg->reg_read_list.reg_list),
+			(*num_regs * sizeof(struct qdma_reg_data)));
 
 	return msg->hdr.status;
 
@@ -1805,9 +1898,11 @@ int qdma_mbox_vf_intr_context_get(uint32_t *rcv_data,
 void qdma_mbox_pf_hw_clear_ack(void *dev_hndl)
 {
 	uint32_t v;
-	uint32_t mbox_base = MBOX_BASE_PF;
-	uint32_t reg = mbox_base + MBOX_PF_ACK_BASE;
+	uint32_t reg;
 	int i;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, 0);
+
+	reg = mbox_base + MBOX_PF_ACK_BASE;
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 	if ((v & F_MBOX_FN_STATUS_ACK) == 0)
@@ -1831,15 +1926,15 @@ int qdma_mbox_send(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 	uint32_t v;
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
 	uint16_t dst_func_id = msg->hdr.dst_func_id;
-	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
-
-	if (!is_vf)
-		qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_TARGET,
-				V_MBOX_FN_TARGET_ID(dst_func_id));
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 	if (v & F_MBOX_FN_STATUS_OUT_MSG)
 		return -QDMA_ERR_MBOX_SEND_BUSY;
+
+	if (!is_vf)
+		qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_TARGET,
+				V_MBOX_FN_TARGET_ID(dst_func_id));
 
 	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP)
 		qdma_reg_write(dev_hndl, mbox_base + reg, raw_data[i]);
@@ -1848,6 +1943,10 @@ int qdma_mbox_send(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 	if (!is_vf)
 		mbox_pf_hw_clear_func_ack(dev_hndl, dst_func_id);
 
+
+	qdma_log_debug("%s %s tx from_id=%d, to_id=%d, opcode=0x%x\n", __func__,
+			is_vf?"VF":"PF", msg->hdr.src_func_id,
+			msg->hdr.dst_func_id, msg->hdr.op);
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_CMD, F_MBOX_FN_CMD_SND);
 
 	return QDMA_SUCCESS;
@@ -1859,19 +1958,20 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 	uint32_t v = 0;
 	int all_zero_msg = 1;
 	int i;
-	unsigned int from_id = 0;
+	uint32_t from_id = 0;
 	union qdma_mbox_txrx *msg = (union qdma_mbox_txrx *)raw_data;
-	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 
 	if (!(v & M_MBOX_FN_STATUS_IN_MSG))
-		return -QDMA_ERR_MOBX_NO_MSG_IN;
+		return -QDMA_ERR_MBOX_NO_MSG_IN;
 
 	if (!is_vf) {
 		from_id = G_MBOX_FN_STATUS_SRC(v);
 		qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_TARGET, from_id);
 	}
+
 	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP) {
 		raw_data[i] = qdma_reg_read(dev_hndl, mbox_base + reg);
 		/* if rcv'ed message is all zero, stop and disable the mbox,
@@ -1890,6 +1990,10 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 		return -QDMA_ERR_MBOX_ALL_ZERO_MSG;
 	}
 
+
+	qdma_log_debug("%s %s fid=%d, opcode=0x%x\n", __func__,
+				   is_vf?"VF":"PF", msg->hdr.dst_func_id,
+				   msg->hdr.op);
 	if (!is_vf && (from_id != msg->hdr.src_func_id))
 		msg->hdr.src_func_id = from_id;
 
@@ -1899,7 +2003,7 @@ int qdma_mbox_rcv(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 void qdma_mbox_hw_init(void *dev_hndl, uint8_t is_vf)
 {
 	uint32_t v;
-	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
 	if (is_vf) {
 		v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
@@ -1913,7 +2017,7 @@ void qdma_mbox_hw_init(void *dev_hndl, uint8_t is_vf)
 void qdma_mbox_enable_interrupts(void *dev_hndl, uint8_t is_vf)
 {
 	int vector = 0x0;
-	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_ISR_VEC, vector);
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_ISR_EN, 0x1);
@@ -1921,7 +2025,7 @@ void qdma_mbox_enable_interrupts(void *dev_hndl, uint8_t is_vf)
 
 void qdma_mbox_disable_interrupts(void *dev_hndl, uint8_t is_vf)
 {
-	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
 	qdma_reg_write(dev_hndl, mbox_base + MBOX_ISR_EN, 0x0);
 }
@@ -2006,7 +2110,7 @@ int qdma_mbox_vf_rcv_msg_handler(uint32_t *rcv_msg, uint32_t *resp_msg)
 uint8_t qdma_mbox_out_status(void *dev_hndl, uint8_t is_vf)
 {
 	uint32_t v;
-	uint32_t mbox_base = (is_vf) ? MBOX_BASE_VF : MBOX_BASE_PF;
+	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
 	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
 	if (v & F_MBOX_FN_STATUS_OUT_MSG)

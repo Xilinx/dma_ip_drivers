@@ -59,6 +59,9 @@
 #define H2C_CONTROL_REG    0xC
 #define H2C_STATUS_REG    0x10
 #define C2H_PACKET_COUNT_REG    0x20
+#define C2H_STATUS_REG                    0x18
+#define C2H_STREAM_MARKER_PKT_GEN_VAL     0x22
+#define MARKER_RESPONSE_COMPLETION_BIT    0x1
 
 extern int num_ports;
 
@@ -71,18 +74,21 @@ struct port_info {
 	unsigned int nb_descs;
 	unsigned int st_queues;
 	unsigned int buff_size;
+	rte_spinlock_t port_update_lock;
 	char mem_pool[RTE_MEMPOOL_NAMESIZE];
 };
 
 extern struct port_info pinfo[QDMA_MAX_PORTS];
-int port_init(int portid, int num_queues, int st_queues,
-				int nb_descs, int buff_size);
-int do_recv_st(int portid, int fd, int queueid, int input_size);
-int do_recv_mm(int portid, int fd, int queueid, int size, int tot_num_desc);
-int do_xmit(int portid, int fd, int queueid, int size, int nb_desc, int zbyte);
+int port_init(int port_id, int num_queues, int st_queues,
+		int nb_descs, int buff_size);
+int do_recv_st(int port_id, int fd, int queueid, int input_size);
+int do_recv_mm(int port_id, int fd, int queueid,
+		int ld_size, int tot_num_desc);
+int do_xmit(int port_id, int fd, int queueid,
+		int ld_size, int tot_num_desc, int zbyte);
 void load_file_cmds(struct cmdline *cl);
 void port_close(int port_id);
 int port_reset(int port_id, int num_queues, int st_queues,
-				int nb_descs, int buff_size);
-void port_remove(int port_id);
+		int nb_descs, int buff_size);
+int port_remove(int port_id);
 int parse_cmdline(int argc, char **argv);

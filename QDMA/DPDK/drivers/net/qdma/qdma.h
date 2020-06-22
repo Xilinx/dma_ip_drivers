@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,13 +36,17 @@
 #include <stdbool.h>
 #include <rte_dev.h>
 #include <rte_ethdev.h>
+#include <rte_ethdev_driver.h>
 #include <rte_spinlock.h>
 #include <rte_log.h>
+#include <rte_cycles.h>
 #include <rte_byteorder.h>
 #include <rte_memzone.h>
 #include <linux/pci.h>
 #include "qdma_user.h"
-#include "qdma_reg.h"
+#include "qdma_soft_reg.h"
+#include "eqdma_soft_reg.h"
+#include "qdma_s80_hard_reg.h"
 #include "qdma_resource_mgmt.h"
 #include "qdma_mbox.h"
 #include "rte_pmd_qdma.h"
@@ -53,17 +57,11 @@
 #define DEFAULT_VF_CONFIG_BAR  (0)
 #define BAR_ID_INVALID         (-1)
 
-/* QDMA IP absolute maximum */
-#define QDMA_PF_MAX             4       /* 4 PFs */
-#define QDMA_VF_MAX             252
-#define QDMA_FUNC_ID_INVALID    (QDMA_PF_MAX + QDMA_VF_MAX)
+#define QDMA_FUNC_ID_INVALID    0xFFFF
 
 #define DEFAULT_QUEUE_BASE	(0)
-#define QDMA_QUEUES_NUM_MAX (2048)
-#define CPM_DEFAULT_QUEUE_BASE	(1)
-#define CPM_QDMA_QUEUES_NUM_MAX (2047)
 
-#define QDMA_MAX_BURST_SIZE (256)
+#define QDMA_MAX_BURST_SIZE (128)
 #define QDMA_MIN_RXBUFF_SIZE	(256)
 
 /* Descriptor Rings aligned to 4KB boundaries - only supported value */
@@ -170,7 +168,7 @@ struct qdma_cmpt_queue {
 struct qdma_rx_queue {
 	struct rte_mempool	*mb_pool; /**< mbuf pool to populate RX ring. */
 	void			*rx_ring; /**< RX ring virtual address */
-	struct qdma_ul_st_cmpt_ring	*cmpt_ring;
+	union qdma_ul_st_cmpt_ring	*cmpt_ring;
 	struct wb_status	*wb_status;
 	struct rte_mbuf		**sw_ring; /**< address of RX software ring. */
 	struct rte_eth_dev	*dev;
@@ -181,26 +179,28 @@ struct qdma_rx_queue {
 	uint16_t		nb_rx_desc; /**< number of RX descriptors. */
 	uint16_t		nb_rx_cmpt_desc;
 	uint32_t		queue_id; /**< RX queue index. */
+	uint64_t		mbuf_initializer; /**< value to init mbufs */
 
 	struct qdma_q_pidx_reg_info	q_pidx_info;
 	struct qdma_q_cmpt_cidx_reg_info cmpt_cidx_info;
 	struct qdma_pkt_stats	stats;
 
-	uint32_t		ep_addr;
+	uint16_t		port_id; /**< Device port identifier. */
 	uint8_t			status:1;
 	uint8_t			err:1;
 	uint8_t			st_mode:1; /**< dma-mode: MM or ST */
+	uint8_t			dump_immediate_data:1;
 	uint8_t			rx_deferred_start:1;
 	uint8_t			en_prefetch:1;
 	uint8_t			en_bypass:1;
-	uint8_t			dump_immediate_data:1;
 	uint8_t			en_bypass_prefetch:1;
 	uint8_t			dis_overflow_check:1;
 
-	enum rte_pmd_qdma_bypass_desc_len	bypass_desc_sz:7;
+	union qdma_ul_st_cmpt_ring cmpt_data[QDMA_MAX_BURST_SIZE];
 
-	uint16_t		port_id; /**< Device port identifier. */
+	enum rte_pmd_qdma_bypass_desc_len	bypass_desc_sz:7;
 	uint8_t			func_id; /**< RX queue index. */
+	uint32_t		ep_addr;
 
 	int8_t			ringszidx;
 	int8_t			cmpt_ringszidx;
@@ -208,9 +208,23 @@ struct qdma_rx_queue {
 	int8_t			threshidx;
 	int8_t			timeridx;
 	int8_t			triggermode;
+
 	const struct rte_memzone *rx_mz;
 	/* C2H stream mode, completion descriptor result */
 	const struct rte_memzone *rx_cmpt_mz;
+
+#ifdef QDMA_LATENCY_OPTIMIZED
+	/**< pend_pkt_moving_avg: average rate of packets received */
+	unsigned int pend_pkt_moving_avg;
+	/**< pend_pkt_avg_thr_hi: higher average threshold */
+	unsigned int pend_pkt_avg_thr_hi;
+	/**< pend_pkt_avg_thr_lo: lower average threshold */
+	unsigned int pend_pkt_avg_thr_lo;
+	/**< sorted_c2h_cntr_idx: sorted c2h counter index */
+	unsigned char sorted_c2h_cntr_idx;
+	/**< c2h_cntr_monitor_cnt: c2h counter stagnant monitor count */
+	unsigned char c2h_cntr_monitor_cnt;
+#endif //QDMA_LATENCY_OPTIMIZED
 };
 
 /**
@@ -226,6 +240,7 @@ struct qdma_tx_queue {
 	uint16_t			nb_tx_desc; /* No of TX descriptors.*/
 	rte_spinlock_t			pidx_update_lock;
 	struct qdma_q_pidx_reg_info	q_pidx_info;
+	uint64_t			offloads; /* Tx offloads */
 
 	uint8_t				st_mode:1;/* dma-mode: MM or ST */
 	uint8_t				tx_deferred_start:1;
@@ -236,7 +251,7 @@ struct qdma_tx_queue {
 	uint8_t				func_id; /* RX queue index. */
 	int8_t				ringszidx;
 
-	struct				qdma_pkt_stats stats;
+	struct qdma_pkt_stats stats;
 
 	uint32_t			ep_addr;
 	uint32_t			queue_id; /* TX queue index. */
@@ -273,6 +288,11 @@ struct qdma_pci_dev {
 	uint32_t queue_base;
 	uint8_t func_id;  /* Function id */
 
+	/* DMA identifier used by the resource manager
+	 * for the DMA instances used by this driver
+	 */
+	uint32_t dma_device_index;
+
 	/* Device capabilities */
 	struct qdma_dev_attributes dev_cap;
 
@@ -288,13 +308,14 @@ struct qdma_pci_dev {
 	uint8_t en_desc_prefetch:1;
 
 	/* Reset state */
+	uint8_t reset_in_progress;
 	enum reset_state_t reset_state;
 
 	/* Hardware version info*/
 	uint32_t vivado_rel:4;
 	uint32_t rtl_version:4;
 	uint32_t device_type:4;
-	uint32_t versal_ip_type:4;
+	uint32_t ip_type:4;
 
 	struct queue_info *q_info;
 	struct qdma_dev_mbox mbox;
@@ -304,42 +325,32 @@ struct qdma_pci_dev {
 	uint32_t g_c2h_cnt_th[QDMA_NUM_C2H_COUNTERS];
 	uint32_t g_c2h_buf_sz[QDMA_NUM_C2H_BUFFER_SIZES];
 	uint32_t g_c2h_timer_cnt[QDMA_NUM_C2H_TIMERS];
+#ifdef QDMA_LATENCY_OPTIMIZED
+	uint32_t sorted_idx_c2h_cnt_th[QDMA_NUM_C2H_COUNTERS];
+#endif //QDMA_LATENCY_OPTIMIZED
 	void	**cmpt_queues;
 	/*Pointer to QDMA access layer function pointers*/
 	struct qdma_hw_access *hw_access;
 
 	struct qdma_vf_info *vfinfo;
 	uint8_t vf_online_count;
+
+	int16_t tx_qid_statid_map[RTE_ETHDEV_QUEUE_STAT_CNTRS];
+	int16_t rx_qid_statid_map[RTE_ETHDEV_QUEUE_STAT_CNTRS];
 };
 
 void qdma_dev_ops_init(struct rte_eth_dev *dev);
-uint32_t qdma_read_reg(uint64_t addr);
-void qdma_write_reg(uint64_t addr, uint32_t val);
+uint32_t qdma_read_reg(uint64_t reg_addr);
+void qdma_write_reg(uint64_t reg_addr, uint32_t val);
 void qdma_txq_pidx_update(void *arg);
 int qdma_pf_csr_read(struct rte_eth_dev *dev);
 int qdma_vf_csr_read(struct rte_eth_dev *dev);
 
-void qdma_dev_close(struct rte_eth_dev *dev);
-int qdma_dev_stats_get(struct rte_eth_dev *dev,
-			      struct rte_eth_stats *eth_stats);
-int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
-				uint16_t nb_rx_desc, unsigned int socket_id,
-				const struct rte_eth_rxconf *rx_conf,
-				struct rte_mempool *mb_pool);
-int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
-				uint16_t nb_tx_desc, unsigned int socket_id,
-				const struct rte_eth_txconf *tx_conf);
-void qdma_dev_rx_queue_release(void *rqueue);
-void qdma_dev_tx_queue_release(void *tqueue);
 uint8_t qmda_get_desc_sz_idx(enum rte_pmd_qdma_bypass_desc_len);
-int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t rx_queue_id);
-int qdma_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t rx_queue_id);
-int qdma_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t tx_queue_id);
-int qdma_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t tx_queue_id);
-int qdma_vf_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t rx_queue_id);
-int qdma_vf_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t rx_queue_id);
-int qdma_vf_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t tx_queue_id);
-int qdma_vf_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t tx_queue_id);
+int qdma_vf_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid);
+int qdma_vf_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t qid);
+int qdma_vf_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid);
+int qdma_vf_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t qid);
 
 int qdma_init_rx_queue(struct qdma_rx_queue *rxq);
 void qdma_reset_tx_queue(struct qdma_tx_queue *txq);
@@ -355,18 +366,12 @@ void qdma_inv_tx_queue_ctxts(struct rte_eth_dev *dev, uint32_t qid,
 				uint32_t mode);
 int qdma_identify_bars(struct rte_eth_dev *dev);
 int qdma_get_hw_version(struct rte_eth_dev *dev);
-/* implemented in rxtx.c */
-uint16_t qdma_recv_pkts(void *rx_queue, struct rte_mbuf **rx_pkts,
-				uint16_t nb_pkts);
-uint16_t qdma_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
-				uint16_t nb_pkts);
-int qdma_dev_rx_descriptor_done(void *rx_queue, uint16_t exp_count);
 
+/* implemented in rxtx.c */
 uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 				uint16_t nb_pkts);
 uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 				uint16_t nb_pkts);
-
 uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 				uint16_t nb_pkts);
 uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
@@ -389,7 +394,7 @@ struct rte_memzone *qdma_zone_reserve(struct rte_eth_dev *dev,
 					int socket_id)
 {
 	char z_name[RTE_MEMZONE_NAMESIZE];
-	snprintf(z_name, sizeof(z_name), "%s%s%d_%d",
+	snprintf(z_name, sizeof(z_name), "%s%s%d_%u",
 			dev->device->driver->name, ring_name,
 			dev->data->port_id, queue_id);
 	return rte_memzone_reserve_aligned(z_name, (uint64_t)ring_size,

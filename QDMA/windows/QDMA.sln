@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utilities", "utilities", "{94F05E27-A247-49D0-87D9-9EA67085F512}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "drivers", "drivers", "{AE056764-B26E-440F-A803-22D4287DC633}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{63917B3A-5853-4882-BB78-1A4367A87B62}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QDMA Reference Driver", "sys\drv\qdma_generic.vcxproj", "{B446331B-DD9E-40DD-958A-8D7A1AACA454}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dma-arw", "apps\dma-arw\dma_arw.vcxproj", "{4898E717-0B00-487F-9F88-C95D61116871}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dma-rw", "apps\dma-rw\dma_rw.vcxproj", "{F7C376CA-92F6-4484-B737-8670222CE79F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dma-ctl", "apps\dma-ctl\dmactl.vcxproj", "{620A4D4D-5D14-41BA-909B-011FF03A25FD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libqdma", "sys\libqdma\libqdma.vcxproj", "{359143E6-933A-49CC-806C-C5376E1809A4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454}.Debug|x64.ActiveCfg = Debug|x64
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454}.Debug|x64.Build.0 = Debug|x64
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454}.Debug|x64.Deploy.0 = Debug|x64
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454}.Release|x64.ActiveCfg = Release|x64
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454}.Release|x64.Build.0 = Release|x64
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454}.Release|x64.Deploy.0 = Release|x64
+		{4898E717-0B00-487F-9F88-C95D61116871}.Debug|x64.ActiveCfg = Debug|x64
+		{4898E717-0B00-487F-9F88-C95D61116871}.Debug|x64.Build.0 = Debug|x64
+		{4898E717-0B00-487F-9F88-C95D61116871}.Release|x64.ActiveCfg = Release|x64
+		{4898E717-0B00-487F-9F88-C95D61116871}.Release|x64.Build.0 = Release|x64
+		{F7C376CA-92F6-4484-B737-8670222CE79F}.Debug|x64.ActiveCfg = Debug|x64
+		{F7C376CA-92F6-4484-B737-8670222CE79F}.Debug|x64.Build.0 = Debug|x64
+		{F7C376CA-92F6-4484-B737-8670222CE79F}.Release|x64.ActiveCfg = Release|x64
+		{F7C376CA-92F6-4484-B737-8670222CE79F}.Release|x64.Build.0 = Release|x64
+		{620A4D4D-5D14-41BA-909B-011FF03A25FD}.Debug|x64.ActiveCfg = Debug|x64
+		{620A4D4D-5D14-41BA-909B-011FF03A25FD}.Debug|x64.Build.0 = Debug|x64
+		{620A4D4D-5D14-41BA-909B-011FF03A25FD}.Release|x64.ActiveCfg = Release|x64
+		{620A4D4D-5D14-41BA-909B-011FF03A25FD}.Release|x64.Build.0 = Release|x64
+		{359143E6-933A-49CC-806C-C5376E1809A4}.Debug|x64.ActiveCfg = Debug|x64
+		{359143E6-933A-49CC-806C-C5376E1809A4}.Debug|x64.Build.0 = Debug|x64
+		{359143E6-933A-49CC-806C-C5376E1809A4}.Debug|x64.Deploy.0 = Debug|x64
+		{359143E6-933A-49CC-806C-C5376E1809A4}.Release|x64.ActiveCfg = Release|x64
+		{359143E6-933A-49CC-806C-C5376E1809A4}.Release|x64.Build.0 = Release|x64
+		{359143E6-933A-49CC-806C-C5376E1809A4}.Release|x64.Deploy.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B446331B-DD9E-40DD-958A-8D7A1AACA454} = {AE056764-B26E-440F-A803-22D4287DC633}
+		{4898E717-0B00-487F-9F88-C95D61116871} = {94F05E27-A247-49D0-87D9-9EA67085F512}
+		{F7C376CA-92F6-4484-B737-8670222CE79F} = {94F05E27-A247-49D0-87D9-9EA67085F512}
+		{620A4D4D-5D14-41BA-909B-011FF03A25FD} = {94F05E27-A247-49D0-87D9-9EA67085F512}
+		{359143E6-933A-49CC-806C-C5376E1809A4} = {AE056764-B26E-440F-A803-22D4287DC633}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C455ECA0-8379-4737-AE1C-A9D89747A2E2}
+	EndGlobalSection
+EndGlobal

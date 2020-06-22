@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,7 +38,8 @@
 #include <stdlib.h>
 #include <rte_log.h>
 
-#define QDMA_SNPRINTF	snprintf
+#define QDMA_SNPRINTF_S(arg1, arg2, arg3, ...) \
+		snprintf(arg1, arg3, ##__VA_ARGS__)
 
 #ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
 #define qdma_log_info(x_, ...) rte_log(RTE_LOG_INFO,\

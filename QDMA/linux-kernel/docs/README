@@ -14,9 +14,9 @@ Contents
      1.3   Loading the Kernel module
 2    Configuration
      2.1   Configuring Queues
-3.   Xilinx "dmactl" Command-line Utility
-     3.1   Using dmactl for query the QDMA devices/functions
-     3.2   Using dmactl for Queue control
+3.   Xilinx "dma-ctl" Command-line Utility
+     3.1   Using dma-ctl for query the QDMA devices/functions
+     3.2   Using dma-ctl for Queue control
 4.   QDMA test script
      Sample scripts to run simple MM and ST transfers 
 _____________________________________________________________________________
@@ -43,16 +43,17 @@ _____________________________________________________________________________
 
   	[xilinx@]# make
 
-	a sub-directory build/ will be created as a result of running "make".
+	a sub-directory bin/ will be created as a result of running "make".
 
-	By default, both PF driver (qdma.ko) and VF driver (qdma_vf.ko) will
-	be compiled.
+	By default, both PF driver (qdma-pf.ko) and VF driver (qdma-vf.ko) will
+	be compiled along with all the sample applications
 
-	If only PF driver is desired:
-  	[xilinx@]# make pf
 
-	If only VF driver is desired:
-  	[xilinx@]# make vf
+	If only PF driver needs to be compiled:
+  	[xilinx@]# make driver MODULE=mod_pf
+
+	If only VF driver needs to be compiled:
+  	[xilinx@]# make driver MODULE=mod_vf
 
   1.2 Installing the compiled binaries:
   -------------------------------------
@@ -60,17 +61,12 @@ _____________________________________________________________________________
   To install the QDMA software, the installer must be the root user, then
   run "make install".
 
-  [xilinx@]# make install
+	Run "make install-mods" to install the drivers in /lib/modules/<kernel version>/qdma/
 
-  The QDMA module will be installed in the
-  /lib/modules/<linux_kernel_version>/updates/kernel/drivers/qdma directory.
-
-  The dmactl tool will be installed in /user/local/sbin.
+	Run "make install-apps" to install the applications in "/user/local/sbin"
 
   Example application software to issue DMA requests:
-  dma_to_device for H2C queues and 
-  dma_from_device for C2H queues
-  will be installed in /user/local/sbin.
+  dma-to-device for H2C queues and dma-from-device for C2H queues will be installed in /user/local/sbin.
 
 
   1.3 Loading the Kernel module:
@@ -85,41 +81,30 @@ _____________________________________________________________________________
 
   Find the QDMA device bus number from lspci. Ex : 01:00.0 is the BDF of the device.
   By default, all the functions are loaded in Auto Mode.
-  To load a device in any other mode, load the module as follows:
   
-  [root@]# modprobe qdma mode=0x<device_bus_number><pf0_mode><pf1_mode><pf2_mode><pf3_mode>
-  
-	or
-	
-  [root@]# modprobe qdma mode=0x<device_bus_number><vfg0_mode><vfg1_mode><vfg2_mode><vfg3_mode>
-    
-  To load the module in poll mode run modprobe as follows:
+  In order to pass the module parameters while loading a driver, a config file "qdma.conf" needs to be placed in /etc/modprobe.d directory. Format of the qdma.conf is as below
 
-  [root@]# modprobe qdma mode=0x011111
+	------------------------------------------------------------------------------------------------------------------
+	options <module_name> mode=<bus_num>:<pf_num>:<mode>,<bus_num>:<pf_num>:<mode>,<bus_num>:<pf_num>:<mode>,.....
+	options <module_name> config_bar=<bus_num>:<pf_num>:<config_bar>,<bus_num>:<pf_num>:<config_bar>,<bus_num>:<pf_num>:<config_bar>,.....
+	options <module_name> master_pf=<bus_num>:<master_pf>,<bus_num>:<master_pf>
+	------------------------------------------------------------------------------------------------------------------
 
-  Or on a VM:
-  [root@]# modprobe qdma_vf mode=0x011111
+	- module_name:  Name of the mode. For PF: qdma-pf and for VF: qdma-vf
+	- bus_num : Bus number of the PCIe endpoint card
+	- func_num : Function number of the corressponding bus_num
+	- mode: Mode in which the driver needs to be loaded
+	- config_bar: Config bar number
+	- master_pf: Master PF  
 
-  To load the module in direct interrupt mode run modprobe as follows:
 
-  [root@]# modprobe qdma mode=0x012222
+   Sample qdma.conf can be found below:
 
-  To load the module in indirect interrupt mode run modprobe as follows:
+	------------------------------------------------------------------------------------------------------------------
+	options qdma-pf mode=0x06:0:2,0x06:1:3,0x06:2:0,0x07:2:1
+	options qdma-vf mode=0x06:0:2,0x06:1:3
+	------------------------------------------------------------------------------------------------------------------
 
-  [root@]# modprobe qdma mode=0x013333
-   
-  To load the module with each pf is different mode, run modprobe as follows:
-
-  [root@]# modprobe qdma mode=0x011234
-  
-  To set a master pf other than the first pf, load the module as follows:
-
-  [root@]# modprobe qdma master_pf=0x<bbddf>
-
-  Note:<bbddf> can figured out for a pf from 'lspci' output 
-        bb - bus number
-        dd - device number
-         f -  function number
   
   Now the QDMA software is ready for use.
 
@@ -136,9 +121,13 @@ _____________________________________________________________________________
        dir <h2c | c2h>: queue direction, default to "h2c"
 
   - "idx" is a 0-based unique index on the function.
-    *With the 2018.2 release, the range is
-	0 ~ (512 - 8 * total # of VFs) on a physical function and
-	0 ~ 7 on a virtual function
+    *QDMA3.1, the range can be
+	0 ~ 2047 on a physical function and
+	0 ~ 2047 on a virtual function
+	
+    *QDMA4.0, the range can be
+	0 ~ 2047 on a physical function and
+	0 ~ 256 on a virtual function
 
   - "mode" is the operation mode of the queue.
 	It is either memory mapped (mm) or streaming mode (st)
@@ -151,9 +140,9 @@ _____________________________________________________________________________
   direction.
 
 
-3. Xilinx "dmactl" Command-line Configuration Utility:
+3. Xilinx "dma-ctl" Command-line Configuration Utility:
 
-  The Xilinx QDMA control tool, dmactl, is a Command Line utility
+  The Xilinx QDMA control tool, dma-ctl, is a Command Line utility
   which is installed in /usr/local/sbin/ and allows administration of the
   Xilinx QDMA queues. It can perform the following functions:
 
@@ -177,23 +166,23 @@ _____________________________________________________________________________
   - display the interrupt ring entries in indirect interrupt mode
 
   Apart from the above basic commands, there are various other commands
-  available in dmactl to add/start/stop/del list of queues at the same time
+  available in dma-ctl to add/start/stop/del list of queues at the same time
 
   For help run:
-    dmactl -h
+    dma-ctl -h
        (or)
-    man dmactl
+    man dma-ctl
 
 
-  3.1 Using dmactl for query the QDMA devices/functions
+  3.1 Using dma-ctl for query the QDMA devices/functions
   -------------------------------------
 
-  Please refer User Guide/dmactl man page to find all options and parameters
+  Please refer dma-ctl man page to find all options and parameters
   available.
 
     1. Get the list of devices the driver has bind with
 
-      [root@]# dmactl dev list
+      [root@]# dma-ctl dev list
 
 	qdma06000	0000:06:00.0	max QP: 32
 	qdma06001	0000:06:00.1	max QP: 32
@@ -203,22 +192,22 @@ _____________________________________________________________________________
       the other is at pci BDF: 06:00.1
 
 
-  3.2 Using dmactl for Queue control
+  3.2 Using dma-ctl for Queue control
   -------------------------------------
 
-  Please refer User Guide to find all options and parameters available.
+  Please refer dma-ctl man page to find all options and parameters available.
 
     a. Add/Configure a queue
 
       To add a MM H2C queue on qdma06000 in the above example:
 
-      [root@]# dmactl qdma06000 q add idx 0 mode mm dir h2c
+      [root@]# dma-ctl qdma06000 q add idx 0 mode mm dir h2c
 
       *A character device /dev/qdma06000-MM-0 would be created.
 
       To add a MM C2H queue on qdma06000:
 
-      [root@]# dmactl qdma06000 q add idx 0 mode mm dir c2h
+      [root@]# dma-ctl qdma06000 q add idx 0 mode mm dir c2h
 
       *A character device /dev/qdma06000-MM-0 would be created.
 
@@ -226,28 +215,28 @@ _____________________________________________________________________________
 
       To start the MM H2C queue on qdma06000 added in the previous example:
 
-      [root@]# dmactl qdma06000 q start idx 0 dir h2c
+      [root@]# dma-ctl qdma06000 q start idx 0 dir h2c
 
       *After the queue is started the normal read and write operation can be
        performed on the character device /dev/qdma06000-MM-0.
 
       To start the MM C2H queue on qdma06000 added in the previous example:
 
-      [root@]# dmactl qdma06000 q start idx 0 dir c2h
+      [root@]# dma-ctl qdma06000 q start idx 0 dir c2h
 
       *After the queue is started the normal read and write operation can be
        performed on the character device /dev/qdma06000-MM-0.
 
     c. Stop a queue
 
-      [root@]# dmactl qdma06000 q start idx 0 dir h2c
-      [root@]# dmactl qdma06000 q start idx 0 dir c2h
+      [root@]# dma-ctl qdma06000 q start idx 0 dir h2c
+      [root@]# dma-ctl qdma06000 q start idx 0 dir c2h
 
 
     d. Delete a queue
 
-      [root@]# dmactl qdma06000 q del idx 0 dir h2c
-      [root@]# dmactl qdma06000 q del idx 0 dir c2h
+      [root@]# dma-ctl qdma06000 q del idx 0 dir h2c
+      [root@]# dma-ctl qdma06000 q del idx 0 dir c2h
 
 
 4. QDMA test script

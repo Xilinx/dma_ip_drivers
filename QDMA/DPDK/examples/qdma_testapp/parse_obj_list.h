@@ -124,13 +124,13 @@ typedef struct token_obj_list parse_token_obj_list_t;
 
 extern struct cmdline_token_ops token_obj_list_ops;
 
-int parse_obj_list(cmdline_parse_token_hdr_t *tk, const char *srcbuf, void *res,
-			unsigned int buf_len);
+int parse_obj_list(cmdline_parse_token_hdr_t *tk, const char *srcbuf,
+		void *res, unsigned int buf_len);
 int complete_get_nb_obj_list(cmdline_parse_token_hdr_t *tk);
 int complete_get_elt_obj_list(cmdline_parse_token_hdr_t *tk, int idx,
-			      char *dstbuf, unsigned int size);
+		char *dstbuf, unsigned int size);
 int get_help_obj_list(cmdline_parse_token_hdr_t *tk, char *dstbuf,
-				unsigned int size);
+		unsigned int size);
 
 #define TOKEN_OBJ_LIST_INITIALIZER(structure, field, obj_list_ptr)  \
 {								    \

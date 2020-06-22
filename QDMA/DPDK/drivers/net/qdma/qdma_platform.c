@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "qdma_access.h"
+#include "qdma_access_common.h"
 #include "qdma_platform.h"
 #include "qdma.h"
 #include <rte_malloc.h>
@@ -63,7 +63,7 @@ struct err_code_map error_code_map_list[] = {
 	{QDMA_ERR_MBOX_INV_TMR_TH,		EINVAL},
 	{QDMA_ERR_MBOX_INV_MSG,			EINVAL},
 	{QDMA_ERR_MBOX_SEND_BUSY,		EBUSY},
-	{QDMA_ERR_MOBX_NO_MSG_IN,		EINVAL},
+	{QDMA_ERR_MBOX_NO_MSG_IN,		EINVAL},
 	{QDMA_ERR_MBOX_ALL_ZERO_MSG,		EINVAL},
 };
 

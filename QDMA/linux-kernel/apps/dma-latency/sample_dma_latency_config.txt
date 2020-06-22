@@ -1,0 +1,16 @@
+pf_range=0:0
+q_range=0:0
+flags=
+cmpl_status_acc=5
+dump_en=0
+tmr_idx=9
+cntr_idx=0
+trig_mode=cntr_tmr
+pfetch_en=1
+cmptsz=1
+rngidx=9
+runtime=1
+pkt_sz=64
+pci_bus=41
+pci_device=00
+

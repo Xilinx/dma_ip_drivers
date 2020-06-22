@@ -1,6 +1,6 @@
 #   BSD LICENSE
 #
-#   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
+#   Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -48,12 +48,23 @@ EXPORT_MAP := rte_pmd_qdma_version.map
 
 CFLAGS += -O3 -DDMA_BRAM_SIZE=$(BRAM_SIZE)
 #CFLAGS += -g
+ifeq ($(CONFIG_RTE_LIBRTE_QDMA_GCOV),y)
+  CFLAGS += -ftest-coverage -fprofile-arcs
+endif
 CFLAGS += $(WERROR_FLAGS)
 CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/qdma_access/
+CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/qdma_access/qdma_soft_access/
+CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/qdma_access/eqdma_soft_access/
+CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/qdma_access/qdma_s80_hard_access/
 CFLAGS += -I$(RTE_SDK)/drivers/net/qdma/
 ifeq ($(TEST_64B_DESC_BYPASS),1)
   CFLAGS += -DTEST_64B_DESC_BYPASS
 endif
+ifeq ($(CONFIG_RTE_ARCH_X86_64),y)
+  CFLAGS += -DQDMA_RX_VEC_X86_64
+  CFLAGS += -DQDMA_TX_VEC_X86_64
+endif
+CFLAGS += -DQDMA_LATENCY_OPTIMIZED
 
 # this lib depends upon:
 LDLIBS += -lpthread
@@ -71,13 +82,13 @@ SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_common.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_rxtx.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_xdebug.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_user.c
-SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_access.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/eqdma_soft_access/eqdma_soft_access.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_s80_hard_access/qdma_s80_hard_access.c
+SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_soft_access/qdma_soft_access.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_list.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_resource_mgmt.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_mbox_protocol.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_access_common.c
-SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_cpm_access.c
-SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_access/qdma_reg_dump.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_mbox.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma_platform.c
 SRCS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += rte_pmd_qdma.c

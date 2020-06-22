@@ -117,33 +117,33 @@ struct cmdline_token_ops token_obj_list_ops = {
 };
 
 int
-parse_obj_list(cmdline_parse_token_hdr_t *tk, const char *buf, void *res,
+parse_obj_list(cmdline_parse_token_hdr_t *tk, const char *srcbuf, void *res,
 		unsigned int buf_len)
 {
 	struct token_obj_list *tk2 = (struct token_obj_list *)tk;
 	struct token_obj_list_data *tkd = &tk2->obj_list_data;
-	struct object *o;
+	struct object *obj = NULL;
 	unsigned int token_len = 0;
 
-	if (*buf == 0)
+	if (*srcbuf == 0)
 		return -1;
 
-	while (!cmdline_isendoftoken(buf[token_len]))
+	while (!cmdline_isendoftoken(srcbuf[token_len]))
 		token_len++;
 
-	SLIST_FOREACH(o, tkd->list, next) {
-		if (token_len != strnlen(o->name, OBJ_NAME_LEN_MAX))
+	SLIST_FOREACH(obj, tkd->list, next) {
+		if (token_len != strnlen(obj->name, OBJ_NAME_LEN_MAX))
 			continue;
-		if (strncmp(buf, o->name, token_len))
+		if (strncmp(srcbuf, obj->name, token_len))
 			continue;
 		break;
 	}
-	if (!o) /* not found */
+	if (!obj) /* not found */
 		return -1;
 
 	/* store the address of object in structure */
 	if (res)
-		*(struct object **)res = o;
+		*(struct object **)res = obj;
 
 	return token_len;
 }
@@ -152,10 +152,10 @@ int complete_get_nb_obj_list(cmdline_parse_token_hdr_t *tk)
 {
 	struct token_obj_list *tk2 = (struct token_obj_list *)tk;
 	struct token_obj_list_data *tkd = &tk2->obj_list_data;
-	struct object *o;
+	struct object *obj = NULL;
 	int ret = 0;
 
-	SLIST_FOREACH(o, tkd->list, next) {
+	SLIST_FOREACH(obj, tkd->list, next) {
 		ret++;
 	}
 	return ret;
@@ -166,23 +166,23 @@ int complete_get_elt_obj_list(cmdline_parse_token_hdr_t *tk,
 {
 	struct token_obj_list *tk2 = (struct token_obj_list *)tk;
 	struct token_obj_list_data *tkd = &tk2->obj_list_data;
-	struct object *o;
+	struct object *obj = NULL;
 	int i = 0;
 	unsigned int len;
 
-	SLIST_FOREACH(o, tkd->list, next) {
+	SLIST_FOREACH(obj, tkd->list, next) {
 		if (i++ == idx)
 			break;
 	}
-	if (!o)
+	if (!obj)
 		return -1;
 
-	len = strnlen(o->name, OBJ_NAME_LEN_MAX);
+	len = strnlen(obj->name, OBJ_NAME_LEN_MAX);
 	if ((len + 1) > size)
 		return -1;
 
 	if (dstbuf)
-		snprintf(dstbuf, size, "%s", o->name);
+		snprintf(dstbuf, size, "%s", obj->name);
 
 	return 0;
 }

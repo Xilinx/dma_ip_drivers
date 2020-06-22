@@ -1,39 +1,15 @@
 /*
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
- *
- * BSD LICENSE
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   * Neither the name of the copyright holder nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  */
 
 #include "qdma_resource_mgmt.h"
 #include "qdma_platform.h"
 #include "qdma_list.h"
 #include "qdma_access_errors.h"
+
+#ifdef ENABLE_WPP_TRACING
+#include "qdma_resource_mgmt.tmh"
+#endif
 
 struct qdma_resource_entry {
 	int qbase;
@@ -43,7 +19,7 @@ struct qdma_resource_entry {
 
 /** per function entry */
 struct qdma_dev_entry {
-	uint16_t  func_id;
+	uint16_t func_id;
 	uint32_t active_h2c_qcnt;
 	uint32_t active_c2h_qcnt;
 	uint32_t active_cmpt_qcnt;
@@ -52,8 +28,12 @@ struct qdma_dev_entry {
 
 /** for hodling the qconf_entry structure */
 struct qdma_resource_master {
-	/** pci bus number this reousrce belongs to */
-	uint32_t pci_bus_num;
+	/** DMA device index this resource belongs to */
+	uint32_t dma_device_index;
+	/** starting pci bus number this resource belongs to */
+	uint32_t pci_bus_start;
+	/** ending pci bus number this resource belongs to */
+	uint32_t pci_bus_end;
 	/** total queue this resource manager handles */
 	uint32_t total_q;
 	/** queue base from which this resource manger handles */
@@ -70,17 +50,19 @@ struct qdma_resource_master {
 
 static QDMA_LIST_HEAD(master_resource_list);
 
-static struct qdma_resource_master *qdma_get_master_resource_entry(
-							uint32_t pci_bus_num)
+static struct qdma_resource_master *qdma_find_master_resource_entry(
+		uint32_t bus_start, uint32_t bus_end)
 {
 	struct qdma_list_head *entry, *tmp;
 
 	qdma_resource_lock_take();
 	qdma_list_for_each_safe(entry, tmp, &master_resource_list) {
 		struct qdma_resource_master *q_resource =
-				QDMA_LIST_GET_DATA(entry);
+			(struct qdma_resource_master *)
+			QDMA_LIST_GET_DATA(entry);
 
-		if (q_resource->pci_bus_num == pci_bus_num) {
+		if (q_resource->pci_bus_start == bus_start &&
+			q_resource->pci_bus_end == bus_end) {
 			qdma_resource_lock_give();
 			return q_resource;
 		}
@@ -90,19 +72,41 @@ static struct qdma_resource_master *qdma_get_master_resource_entry(
 	return NULL;
 }
 
-static struct qdma_dev_entry *qdma_get_dev_entry(uint32_t pci_bus_num,
+static struct qdma_resource_master *qdma_get_master_resource_entry(
+		uint32_t dma_device_index)
+{
+	struct qdma_list_head *entry, *tmp;
+
+	qdma_resource_lock_take();
+	qdma_list_for_each_safe(entry, tmp, &master_resource_list) {
+		struct qdma_resource_master *q_resource =
+			(struct qdma_resource_master *)
+				QDMA_LIST_GET_DATA(entry);
+
+		if (q_resource->dma_device_index == dma_device_index) {
+			qdma_resource_lock_give();
+			return q_resource;
+		}
+	}
+	qdma_resource_lock_give();
+
+	return NULL;
+}
+
+static struct qdma_dev_entry *qdma_get_dev_entry(uint32_t dma_device_index,
 						uint16_t func_id)
 {
 	struct qdma_list_head *entry, *tmp;
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 
 	if (!q_resource)
 		return NULL;
 
 	qdma_resource_lock_take();
 	qdma_list_for_each_safe(entry, tmp, &q_resource->dev_list) {
-		struct qdma_dev_entry *dev_entry = QDMA_LIST_GET_DATA(entry);
+		struct qdma_dev_entry *dev_entry = (struct qdma_dev_entry *)
+			QDMA_LIST_GET_DATA(entry);
 
 		if (dev_entry->func_id == func_id) {
 			qdma_resource_lock_give();
@@ -117,8 +121,8 @@ static struct qdma_dev_entry *qdma_get_dev_entry(uint32_t pci_bus_num,
 static struct qdma_resource_entry *qdma_free_entry_create(int q_base,
 							  uint32_t total_q)
 {
-	struct qdma_resource_entry *entry =
-			qdma_calloc(1, sizeof(struct qdma_resource_master));
+	struct qdma_resource_entry *entry = (struct qdma_resource_entry *)
+		qdma_calloc(1, sizeof(struct qdma_resource_master));
 	if (entry == NULL)
 		return NULL;
 
@@ -152,6 +156,7 @@ static void qdma_submit_to_free_list(struct qdma_dev_entry *dev_entry,
 	} else {
 		qdma_list_for_each_safe(entry, tmp, head) {
 			struct qdma_resource_entry *node =
+				(struct qdma_resource_entry *)
 					QDMA_LIST_GET_DATA(entry);
 
 			/* insert the free slot at appropriate place */
@@ -179,7 +184,8 @@ static void qdma_submit_to_free_list(struct qdma_dev_entry *dev_entry,
 
 	/* de-fragment (merge contiguous resource chunks) if possible */
 	qdma_list_for_each_safe(entry, tmp, head) {
-		struct qdma_resource_entry *node = QDMA_LIST_GET_DATA(entry);
+		struct qdma_resource_entry *node =
+		(struct qdma_resource_entry *)QDMA_LIST_GET_DATA(entry);
 
 		if (!streach_node)
 			streach_node = node;
@@ -210,7 +216,7 @@ static struct qdma_resource_entry *qdma_get_resource_node(uint32_t qmax,
 	if (qbase >= 0) {
 		qdma_list_for_each_safe(entry, tmp, free_list_head) {
 			struct qdma_resource_entry *node =
-					QDMA_LIST_GET_DATA(entry);
+			(struct qdma_resource_entry *)QDMA_LIST_GET_DATA(entry);
 
 			if ((qbase >= node->qbase) &&
 					(node->qbase + node->total_q) >=
@@ -224,7 +230,8 @@ static struct qdma_resource_entry *qdma_get_resource_node(uint32_t qmax,
 
 	/* find a best node to accommodate q resource request */
 	qdma_list_for_each_safe(entry, tmp, free_list_head) {
-		struct qdma_resource_entry *node = QDMA_LIST_GET_DATA(entry);
+		struct qdma_resource_entry *node =
+		(struct qdma_resource_entry *)QDMA_LIST_GET_DATA(entry);
 
 		if (node->total_q >= qmax) {
 			if (!best_fit_node || (best_fit_node->total_q >=
@@ -354,23 +361,26 @@ static int qdma_request_q_resource(struct qdma_dev_entry *dev_entry,
 	return rv;
 }
 
-int qdma_master_resource_create(uint32_t pci_bus_num, int qbase,
-				 uint32_t total_q)
+int qdma_master_resource_create(uint32_t bus_start, uint32_t bus_end,
+		int q_base, uint32_t total_q, uint32_t *dma_device_index)
 {
-	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+	struct qdma_resource_master *q_resource;
 	struct qdma_resource_entry *free_entry;
+	static int index;
 
-	if (!q_resource)
-		q_resource = qdma_calloc(1,
-					 sizeof(struct qdma_resource_master));
-	else {
+	q_resource = qdma_find_master_resource_entry(bus_start, bus_end);
+	if (q_resource) {
+		*dma_device_index = q_resource->dma_device_index;
 		qdma_log_debug("%s: Resource already created", __func__);
-		qdma_log_debug("for this bus(%d)\n",
-			     pci_bus_num);
+		qdma_log_debug("for this device(%d)\n",
+				q_resource->dma_device_index);
 		return -QDMA_ERR_RM_RES_EXISTS;
 	}
 
+	*dma_device_index = index;
+
+	q_resource = (struct qdma_resource_master *)qdma_calloc(1,
+		sizeof(struct qdma_resource_master));
 	if (!q_resource) {
 		qdma_log_error("%s: no memory for q_resource, err:%d\n",
 					__func__,
@@ -378,8 +388,8 @@ int qdma_master_resource_create(uint32_t pci_bus_num, int qbase,
 		return -QDMA_ERR_NO_MEM;
 	}
 
-	qdma_resource_lock_take();
-	free_entry = qdma_calloc(1, sizeof(struct qdma_resource_entry));
+	free_entry = (struct qdma_resource_entry *)
+		qdma_calloc(1, sizeof(struct qdma_resource_entry));
 	if (!free_entry) {
 		qdma_memfree(q_resource);
 		qdma_log_error("%s: no memory for free_entry, err:%d\n",
@@ -388,9 +398,12 @@ int qdma_master_resource_create(uint32_t pci_bus_num, int qbase,
 		return -QDMA_ERR_NO_MEM;
 	}
 
-	q_resource->pci_bus_num = pci_bus_num;
+	qdma_resource_lock_take();
+	q_resource->dma_device_index = index;
+	q_resource->pci_bus_start = bus_start;
+	q_resource->pci_bus_end = bus_end;
 	q_resource->total_q = total_q;
-	q_resource->qbase = qbase;
+	q_resource->qbase = q_base;
 	qdma_list_init_head(&q_resource->dev_list);
 	qdma_list_init_head(&q_resource->free_list);
 	QDMA_LIST_SET_DATA(&q_resource->node, q_resource);
@@ -399,18 +412,22 @@ int qdma_master_resource_create(uint32_t pci_bus_num, int qbase,
 
 
 	free_entry->total_q = total_q;
-	free_entry->qbase = qbase;
+	free_entry->qbase = q_base;
 	QDMA_LIST_SET_DATA(&free_entry->node, free_entry);
 	qdma_list_add_tail(&free_entry->node, &q_resource->free_list);
 	qdma_resource_lock_give();
 
+	qdma_log_debug("%s: New master resource created at %d",
+		__func__, index);
+	++index;
+
 	return QDMA_SUCCESS;
 }
 
-void qdma_master_resource_destroy(uint32_t pci_bus_num)
+void qdma_master_resource_destroy(uint32_t dma_device_index)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_list_head *entry, *tmp;
 
 	if (!q_resource)
@@ -422,6 +439,7 @@ void qdma_master_resource_destroy(uint32_t pci_bus_num)
 	}
 	qdma_list_for_each_safe(entry, tmp, &q_resource->free_list) {
 		struct qdma_resource_entry *free_entry =
+			(struct qdma_resource_entry *)
 				QDMA_LIST_GET_DATA(entry);
 
 		qdma_list_del(&free_entry->node);
@@ -433,10 +451,10 @@ void qdma_master_resource_destroy(uint32_t pci_bus_num)
 }
 
 
-int qdma_dev_entry_create(uint32_t pci_bus_num, uint16_t func_id)
+int qdma_dev_entry_create(uint32_t dma_device_index, uint16_t func_id)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource) {
@@ -446,10 +464,11 @@ int qdma_dev_entry_create(uint32_t pci_bus_num, uint16_t func_id)
 		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 	if (!dev_entry) {
 		qdma_resource_lock_take();
-		dev_entry = qdma_calloc(1, sizeof(struct qdma_dev_entry));
+		dev_entry = (struct qdma_dev_entry *)
+			qdma_calloc(1, sizeof(struct qdma_dev_entry));
 		if (dev_entry == NULL) {
 			qdma_resource_lock_give();
 			qdma_log_error("%s: Insufficient memory, err:%d\n",
@@ -476,10 +495,10 @@ int qdma_dev_entry_create(uint32_t pci_bus_num, uint16_t func_id)
 	return QDMA_SUCCESS;
 }
 
-void qdma_dev_entry_destroy(uint32_t pci_bus_num, uint32_t func_id)
+void qdma_dev_entry_destroy(uint32_t dma_device_index, uint16_t func_id)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource) {
@@ -487,7 +506,7 @@ void qdma_dev_entry_destroy(uint32_t pci_bus_num, uint32_t func_id)
 		return;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 	if (!dev_entry) {
 		qdma_log_error("%s: Dev entry not found\n", __func__);
 		return;
@@ -500,11 +519,11 @@ void qdma_dev_entry_destroy(uint32_t pci_bus_num, uint32_t func_id)
 	qdma_resource_lock_give();
 }
 
-int qdma_dev_update(uint32_t pci_bus_num, uint32_t func_id,
+int qdma_dev_update(uint32_t dma_device_index, uint16_t func_id,
 		    uint32_t qmax, int *qbase)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 	int rv;
 
@@ -514,7 +533,7 @@ int qdma_dev_update(uint32_t pci_bus_num, uint32_t func_id,
 		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 
 	if (!dev_entry) {
 		qdma_log_error("%s: Dev Entry not found, err: %d\n",
@@ -547,11 +566,11 @@ int qdma_dev_update(uint32_t pci_bus_num, uint32_t func_id,
 	return rv;
 }
 
-int qdma_dev_qinfo_get(uint32_t pci_bus_num, uint32_t func_id,
+int qdma_dev_qinfo_get(uint32_t dma_device_index, uint16_t func_id,
 		       int *qbase, uint32_t *qmax)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 
 	if (!q_resource) {
@@ -560,7 +579,7 @@ int qdma_dev_qinfo_get(uint32_t pci_bus_num, uint32_t func_id,
 		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 
 	if (!dev_entry) {
 		qdma_log_debug("%s: Dev Entry not created yet\n", __func__);
@@ -575,27 +594,27 @@ int qdma_dev_qinfo_get(uint32_t pci_bus_num, uint32_t func_id,
 	return QDMA_SUCCESS;
 }
 
-enum qdma_dev_q_range qdma_dev_is_queue_in_range(uint32_t pci_bus_num,
-						 uint32_t func_id,
+enum qdma_dev_q_range qdma_dev_is_queue_in_range(uint32_t dma_device_index,
+						 uint16_t func_id,
 						 uint32_t qid_hw)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 	uint32_t qmax;
 
 	if (!q_resource) {
 		qdma_log_error("%s: Queue resource not found, err: %d\n",
 				__func__, -QDMA_ERR_RM_RES_NOT_EXISTS);
-		return -QDMA_ERR_RM_RES_NOT_EXISTS;
+		return QDMA_DEV_Q_OUT_OF_RANGE;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 
 	if (!dev_entry) {
 		qdma_log_error("%s: Dev entry not found, err: %d\n",
 				__func__, -QDMA_ERR_RM_DEV_NOT_EXISTS);
-		return -QDMA_ERR_RM_DEV_NOT_EXISTS;
+		return QDMA_DEV_Q_OUT_OF_RANGE;
 	}
 
 	qdma_resource_lock_take();
@@ -610,14 +629,14 @@ enum qdma_dev_q_range qdma_dev_is_queue_in_range(uint32_t pci_bus_num,
 	return QDMA_DEV_Q_OUT_OF_RANGE;
 }
 
-int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id,
+int qdma_dev_increment_active_queue(uint32_t dma_device_index, uint16_t func_id,
 				    enum qdma_dev_q_type q_type)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 	int rv = QDMA_SUCCESS;
-	unsigned int *active_qcnt = NULL;
+	uint32_t *active_qcnt = NULL;
 
 	if (!q_resource) {
 		qdma_log_error("%s: Queue resource not found, err: %d\n",
@@ -625,7 +644,7 @@ int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id,
 		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 
 	if (!dev_entry) {
 		qdma_log_error("%s: Dev Entry not found, err: %d\n",
@@ -664,11 +683,11 @@ int qdma_dev_increment_active_queue(uint32_t pci_bus_num, uint32_t func_id,
 }
 
 
-int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id,
+int qdma_dev_decrement_active_queue(uint32_t dma_device_index, uint16_t func_id,
 				    enum qdma_dev_q_type q_type)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 	int rv = QDMA_SUCCESS;
 
@@ -679,7 +698,7 @@ int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id,
 		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 	}
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 
 	if (!dev_entry) {
 		qdma_log_error("%s: Dev entry not found, err: %d\n",
@@ -710,10 +729,10 @@ int qdma_dev_decrement_active_queue(uint32_t pci_bus_num, uint32_t func_id,
 	return rv;
 }
 
-uint32_t qdma_get_active_queue_count(uint32_t pci_bus_num)
+uint32_t qdma_get_active_queue_count(uint32_t dma_device_index)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	uint32_t q_cnt;
 
 	if (!q_resource)
@@ -726,19 +745,19 @@ uint32_t qdma_get_active_queue_count(uint32_t pci_bus_num)
 	return q_cnt;
 }
 
-int qdma_get_device_active_queue_count(uint32_t pci_bus_num,
-					uint32_t func_id,
+int qdma_get_device_active_queue_count(uint32_t dma_device_index,
+					uint16_t func_id,
 					enum qdma_dev_q_type q_type)
 {
 	struct qdma_resource_master *q_resource =
-			qdma_get_master_resource_entry(pci_bus_num);
+			qdma_get_master_resource_entry(dma_device_index);
 	struct qdma_dev_entry *dev_entry;
 	uint32_t dev_active_qcnt = 0;
 
 	if (!q_resource)
 		return -QDMA_ERR_RM_RES_NOT_EXISTS;
 
-	dev_entry = qdma_get_dev_entry(pci_bus_num, func_id);
+	dev_entry = qdma_get_dev_entry(dma_device_index, func_id);
 
 	if (!dev_entry)
 		return -QDMA_ERR_RM_DEV_NOT_EXISTS;

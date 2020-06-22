@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -64,7 +64,7 @@ int qdma_mbox_init(struct rte_eth_dev *dev);
 void qdma_mbox_uninit(struct rte_eth_dev *dev);
 void *qdma_mbox_msg_alloc(void);
 void qdma_mbox_msg_free(void *buffer);
-int qdma_mbox_msg_send(struct rte_eth_dev *dev, struct qdma_mbox_msg *buf,
+int qdma_mbox_msg_send(struct rte_eth_dev *dev, struct qdma_mbox_msg *msg,
 		       unsigned int timeout_ms);
 int qdma_dev_notify_qadd(struct rte_eth_dev *dev, uint32_t qidx_hw,
 						enum qdma_dev_q_type q_type);
