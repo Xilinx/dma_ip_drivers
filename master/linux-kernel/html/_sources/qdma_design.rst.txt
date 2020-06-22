@@ -233,7 +233,7 @@ Add a Queue
 ===========
 
 QDMA Linux Driver exposes the ``qdma_queue_add`` API to add a queue to a function. 
-``dmactl`` application provided along with QDMA driver enables
+``dma-ctl`` application provided along with QDMA driver enables
 the user to add a queue. QDMA driver creates the queue handle for application and 
 a character dev interface to read and write to the queue.
 FMAP programming is done for a function when a first queue is added to a function. 
@@ -249,7 +249,7 @@ Start a Queue
 
 QDMA Linux Driver exposes the ``qdma_queue_start`` API to start an already added queue. 
 User can configure the queue using the various configuration options
-provided through ``dmactl`` application. During queue start, driver creates the H2C/C2H descriptor rings, 
+provided through ``dma-ctl`` application. During queue start, driver creates the H2C/C2H descriptor rings, 
 configures the context for the queue, configures the interrupt context
 if driver is loaded in interrupt mode, attaches a thread to the queue.
 
@@ -280,7 +280,7 @@ Queue handle is released and character device interface is deleted
 Read/Write from a Queue
 =======================
 
-``dma_from_device`` and ``dma_to_device`` utilities are provided with QDMA Linux driver to perform 
+``dma-from-device`` and ``dma-to-device`` utilities are provided with QDMA Linux driver to perform 
 a read(C2H) and write(H2C) operations on a queue.
 
 .. image:: /images/read_write_request.PNG

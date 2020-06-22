@@ -1,0 +1,77 @@
+***************************
+DMA read and write (dma-rw)
+***************************
+
+dma-rw is a user application tool provided along with QDMA Windows driver to demonstrate DMA read and write operations.
+
+usage: 
+
+::
+
+	PS H:\> .\dma-rw.exe qdma<N> <DEVNODE> <read|write> <ADDR> [OPTIONS] [DATA]
+
+
+**Parameters**
+
+::
+
+	- qdma<N>   : unique qdma device name (<N> is BBDDF where BB -> PCI Bus No, DD -> PCI Dev No, F -> PCI Fun No)
+	- DEVNODE   : One of: control | user | queue_mm_ | queue_st_*
+	              where the * is a numeric wildcard (0 - N) for queue.
+	- ADDR      : The target offset address of the read/write operation.
+	              Applicable only for control, user, queue_mm device nodes.
+	              Can be in hex or decimal.
+	- OPTIONS   :
+	              -a set alignment requirement for host-side buffer (default: PAGE_SIZE)
+	              -b open file as binary
+	              -f use contents of file as input or write output into file.
+	              -l length of data to read/write (default: 4 bytes or whole file if '-f' flag is used)
+	- DATA      : Space separated bytes (big endian) in decimal or hex,
+	              e.g.: 17 34 51 68
+	              or:   0x11 0x22 0x33 0x44
+
+Read and Write on MM configured queue
+-------------------------------------
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue add mode mm idx_h2c_ringsz 0  idx_c2h_ringsz 0 qid 0
+	Adding queue ::0
+	Added Queue 0 Successfully
+	PS H:\> .\dma-ctl.exe qdma04000 queue start qid 0
+	Starting queue :: 0
+	Started Queue 0 Successfully
+	PS H:\> .\dma-rw.exe qdma04000 queue_mm_0 write 0 11 22 33 44 55 66 77 88 99 00
+	Found 4 QDMA devices
+	PS H:\> .\dma-rw.exe qdma04000 queue_mm_0 read 0 -l 10
+	Found 4 QDMA devices
+	0x0000:  0b 16 21 2c 37 42 4d 58 63 00                       ..!,7BMXc.
+
+Read and write on control/user BAR
+----------------------------------
+
+::
+
+	PS H:\> .\dma_rw.exe qdma04000 control read 0x0 -l 100
+	Found 4 QDMA devices
+	0x0000:  00 00 d3 1f 00 00 00 00 51 00 00 00 52 00 00 00     ........Q...R...
+	0x0010:  34 12 00 00 02 02 02 02 03 00 00 00 01 00 00 00     4...............
+	0x0020:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0030:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0040:  55 00 00 00 55 00 00 00 00 00 00 00 09 00 01 00     U...U...........
+	0x0050:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0060:  00 00 00 00
+	
+	PS H:\> .\dma_rw.exe qdma04000 user read 0x0 -l 100
+	Found 4 QDMA devices
+	0x0000:  01 00 00 00 80 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0010:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0020:  01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0030:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0040:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0050:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+	0x0060:  00 00 00 00
+
+	PS H:\> .\dma_rw.exe qdma04000 user write 0xa0 01 00 00 00
+	Found 4 QDMA devices
+	PS H:\>

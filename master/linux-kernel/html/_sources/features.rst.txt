@@ -33,8 +33,8 @@ QDMA Hardware Features
 * ECC support
 
 
-Features Supported only in Ultrascale+ Designs
-==============================================
+Features Supported only in QDMA3.1 and QDMA4.0 Designs
+======================================================
 
 * Interrupt support for Mailbox events
 * Flexible interrupt allocation between PF and VF
@@ -42,6 +42,10 @@ Features Supported only in Ultrascale+ Designs
 * Streaming C2H completion entry coalescing
 * Disabling overflow check in completion ring
 * Completion ring descriptors of 64 bytes sizes
+
+Features Supported only in QDMA3.1 Design
+=========================================
+
 * Flexible BAR mapping for QDMA configuration register space
 		
 
@@ -74,8 +78,8 @@ QDMA Software Features
 		Interrupt aggregation is used for processing the completion ring.
 		
 - Allows only Privileged Physical Function to program the contexts and registers
-- Dynamic queue configuration, refer to Interface file, libqdma_export.h (struct qdma_queue_conf) for configurable parameters
-- Dynamic driver configuration, refer to Interface file, libqdma_export.h (struct qdma_dev_conf) for configurable parameters
+- Dynamic queue configuration, refer to Interface file, libqdma_export.h (``struct qdma_queue_conf``) for configurable parameters
+- Dynamic driver configuration, refer to Interface file, libqdma_export.h (``struct qdma_dev_conf``) for configurable parameters
 - Driver configuration through sysfs
 - Asynchronous and Synchronous IO support
 - Display the Version details for SW and HW

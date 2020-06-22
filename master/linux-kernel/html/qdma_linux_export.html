@@ -1,60 +1,312 @@
 
 
-<!DOCTYPE html>
+
+<!DOCTYPE HTML>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>QDMA Linux Driver Exported APIs &mdash; QDMA Linux Driver 2019.2 documentation</title>
-  
+	<head>
+		<meta charset="utf-8">
+		
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="description"/>
+		<meta name="keywords"/>
+		<meta property="og:title" content=""/>
+		<meta property="og:description"/>
+		<!-- favicon -->
+		<link rel="icon" type="image/vnd.microsoft.icon" href="_static/favicon.ico"/>
+		<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="_static/favicon.ico"/>
+		<!-- Fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
 
   
   
+  
+  
 
   
+      <script type="text/javascript" src="_static/js/jquery.min.js"></script>	
+	  <script type="text/javascript" src="_static/js/gtm.js"></script>
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+    <script type="text/javascript" src="_static/js/d3dd8c60ed.js"></script>
+    <script type="text/javascript" src="_static/js/common-ui-all.min.js"></script>		
+    <script type="text/javascript" src="_static/js/header-footer.min.js"></script>	
+    <script type="text/javascript" src="_static/js/jquery-ui.min.js"></script>	
+    <script type="text/javascript" src="_static/js/CoveoJsSearch.Lazy.min.js"></script>	
+    <script type="text/javascript" src="_static/js/linkid.js"></script>		
+    <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2020.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="QDMA Linux Driver 2019.2 documentation" href="index.html"/>
-        <link rel="up" title="Developers Guide" href="devguide.html"/>
-        <link rel="next" title="QDMA Linux Driver Design Flow" href="qdma_design.html"/>
-        <link rel="prev" title="Developers Guide" href="devguide.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
-</head>
-
-<body class="wy-body-for-nav" role="document">
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Definitions" href="qdma_linux_export_defines.html" />
+    <link rel="prev" title="Developers Guide" href="devguide.html" /> 
+	</head>
+	<body>
+		<div class="xilinx-bs3"/>
+		<div class="root responsivegrid">
+			<div class="aem-Grid aem-Grid--16 aem-Grid--default--16 aem-Grid--large--16 aem-Grid--xlarge--16 aem-Grid--xxlarge--16 aem-Grid--xxxlarge--16 ">
+				<div class="xilinxExperienceFragments experiencefragment aem-GridColumn aem-GridColumn--default--12">
+					<div class="xf-content-height">
+						<div class="aem-Grid aem-Grid--16 aem-Grid--default--16 ">
+							<div class="header parbase aem-GridColumn aem-GridColumn--default--12">
+								<noindex>
+									<header data-component="header">
+										<nav class="navbar navbar-default aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid main-nav">
+													<div class="row">
+														<div class="col-xs-12">
+															<div class="logo-column">
+																<div class="logo">
+																	<a href="https://www.xilinx.com/">
+																	<img src="https://www.xilinx.com/etc.clientlibs/site/clientlibs/xilinx/all/resources/imgs/header/xilinx-header-logo.svg" title="Xilinx Inc"/>
+																	</a>
+																</div>
+															</div>
+															<div class="navbar-column">
+																<div class="navbar navbar-collapse collapse" id="xilinx-main-menu">
+																	<div class="mobile-search-container">
+																		<div id="headerSearchBox" class="headerSearch"
+																			data-component="header-search" 
+																			data-redirect-if-empty="false"
+																			data-coveo-access-token="xxa237d4dd-f0aa-47fc-9baa-af9121851b33"
+																			data-coveo-organization-id="xilinxcomprode2rjoqok">
+																			<div class='coveo-search-section'>
+																				<div class="CoveoAnalytics" data-search-hub="Site"></div>
+																				<ul class="dropdown-menu options">
+																					<li class="option" data-label="All" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-search-hub="Site">
+																						<a href="#">
+																						All</a>
+																					</li>
+																					<li data-label="Silicon Devices" data-action-link="https://www.xilinx.com//products/silicon-devices/si-keyword-search.html" data-search-hub="Product">
+																						<a href="#">
+																						Silicon Devices</a>
+																					</li>
+																					<li data-label="Boards and Kits" data-action-link="https://www.xilinx.com//products/boards-and-kits/bk-keyword-search.html" data-search-hub="Product">
+																						<a href="#">
+																						Boards and Kits</a>
+																					</li>
+																					<li data-label="Intellectual Property" data-action-link="https://www.xilinx.com//products/intellectual-property/ip-keyword-search.html" data-search-hub="Product">
+																						<a href="#">
+																						Intellectual Property</a>
+																					</li>
+																					<li data-label="Support" class="option" data-action-link="https://www.xilinx.com/search/support-keyword-search.html" data-search-hub="Support">
+																						<a href="#">
+																						Support</a>
+																						<ul>
+																							<li data-label="Documentation" data-action-link="https://www.xilinx.com//support/documentation-navigation/documentation-keyword-search.html" data-search-hub="Document">
+																								<a href="#">
+																								Documentation</a>
+																							</li>
+																							<li data-label="Knowledge Base" data-action-link="https://www.xilinx.com//support/answer-navigation/answer-keyword-search.html" data-search-hub="AnswerRecord">
+																								<a href="#">
+																								Knowledge Base</a>
+																							</li>
+																							<li data-label="Community Forums" data-action-link="https://www.xilinx.com/search/forums-keyword-search.html" data-search-hub="Forums">
+																								<a href="#">
+																								Community Forums</a>
+																							</li>
+																						</ul>
+																					</li>
+																					<li data-label="Partners" data-action-link="https://www.xilinx.com//alliance/member-keyword-search.html" data-search-hub="Partner">
+																						<a href="#">
+																						Partners</a>
+																					</li>
+																					<li data-label="Videos" data-action-link="https://www.xilinx.com/video/video-keyword-search.html" data-search-hub="Video">
+																						<a href="#">
+																						Videos</a>
+																					</li>
+																					<li data-label="Press" data-action-link="https://www.xilinx.com/search/press-keyword-search.html" data-search-hub="Press">
+																						<a href="#">
+																						Press</a>
+																					</li>
+																				</ul>
+																				<a href="#" class="btn dropdown-toggle value" data-toggle="dropdown"></a>
+																				<div class="CoveoSearchbox" data-id="coveosearchbox" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-placeholder="Search Xilinx"></div>
+																			</div>
+																		</div>
+																	</div>
+																	<ul class="nav navbar-nav nav-justified">
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/applications.html">
+																			Applications</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/products/silicon-devices.html">
+																			Products</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://developer.xilinx.com/">
+																			Developers</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/support.html">
+																			Support</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/about/company-overview.html">
+																			About</a> 
+																		</li>
+																	</ul>
+																</div>
+															</div>
+															<script type="text/javascript" src="_static/js/gtm.js"></script>
+															<!--<div class="mini-nav">
+																<button type="button" data-function="xilinx-mobile-menu" id="nav-toggle" class="navbar-toggle collapsed visible-xs-block" aria-expanded="false">
+																<span></span>
+																<span></span>
+																<span></span>
+																<span></span>
+																</button>
+																<ul class="list-inline">
+																	<li class="dropdown user-menu">
+																		<button data-toggle="dropdown">
+																		<span class="sr-only">Account</span>
+																		<span class="fas fa-user"></span>
+																		</button>
+																		<ul class="dropdown-menu">
+																			<li>
+																				<a href="https://www.xilinx.com/myprofile/subscriptions.html">
+																				My Account</a>
+																			</li>
+																			<li>
+																				<a href="https://www.xilinx.com/registration/create-account.html">
+																				Create Account</a>
+																			</li>
+																			<li>
+																				<a href="https://www.xilinx.com/bin/protected/en/signout">
+																				Sign Out</a>
+																			</li>
+																		</ul>
+																	</li>
+																	<li class="hidden-xs">
+																		<button data-function="search-toggle">
+																		<span class="sr-only">Search</span>
+																		<span class="far fa-search"></span>
+																		</button>
+																	</li>
+																</ul>
+															</div>
+															-->
+															<div class="search-container">
+																<div id="headerSearchBox" class="headerSearch"
+																	data-component="header-search" 
+																	data-redirect-if-empty="false"
+																	data-coveo-access-token="xxa237d4dd-f0aa-47fc-9baa-af9121851b33"
+																	data-coveo-organization-id="xilinxcomprode2rjoqok">
+																	<div class='coveo-search-section'>
+																		<div class="CoveoAnalytics" data-search-hub="Site"></div>
+																		<ul class="dropdown-menu options">
+																			<li class="option" data-label="All" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-search-hub="Site">
+																				<a href="#">
+																				All</a>
+																			</li>
+																			<li data-label="Silicon Devices" data-action-link="https://www.xilinx.com/products/silicon-devices/si-keyword-search.html" data-search-hub="Product">
+																				<a href="#">
+																				Silicon Devices</a>
+																			</li>
+																			<li data-label="Boards and Kits" data-action-link="https://www.xilinx.com/products/boards-and-kits/bk-keyword-search.html" data-search-hub="Product">
+																				<a href="#">
+																				Boards and Kits</a>
+																			</li>
+																			<li data-label="Intellectual Property" data-action-link="https://www.xilinx.com/products/intellectual-property/ip-keyword-search.html" data-search-hub="Product">
+																				<a href="#">
+																				Intellectual Property</a>
+																			</li>
+																			<li data-label="Support" class="option" data-action-link="https://www.xilinx.com/search/support-keyword-search.html" data-search-hub="Support">
+																				<a href="#">
+																				Support</a>
+																				<ul>
+																					<li data-label="Documentation" data-action-link="https://www.xilinx.com/support/documentation-navigation/documentation-keyword-search.html" data-search-hub="Document">
+																						<a href="#">
+																						Documentation</a>
+																					</li>
+																					<li data-label="Knowledge Base" data-action-link="https://www.xilinx.com/support/answer-navigation/answer-keyword-search.html" data-search-hub="AnswerRecord">
+																						<a href="#">
+																						Knowledge Base</a>
+																					</li>
+																					<li data-label="Community Forums" data-action-link="https://www.xilinx.com/search/forums-keyword-search.html" data-search-hub="Forums">
+																						<a href="#">
+																						Community Forums</a>
+																					</li>
+																				</ul>
+																			</li>
+																			<li data-label="Partners" data-action-link="https://www.xilinx.com/alliance/member-keyword-search.html" data-search-hub="Partner">
+																				<a href="#">
+																				Partners</a>
+																			</li>
+																			<li data-label="Videos" data-action-link="https://www.xilinx.com/video/video-keyword-search.html" data-search-hub="Video">
+																				<a href="#">
+																				Videos</a>
+																			</li>
+																			<li data-label="Press" data-action-link="https://www.xilinx.com/search/press-keyword-search.html" data-search-hub="Press">
+																				<a href="#">
+																				Press</a>
+																			</li>
+																		</ul>
+																		<a href="#" class="btn dropdown-toggle value" data-toggle="dropdown"></a>
+																		<div class="CoveoSearchbox" data-id="coveosearchbox" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-placeholder="Search Xilinx"></div>
+																	</div>
+																</div>
+																<button data-function="search-toggle">
+																<span class="sr-only">Search</span>
+																<span class="far fa-times"></span>
+																</button>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</nav>
+									</header>
+								</noindex>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="parsys aem-GridColumn--xxxlarge--none aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+						<div class="container-fluid">
+							<div class="row">
+							<div class="col-xs-12">
+   
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
-            <a href="index.html" class="icon icon-home"> QDMA Linux Driver
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> QDMA Linux Driver
           
 
           
@@ -64,7 +316,7 @@
             
             
               <div class="version">
-                2019.2
+                2020.1
               </div>
             
           
@@ -81,11 +333,15 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
             
-                <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
@@ -93,7 +349,13 @@
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">QDMA Linux Driver Exported APIs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">QDMA Linux Driver Exported APIs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_defines.html">Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_enums.html">Enumerations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_structs.html">Data Structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_functions.html">Global Functions</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_design.html">QDMA Linux Driver Design Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
 </ul>
@@ -102,44 +364,70 @@
 </ul>
 
             
+			<p class="caption"><span class="caption-text">This Page</span></p>
+				<ul class="current">
+				  <li class="toctree-l1"><a href="_sources/qdma_linux_export.rst.txt"
+						rel="nofollow">Show Source</a></li>						
+				</ul>
           
         </div>
+        
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">QDMA Linux Driver</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA Linux Driver</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
           <li><a href="devguide.html">Developers Guide</a> &raquo;</li>
-      
-    <li>QDMA Linux Driver Exported APIs</li>
+        
+      <li>QDMA Linux Driver Exported APIs</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/qdma_linux_export.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -147,1783 +435,255 @@
             
   <div class="section" id="qdma-linux-driver-exported-apis">
 <h1>QDMA Linux Driver Exported APIs<a class="headerlink" href="#qdma-linux-driver-exported-apis" title="Permalink to this headline">¶</a></h1>
-<p><strong>Xilinx QDMA Library Interface Definitions</strong></p>
-<p>Header file <em>libqdma_export.h</em> defines data structures and function
-signatures exported by Xilinx QDMA (libqdma) Library.
-libqdma is part of Xilinx QDMA Linux Driver.</p>
-<p>libqdma exports the configuration and control APIs for device and
-queue management and data processing APIs. Configuration APIs
-shall not be invoked in interrupt context by upper layers.</p>
-<dl class="type">
-<dt id="c.qdma_q_mode">
-enum <code class="descname">qdma_q_mode</code><a class="headerlink" href="#c.qdma_q_mode" title="Permalink to this definition">¶</a></dt>
-<dd><p>per queue DMA AXI Interface option</p>
-</dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">QDMA_Q_MODE_MM</span></code></dt>
-<dd>AXI Memory Mapped Mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">QDMA_Q_MODE_ST</span></code></dt>
-<dd>AXI Stream Mode</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_q_dir">
-enum <code class="descname">qdma_q_dir</code><a class="headerlink" href="#c.qdma_q_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Direction of the queue</p>
-</dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">QDMA_Q_DIR_H2C</span></code></dt>
-<dd>host to card</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">QDMA_Q_DIR_C2H</span></code></dt>
-<dd>card to host</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_drv_mode">
-enum <code class="descname">qdma_drv_mode</code><a class="headerlink" href="#c.qdma_drv_mode" title="Permalink to this definition">¶</a></dt>
-<dd><p>PF/VF qdma driver modes</p>
-</dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">AUTO_MODE</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Auto mode is mix of Poll and Interrupt Aggregation</dt>
-<dd>mode. Driver polls for the write back status updates. Interrupt
-aggregation is used for processing the completion ring</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">POLL_MODE</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>In Poll Mode, Software polls for the write back</dt>
-<dd>completions (Status Descriptor Write Back)</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">DIRECT_INTR_MODE</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Direct Interrupt mode, each queue is</dt>
-<dd>assigned to one of the available interrupt vectors in a round robin
-fashion to service the requests. Interrupt is raised by the HW upon
-receiving the completions and software reads the completion status.</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INDIRECT_INTR_MODE</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>In Indirect Interrupt mode or Interrupt</dt>
-<dd>Aggregation mode, each vector has an associated Interrupt
-Aggregation Ring. The QID and status of queues requiring service
-are written into the Interrupt Aggregation Ring. When a PCIe MSI-X
-interrupt is received by the Host, the software reads the Interrupt
-Aggregation Ring to determine which queue needs service. Mapping of
-queues to vectors is programmable</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">LEGACY_INTR_MODE</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Driver is inserted in legacy interrupt mode</dt>
-<dd>Software serves status updates upon receiving the legacy interrupt</dd>
-</dl>
-</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>QDMA PF/VF drivers can be loaded in one of these modes.
-Mode options is exposed as a user configurable module parameter</p>
-<dl class="type">
-<dt id="c.queue_type_t">
-enum <code class="descname">queue_type_t</code><a class="headerlink" href="#c.queue_type_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">Q_H2C</span></code></dt>
-<dd>host to card</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Q_C2H</span></code></dt>
-<dd>card to host</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Q_CMPT</span></code></dt>
-<dd>cmpt queue</dd>
-</dl>
-<dl class="type">
-<dt id="c.intr_ring_size_sel">
-enum <code class="descname">intr_ring_size_sel</code><a class="headerlink" href="#c.intr_ring_size_sel" title="Permalink to this definition">¶</a></dt>
-<dd><p>qdma interrupt ring size selection</p>
-</dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_4KB</span></code></dt>
-<dd>accommodates 512 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_8KB</span></code></dt>
-<dd>accommodates 1024 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_12KB</span></code></dt>
-<dd>accommodates 1536 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_16KB</span></code></dt>
-<dd>accommodates 2048 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_20KB</span></code></dt>
-<dd>accommodates 2560 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_24KB</span></code></dt>
-<dd>accommodates 3072 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_28KB</span></code></dt>
-<dd>accommodates 3584 entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">INTR_RING_SZ_32KB</span></code></dt>
-<dd>accommodates 4096 entries</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>Each interrupt vector can be associated with 1 or more interrupt rings.
-The software can choose 8 different interrupt ring sizes. The ring size
-for each vector is programmed during interrupt context programming</p>
-<dl class="type">
-<dt id="c.qdma_dev_qmax_state">
-enum <code class="descname">qdma_dev_qmax_state</code><a class="headerlink" href="#c.qdma_dev_qmax_state" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">QMAX_CFG_UNCONFIGURED</span></code></dt>
-<dd>queue max not configured</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">QMAX_CFG_INITIAL</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>queue max configured with</dt>
-<dd>initial default values</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">QMAX_CFG_USER</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>queue max configured from</dt>
-<dd>sysfs as per user choice</dd>
-</dl>
-</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>Each PF/VF device can be configured with 0 or more number of queues.
-When the queue is not assigned to any function, function is in unfonfigured
-state. Sysfs interface enables the users to configure the number of
-queues to different functions. Upon adding the queues, function moves to
-user configured state.</p>
-<dl class="type">
-<dt id="c.cmpt_desc_sz_t">
-enum <code class="descname">cmpt_desc_sz_t</code><a class="headerlink" href="#c.cmpt_desc_sz_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">CMPT_DESC_SZ_8B</span></code></dt>
-<dd>completion size 8B</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CMPT_DESC_SZ_16B</span></code></dt>
-<dd>completion size 16B</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CMPT_DESC_SZ_32B</span></code></dt>
-<dd>completion size 32B</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">CMPT_DESC_SZ_64B</span></code></dt>
-<dd>completion size 64B</dd>
-</dl>
-<dl class="type">
-<dt id="c.desc_sz_t">
-enum <code class="descname">desc_sz_t</code><a class="headerlink" href="#c.desc_sz_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">DESC_SZ_8B</span></code></dt>
-<dd>descriptor size 8B</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">DESC_SZ_16B</span></code></dt>
-<dd>descriptor size 16B</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">DESC_SZ_32B</span></code></dt>
-<dd>descriptor size 32B</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">DESC_SZ_64B</span></code></dt>
-<dd>descriptor size 64B</dd>
-</dl>
-<dl class="type">
-<dt id="c.tigger_mode_t">
-enum <code class="descname">tigger_mode_t</code><a class="headerlink" href="#c.tigger_mode_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">TRIG_MODE_DISABLE</span></code></dt>
-<dd>disable trigger mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">TRIG_MODE_ANY</span></code></dt>
-<dd>any trigger mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">TRIG_MODE_COUNTER</span></code></dt>
-<dd>counter trigger mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">TRIG_MODE_USER</span></code></dt>
-<dd>trigger mode of user choice</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">TRIG_MODE_TIMER</span></code></dt>
-<dd>timer trigger mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">TRIG_MODE_COMBO</span></code></dt>
-<dd>timer and counter combo trigger mode</dd>
-</dl>
-<dl class="type">
-<dt id="c.q_state_t">
-enum <code class="descname">q_state_t</code><a class="headerlink" href="#c.q_state_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Constants</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">Q_STATE_DISABLED</span></code></dt>
-<dd>Queue is not taken</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Q_STATE_ENABLED</span></code></dt>
-<dd>Assigned/taken. Partial config is done</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">Q_STATE_ONLINE</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Resource/context is initialized for the queue</dt>
-<dd>and is available for data consumption</dd>
-</dl>
-</dd>
-</dl>
-<dl class="type">
-<dt id="c.drv_mode_name">
-struct <code class="descname">drv_mode_name</code><a class="headerlink" href="#c.drv_mode_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Structure to hold the driver name and mode</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct drv_mode_name {
-  enum qdma_drv_mode drv_mode;
-  char name;
-};
-</pre></div>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_defines.html">Definitions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_defines.html#macros">Macros</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_enums.html">Enumerations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-cmpt-desc-sz-t">enum cmpt_desc_sz_t</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-desc-sz-t">enum desc_sz_t</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-intr-ring-size-sel">enum intr_ring_size_sel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-q-state-t">enum q_state_t</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-dev-qmax-state">enum qdma_dev_qmax_state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-drv-mode">enum qdma_drv_mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-q-dir">enum qdma_q_dir</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-q-mode">enum qdma_q_mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-queue-type-t">enum queue_type_t</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-tigger-mode-t">enum tigger_mode_t</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_structs.html">Data Structures</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-drv-mode-name">struct drv_mode_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-global-csr-conf">struct global_csr_conf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-cmpl-ctrl">struct qdma_cmpl_ctrl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-dev-conf">struct qdma_dev_conf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-q-state">struct qdma_q_state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-q-type">struct qdma_q_type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-queue-conf">struct qdma_queue_conf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-queue-count">struct qdma_queue_count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-request">struct qdma_request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-sw-sg">struct qdma_sw_sg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-ul-cmpt-info">struct qdma_ul_cmpt_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-version-info">struct qdma_version_info</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_functions.html">Global Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#libqdma-init">libqdma_init</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#libqdma-exit">libqdma_exit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#intr-legacy-init">intr_legacy_init</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-open">qdma_device_open</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-close">qdma_device_close</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-offline">qdma_device_offline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-online">qdma_device_online</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-flr-quirk-set">qdma_device_flr_quirk_set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-flr-quirk-check">qdma_device_flr_quirk_check</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-config">qdma_device_get_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-clear-stats">qdma_device_clear_stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-mmh2c-pkts">qdma_device_get_mmh2c_pkts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-mmc2h-pkts">qdma_device_get_mmc2h_pkts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-sth2c-pkts">qdma_device_get_sth2c_pkts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-stc2h-pkts">qdma_device_get_stc2h_pkts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-ping-pong-min-lat">qdma_device_get_ping_pong_min_lat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-ping-pong-max-lat">qdma_device_get_ping_pong_max_lat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-ping-pong-tot-lat">qdma_device_get_ping_pong_tot_lat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-set-config">qdma_device_set_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-sriov-config">qdma_device_sriov_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-read-config-register">qdma_device_read_config_register</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-write-config-register">qdma_device_write_config_register</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-capabilities-info">qdma_device_capabilities_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-version-info">qdma_device_version_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-software-version-info">qdma_software_version_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-global-csr-get">qdma_global_csr_get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-add">qdma_queue_add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-config">qdma_queue_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-start">qdma_queue_start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-stop">qdma_queue_stop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-get-queue-state">qdma_get_queue_state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-remove">qdma_queue_remove</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-get-config">qdma_queue_get_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-list">qdma_queue_list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-config-reg-dump">qdma_config_reg_dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-dump">qdma_queue_dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-dump-desc">qdma_queue_dump_desc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-dump-cmpt">qdma_queue_dump_cmpt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-request-submit">qdma_request_submit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-batch-request-submit">qdma_batch_request_submit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-c2h-peek">qdma_queue_c2h_peek</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-avail-desc">qdma_queue_avail_desc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-cmpl-ctrl">qdma_queue_cmpl_ctrl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-packet-read">qdma_queue_packet_read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-packet-write">qdma_queue_packet_write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-service">qdma_queue_service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-update-pointers">qdma_queue_update_pointers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-intr-ring-dump">qdma_intr_ring_dump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-descq-get-cmpt-udd">qdma_descq_get_cmpt_udd</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-descq-read-cmpt-data">qdma_descq_read_cmpt_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-get-queue-count">qdma_get_queue_count</a></li>
+</ul>
+</li>
+</ul>
 </div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">drv_mode</span></code></dt>
-<dd>Mode of the function</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">name</span></code></dt>
-<dd>Driver Name</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>Mode can be set for each PF or VF group using module parameters
-Refer enum qdma_drv_mode for different mode options</p>
-<dl class="type">
-<dt id="c.qdma_q_type">
-struct <code class="descname">qdma_q_type</code><a class="headerlink" href="#c.qdma_q_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Queue type</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_q_type {
-  const char * name;
-  enum queue_type_t q_type;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">name</span></code></dt>
-<dd>Queue type name</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">q_type</span></code></dt>
-<dd>Queue type</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>Look up table for name of the queue type and enum</p>
-<dl class="type">
-<dt id="c.qdma_ul_cmpt_info">
-struct <code class="descname">qdma_ul_cmpt_info</code><a class="headerlink" href="#c.qdma_ul_cmpt_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>Completion entry format</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_ul_cmpt_info {
-  union {unnamed_union};
-  u8 rsvd;
-  u16 len;
-  unsigned int pidx;
-  __be64 * entry;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">{unnamed_union}</span></code></dt>
-<dd>anonymous</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">rsvd</span></code></dt>
-<dd>Reserved filed added for structure alignment</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">len</span></code></dt>
-<dd>Length of the completion entry</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pidx</span></code></dt>
-<dd>Producer Index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">entry</span></code></dt>
-<dd>Completion entry</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>Completion Entry is user logic dependent
-Current SW supported the following completion entry format</p>
-<dl class="type">
-<dt id="c.qdma_dev_conf">
-struct <code class="descname">qdma_dev_conf</code><a class="headerlink" href="#c.qdma_dev_conf" title="Permalink to this definition">¶</a></dt>
-<dd><p>device qdma property.</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_dev_conf {
-  struct pci_dev * pdev;
-  unsigned short qsets_max;
-  unsigned short rsvd2;
-  u8 zerolen_dma:1;
-  u8 master_pf:1;
-  u8 intr_moderation:1;
-  u8 rsvd1:5;
-  u8 vf_max;
-  u8 intr_rngsz;
-  u16 msix_qvec_max;
-  u16 user_msix_qvec_max;
-  u16 data_msix_qvec_max;
-  unsigned long uld;
-  enum qdma_drv_mode qdma_drv_mode;
-  char name;
-  char bar_num_config;
-  char bar_num_user;
-  char bar_num_bypass;
-  int qsets_base;
-  u32 bdf;
-  u32 idx;
-  void (* fp_user_isr_handler) (unsigned long dev_hndl, unsigned long uld);
-  void (* fp_q_isr_top_dev) (unsigned long dev_hndl, unsigned long uld);
-  void * debugfs_dev_root;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">pdev</span></code></dt>
-<dd>pointer to pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">qsets_max</span></code></dt>
-<dd>Maximum number of queue pairs per device</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">rsvd2</span></code></dt>
-<dd>Reserved</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">zerolen_dma</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Indicates whether zero length</dt>
-<dd>DMA is allowed or not</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">master_pf</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Indicates whether the current pf</dt>
-<dd>is master_pf or not</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">intr_moderation</span></code></dt>
-<dd>moderate interrupt generation</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">rsvd1</span></code></dt>
-<dd>Reserved1</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">vf_max</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Maximum number of virtual functions for</dt>
-<dd>current physical function</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">intr_rngsz</span></code></dt>
-<dd>Interrupt ring size</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">msix_qvec_max</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>max. of vectors used for queues.</dt>
-<dd>libqdma update w/ actual #</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">user_msix_qvec_max</span></code></dt>
-<dd>Max user msix vectors</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">data_msix_qvec_max</span></code></dt>
-<dd>Max data msix vectors</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">uld</span></code></dt>
-<dd>upper layer data, i.e. callback data</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">qdma_drv_mode</span></code></dt>
-<dd>qdma driver mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">name</span></code></dt>
-<dd>an unique string to identify the dev.
-current format: qdma[pf|vf][idx] filled in by libqdma</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">bar_num_config</span></code></dt>
-<dd>dma config bar #, &lt; 0 not present</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">bar_num_user</span></code></dt>
-<dd>user bar</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">bar_num_bypass</span></code></dt>
-<dd>bypass bar</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">qsets_base</span></code></dt>
-<dd>queue base for this funciton</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">bdf</span></code></dt>
-<dd>device index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">idx</span></code></dt>
-<dd>index of device in device list</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_user_isr_handler</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>user interrupt, if null,</dt>
-<dd>default libqdma handler is used</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_q_isr_top_dev</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Q interrupt top,</dt>
-<dd>per-device addtional handling code</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">debugfs_dev_root</span></code></dt>
-<dd>root path for debugfs</dd>
-</dl>
-<p><strong>NOTE</strong></p>
-<dl class="docutils">
-<dt>if any of the max requested is less than supported, the value will</dt>
-<dd>be updated</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_version_info">
-struct <code class="descname">qdma_version_info</code><a class="headerlink" href="#c.qdma_version_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>defines the per-device version information</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_version_info {
-  char rtl_version_str;
-  char vivado_release_str;
-  char versal_ip_str;
-  char device_type_str;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">rtl_version_str</span></code></dt>
-<dd>Version string</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">vivado_release_str</span></code></dt>
-<dd>Release string</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">versal_ip_str</span></code></dt>
-<dd>Versal IP version string</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">device_type_str</span></code></dt>
-<dd>Qdma device type string</dd>
-</dl>
-<dl class="type">
-<dt id="c.global_csr_conf">
-struct <code class="descname">global_csr_conf</code><a class="headerlink" href="#c.global_csr_conf" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct global_csr_conf {
-  unsigned int ring_sz;
-  unsigned int c2h_timer_cnt;
-  unsigned int c2h_cnt_th;
-  unsigned int c2h_buf_sz;
-  unsigned int wb_intvl;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">ring_sz</span></code></dt>
-<dd>Descriptor ring size ie. queue depth</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">c2h_timer_cnt</span></code></dt>
-<dd>C2H timer count  list</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">c2h_cnt_th</span></code></dt>
-<dd>C2H counter threshold list</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">c2h_buf_sz</span></code></dt>
-<dd>C2H buffer size list</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">wb_intvl</span></code></dt>
-<dd>Writeback interval</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_sw_sg">
-struct <code class="descname">qdma_sw_sg</code><a class="headerlink" href="#c.qdma_sw_sg" title="Permalink to this definition">¶</a></dt>
-<dd><p>qdma scatter gather request</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_sw_sg {
-  struct qdma_sw_sg * next;
-  struct page * pg;
-  unsigned int offset;
-  unsigned int len;
-  dma_addr_t dma_addr;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">next</span></code></dt>
-<dd>pointer to next page</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pg</span></code></dt>
-<dd>pointer to current page</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">offset</span></code></dt>
-<dd>offset in current page</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">len</span></code></dt>
-<dd>length of the page</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">dma_addr</span></code></dt>
-<dd>dma address of the allocated page</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_queue_conf">
-struct <code class="descname">qdma_queue_conf</code><a class="headerlink" href="#c.qdma_queue_conf" title="Permalink to this definition">¶</a></dt>
-<dd><p>qdma configuration parameters</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_queue_conf {
-  u32 qidx:24;
-  u32 st:1;
-  u32 q_type:2;
-  u32 pipe:1;
-  u32 irq_en:1;
-  u32 desc_rng_sz_idx:4;
-  u8 wb_status_en:1;
-  u8 cmpl_status_acc_en:1;
-  u8 cmpl_status_pend_chk:1;
-  u8 desc_bypass:1;
-  u8 pfetch_en:1;
-  u8 fetch_credit:1;
-  u8 st_pkt_mode:1;
-  u8 c2h_buf_sz_idx:4;
-  u8 cmpl_rng_sz_idx:4;
-  u8 cmpl_desc_sz:2;
-  u8 cmpl_stat_en:1;
-  u8 cmpl_udd_en:1;
-  u8 cmpl_timer_idx:4;
-  u8 cmpl_cnt_th_idx:4;
-  u8 cmpl_trig_mode:3;
-  u8 cmpl_en_intr:1;
-  u8 sw_desc_sz:2;
-  u8 pfetch_bypass:1;
-  u8 cmpl_ovf_chk_dis:1;
-  u8 port_id:3;
-  u8 at:1;
-  u8 adaptive_rx:1;
-  u8 latency_optimize:1;
-  u8 init_pidx_dis:1;
-  u8 mm_channel:1;
-  unsigned long quld;
-  void (* fp_descq_isr_top) (unsigned long qhndl, unsigned long quld);
-  int (* fp_descq_c2h_packet) (unsigned long qhndl, unsigned long quld,unsigned int len, unsigned int sgcnt, struct qdma_sw_sg *sgl, void *udd);
-  int (* fp_bypass_desc_fill) (void *q_hndl, enum qdma_q_mode q_mode, enum qdma_q_dir, struct qdma_request *req);
-  int (* fp_proc_ul_cmpt_entry) (void *cmpt_entry, struct qdma_ul_cmpt_info *cmpt_info);
-  char name;
-  unsigned int rngsz;
-  unsigned int rngsz_cmpt;
-  unsigned int c2h_bufsz;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">qidx</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>0xFFFF: libqdma choose the queue idx 0 ~</dt>
-<dd><dl class="first last docutils">
-<dt>(qdma_dev_conf.qsets_max - 1) the calling function choose the</dt>
-<dd>queue idx</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">st</span></code></dt>
-<dd>Indicates the streaming mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">q_type</span></code></dt>
-<dd>queue_type_t</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pipe</span></code></dt>
-<dd>SDx only: inter-kernel communication pipe</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">irq_en</span></code></dt>
-<dd>poll or interrupt</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">desc_rng_sz_idx</span></code></dt>
-<dd>global_csr_conf.ringsz[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">wb_status_en</span></code></dt>
-<dd>writeback enable, disabled for ST C2H</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_status_acc_en</span></code></dt>
-<dd>sw context.cmpl_status_acc_en</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_status_pend_chk</span></code></dt>
-<dd>sw context.cmpl_stauts_pend_chk</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">desc_bypass</span></code></dt>
-<dd>send descriptor to bypass out</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pfetch_en</span></code></dt>
-<dd>descriptor prefetch enable control</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fetch_credit</span></code></dt>
-<dd>sw context.frcd_en[32]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">st_pkt_mode</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>SDx only: ST packet mode</dt>
-<dd>(i.e., with TLAST to identify the packet boundary)</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">c2h_buf_sz_idx</span></code></dt>
-<dd>global_csr_conf.c2h_buf_sz[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_rng_sz_idx</span></code></dt>
-<dd>global_csr_conf.ringsz[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_desc_sz</span></code></dt>
-<dd>C2H ST cmpt + immediate data, desc_sz_t</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_stat_en</span></code></dt>
-<dd>enable status desc. for CMPT</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_udd_en</span></code></dt>
-<dd>C2H Completion entry user-defined data</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_timer_idx</span></code></dt>
-<dd>global_csr_conf.c2h_timer_cnt[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_cnt_th_idx</span></code></dt>
-<dd>global_csr_conf.c2h_cnt_th[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_trig_mode</span></code></dt>
-<dd>tigger_mode_t</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_en_intr</span></code></dt>
-<dd>enable interrupt for CMPT</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">sw_desc_sz</span></code></dt>
-<dd>SW Context desc size, desc_sz_t</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pfetch_bypass</span></code></dt>
-<dd>prefetch bypass en</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_ovf_chk_dis</span></code></dt>
-<dd>OVF_DIS C2H ST over flow disable</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">port_id</span></code></dt>
-<dd>Port ID</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">at</span></code></dt>
-<dd>Address Translation</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">adaptive_rx</span></code></dt>
-<dd>Adaptive rx counter threshold</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">latency_optimize</span></code></dt>
-<dd>optimize for latency</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">init_pidx_dis</span></code></dt>
-<dd>Disable pidx initialiaztion for ST C2H</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">mm_channel</span></code></dt>
-<dd>MM Channel</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">quld</span></code></dt>
-<dd>user provided per-Q irq handler</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_descq_isr_top</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>Q interrupt top, per-queue additional handling</dt>
-<dd>code for example, network rx napi_schedule(<code class="xref c c-type docutils literal notranslate"><span class="pre">Q-&gt;napi</span></code>)</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_descq_c2h_packet</span></code></dt>
-<dd><dl class="first docutils">
-<dt>optional rx packet handler:</dt>
-<dd>called from irq BH (i.e.:c:func:<cite>qdma_queue_service_bh()</cite>)</dd>
-</dl>
-<p>udd: user defined data in the completion entry
-sgcnt / sgl: packet data in scatter-gather list</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>NOTE: a. do NOT modify any field of sgl</dt>
-<dd><ol class="first last loweralpha simple" start="2">
-<li>if zero copy, do a <code class="xref c c-func docutils literal notranslate"><span class="pre">get_page()</span></code> to prevent page freeing</li>
-<li>do loop through the sgl with sg-&gt;next and stop
-at sgcnt. the last sg may not have sg-&gt;next = NULL</li>
-</ol>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="docutils">
-<dt>Returns:</dt>
-<dd>0 to allow libqdma free/re-task the sgl
-&lt; 0, libqdma will keep the packet for processing again</dd>
-</dl>
-<p>A single packet could contain:
-in the case of c2h_udd_en = 1:</p>
-<p class="last">udd only (udd valid, sgcnt = 0, sgl = NULL), or
-udd + packet data in the case of c2h_udd_en = 0:
-packet data (udd = NULL, sgcnt &gt; 0 and sgl valid)</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_bypass_desc_fill</span></code></dt>
-<dd><dl class="first docutils">
-<dt>fill the all the descriptors required for</dt>
-<dd>transfer</dd>
-<dt>q_hndl: handle with which bypass module can request back info from</dt>
-<dd>libqdma</dd>
-</dl>
-<p>q_mode: mode in which q is initialized
-q_dir: direction in which q is initialized
-sgcnt: number of scatter gather entries for this request
-sgl: list of scatter gather entries</p>
-<blockquote class="last">
-<div>On calling this API, bypass module can request for descriptor using
-qdma_q_desc_get and set up as many descriptors as required for each
-scatter gather entry. If descriptors required are not available,
-it can return the number of sgcnt addressed till now and return &lt;0
-in case of any failure</div></blockquote>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_proc_ul_cmpt_entry</span></code></dt>
-<dd><p class="first">parse cmpt entry in bypass mode</p>
-<p class="last">q_mode: mode in which q is initialized
-cmpt_entry: cmpt entry descriptor
-cmpt_info: parsed bypass related info from cmpt_entry</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">name</span></code></dt>
-<dd>name of the qdma device</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">rngsz</span></code></dt>
-<dd>ring size of the queue</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">rngsz_cmpt</span></code></dt>
-<dd>completion ring size of the queue</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">c2h_bufsz</span></code></dt>
-<dd>C2H buffer size</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>qdma_queue_conf defines the per-dma Q property.
-if any of the max requested is less than supported, the value will
-be updated</p>
-<dl class="type">
-<dt id="c.qdma_q_state">
-struct <code class="descname">qdma_q_state</code><a class="headerlink" href="#c.qdma_q_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>display queue state in a string buffer</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_q_state {
-  enum q_state_t qstate;
-  u32 qidx:24;
-  u32 st:1;
-  enum queue_type_t q_type;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">qstate</span></code></dt>
-<dd>current q state</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">qidx</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>0xFFFF: libqdma choose the queue idx 0 ~</dt>
-<dd><dl class="first last docutils">
-<dt>(qdma_dev_conf.qsets_max - 1) the calling function choose the</dt>
-<dd>queue idx</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">st</span></code></dt>
-<dd>Indicates the streaming mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">q_type</span></code></dt>
-<dd>queue type</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_request">
-struct <code class="descname">qdma_request</code><a class="headerlink" href="#c.qdma_request" title="Permalink to this definition">¶</a></dt>
-<dd><p>qdma request for read or write</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_request {
-  unsigned char opaque;
-  unsigned long uld_data;
-  int (* fp_done) (struct qdma_request *req, unsigned int bytes_done, int err);
-  unsigned int timeout_ms;
-  unsigned int count;
-  u64 ep_addr;
-  u8 no_memcpy:1;
-  u8 write:1;
-  u8 dma_mapped:1;
-  u8 h2c_eot:1;
-  u8 udd_len;
-  unsigned int sgcnt;
-  struct qdma_sw_sg * sgl;
-  u8 udd;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">opaque</span></code></dt>
-<dd>private to the dma driver, do NOT touch</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">uld_data</span></code></dt>
-<dd><dl class="first last docutils">
-<dt>filled in by the calling function</dt>
-<dd>for the calling function</dd>
-</dl>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">fp_done</span></code></dt>
-<dd>set fp_done for non-blocking mode</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">timeout_ms</span></code></dt>
-<dd>timeout in mili-seconds, 0 - no timeout</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">count</span></code></dt>
-<dd>total data size</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">ep_addr</span></code></dt>
-<dd>MM only, DDR/BRAM memory addr</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">no_memcpy</span></code></dt>
-<dd>flag to indicate if memcpy is required</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">write</span></code></dt>
-<dd>if write to the device</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">dma_mapped</span></code></dt>
-<dd>if sgt is already dma mapped</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">h2c_eot</span></code></dt>
-<dd>user defined data present</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">udd_len</span></code></dt>
-<dd>indicates end of transfer towards user kernel</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">sgcnt</span></code></dt>
-<dd># of scatter-gather entries &lt; 64K</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">sgl</span></code></dt>
-<dd>scatter-gather list of data bufs</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">udd</span></code></dt>
-<dd>udd data</dd>
-</dl>
-<dl class="type">
-<dt id="c.qdma_cmpl_ctrl">
-struct <code class="descname">qdma_cmpl_ctrl</code><a class="headerlink" href="#c.qdma_cmpl_ctrl" title="Permalink to this definition">¶</a></dt>
-<dd><p>completion control</p>
-</dd></dl>
-
-<p><strong>Definition</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre>struct qdma_cmpl_ctrl {
-  u8 cnt_th_idx:4;
-  u8 timer_idx:4;
-  u8 trigger_mode:3;
-  u8 en_stat_desc:1;
-  u8 cmpl_en_intr:1;
-};
-</pre></div>
-</div>
-<p><strong>Members</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">cnt_th_idx</span></code></dt>
-<dd>global_csr_conf.c2h_cnt_th[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">timer_idx</span></code></dt>
-<dd>global_csr_conf.c2h_timer_cnt[N]</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">trigger_mode</span></code></dt>
-<dd>tigger_mode_t</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">en_stat_desc</span></code></dt>
-<dd>enable status desc. for CMPT</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">cmpl_en_intr</span></code></dt>
-<dd>enable interrupt for CMPT</dd>
-</dl>
-<dl class="function">
-<dt id="c.libqdma_init">
-int <code class="descname">libqdma_init</code><span class="sig-paren">(</span>unsigned int<em>&nbsp;num_threads</em>, void *<em>&nbsp;debugfs_root</em><span class="sig-paren">)</span><a class="headerlink" href="#c.libqdma_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>initializes the QDMA core library</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">num_threads</span></code></dt>
-<dd>number of threads to be created each for request
-processing and writeback processing</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">*</span> <span class="pre">debugfs_root</span></code></dt>
-<dd>root path for debugfs</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0:      success &lt;0:     error</p>
-<dl class="function">
-<dt id="c.libqdma_exit">
-void <code class="descname">libqdma_exit</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.libqdma_exit" title="Permalink to this definition">¶</a></dt>
-<dd><p>cleanup the QDMA core library before exiting</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">void</span></code></dt>
-<dd>no arguments</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>cleanup the QDMA core library before exiting</p>
-<dl class="function">
-<dt id="c.intr_legacy_init">
-void <code class="descname">intr_legacy_init</code><span class="sig-paren">(</span>void<span class="sig-paren">)</span><a class="headerlink" href="#c.intr_legacy_init" title="Permalink to this definition">¶</a></dt>
-<dd><p>legacy interrupt init</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">void</span></code></dt>
-<dd>no arguments</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_device_open">
-int <code class="descname">qdma_device_open</code><span class="sig-paren">(</span>const char *<em>&nbsp;mod_name</em>, struct <a class="reference internal" href="#c.qdma_dev_conf" title="qdma_dev_conf">qdma_dev_conf</a> *<em>&nbsp;conf</em>, unsigned long *<em>&nbsp;dev_hndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_open" title="Permalink to this definition">¶</a></dt>
-<dd><p>read the pci bars and configure the fpga This API should be called from <code class="xref c c-func docutils literal notranslate"><span class="pre">probe()</span></code></p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span> <span class="pre">mod_name</span></code></dt>
-<dd>the module name, used for request_irq</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_dev_conf</span> <span class="pre">*</span> <span class="pre">conf</span></code></dt>
-<dd>device configuration</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">*</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>an opaque handle for libqdma to identify the device</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>User interrupt will not be enabled until <code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_user_isr_enable()</span></code> is called</p>
-<p><strong>Return</strong></p>
-<p>0 in case of success and &lt;0 in case of error</p>
-<dl class="function">
-<dt id="c.qdma_device_close">
-int <code class="descname">qdma_device_close</code><span class="sig-paren">(</span>struct pci_dev *<em>&nbsp;pdev</em>, unsigned long<em>&nbsp;dev_hndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_close" title="Permalink to this definition">¶</a></dt>
-<dd><p>prepare fpga for removal: disable all interrupts (users and qdma) and release all resources.This API should be called from <code class="xref c c-func docutils literal notranslate"><span class="pre">remove()</span></code></p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pci_dev</span> <span class="pre">*</span> <span class="pre">pdev</span></code></dt>
-<dd>ptr to struct pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retured from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 in case of success and &lt;0 in case of error</p>
-<dl class="function">
-<dt id="c.qdma_device_offline">
-int <code class="descname">qdma_device_offline</code><span class="sig-paren">(</span>struct pci_dev *<em>&nbsp;pdev</em>, unsigned long<em>&nbsp;dev_hndl</em>, int<em>&nbsp;reset</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_offline" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the device in offline mode</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pci_dev</span> <span class="pre">*</span> <span class="pre">pdev</span></code></dt>
-<dd>ptr to struct pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retured from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">reset</span></code></dt>
-<dd>0/1 function level reset active or not</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_online">
-int <code class="descname">qdma_device_online</code><span class="sig-paren">(</span>struct pci_dev *<em>&nbsp;pdev</em>, unsigned long<em>&nbsp;dev_hndl</em>, int<em>&nbsp;reset</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_online" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the device in online mode and re-initialze it</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pci_dev</span> <span class="pre">*</span> <span class="pre">pdev</span></code></dt>
-<dd>ptr to struct pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retured from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">reset</span></code></dt>
-<dd>0/1 function level reset active or not</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_flr_quirk_set">
-int <code class="descname">qdma_device_flr_quirk_set</code><span class="sig-paren">(</span>struct pci_dev *<em>&nbsp;pdev</em>, unsigned long<em>&nbsp;dev_hndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_flr_quirk_set" title="Permalink to this definition">¶</a></dt>
-<dd><p>start pre-flr processing</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pci_dev</span> <span class="pre">*</span> <span class="pre">pdev</span></code></dt>
-<dd>ptr to struct pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_flr_quirk_check">
-int <code class="descname">qdma_device_flr_quirk_check</code><span class="sig-paren">(</span>struct pci_dev *<em>&nbsp;pdev</em>, unsigned long<em>&nbsp;dev_hndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_flr_quirk_check" title="Permalink to this definition">¶</a></dt>
-<dd><p>check if pre-flr processing completed</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pci_dev</span> <span class="pre">*</span> <span class="pre">pdev</span></code></dt>
-<dd>ptr to struct pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_get_config">
-int <code class="descname">qdma_device_get_config</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, struct <a class="reference internal" href="#c.qdma_dev_conf" title="qdma_dev_conf">qdma_dev_conf</a> *<em>&nbsp;conf</em>, char *<em>&nbsp;ebuf</em>, int<em>&nbsp;ebuflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_get_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>retrieve the current device configuration</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_dev_conf</span> <span class="pre">*</span> <span class="pre">conf</span></code></dt>
-<dd>device configuration</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">ebuf</span></code></dt>
-<dd>error message buffer, can be NULL/0 (i.e., optional)</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">ebuflen</span></code></dt>
-<dd>input buffer length</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_clear_stats">
-int <code class="descname">qdma_device_clear_stats</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_clear_stats" title="Permalink to this definition">¶</a></dt>
-<dd><p>clear device statistics</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_get_mmh2c_pkts">
-int <code class="descname">qdma_device_get_mmh2c_pkts</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long long *<em>&nbsp;mmh2c_pkts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_get_mmh2c_pkts" title="Permalink to this definition">¶</a></dt>
-<dd><p>get mm h2c packets processed</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">long</span> <span class="pre">*</span> <span class="pre">mmh2c_pkts</span></code></dt>
-<dd>number of mm h2c packets processed</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_get_mmc2h_pkts">
-int <code class="descname">qdma_device_get_mmc2h_pkts</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long long *<em>&nbsp;mmc2h_pkts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_get_mmc2h_pkts" title="Permalink to this definition">¶</a></dt>
-<dd><p>get mm c2h packets processed</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">long</span> <span class="pre">*</span> <span class="pre">mmc2h_pkts</span></code></dt>
-<dd>number of mm c2h packets processed</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_get_sth2c_pkts">
-int <code class="descname">qdma_device_get_sth2c_pkts</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long long *<em>&nbsp;sth2c_pkts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_get_sth2c_pkts" title="Permalink to this definition">¶</a></dt>
-<dd><p>get st h2c packets processed</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">long</span> <span class="pre">*</span> <span class="pre">sth2c_pkts</span></code></dt>
-<dd>number of st h2c packets processed</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_get_stc2h_pkts">
-int <code class="descname">qdma_device_get_stc2h_pkts</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long long *<em>&nbsp;stc2h_pkts</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_get_stc2h_pkts" title="Permalink to this definition">¶</a></dt>
-<dd><p>get st c2h packets processed</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl retunred from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">long</span> <span class="pre">*</span> <span class="pre">stc2h_pkts</span></code></dt>
-<dd>number of st c2h packets processed</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_set_config">
-int <code class="descname">qdma_device_set_config</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, struct <a class="reference internal" href="#c.qdma_dev_conf" title="qdma_dev_conf">qdma_dev_conf</a> *<em>&nbsp;conf</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_set_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>set the current device configuration</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_dev_conf</span> <span class="pre">*</span> <span class="pre">conf</span></code></dt>
-<dd>device configuration to set</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_sriov_config">
-int <code class="descname">qdma_device_sriov_config</code><span class="sig-paren">(</span>struct pci_dev *<em>&nbsp;pdev</em>, unsigned long<em>&nbsp;dev_hndl</em>, int<em>&nbsp;num_vfs</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_sriov_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>configure sriov</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">pci_dev</span> <span class="pre">*</span> <span class="pre">pdev</span></code></dt>
-<dd>ptr to struct pci_dev</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">num_vfs</span></code></dt>
-<dd># of VFs to be instantiated</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<p>configures sriov</p>
-<dl class="function">
-<dt id="c.qdma_device_read_config_register">
-int <code class="descname">qdma_device_read_config_register</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned int<em>&nbsp;reg_addr</em>, unsigned int *<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_read_config_register" title="Permalink to this definition">¶</a></dt>
-<dd><p>read dma config register</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">reg_addr</span></code></dt>
-<dd>register address</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">*</span> <span class="pre">value</span></code></dt>
-<dd>pointer to hold the read value</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<p>reads dma config register</p>
-<dl class="function">
-<dt id="c.qdma_device_write_config_register">
-int <code class="descname">qdma_device_write_config_register</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned int<em>&nbsp;reg_addr</em>, unsigned int<em>&nbsp;value</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_write_config_register" title="Permalink to this definition">¶</a></dt>
-<dd><p>write dma config register</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">reg_addr</span></code></dt>
-<dd>register address</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">value</span></code></dt>
-<dd>register value to be writen</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error
-writes dma config register</p>
-<dl class="function">
-<dt id="c.qdma_device_capabilities_info">
-int <code class="descname">qdma_device_capabilities_info</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, struct qdma_dev_attributes *<em>&nbsp;dev_attr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_capabilities_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>retrieve the capabilities of a device.</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>handle returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_dev_attributes</span> <span class="pre">*</span> <span class="pre">dev_attr</span></code></dt>
-<dd>pointer to hold all the device attributes</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_device_version_info">
-int <code class="descname">qdma_device_version_info</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, struct <a class="reference internal" href="#c.qdma_version_info" title="qdma_version_info">qdma_version_info</a> *<em>&nbsp;version_info</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_device_version_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>retrieve the RTL version , Vivado Release ID and Versal IP info</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>handle returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_version_info</span> <span class="pre">*</span> <span class="pre">version_info</span></code></dt>
-<dd>pointer to hold all the version details</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<p>retrieves the RTL version , Vivado Release ID and Versal IP info</p>
-<dl class="function">
-<dt id="c.qdma_software_version_info">
-int <code class="descname">qdma_software_version_info</code><span class="sig-paren">(</span>char *<em>&nbsp;software_version</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_software_version_info" title="Permalink to this definition">¶</a></dt>
-<dd><p>retrieve the software version</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">software_version</span></code></dt>
-<dd>A pointer to a null-terminated string</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<p>retrieves the software version</p>
-<dl class="function">
-<dt id="c.qdma_global_csr_get">
-int <code class="descname">qdma_global_csr_get</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, u8<em>&nbsp;index</em>, u8<em>&nbsp;count</em>, struct <a class="reference internal" href="#c.global_csr_conf" title="global_csr_conf">global_csr_conf</a> *<em>&nbsp;csr</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_global_csr_get" title="Permalink to this definition">¶</a></dt>
-<dd><p>retrieve the global csr settings</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>handle returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">u8</span> <span class="pre">index</span></code></dt>
-<dd>Index from where the values needs to read</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">u8</span> <span class="pre">count</span></code></dt>
-<dd>number of entries to be read</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">global_csr_conf</span> <span class="pre">*</span> <span class="pre">csr</span></code></dt>
-<dd>data structures to hold the csr values</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<p>retrieves the global csr settings</p>
-<dl class="function">
-<dt id="c.qdma_queue_add">
-int <code class="descname">qdma_queue_add</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, struct <a class="reference internal" href="#c.qdma_queue_conf" title="qdma_queue_conf">qdma_queue_conf</a> *<em>&nbsp;qconf</em>, unsigned long *<em>&nbsp;qhndl</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_add" title="Permalink to this definition">¶</a></dt>
-<dd><p>add a queue</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_queue_conf</span> <span class="pre">*</span> <span class="pre">qconf</span></code></dt>
-<dd>queue configuration parameters</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">*</span> <span class="pre">qhndl</span></code></dt>
-<dd>list of unsigned long values that are the opaque qhndl</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_config">
-int <code class="descname">qdma_queue_config</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qid</em>, struct <a class="reference internal" href="#c.qdma_queue_conf" title="qdma_queue_conf">qdma_queue_conf</a> *<em>&nbsp;qconf</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>configure the queue with qcong parameters</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qid</span></code></dt>
-<dd>queue id</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_queue_conf</span> <span class="pre">*</span> <span class="pre">qconf</span></code></dt>
-<dd>queue configuration parameters</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p><strong>return</strong>      0: success
-<strong>return</strong>      &lt;0: error</p>
-<dl class="function">
-<dt id="c.qdma_queue_start">
-int <code class="descname">qdma_queue_start</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>start a queue (i.e, online, ready for dma)</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>the opaque qhndl</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_stop">
-int <code class="descname">qdma_queue_stop</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>stop a queue (i.e., offline, NOT ready for dma)</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>the opaque qhndl</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_get_queue_state">
-int <code class="descname">qdma_get_queue_state</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, struct <a class="reference internal" href="#c.qdma_q_state" title="qdma_q_state">qdma_q_state</a> *<em>&nbsp;qstate</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_get_queue_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the state of the queue</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>the opaque qhndl</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_q_state</span> <span class="pre">*</span> <span class="pre">qstate</span></code></dt>
-<dd>state of the queue</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_remove">
-int <code class="descname">qdma_queue_remove</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_remove" title="Permalink to this definition">¶</a></dt>
-<dd><p>remove a queue</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>the opaque qhndl</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success and &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_get_config">
-int <code class="descname">qdma_queue_get_config</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, struct <a class="reference internal" href="#c.qdma_queue_conf" title="qdma_queue_conf">qdma_queue_conf</a> *<em>&nbsp;qconf</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_get_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>retrieve the configuration of a queue</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>an opaque queue handle of type unsigned long</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_queue_conf</span> <span class="pre">*</span> <span class="pre">qconf</span></code></dt>
-<dd>pointer to hold the qdma_queue_conf structure.</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p><strong>return</strong>      0: success
-<strong>return</strong>      &lt;0: error</p>
-<dl class="function">
-<dt id="c.qdma_queue_list">
-int <code class="descname">qdma_queue_list</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>display all configured queues in a string buffer</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<dl class="docutils">
-<dt>if optional message buffer used then strlen of buf,</dt>
-<dd>otherwise QDMA_OPERATION_SUCCESSFUL and &lt;0 for error</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_config_reg_dump">
-int <code class="descname">qdma_config_reg_dump</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_config_reg_dump" title="Permalink to this definition">¶</a></dt>
-<dd><p>display a config registers in a string buffer</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Description</strong></p>
-<dl class="docutils">
-<dt>Return  success: if optional message buffer used then strlen of buf,</dt>
-<dd>otherwise 0 and &lt;0: error</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_queue_dump">
-int <code class="descname">qdma_queue_dump</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_dump" title="Permalink to this definition">¶</a></dt>
-<dd><p>display a queue’s state in a string buffer</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>an opaque queue handle of type unsigned long</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<dl class="docutils">
-<dt>if optional message buffer used then strlen of buf,</dt>
-<dd>otherwise QDMA_OPERATION_SUCCESSFUL and &lt;0 for error</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_queue_dump_desc">
-int <code class="descname">qdma_queue_dump_desc</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, unsigned int<em>&nbsp;start</em>, unsigned int<em>&nbsp;end</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_dump_desc" title="Permalink to this definition">¶</a></dt>
-<dd><p>display a queue’s descriptor ring from index start ~ end in a string buffer</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>an opaque queue handle of type unsigned long</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">start</span></code></dt>
-<dd>start index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">end</span></code></dt>
-<dd>end index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<dl class="docutils">
-<dt>if optional message buffer used then strlen of buf,</dt>
-<dd>otherwise QDMA_OPERATION_SUCCESSFUL and &lt;0 for error</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_queue_dump_cmpt">
-int <code class="descname">qdma_queue_dump_cmpt</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, unsigned int<em>&nbsp;start</em>, unsigned int<em>&nbsp;end</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_dump_cmpt" title="Permalink to this definition">¶</a></dt>
-<dd><p>display a queue’s descriptor ring from index start ~ end in a string buffer</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>an opaque queue handle of type unsigned long</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">start</span></code></dt>
-<dd>start index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">end</span></code></dt>
-<dd>end index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<dl class="docutils">
-<dt>if optional message buffer used then strlen of buf,</dt>
-<dd>otherwise QDMA_OPERATION_SUCCESSFUL and &lt;0 for error</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_queue_set_err_induction">
-int <code class="descname">qdma_queue_set_err_induction</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, u32<em>&nbsp;err</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_set_err_induction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Induce the error</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>error id</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">u32</span> <span class="pre">err</span></code></dt>
-<dd>error info</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message buffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<dl class="docutils">
-<dt>if optional message buffer used then strlen of buf,</dt>
-<dd>otherwise QDMA_OPERATION_SUCCESSFUL and &lt;0 for error</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_request_submit">
-ssize_t <code class="descname">qdma_request_submit</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, struct <a class="reference internal" href="#c.qdma_request" title="qdma_request">qdma_request</a> *<em>&nbsp;req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_request_submit" title="Permalink to this definition">¶</a></dt>
-<dd><p>submit a scatter-gather list of data for dma operation (for both read and write)</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>queue index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_request</span> <span class="pre">*</span> <span class="pre">req</span></code></dt>
-<dd>qdma request</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p># of bytes transferred for success and  &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_batch_request_submit">
-ssize_t <code class="descname">qdma_batch_request_submit</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;id</em>, unsigned long<em>&nbsp;count</em>, struct <a class="reference internal" href="#c.qdma_request" title="qdma_request">qdma_request</a> **<em>&nbsp;reqv</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_batch_request_submit" title="Permalink to this definition">¶</a></dt>
-<dd><p>submit a scatter-gather list of data for dma operation (for both read and write)</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">id</span></code></dt>
-<dd>queue index</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">count</span></code></dt>
-<dd>number of requests</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_request</span> <span class="pre">**</span> <span class="pre">reqv</span></code></dt>
-<dd>qdma request</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p># of bytes transferred for success and  &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_c2h_peek">
-int <code class="descname">qdma_queue_c2h_peek</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, unsigned int *<em>&nbsp;udd_cnt</em>, unsigned int *<em>&nbsp;pkt_cnt</em>, unsigned int *<em>&nbsp;data_len</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_c2h_peek" title="Permalink to this definition">¶</a></dt>
-<dd><p>peek a receive (c2h) queue</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">*</span> <span class="pre">udd_cnt</span></code></dt>
-<dd># of udd received</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">*</span> <span class="pre">pkt_cnt</span></code></dt>
-<dd># of packets received</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">*</span> <span class="pre">data_len</span></code></dt>
-<dd># of bytes of packet data received</dd>
-</dl>
-<p><strong>Description</strong></p>
-<p>filled in by libqdma:</p>
-<p><strong>Return</strong></p>
-<p># of packets received in the Q or &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_avail_desc">
-int <code class="descname">qdma_queue_avail_desc</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_avail_desc" title="Permalink to this definition">¶</a></dt>
-<dd><p>query of # of free descriptor</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-</dl>
-<p><strong>Return</strong></p>
-<p># of available desc in the queue or &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_cmpl_ctrl">
-int <code class="descname">qdma_queue_cmpl_ctrl</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, struct <a class="reference internal" href="#c.qdma_cmpl_ctrl" title="qdma_cmpl_ctrl">qdma_cmpl_ctrl</a> *<em>&nbsp;cctrl</em>, bool<em>&nbsp;set</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_cmpl_ctrl" title="Permalink to this definition">¶</a></dt>
-<dd><p>read/set the c2h Q’s completion control</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_cmpl_ctrl</span> <span class="pre">*</span> <span class="pre">cctrl</span></code></dt>
-<dd>completion control</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">set</span></code></dt>
-<dd>read or set</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success or &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_packet_read">
-int <code class="descname">qdma_queue_packet_read</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, struct <a class="reference internal" href="#c.qdma_request" title="qdma_request">qdma_request</a> *<em>&nbsp;req</em>, struct <a class="reference internal" href="#c.qdma_cmpl_ctrl" title="qdma_cmpl_ctrl">qdma_cmpl_ctrl</a> *<em>&nbsp;cctrl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_packet_read" title="Permalink to this definition">¶</a></dt>
-<dd><p>read rcv’ed data (ST C2H dma operation)</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_request</span> <span class="pre">*</span> <span class="pre">req</span></code></dt>
-<dd>pointer to the request data</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_cmpl_ctrl</span> <span class="pre">*</span> <span class="pre">cctrl</span></code></dt>
-<dd>completion control, if no change is desired,
-set it to NULL</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p># of bytes transferred for success and  &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_packet_write">
-int <code class="descname">qdma_queue_packet_write</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, struct <a class="reference internal" href="#c.qdma_request" title="qdma_request">qdma_request</a> *<em>&nbsp;req</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_packet_write" title="Permalink to this definition">¶</a></dt>
-<dd><p>submit data for ST H2C dma operation</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_request</span> <span class="pre">*</span> <span class="pre">req</span></code></dt>
-<dd>pointer to the list of packet data</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p># of bytes transferred for success and  &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_queue_service">
-void <code class="descname">qdma_queue_service</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, int<em>&nbsp;budget</em>, bool<em>&nbsp;c2h_upd_cmpl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_service" title="Permalink to this definition">¶</a></dt>
-<dd><p>service the queue in the case of irq handler is registered by the user, the user should call <a class="reference internal" href="#c.qdma_queue_service" title="qdma_queue_service"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_service()</span></code></a> in its interrupt handler to service the queue</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">budget</span></code></dt>
-<dd>ST C2H only, max number of completions to be processed.</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">c2h_upd_cmpl</span></code></dt>
-<dd>flag to update the completion</dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_queue_update_pointers">
-void <code class="descname">qdma_queue_update_pointers</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_queue_update_pointers" title="Permalink to this definition">¶</a></dt>
-<dd><p>update queue pointers</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>hndl returned from <a class="reference internal" href="#c.qdma_queue_add" title="qdma_queue_add"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_queue_add()</span></code></a></dd>
-</dl>
-<dl class="function">
-<dt id="c.qdma_intr_ring_dump">
-int <code class="descname">qdma_intr_ring_dump</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned int<em>&nbsp;vector_idx</em>, int<em>&nbsp;start_idx</em>, int<em>&nbsp;end_idx</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_intr_ring_dump" title="Permalink to this definition">¶</a></dt>
-<dd><p>display the interrupt ring info of a vector</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span> <span class="pre">vector_idx</span></code></dt>
-<dd>vector number</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">start_idx</span></code></dt>
-<dd>interrupt ring start idx</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">end_idx</span></code></dt>
-<dd>interrupt ring end idx</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message bufferuffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success or &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_descq_get_cmpt_udd">
-int <code class="descname">qdma_descq_get_cmpt_udd</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_descq_get_cmpt_udd" title="Permalink to this definition">¶</a></dt>
-<dd><p>function to receive the user defined data</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>queue handle</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message bufferuffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success or &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_descq_read_cmpt_data">
-int <code class="descname">qdma_descq_read_cmpt_data</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, unsigned long<em>&nbsp;qhndl</em>, u32 *<em>&nbsp;num_entries</em>, u8 **<em>&nbsp;cmpt_entries</em>, char *<em>&nbsp;buf</em>, int<em>&nbsp;buflen</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_descq_read_cmpt_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>function to receive the completion data</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">qhndl</span></code></dt>
-<dd>queue handle</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">u32</span> <span class="pre">*</span> <span class="pre">num_entries</span></code></dt>
-<dd>I/O number of entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">u8</span> <span class="pre">**</span> <span class="pre">cmpt_entries</span></code></dt>
-<dd>List of completion entries</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span> <span class="pre">buf</span></code></dt>
-<dd>message bufferuffer</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">buflen</span></code></dt>
-<dd>length of the input buffer</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success or &lt;0 for error</p>
-<dl class="function">
-<dt id="c.qdma_vf_qconf">
-int <code class="descname">qdma_vf_qconf</code><span class="sig-paren">(</span>unsigned long<em>&nbsp;dev_hndl</em>, int<em>&nbsp;qmax</em><span class="sig-paren">)</span><a class="headerlink" href="#c.qdma_vf_qconf" title="Permalink to this definition">¶</a></dt>
-<dd><p>call for VF to request qmax number of Qs</p>
-</dd></dl>
-
-<p><strong>Parameters</strong></p>
-<dl class="docutils">
-<dt><code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">long</span> <span class="pre">dev_hndl</span></code></dt>
-<dd>dev_hndl returned from <a class="reference internal" href="#c.qdma_device_open" title="qdma_device_open"><code class="xref c c-func docutils literal notranslate"><span class="pre">qdma_device_open()</span></code></a></dd>
-<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">qmax</span></code></dt>
-<dd>number of qs requested by vf</dd>
-</dl>
-<p><strong>Return</strong></p>
-<p>0 for success or &lt;0 for error</p>
 </div>
 
 
            </div>
+           
           </div>
           <footer>
+<!-- Atalwar: Moved the footer code to layout.html to resolve conflict with the Xilinx template -->
+
+</footer>
+
+        </div>
+      </div>
+	  
+	  
+	  <!-- Sphinx Page Footer block -->
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="qdma_design.html" class="btn btn-neutral float-right" title="QDMA Linux Driver Design Flow" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="qdma_linux_export_defines.html" class="btn btn-neutral float-right" title="Definitions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="devguide.html" class="btn btn-neutral" title="Developers Guide" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="devguide.html" class="btn btn-neutral float-left" title="Developers Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
 
   <hr/>
 
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2018-2019, Xilinx, Inc.
+  <div role="contentinfo" class="copyright">
+    <p class="footerinfo">
+      <span class="lastupdated">
+        Last updated on June 08, 2020.
+      </span>
 
     </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
-        </div>
+  </div>	  
       </div>
-
     </section>
 
-  </div>
-  
-
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'2019.2',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-   
 
-</body>
+  
+  
+    
+  
+  
+
+  
+  <!--  Xilinx template footer block -->
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="xilinxExperienceFragments experiencefragment aem-GridColumn--default--none aem-GridColumn aem-GridColumn--offset--default--0 aem-GridColumn--default--16">
+					<div class="xf-content-height">
+						<div class="aem-Grid aem-Grid--16 aem-Grid--default--16 ">
+							<div class="footer parbase aem-GridColumn--default--none aem-GridColumn aem-GridColumn--offset--default--0 aem-GridColumn--default--16">
+								<noindex>
+									<footer>
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+													<div class="row">
+														<div class="footerSocial parbase">
+															<div class="col-md-push-6 col-lg-push-6 col-md-6 col-lg-6">
+																<ul class="list-inline pull-right social-menu">
+																	<li>
+																		<a href="https://www.linkedin.com/company/xilinx">
+																		<span class="linkedin icon"></span>
+																		<span class="sr-only">Connect on LinkedIn</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.twitter.com/XilinxInc">
+																		<span class="twitter icon"></span>
+																		<span class="sr-only">Follow us on Twitter</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.facebook.com/XilinxInc">
+																		<span class="facebook icon"></span>
+																		<span class="sr-only">Connect on Facebook</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.youtube.com/XilinxInc">
+																		<span class="youtube icon"></span>
+																		<span class="sr-only">Watch us on YouTube</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.xilinx.com/registration/subscriber-signup.html">
+																		<span class="newsletter icon"></span>
+																		<span class="sr-only">Subscribe to Newsletter</span>
+																		</a>
+																	</li>
+																</ul>
+															</div>
+														</div>
+														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
+															<span class="copyright">
+                                  
+                                  &copy; 2018-2020, Xilinx, Inc
+                              </span>
+															<ul class="list-inline sub-menu">
+																<li>
+																	<a href="https://www.xilinx.com/about/privacy-policy.html">Privacy</a>
+																</li>
+																<li>
+																	<a href="https://www.xilinx.com/about/legal.html">Legal</a>
+																</li>
+																<li>
+																	<a href="https://www.xilinx.com/about/contact.html">Contact</a>
+																</li>
+															</ul>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</footer>
+								</noindex>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="quicklinks parbase aem-GridColumn--default--none aem-GridColumn aem-GridColumn--offset--default--0 aem-GridColumn--default--16">
+					<noindex>
+						<span class="quickLinks">
+							<ul>
+								<li>
+									<a href="#top" class="btn backToTop">
+									<span class="fas fa-angle-up" aria-hidden="true"></span>
+									</a>
+								</li>
+							</ul>
+						</span>
+					</noindex>
+				</div>
+			</div>
+		</div>
+		<script>window.CQ = window.CQ || {}</script>
+		<script src="https://static.cloud.coveo.com/searchui/v2.4382/js/CoveoJsSearch.Lazy.min.js"></script>
+		<script>
+			var underscoreSetup = function () {
+			  _.templateSettings.interpolate = /\{\{=([^-][\S\s]+?)\}\}/g;
+			  _.templateSettings.evaluate = /\{\{([^-=][\S\s]+?)\}\}/g;
+			  _.templateSettings.escape = /\{\{-([^=][\S\s]+?)\}\}/g;
+			}
+			
+			underscoreSetup();
+		</script>
+	</body>
 </html>

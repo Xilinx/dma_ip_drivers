@@ -7,7 +7,6 @@ Xilinx Accelerator Card
 -----------------------
 
 1. VCU1525
-2. U200
 
 Host Platform
 -------------
@@ -66,21 +65,23 @@ Linux QDMA Driver is supported on the following linux distributions
 +-------------------------+---------------------+----------------+
 | Linux Distribution      | Version             | Kernel Version |          
 +=========================+=====================+================+
-| CentOS                  |7.5-1804             |3.10.0-862      |
+| CentOS                  |7.6-1810 (RHEL 7.6)  |3.10.0-957      |
 |                         +---------------------+----------------+
-|                         |7.6-1810             |3.10.0-957      |
+|                         |7.7-1908 (RHEL 7.7)  |3.10.0-1062     |
 |                         +---------------------+----------------+
-|                         |7.7-1908             |3.10.0-1062     |
+|                         |8.1-1911 (RHEL 8.3)  |4.18.0-193      |
 +-------------------------+---------------------+----------------+
-|Fedora                   |28                   |4.16            |
+|Fedora                   |29                   |4.18.16         |
 |                         +---------------------+----------------+
-|                         |29                   |4.18            |
+|                         |30                   |5.0.9-301       |
 |                         +---------------------+----------------+
-|                         |30                   |5.0             |
+|                         |31                   |5.3.7-301       |
 +-------------------------+---------------------+----------------+
-|Ubuntu                   |16.04                |4.10            |
+|Ubuntu                   |16.04                |4.15.0-101      |
 |                         +---------------------+----------------+
-|                         |18.04                |4.15.0-23       |
+|                         |18.04                |4.15.0-20       |
+|                         +---------------------+----------------+
+|                         |20.04                |5.4.0-31        |
 +-------------------------+---------------------+----------------+
 
 
@@ -100,7 +101,7 @@ Linux QDMA Driver is verified on following kernel.org Linux kernel versions
 |                         +-----------------+
 |                         | 4.14.117        |
 |                         +-----------------+
-|                         | 5.3             |
+|                         | 5.4             |
 +-------------------------+-----------------+
 
 The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.
@@ -128,11 +129,4 @@ These aliases point to the __init/__exit functions of a module, which are define
 the aliases themselves do not have the __cold attribute, this causes compilation failure for driver if used with Kernel Versions < 3.16.66 mentioned
 in the supported kernels list above or if the Kernel Source doesn't have the fix for this which are there in the long term releases.
 
-
-Notes about iommu
------------------
-
-When ``iommu=on``, adding 2048 queues to the functions on a Host System results in ``dma_alloc_coherent`` API failure. To avoid this issue, allocate piece of physically contiguous reserved memory using the ``cma`` boot arguments.
-
-Ex: ``cma=4096M@0-6G``
 

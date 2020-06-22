@@ -1,10 +1,10 @@
-********************************
-DMA Control Application (dmactl)
-********************************
+*********************************
+DMA Control Application (dma-ctl)
+*********************************
 
-QDMA driver comes with a command-line configuration utility called ``dmactl`` to manage the driver.
+QDMA driver comes with a command-line configuration utility called ``dma-ctl`` to manage the driver.
 
-The Xilinx QDMA control tool, ``dmactl`` is a command Line utility which is installed in ``/usr/local/sbin/`` and allows administration of the Xilinx QDMA queues. Make sure that the installation path ``/usr/local/sbin/`` is added to the ``PATH`` variable.
+The Xilinx QDMA control tool, ``dma-ctl`` is a command Line utility which is installed in ``/usr/local/sbin/`` and allows administration of the Xilinx QDMA queues. Make sure that the installation path ``/usr/local/sbin/`` is added to the ``PATH`` variable.
 
 It can perform the following functions:
 
@@ -30,11 +30,11 @@ It can perform the following functions:
    - Display a c2h queue's completion ring entries
    - Display the interrupt ring entries 
 
-For dmactl help run ``dmactl –h``
+For dma-ctl help run ``dma-ctl –h``
 
-For more details on the dmactl tool commands and options for each command, refer to dmactl man page.
+For more details on the dma-ctl tool commands and options for each command, refer to dma-ctl man page.
 
-For dmactl man page, run ``man dmactl``
+For dma-ctl man page, run ``man dma-ctl``
 
 ==========================
 Device Management Commands
@@ -43,7 +43,7 @@ Device Management Commands
 List devices
 ------------
 
-command: ``dmactl dev list``
+command: ``dma-ctl dev list``
 
 This command lists all the physical and virtual functions available in the system along with the number of queues assigned to each function, queue base and queue max.
 Each qdma device name is listed as ``qdma<bbddf>`` where ``<bbddf>`` is bus number, device number and function number.
@@ -53,7 +53,7 @@ Initially when the system is started, the queues are not assigned to any of the 
 ::
 
 
-	[xilinx@]# dmactl dev list
+	[xilinx@]# dma-ctl dev list
 
 	qdma01000	0000:01:00.0	max QP: 0, -~-
 	qdma01001	0000:01:00.1	max QP: 0, -~-
@@ -69,7 +69,7 @@ Initially when the system is started, the queues are not assigned to any of the 
 	[xilinx@]# echo 100 > /sys/bus/pci/devices/0000\:01\:00.2/qdma/qmax 
 	[xilinx@]# echo 100 > /sys/bus/pci/devices/0000\:01\:00.3/qdma/qmax 
 	[xilinx@]# echo 100 > /sys/bus/pci/devices/0000\:01\:00.4/qdma/qmax 
-	[xilinx@]# dmactl dev list
+	[xilinx@]# dma-ctl dev list
 
 	qdma01000	0000:01:00.0	max QP: 100, 0~99
 	qdma01001	0000:01:00.1	max QP: 100, 100~199
@@ -88,12 +88,12 @@ Queue Management Commands
 List Version
 ------------
 
-command: ``dmactl qdma<bbddf> cap``
+command: ``dma-ctl qdma<bbddf> cap``
 
 This command lists hardware and software version details and device capabilities.
 ::
 
-	[xilinx@]# dmactl qdma01000 cap
+	[xilinx@]# dma-ctl qdma01000 cap
 	=============Hardware Version============
 
 	RTL Version         : RTL Base
@@ -120,12 +120,12 @@ This command lists hardware and software version details and device capabilities
 List Device Statistics
 -----------------------
 
-command: ``dmactl qdma<bbddf> stat``
+command: ``dma-ctl qdma<bbddf> stat``
 
 This command lists the statistics accumulated for this device
 ::
 
-   [xilinx@]# dmactl qdma01000 stat
+   [xilinx@]# dma-ctl qdma01000 stat
 
    qdma01000:statistics
    Total MM H2C packets processed = 312220
@@ -133,12 +133,12 @@ This command lists the statistics accumulated for this device
    Total ST H2C packets processed = 64127
    Total ST C2H packets processed = 100954
 
-Use ``dmactl qdma01000 stat clear`` to clear the statistics collected
+Use ``dma-ctl qdma01000 stat clear`` to clear the statistics collected
 
 Add a Queue
 -----------
 
-command: ``dmactl qdma<bbddf> q add idx <N> [mode <st|mm>] [dir <h2c|c2h|bi>]``
+command: ``dma-ctl qdma<bbddf> q add idx <N> [mode <st|mm>] [dir <h2c|c2h|bi>]``
 
 This command allows the user to add a queue.
 
@@ -150,7 +150,7 @@ This command allows the user to add a queue.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q add idx 4 mode mm dir h2c
+   [xilinx@]# dma-ctl qdma01000 q add idx 4 mode mm dir h2c
 
    qdma01000-MM-4 H2C added.
    Added 1 Queues.
@@ -158,7 +158,7 @@ This command allows the user to add a queue.
 Add a List of Queues
 --------------------
 
-command: ``dmactl qdma<bbddf> q add list <start_idx> <N>  [ mode <st|mm> ] [ dir <h2c|c2h|bi> ]``
+command: ``dma-ctl qdma<bbddf> q add list <start_idx> <N>  [ mode <st|mm> ] [ dir <h2c|c2h|bi> ]``
 
 This command allows the user to add a list of queues.
 
@@ -171,7 +171,7 @@ This command allows the user to add a list of queues.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q add list 1 4 mode mm dir h2c
+   [xilinx@]# dma-ctl qdma01000 q add list 1 4 mode mm dir h2c
 
    qdma01000-MM-1 H2C added.
    qdma01000-MM-2 H2C added.
@@ -185,7 +185,7 @@ This command allows the user to start a queue.
 
 command: 
 
-   ``dmactl qdma<bbddf> q start idx <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] \
+   ``dma-ctl qdma<bbddf> q start idx <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] \
    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]\
    [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] \ [cmpl_ovf_dis]``
 
@@ -215,8 +215,8 @@ command:
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q start idx 4 dir h2c
-   dmactl: Info: Default ring size set to 2048
+   [xilinx@]# dma-ctl qdma01000 q start idx 4 dir h2c
+   dma-ctl: Info: Default ring size set to 2048
 
    1 Queues started, idx 4 ~ 4.
 
@@ -225,7 +225,7 @@ Start a List of Queues
 
 command:
 
-   ``dmactl qdma<bbddf> q start list <start_idx> <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] \
+   ``dma-ctl qdma<bbddf> q start list <start_idx> <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] \
    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]\
    [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] \ [cmpl_ovf_dis]``
 
@@ -255,14 +255,14 @@ This command allows the user to start a list of queues.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q start list 1 4 dir h2c
+   [xilinx@]# dma-ctl qdma01000 q start list 1 4 dir h2c
 
    Started Queues 1 -> 4.
    
 Stop a Queue
 ------------
 
-command: ``dmactl qdma<bbddf> q stop idx <N> [dir <h2c|c2h|bi>]``
+command: ``dma-ctl qdma<bbddf> q stop idx <N> [dir <h2c|c2h|bi>]``
 
 This command allows the user to stop a queue.
 
@@ -273,15 +273,15 @@ This command allows the user to stop a queue.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q stop idx 4 dir h2c
-   dmactl: Info: Default ring size set to 2048
+   [xilinx@]# dma-ctl qdma01000 q stop idx 4 dir h2c
+   dma-ctl: Info: Default ring size set to 2048
 
    Stopped Queues 4 -> 4.
    
 Stop a List of Queues
 ---------------------
 
-command: ``dmactl qdma<bbddf> q stop list <start_idx> <N> [dir <h2c|c2h|bi>]``
+command: ``dma-ctl qdma<bbddf> q stop list <start_idx> <N> [dir <h2c|c2h|bi>]``
 
 This command allows the user to stop a list of queues.
 
@@ -293,14 +293,14 @@ This command allows the user to stop a list of queues.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q stop list 1 4 dir h2c
+   [xilinx@]# dma-ctl qdma01000 q stop list 1 4 dir h2c
 
    Stopped Queues 1 -> 4.
 
 Delete a Queue
 --------------
 
-command: ``dmactl qdma<bbddf> q del idx <N> [dir <h2c|c2h|bi>]``
+command: ``dma-ctl qdma<bbddf> q del idx <N> [dir <h2c|c2h|bi>]``
 
 This command allows the user to delete a queue.
 
@@ -311,14 +311,14 @@ This command allows the user to delete a queue.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q del idx 4 dir h2c
+   [xilinx@]# dma-ctl qdma01000 q del idx 4 dir h2c
 
    Deleted Queues 4 -> 4.
    
 Delete a List of Queues
 -----------------------
 
-command: ``dmactl <bbddf> q del list <start_idx> <N> [ dir <h2c|c2h|bi> ]``
+command: ``dma-ctl <bbddf> q del list <start_idx> <N> [ dir <h2c|c2h|bi> ]``
 
 This command allows the user to delete a list of queues.
 
@@ -330,14 +330,14 @@ This command allows the user to delete a list of queues.
 
 ::
 
-   [xilinx@]# dmactl qdma01000 q del list 1 4 dir h2c
+   [xilinx@]# dma-ctl qdma01000 q del list 1 4 dir h2c
 
    Deleted Queues 1 -> 4.
    
 Dump Queue Information
 ----------------------
 
-command: ``dmactl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>]``
+command: ``dma-ctl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>]``
 
 Dump the queue information
 
@@ -351,7 +351,7 @@ Sample output is given below:
 ::
 
 
-	[xilinx@]# dmactl qdma01000 q dump idx 1 dir bi
+	[xilinx@]# dma-ctl qdma01000 q dump idx 1 dir bi
 
 	qdma01000-ST-0 H2C online
 		hw_ID 0, thp ?, desc 0x000000002faff247/0x2a878000, 1536
@@ -507,7 +507,7 @@ Sample output is given below:
 Dump Multiple Queue Information
 -------------------------------
 
-command: ``dmactl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>]``
+command: ``dma-ctl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>]``
 
 Dumps the information for multiple queues
 
@@ -521,7 +521,7 @@ Dumps the information for multiple queues
 
 
 
-	[xilinx@]# dmactl qdma01000 q dump list 1 2 dir bi
+	[xilinx@]# dma-ctl qdma01000 q dump list 1 2 dir bi
 
 	qdma01000-ST-1 H2C online
 		hw_ID 1, thp ?, desc 0x000000006c71b76a/0x2a890000, 1536
@@ -825,7 +825,7 @@ Dumps the information for multiple queues
 Dump Queue Descriptor Information
 ---------------------------------
 
-command: ``dmactl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>] [desc <x> <y>]``
+command: ``dma-ctl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>] [desc <x> <y>]``
 
 Dump the queue descriptor information
 
@@ -838,7 +838,7 @@ Dump the queue descriptor information
 
 ::
 
-	[xilinx@]# dmactl qdma17000 q dump idx 0 dir h2c desc 1 10
+	[xilinx@]# dma-ctl qdma17000 q dump idx 0 dir h2c desc 1 10
 
 		qdma17000-ST-0 H2C online
 	1: 0x00000000cd4d039c 00000000 00000000 00000000 00000000
@@ -859,7 +859,7 @@ Dump the queue descriptor information
 Dump Multiple Queue Descriptor Information
 ------------------------------------------
 
-command: ``dmactl qdma<bbddf> q dump list idx <N> [dir <h2c|c2h|bi>] [desc <x> <y>]``
+command: ``dma-ctl qdma<bbddf> q dump list idx <N> [dir <h2c|c2h|bi>] [desc <x> <y>]``
 
 Dumps the descriptor information for multiple queues
 
@@ -873,7 +873,7 @@ Dumps the descriptor information for multiple queues
 
 ::
 
-	[xilinx@]# dmactl qdma17000 q dump list 1 2 dir h2c desc 1 10
+	[xilinx@]# dma-ctl qdma17000 q dump list 1 2 dir h2c desc 1 10
 
 	qdma17000-ST-1 H2C online
 	1: 0x00000000c8f9ad60 00000000 00000000 00000000 00000000
@@ -902,7 +902,7 @@ Dumps the descriptor information for multiple queues
 Dump Queue Completion Information
 ---------------------------------
 
-command: ``dmactl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>] [cmpt <x> <y>]``
+command: ``dma-ctl qdma<bbddf> q dump idx <N> [dir <h2c|c2h|bi>] [cmpt <x> <y>]``
 
 Dump the queue completion information. This command is valid only for streaming c2h.
 
@@ -915,7 +915,7 @@ Dump the queue completion information. This command is valid only for streaming 
 
 ::
 
-	[xilinx@]# dmactl qdma17000 q dump idx 0 dir c2h cmpt 0 10
+	[xilinx@]# dma-ctl qdma17000 q dump idx 0 dir c2h cmpt 0 10
 
 	qdma17000-ST-0 C2H online
 	0: 0x0000000086ae1f7a 00000000 00000000
@@ -934,7 +934,7 @@ Dump the queue completion information. This command is valid only for streaming 
 Dump Multiple Queue Completion Information
 ------------------------------------------
 
-command: ``dmactl qdma<bbddf> q dump list idx <N> [dir <h2c|c2h|bi>] [cmpt <x> <y>]``
+command: ``dma-ctl qdma<bbddf> q dump list idx <N> [dir <h2c|c2h|bi>] [cmpt <x> <y>]``
 
 Dumps the completion information for multiple queues. This command is valid only for streaming c2h.
 
@@ -948,7 +948,7 @@ Dumps the completion information for multiple queues. This command is valid only
 
 ::
 
-	[xilinx@]# dmactl qdma17000 q dump list 1 2 dir c2h cmpt 0 10
+	[xilinx@]# dma-ctl qdma17000 q dump list 1 2 dir c2h cmpt 0 10
 
 	qdma17000-ST-1 C2H online
 	0: 0x000000005e745eb2 00000000 00000000
@@ -979,7 +979,7 @@ Dumps the completion information for multiple queues. This command is valid only
 Dump the Interrupt Ring Information
 -----------------------------------
 
-command: ``dmactl qdma<bbddf> intring dump vector <N> <start_idx> <end_idx>``
+command: ``dma-ctl qdma<bbddf> intring dump vector <N> <start_idx> <end_idx>``
 
 Dump the interrupt ring information
 
@@ -991,7 +991,7 @@ Dump the interrupt ring information
 
 ::
 
-	[xilinx@]# dmactl qdma17000 intring dump vector 3 0 10
+	[xilinx@]# dma-ctl qdma17000 intring dump vector 3 0 10
 
 	intr_ring_entry = 0: 0x00000000 0x00000000
 	intr_ring_entry = 1: 0x00000000 0x00000000
@@ -1013,7 +1013,7 @@ Register Commands
 Read a Register
 ---------------
 
-command: ``dmactl qdma<bbddf> reg read bar <N> <addr>``
+command: ``dma-ctl qdma<bbddf> reg read bar <N> <addr>``
 
 Read a register value.
 
@@ -1024,13 +1024,13 @@ Read a register value.
 
 ::
 
-	[xilinx@]# dmactl qdma17000 reg read bar 2 0x0
+	[xilinx@]# dma-ctl qdma17000 reg read bar 2 0x0
 	qdma17000, 17:00.00, bar#2, 0x0 = 0x0.
 	
 Write a Register
 ----------------
 
-command: ``dmactl qdma<bbddf> reg write bar <N> <addr>``
+command: ``dma-ctl qdma<bbddf> reg write bar <N> <addr>``
 
 Write a value to into the given register.
 
@@ -1041,19 +1041,19 @@ Write a value to into the given register.
 
 ::
 
-	[xilinx@]# dmactl qdma17000 reg write bar 2 0x0 0
+	[xilinx@]# dma-ctl qdma17000 reg write bar 2 0x0 0
 	qdma17000, 17:00.00, bar#2, reg 0x0 -> 0x0, read back 0x0.
 	
 Dump the Queue registers
 ------------------------
 
-command: ``dmactl qdma<bbddf> reg dump``
+command: ``dma-ctl qdma<bbddf> reg dump``
 
 This command allows the user to dump the DMA BAR and User BAR registers.
 
 ::
 
-	[xilinx@]# dmactl qdma17000 reg dump
+	[xilinx@]# dma-ctl qdma17000 reg dump
 	################################################################################
 	###		qdma17000, pci 17:00.00, reg dump
 	################################################################################

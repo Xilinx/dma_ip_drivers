@@ -10,3 +10,4 @@ User Applications
    dma_from_device.rst
    dmaperf.rst
    dma_xfer_app.rst
+   dma-latency.rst

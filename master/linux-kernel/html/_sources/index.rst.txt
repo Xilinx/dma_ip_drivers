@@ -25,10 +25,12 @@ QDMA Linux Driver consists of the following four major components:
 
 - **Applications**: QDMA IP Driver provides the following sample applications.
 
-	- dmactl : This application provides set of commands to configure and control the queues in the system
-	- dma_to_device : This application enables the users to perform Host to Card (H2C) transfer
-	- dma_from_device : This application enables the users to perform Card to Host (C2H) transfer
-	- dmaperf : This application provides commands to measure performance numbers for QDMA IP in MM and ST modes
+	- dma-ctl : This application provides set of commands to configure and control the queues in the system
+	- dma-to-device : This application enables the users to perform Host to Card (H2C) transfer
+	- dma-from-device : This application enables the users to perform Card to Host (C2H) transfer
+	- dma-perf : This application provides commands to measure performance numbers for QDMA IP in MM and ST modes
+	- dma-latency: This application enables the user to measure ping pong latency for ST H2C/C2H transfers
+	- dma-xfer: This is a simple application to demonstrate the QDMA transfers
 
 
 .. image:: /images/qdma_linux_driver_architecture.PNG

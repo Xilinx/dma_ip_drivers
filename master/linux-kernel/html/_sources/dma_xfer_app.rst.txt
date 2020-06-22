@@ -1,11 +1,11 @@
-************************************
-DMA Xfer Application (qdma_xfer_app)
-************************************
+*******************************
+DMA Xfer Application (dma-xfer)
+*******************************
 
-Xilinx-developed custom application ``qdma_xfer_app`` is an example application provided along with QDMA Linux Driver to demonstrate
+Xilinx-developed custom application ``dma-xfer`` is an example application provided along with QDMA Linux Driver to demonstrate
 QDMA configuration and transfer functionality.
 
-``qdma_xfer_app`` application internally takes care of Queues creation/destruction and performs DMA transfers on each queue one by one. If any failure occurs during the initial creation of queues or performing dma transfers on queues, application reports corresponding error and cleans up all the allocated resources then exits.
+``dma-xfer`` application internally takes care of Queues creation/destruction and performs DMA transfers on each queue one by one. If any failure occurs during the initial creation of queues or performing dma transfers on queues, application reports corresponding error and cleans up all the allocated resources then exits.
 
 
 The following diagram illustrates the design flow of application.
@@ -31,13 +31,13 @@ Testing/Creation of cmpt queues is outside the scope of this application as tran
 
 ::
 
-	usage: qdma_xfer_app [OPTIONS]
+	usage: dma-xfer [OPTIONS]
 
 	  -c (--config) config file that has configuration for IO
 	  -v (--version), to print version name
 
 
-qdma_xfer_app application takes a configuration file as input. The configuration file format is as below.
+dma-xfer application takes a configuration file as input. The configuration file format is as below.
 
 ::
 

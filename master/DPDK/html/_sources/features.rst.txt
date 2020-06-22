@@ -4,7 +4,7 @@ QDMA Features
 QDMA DPDK Driver supports the following list of features
 
 Hardware Features
------------------
+----------------------
 * SRIOV with 4 Physical Functions and 252 Virtual Functions
 * Memory Mapped (MM) and Stream (ST) interfaces per queue
 * 2048 queues sets
@@ -25,17 +25,26 @@ Hardware Features
 * Streaming H2C to C2H and C2H to H2C loopback support
 * Dynamic queue configuration
 * Completion ring descriptors of 8, 16, 32, 64 bytes sizes
-* Flexible BAR mapping for QDMA configuration register space
 * ECC support
+
+Features Supported for QDMA3.1
+--------------------------------------
+* Flexible BAR mapping for QDMA configuration register space
+* MM completions
+
+Features Supported for QDMA4.0
+--------------------------------------
+* Support for more than 256 functions
+* Support multiple bus number on single card
 
 For details on Hardware Features refer to QDMA_Product_Guide_.
 
 .. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf
 
 Software Features
------------------
+---------------------
 
-* Support DPDK v18.11 LTS
+* Support DPDK v19.11 LTS
 * Support driver binding to igb_uio and vfio-pci
 * Support device arguments (module parameters) for device level configuration
 * Allows only Privileged Physical Functions to program the contexts and configuration registers

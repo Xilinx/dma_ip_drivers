@@ -6,7 +6,7 @@ This section describes the details on controlling and configuring the QDMA IP
 System Level Configurations
 ---------------------------
 
-QDMA driver provides the sysfs interface to enable to user to perform system level configurations. QDMA ``PF`` and ``VF`` drivers expose several ``sysfs`` nodes under the ``pci`` device root node. ``sysfs`` provides an interface to configure  the module.
+QDMA driver provides the sysfs interface to enable user to perform system level configurations. QDMA ``PF`` and ``VF`` drivers expose several ``sysfs`` nodes under the ``pci`` device root node. ``sysfs`` provides an interface to configure  the module.
 
 ::
 
@@ -66,7 +66,7 @@ To set 1024 as qmax for PF0:
 
 	[xilinx@]# echo 1024 > /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
 
-	[xilinx@]# dmactl dev list
+	[xilinx@]# dma-ctl dev list
 
 	qdma01000	0000:01:00.0	max QP: 1024, 0~1023
 	qdma01001	0000:01:00.1	max QP: 0, -~-
@@ -82,7 +82,7 @@ To set 1770 as qmax for PF0, 8 as q max for PF1, PF2, PF3:
 	[xilinx@]# echo 8 >  /sys/bus/pci/devices/0000\:01\:00.2/qdma/qmax
 	[xilinx@]# echo 8 >  /sys/bus/pci/devices/0000\:01\:00.3/qdma/qmax
 
-	[xilinx@]# dmactl dev list
+	[xilinx@]# dma-ctl dev list
 
 	qdma01000	0000:01:00.0	max QP: 1770, 0~1769
 	qdma01001	0000:01:00.1	max QP: 8, 1770~1777
@@ -181,6 +181,6 @@ To set value 2 to cmpt_intrvl:
 Queue Management
 ----------------
 
-QDMA driver comes with a command-line configuration utility called ``dmactl`` to manage the queues in the system.
+QDMA driver comes with a command-line configuration utility called ``dma-ctl`` to manage the queues in the system.
 
  

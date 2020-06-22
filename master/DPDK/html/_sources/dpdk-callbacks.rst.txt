@@ -2,5 +2,9 @@
 DPDK Callback APIs
 ******************
 
-.. include:: ../build/pmd_callbacks.rst
+.. toctree::
+   :maxdepth: 3
+
+   qdma_devops_functions
+
 

@@ -1,14 +1,14 @@
 *****************************
-DMA to Device (dma_to_device)
+DMA to Device (dma-to-device)
 *****************************
 
-dma_to_device is a user application tool provided along with QDMA Linux driver to perform the Host to Card data transfers.
+dma-to-device is a user application tool provided along with QDMA Linux driver to perform the Host to Card data transfers.
 
 usage: 
 
 ::
 
-	[xilinx@]# dma_to_device [OPTIONS]
+	[xilinx@]# dma-to-device [OPTIONS]
 
 
 **OPTIONS**
@@ -29,7 +29,7 @@ Example:
 
 ::
 
-   [xilinx@]# dma_to_device -d /dev/qdma01000-ST-1 -s 64
+   [xilinx@]# dma-to-device -d /dev/qdma01000-ST-1 -s 64
    ** Average BW = 64, 0.880221
 
 

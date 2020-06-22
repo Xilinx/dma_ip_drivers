@@ -1,0 +1,34 @@
+.. _sys_req:
+
+System Requirements
+===================
+
+Xilinx Accelerator Card
+-----------------------
+
+1. VCU1525
+
+Host Platform
+-------------
+
+x64 host system with at least one Gen 3x16 PCIe slot and minimum 32GB RAM on same CPU node for 2K queues.
+
+
+Host System Configuration & Tools
+---------------------------------
+
+Windows QDMA Driver release is verified on following Host system configuration
+
++--------------------------+-------------------------------------------------------------+
+| Host System              | Configuration Details                                       |
++==========================+=============================================================+
+| Target OS                | Windows 10 64-bit Enterprise Edition                        |
++--------------------------+-------------------------------------------------------------+
+| Development OS           | Windows 10                                                  |
++--------------------------+-------------------------------------------------------------+
+| RAM                      | 32GB                                                        |
++--------------------------+-------------------------------------------------------------+
+| Development Softwares    | Visual Studio 2017 (or later)                               |
+|                          | Windows Driver Kit                                          |
+|                          | Windows 10 SDK 10.0.16299.0 (or later)                      |
++--------------------------+-------------------------------------------------------------+

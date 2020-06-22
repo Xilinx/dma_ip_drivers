@@ -10,7 +10,7 @@ debugfs supports:
 - Files to export single integer that can be read-only or read/write
 - Read-only data blob files.
 
-QDMA Kernel driver uses this facility and exposes qdma information similar to ``dmactl`` user space application. The advantage of debugfs is that users need not depend on user space application but if they integrate the ``libqdma`` in kernel space driver, it comes along with this debug facility.
+QDMA Kernel driver uses this facility and exposes qdma information similar to ``dma-ctl`` user space application. The advantage of debugfs is that users need not depend on user space application but if they integrate the ``libqdma`` in kernel space driver, it comes along with this debug facility.
 
 
 During PF/VF module loading, QDMA driver creates PF/VF directories in ``/sys/kernel/debug`` by the names ``qdma_pf`` and ``qdma_vf``. qdma_pf directory will list all the detected primary functions, similarly qdma_vf will list all virtual functions.
@@ -36,7 +36,7 @@ Below files and directories are created during the device initialization.
 
 
 
-When a queue is added to a QDMA device, per say, through dmactl, a directory with the qid is created in the corresponding ``queues`` directory of the device. This will be used to create further directories under ‘qid’ directory.
+When a queue is added to a QDMA device, per say, through dma-ctl, a directory with the qid is created in the corresponding ``queues`` directory of the device. This will be used to create further directories under ‘qid’ directory.
 
 For example, if a queue with qid 2 is added to device qdma01000, the directory with name ‘2’ is created in queues directory
 

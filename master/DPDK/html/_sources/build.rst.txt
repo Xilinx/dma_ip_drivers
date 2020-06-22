@@ -63,7 +63,7 @@ on the Xilinx GitHub https://github.com/Xilinx/dma_ip_drivers, subdirectory QDMA
 Setup: Download and modifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The reference driver code requires DPDK version 18.11.
+The reference driver code requires DPDK version 19.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.
 
@@ -79,16 +79,16 @@ is installed and move to this directory.
 	cd <server_dir>/<dpdk_test_area>
 	git clone http://dpdk.org/git/dpdk-stable
 	cd dpdk-stable
-	git checkout v18.11
+	git checkout v19.11
 	cp -r <dpdk_sw_database>/drivers/net/qdma ./drivers/net/
 	cp -r <dpdk_sw_database>/examples/qdma_testapp ./examples/
 
-Additionally, make below changes to the DPDK 18.11 tree to build QDMA driver,
+Additionally, make below changes to the DPDK 19.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.
 
 	1. To build QDMA driver
 
-	a. Add below lines to ``./config/common_base`` in DPDK 18.11 tree
+	a. Add below lines to ``./config/common_base`` in DPDK 19.11 tree
 
 	::
 
@@ -132,6 +132,8 @@ support 2K queues and populate Xilinx devices for binding.
 
 	::
 
+		CONFIG_RTE_MAX_VFIO_GROUPS=256
+		CONFIG_RTE_MAX_VFIO_CONTAINERS=256
 		CONFIG_RTE_MAX_MEMZONE=7680
 		CONFIG_RTE_MAX_ETHPORTS=256
 		CONFIG_RTE_MAX_QUEUES_PER_PORT=2048

@@ -1,0 +1,2 @@
+
+.. include:: ../doxygen/qdma_win/rst/namespace_xlnx.rst
