@@ -89,3 +89,4 @@ DRIVER LIMITATIONS:
 - Driver compilation on Fedora 28 with gcc8.1 results in compilation warnings
 - Big endian systems are not supported
 - For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
+- FLR is not supported in the Driver for CentOS because linux kernels provided in CentOS versions does not support the driver call back registration for FLR functionality

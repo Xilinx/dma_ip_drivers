@@ -9,8 +9,8 @@
  * LICENSE file in the root directory of this source tree)
  */
 
-#ifndef __DMA_PERF_VERSION_H
-#define __DMA_PERF_VERSION_H
+#ifndef __DMA_TO_DEVICE_VERSION_H
+#define __DMA_TO_DEVICE_VERSION_H
 
 #define PROGNAME "dma-to-device"
 #define VERSION "2020.1.0"
