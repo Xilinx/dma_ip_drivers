@@ -27,3 +27,6 @@ The following sequence diagrams shows the reset process for PF and VF.
 
 .. image:: /images/flr.png
    :align: center
+   
+   
+**NOTE:** FLR is not supported in CentOS because linux kernels provided in CentOS versions does not support the FLR driver call back registration.

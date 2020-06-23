@@ -709,6 +709,18 @@ options qdma-vf mode=0x06:0:2,0x06:1:3
 options qdma-vf config_bar=0x06:0:2,0x06:1:0
 </pre></div>
 </div>
+<p>An auxillary script, qdma_generate_conf_file.sh has been added to the scripts folder which helps create the qdma.conf
+config file and copies it to the /etc/modprobe.d location. The script can be used as shown below -</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>./scripts/qdma_generate_conf_file.sh &lt;bus_num&gt; &lt;num_pfs&gt; &lt;mode&gt; &lt;config_bar&gt; &lt;master_pf&gt;
+</pre></div>
+</div>
+<p>Please note that having the qdma-pf.ko and qdma-vf.ko files in the /lib/modules/&lt;kernel version&gt;/qdma/ will cause
+automatic loading of the driver modules at boot time. To avoid this, it is recommended to have the drivers
+blacklisted. This can be done by adding the below 2 lines in the /etc/modprobe.d/blacklist.conf file -</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>blacklist qdma-pf
+blacklist qdma-vf
+</pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -743,7 +755,7 @@ options qdma-vf config_bar=0x06:0:2,0x06:1:0
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 08, 2020.
+        Last updated on June 23, 2020.
       </span>
 
     </p>
