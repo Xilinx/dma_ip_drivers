@@ -35,6 +35,7 @@
 static struct option const long_opts[] = {
 	{"device", required_argument, NULL, 'd'},
 	{"address", required_argument, NULL, 'a'},
+	{"aperture", required_argument, NULL, 'k'},
 	{"size", required_argument, NULL, 's'},
 	{"offset", required_argument, NULL, 'o'},
 	{"count", required_argument, NULL, 'c'},
@@ -44,8 +45,9 @@ static struct option const long_opts[] = {
 	{0, 0, 0, 0}
 };
 
-static int test_dma(char *devname, uint64_t addr, uint64_t size,
-		    uint64_t offset, uint64_t count, char *ofname);
+static int test_dma(char *devname, uint64_t addr, uint64_t aperture, 
+					uint64_t size, uint64_t offset, uint64_t count,
+					char *ofname);
 static int no_write = 0;
 
 static void usage(const char *name)
@@ -59,6 +61,9 @@ static void usage(const char *name)
 		long_opts[i].val, long_opts[i].name, DEVICE_NAME_DEFAULT);
 	i++;
 	fprintf(stdout, "  -%c (--%s) the start address on the AXI bus\n",
+	       long_opts[i].val, long_opts[i].name);
+	i++;
+	fprintf(stdout, "  -%c (--%s) memory address aperture\n",
 	       long_opts[i].val, long_opts[i].name);
 	i++;
 	fprintf(stdout,
@@ -88,12 +93,13 @@ int main(int argc, char *argv[])
 	int cmd_opt;
 	char *device = DEVICE_NAME_DEFAULT;
 	uint64_t address = 0;
+	uint64_t aperture = 0;
 	uint64_t size = SIZE_DEFAULT;
 	uint64_t offset = 0;
 	uint64_t count = COUNT_DEFAULT;
 	char *ofname = NULL;
 
-	while ((cmd_opt = getopt_long(argc, argv, "vhxc:f:d:a:s:o:", long_opts,
+	while ((cmd_opt = getopt_long(argc, argv, "vhxc:f:d:a:k:s:o:", long_opts,
 			    NULL)) != -1) {
 		switch (cmd_opt) {
 		case 0:
@@ -107,8 +113,12 @@ int main(int argc, char *argv[])
 			/* RAM address on the AXI bus in bytes */
 			address = getopt_integer(optarg);
 			break;
-			/* RAM size in bytes */
+		case 'k':
+			/* memory aperture windows size */
+			aperture = getopt_integer(optarg);
+			break;
 		case 's':
+			/* RAM size in bytes */
 			size = getopt_integer(optarg);
 			break;
 		case 'o':
@@ -138,17 +148,20 @@ int main(int argc, char *argv[])
 	}
 	if (verbose)
 	fprintf(stdout,
-		"dev %s, addr 0x%lx, size 0x%lx, offset 0x%lx, count %lu\n",
-		device, address, size, offset, count);
+		"dev %s, addr 0x%lx, aperture 0x%lx, size 0x%lx, offset 0x%lx, "
+		"count %lu\n",
+		device, address, aperture, size, offset, count);
 
-	return test_dma(device, address, size, offset, count, ofname);
+	return test_dma(device, address, aperture, size, offset, count, ofname);
 }
 
-static int test_dma(char *devname, uint64_t addr, uint64_t size,
-		    uint64_t offset, uint64_t count, char *ofname)
+static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
+					uint64_t size, uint64_t offset, uint64_t count,
+					char *ofname)
 {
 	ssize_t rc;
 	uint64_t i;
+	uint64_t apt_loop = aperture ? (size + aperture - 1) / aperture : 0;
 	char *buffer = NULL;
 	char *allocated = NULL;
 	struct timespec ts_start, ts_end;
@@ -191,10 +204,25 @@ static int test_dma(char *devname, uint64_t addr, uint64_t size,
 
 	for (i = 0; i < count; i++) {
 		rc = clock_gettime(CLOCK_MONOTONIC, &ts_start);
-		/* lseek & read data from AXI MM into buffer using SGDMA */
-		rc = read_to_buffer(devname, fpga_fd, buffer, size, addr);
-		if (rc < 0)
-			goto out;
+		if (apt_loop) {
+			uint64_t j;
+			uint64_t len = size;
+			char *buf = buffer;
+
+			for (j = 0; j < apt_loop; j++, len -= aperture, buf += aperture) {
+				/* lseek & read data from AXI MM into buffer using SGDMA */
+				rc = read_to_buffer(devname, fpga_fd, buf,
+									(len > aperture) ? aperture : len,
+									addr);
+				if (rc < 0)
+					goto out;
+			}
+		} else {
+			/* lseek & read data from AXI MM into buffer using SGDMA */
+			rc = read_to_buffer(devname, fpga_fd, buffer, size, addr);
+			if (rc < 0)
+				goto out;
+		}
 		clock_gettime(CLOCK_MONOTONIC, &ts_end);
 
 		/* subtract the start time from the end time */
