@@ -57,7 +57,7 @@ MODULE_PARM_DESC(poll_mode, "Set 1 for hw polling, default is 0 (interrupts)");
 
 static unsigned int interrupt_mode;
 module_param(interrupt_mode, uint, 0644);
-MODULE_PARM_DESC(interrupt_mode, "0 - MSI-x , 1 - MSI, 2 - Legacy");
+MODULE_PARM_DESC(interrupt_mode, "0 - Auto , 1 - MSI, 2 - Legacy, 3 - MSI-x");
 
 static unsigned int enable_credit_mp = 1;
 module_param(enable_credit_mp, uint, 0644);
@@ -2012,7 +2012,7 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 		return -EINVAL;
 	}
 
-	if (!interrupt_mode && msi_msix_capable(pdev, PCI_CAP_ID_MSIX)) {
+	if ((interrupt_mode == 3 || !interrupt_mode) && msi_msix_capable(pdev, PCI_CAP_ID_MSIX)) {
 		int req_nvec = xdev->c2h_channel_max + xdev->h2c_channel_max +
 			       xdev->user_max;
 
@@ -2034,7 +2034,7 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 
 		xdev->msix_enabled = 1;
 
-	} else if (interrupt_mode == 1 &&
+	} else if ((interrupt_mode == 1 || !interrupt_mode) &&
 		   msi_msix_capable(pdev, PCI_CAP_ID_MSI)) {
 		/* enable message signalled interrupts */
 		dbg_init("pci_enable_msi()\n");
