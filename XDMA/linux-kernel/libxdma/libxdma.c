@@ -4431,15 +4431,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = probe_engines(xdev);
 	if (rv)
-		goto err_engines;
+		goto err_mask;
 
 	rv = enable_msi_msix(xdev, pdev);
 	if (rv < 0)
-		goto err_enable_msix;
+		goto err_engines;
 
 	rv = irq_setup(xdev, pdev);
 	if (rv < 0)
-		goto err_interrupts;
+		goto err_msix;
 
 	if (!poll_mode)
 		channel_interrupts_enable(xdev, ~0);
@@ -4454,9 +4454,7 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	return (void *)xdev;
 
-err_interrupts:
-	irq_teardown(xdev);
-err_enable_msix:
+err_msix:
 	disable_msi_msix(xdev, pdev);
 err_engines:
 	remove_engines(xdev);
