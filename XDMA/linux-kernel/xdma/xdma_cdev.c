@@ -607,21 +607,20 @@ int xdma_cdev_init(void)
 	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
 	if (IS_ERR(g_xdma_class)) {
 		dbg_init(XDMA_NODE_NAME ": failed to create class");
-		return -1;
+		return -EINVAL;
 	}
 
-    /* using kmem_cache_create to enable sequential cleanup */
-    cdev_cache = kmem_cache_create("cdev_cache",
-                                   sizeof(struct cdev_async_io),
-                                   0,
-                                   SLAB_HWCACHE_ALIGN,
-                                   NULL);
-    if (!cdev_cache) {
-    	pr_info("memory allocation for cdev_cache failed. OOM\n");
-    	return -ENOMEM;
-    }
+	/* using kmem_cache_create to enable sequential cleanup */
+	cdev_cache = kmem_cache_create("cdev_cache",
+					sizeof(struct cdev_async_io), 0,
+					SLAB_HWCACHE_ALIGN, NULL);
 
-   	xdma_threads_create(8);
+	if (!cdev_cache) {
+		pr_info("memory allocation for cdev_cache failed. OOM\n");
+		return -ENOMEM;
+	}
+
+	xdma_threads_create(num_online_cpus());
 
 	return 0;
 }

@@ -101,7 +101,7 @@ struct xdma_pci_dev {
 
 struct cdev_async_io {
 	struct kiocb *iocb;
-	struct xdma_io_cb* cb;
+	struct xdma_io_cb *cb;
 	bool write;
 	bool cancel;
 	int cmpl_cnt;

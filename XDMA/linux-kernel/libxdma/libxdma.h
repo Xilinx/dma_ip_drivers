@@ -57,9 +57,9 @@
  * interrupts per engine, rad2_vul.sv:237
  * .REG_IRQ_OUT	(reg_irq_from_ch[(channel*2) +: 2]),
  */
-#define XDMA_ENG_IRQ_NUM (1)
-#define MAX_EXTRA_ADJ	0x3F 
-#define RX_STATUS_EOP (1)
+#define XDMA_ENG_IRQ_NUM	(1)
+#define MAX_EXTRA_ADJ		(0x3F)
+#define RX_STATUS_EOP		(1)
 
 /* Target internal components on XDMA control BAR */
 #define XDMA_OFS_INT_CTRL	(0x2000UL)
@@ -410,12 +410,12 @@ struct sw_desc {
 struct xdma_transfer {
 	struct list_head entry;		/* queue of non-completed transfers */
 	struct xdma_desc *desc_virt;	/* virt addr of the 1st descriptor */
-	struct xdma_result *res_virt; /* virt addr of result for c2h streaming */
-	dma_addr_t res_bus;			  /* bus addr for result descriptors */
+	struct xdma_result *res_virt;   /* virt addr of result, c2h streaming */
+	dma_addr_t res_bus;		/* bus addr for result descriptors */
 	dma_addr_t desc_bus;		/* bus addr of the first descriptor */
 	int desc_adjacent;		/* adjacent descriptors at desc_bus */
 	int desc_num;			/* number of descriptors in transfer */
-	int desc_index;			/* index for first descriptor in transfer */
+	int desc_index;			/* index for 1st desc. in transfer */
 	enum dma_data_direction dir;
 #if	KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
 	struct swait_queue_head wq;
@@ -438,7 +438,9 @@ struct xdma_request_cb {
 	unsigned int total_len;
 	u64 ep_addr;
 
-	struct xdma_transfer tfer[2]; /* Use two transfers in case single request needs to be split */
+	/* Use two transfers in case single request needs to be split */
+	struct xdma_transfer tfer[2];
+
 	struct xdma_io_cb *cb;
 
 	unsigned int sw_desc_idx;
@@ -484,8 +486,9 @@ struct xdma_engine {
 	dma_addr_t cyclic_result_bus;	/* bus addr for transfer */
 	struct xdma_request_cb *cyclic_req;
 	struct sg_table cyclic_sgt;
-    u8 *perf_buf_virt;
-    dma_addr_t perf_buf_bus; /* bus address */
+	u8 *perf_buf_virt;
+	dma_addr_t perf_buf_bus; /* bus address */
+
 	u8 eop_found; /* used only for cyclic(rx:c2h) */
 	int eop_count;
 	int rx_tail;	/* follows the HW */
