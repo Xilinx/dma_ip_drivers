@@ -558,6 +558,7 @@ static int xdma_engine_stop(struct xdma_engine *engine)
 				(unsigned long)(&engine->regs));
 	/* dummy read of status register to flush all previous writes */
 	dbg_tfr("%s(%s) done\n", __func__, engine->name);
+	engine->running = 0;
 	return 0;
 }
 
@@ -754,7 +755,6 @@ static int engine_service_shutdown(struct xdma_engine *engine)
 		pr_err("Failed to stop engine\n");
 		return rv;
 	}
-	engine->running = 0;
 
 	/* awake task on engine's shutdown wait queue */
 	xlx_wake_up(&engine->shutdown_wq);
@@ -2858,7 +2858,6 @@ struct xdma_transfer *engine_cyclic_stop(struct xdma_engine *engine)
 			pr_err("Failed to stop engine\n");
 			return NULL;
 		}
-		engine->running = 0;
 
 		if (transfer->cyclic) {
 			if (engine->xdma_perf)
@@ -4538,8 +4537,6 @@ void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 			rv = xdma_engine_stop(engine);
 			if (rv < 0)
 				pr_err("Failed to stop engine\n");
-			else
-				engine->running = 0;
 			spin_unlock_irqrestore(&engine->lock, flags);
 		}
 	}
@@ -4555,8 +4552,6 @@ void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 			rv = xdma_engine_stop(engine);
 			if (rv < 0)
 				pr_err("Failed to stop engine\n");
-			else
-				engine->running = 0;
 			spin_unlock_irqrestore(&engine->lock, flags);
 		}
 	}
