@@ -2316,6 +2316,11 @@ static int irq_legacy_setup(struct xdma_dev *xdev, struct pci_dev *pdev)
 	int rv;
 
 	pci_read_config_byte(pdev, PCI_INTERRUPT_PIN, &val);
+	if (val == 0) {
+		dbg_init("Legacy interrupt not supported\n");
+		return -EINVAL;
+	}
+
 	dbg_init("Legacy Interrupt register value = %d\n", val);
 	if (val > 1) {
 		val--;
