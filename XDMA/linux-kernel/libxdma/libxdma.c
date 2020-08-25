@@ -2320,7 +2320,7 @@ static int irq_legacy_setup(struct xdma_dev *xdev, struct pci_dev *pdev)
 	if (val > 1) {
 		val--;
 		w = (val << 24) | (val << 16) | (val << 8) | val;
-		/* Program IRQ Block Channel vactor and IRQ Block User vector
+		/* Program IRQ Block Channel vector and IRQ Block User vector
 		 * with Legacy interrupt value
 		 */
 		reg = xdev->bar[xdev->config_bar_idx] + 0x2080; // IRQ user
