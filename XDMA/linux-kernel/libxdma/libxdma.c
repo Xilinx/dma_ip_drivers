@@ -32,23 +32,6 @@
 #include "cdev_sgdma.h"
 #include "xdma_thread.h"
 
-/* SECTION: Module licensing */
-
-#ifdef __LIBXDMA_MOD__
-#include "version.h"
-#define DRV_MODULE_NAME "libxdma"
-#define DRV_MODULE_DESC "Xilinx XDMA Base Driver"
-
-static char version[] =
-	DRV_MODULE_DESC " " DRV_MODULE_NAME " v" DRV_MODULE_VERSION "\n";
-
-MODULE_AUTHOR("Xilinx, Inc.");
-MODULE_DESCRIPTION(DRV_MODULE_DESC);
-MODULE_VERSION(DRV_MODULE_VERSION);
-MODULE_LICENSE("Dual BSD/GPL");
-#endif
-
-extern unsigned int desc_blen_max;
 
 /* Module Parameters */
 static unsigned int poll_mode;
@@ -156,7 +139,6 @@ struct xdma_dev *xdev_find_by_pdev(struct pci_dev *pdev)
 	mutex_unlock(&xdev_mutex);
 	return NULL;
 }
-EXPORT_SYMBOL_GPL(xdev_find_by_pdev);
 
 static inline int debug_check_dev_hndl(const char *fname, struct pci_dev *pdev,
 				       void *hndl)
@@ -323,7 +305,6 @@ void enable_perf(struct xdma_engine *engine)
 
 	dbg_perf("IOCTL_XDMA_PERF_START\n");
 }
-EXPORT_SYMBOL_GPL(enable_perf);
 
 void get_perf_stats(struct xdma_engine *engine)
 {
@@ -357,7 +338,6 @@ void get_perf_stats(struct xdma_engine *engine)
 	lo = read_register(&engine->regs->perf_pnd_lo);
 	engine->xdma_perf->pending_count = build_u64(hi, lo);
 }
-EXPORT_SYMBOL_GPL(get_perf_stats);
 
 static int engine_reg_dump(struct xdma_engine *engine)
 {
@@ -2884,7 +2864,6 @@ struct xdma_transfer *engine_cyclic_stop(struct xdma_engine *engine)
 	}
 	return transfer;
 }
-EXPORT_SYMBOL_GPL(engine_cyclic_stop);
 
 static int engine_writeback_setup(struct xdma_engine *engine)
 {
@@ -3647,7 +3626,6 @@ unmap_sgl:
 
 	return done;
 }
-EXPORT_SYMBOL_GPL(xdma_xfer_submit);
 
 ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
 			bool write, u64 ep_addr, struct sg_table *sgt,
@@ -3769,8 +3747,6 @@ unmap_sgl:
 	return done;
 
 }
-EXPORT_SYMBOL_GPL(xdma_xfer_completion);
-
 
 ssize_t xdma_xfer_submit_nowait(void *cb_hndl, void *dev_hndl, int channel,
 				bool write, u64 ep_addr, struct sg_table *sgt,
@@ -3933,8 +3909,6 @@ rel_req:
 
 	return rv;
 }
-EXPORT_SYMBOL_GPL(xdma_xfer_submit_nowait);
-
 
 int xdma_performance_submit(struct xdma_dev *xdev, struct xdma_engine *engine)
 {
@@ -4066,7 +4040,6 @@ err_engine_transfer:
 	engine->perf_buf_virt = NULL;
 	return rv;
 }
-EXPORT_SYMBOL_GPL(xdma_performance_submit);
 
 static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 {
@@ -4473,7 +4446,6 @@ err_enable:
 	kfree(xdev);
 	return NULL;
 }
-EXPORT_SYMBOL_GPL(xdma_device_open);
 
 void xdma_device_close(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4518,7 +4490,6 @@ void xdma_device_close(struct pci_dev *pdev, void *dev_hndl)
 
 	kfree(xdev);
 }
-EXPORT_SYMBOL_GPL(xdma_device_close);
 
 void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4580,7 +4551,6 @@ void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 
 	pr_info("xdev 0x%p, done.\n", xdev);
 }
-EXPORT_SYMBOL_GPL(xdma_device_offline);
 
 void xdma_device_online(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4629,7 +4599,6 @@ void xdma_device_online(struct pci_dev *pdev, void *dev_hndl)
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	pr_info("xdev 0x%p, done.\n", xdev);
 }
-EXPORT_SYMBOL_GPL(xdma_device_online);
 
 int xdma_device_restart(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4644,7 +4613,6 @@ int xdma_device_restart(struct pci_dev *pdev, void *dev_hndl)
 	pr_info("NOT implemented, 0x%p.\n", xdev);
 	return -EINVAL;
 }
-EXPORT_SYMBOL_GPL(xdma_device_restart);
 
 int xdma_user_isr_register(void *dev_hndl, unsigned int mask,
 			   irq_handler_t handler, void *dev)
@@ -4671,7 +4639,6 @@ int xdma_user_isr_register(void *dev_hndl, unsigned int mask,
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(xdma_user_isr_register);
 
 int xdma_user_isr_enable(void *dev_hndl, unsigned int mask)
 {
@@ -4690,7 +4657,6 @@ int xdma_user_isr_enable(void *dev_hndl, unsigned int mask)
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(xdma_user_isr_enable);
 
 int xdma_user_isr_disable(void *dev_hndl, unsigned int mask)
 {
@@ -4708,23 +4674,7 @@ int xdma_user_isr_disable(void *dev_hndl, unsigned int mask)
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(xdma_user_isr_disable);
 
-#ifdef __LIBXDMA_MOD__
-static int __init xdma_base_init(void)
-{
-	pr_info("%s", version);
-	return 0;
-}
-
-static void __exit xdma_base_exit(void)
-{
-	pr_info("%s", __func__);
-}
-
-module_init(xdma_base_init);
-module_exit(xdma_base_exit);
-#endif
 /* makes an existing transfer cyclic */
 static void xdma_transfer_cyclic(struct xdma_transfer *transfer)
 {
@@ -5380,3 +5330,50 @@ int engine_addrmode_set(struct xdma_engine *engine, unsigned long arg)
 
 	return rv;
 }
+
+#ifdef __LIBXDMA_MOD__
+/* SECTION: Module licensing */
+#include "version.h"
+#define DRV_MODULE_NAME "libxdma"
+#define DRV_MODULE_DESC "Xilinx XDMA Base Driver"
+
+static char version[] =
+	DRV_MODULE_DESC " " DRV_MODULE_NAME " v" DRV_MODULE_VERSION "\n";
+
+MODULE_AUTHOR("Xilinx, Inc.");
+MODULE_DESCRIPTION(DRV_MODULE_DESC);
+MODULE_VERSION(DRV_MODULE_VERSION);
+MODULE_LICENSE("Dual BSD/GPL");
+
+extern unsigned int desc_blen_max;
+static int __init xdma_base_init(void)
+{
+	pr_info("%s", version);
+	return 0;
+}
+
+static void __exit xdma_base_exit(void)
+{
+	pr_info("%s", __func__);
+}
+
+module_init(xdma_base_init);
+module_exit(xdma_base_exit);
+
+EXPORT_SYMBOL_GPL(xdev_find_by_pdev);
+EXPORT_SYMBOL_GPL(enable_perf);
+EXPORT_SYMBOL_GPL(xdma_user_isr_disable);
+EXPORT_SYMBOL_GPL(xdma_user_isr_enable);
+EXPORT_SYMBOL_GPL(xdma_user_isr_register);
+EXPORT_SYMBOL_GPL(xdma_device_restart);
+EXPORT_SYMBOL_GPL(xdma_device_online);
+EXPORT_SYMBOL_GPL(xdma_device_offline);
+EXPORT_SYMBOL_GPL(xdma_device_close);
+EXPORT_SYMBOL_GPL(xdma_device_open);
+EXPORT_SYMBOL_GPL(xdma_performance_submit);
+EXPORT_SYMBOL_GPL(xdma_xfer_submit_nowait);
+EXPORT_SYMBOL_GPL(xdma_xfer_completion);
+EXPORT_SYMBOL_GPL(xdma_xfer_submit);
+EXPORT_SYMBOL_GPL(engine_cyclic_stop);
+EXPORT_SYMBOL_GPL(get_perf_stats);
+#endif
