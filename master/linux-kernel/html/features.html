@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -345,8 +345,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">QDMA Features</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#qdma-hardware-features">QDMA Hardware Features</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-qdma3-1-and-qdma4-0-designs">Features Supported only in QDMA3.1 and QDMA4.0 Designs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-qdma3-1-design">Features Supported only in QDMA3.1 Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-ultrascale-designs">Features Supported only in Ultrascale+ Designs</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#qdma-software-features">QDMA Software Features</a></li>
@@ -479,8 +478,8 @@
 <li><p class="first">ECC support</p>
 </li>
 </ul>
-<div class="section" id="features-supported-only-in-qdma3-1-and-qdma4-0-designs">
-<h3>Features Supported only in QDMA3.1 and QDMA4.0 Designs<a class="headerlink" href="#features-supported-only-in-qdma3-1-and-qdma4-0-designs" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="features-supported-only-in-ultrascale-designs">
+<h3>Features Supported only in Ultrascale+ Designs<a class="headerlink" href="#features-supported-only-in-ultrascale-designs" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Interrupt support for Mailbox events</li>
 <li>Flexible interrupt allocation between PF and VF</li>
@@ -488,11 +487,6 @@
 <li>Streaming C2H completion entry coalescing</li>
 <li>Disabling overflow check in completion ring</li>
 <li>Completion ring descriptors of 64 bytes sizes</li>
-</ul>
-</div>
-<div class="section" id="features-supported-only-in-qdma3-1-design">
-<h3>Features Supported only in QDMA3.1 Design<a class="headerlink" href="#features-supported-only-in-qdma3-1-design" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
 <li>Flexible BAR mapping for QDMA configuration register space</li>
 </ul>
 <p>For details on Hardware Features refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
@@ -540,8 +534,8 @@ Interrupt aggregation is used for processing the completion ring.</dd>
 </ul>
 <ul class="simple">
 <li>Allows only Privileged Physical Function to program the contexts and registers</li>
-<li>Dynamic queue configuration, refer to Interface file, libqdma_export.h (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">qdma_queue_conf</span></code>) for configurable parameters</li>
-<li>Dynamic driver configuration, refer to Interface file, libqdma_export.h (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">qdma_dev_conf</span></code>) for configurable parameters</li>
+<li>Dynamic queue configuration, refer to Interface file, libqdma_export.h (struct qdma_queue_conf) for configurable parameters</li>
+<li>Dynamic driver configuration, refer to Interface file, libqdma_export.h (struct qdma_dev_conf) for configurable parameters</li>
 <li>Driver configuration through sysfs</li>
 <li>Asynchronous and Synchronous IO support</li>
 <li>Display the Version details for SW and HW</li>
@@ -579,7 +573,7 @@ Interrupt aggregation is used for processing the completion ring.</dd>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 23, 2020.
+        Last updated on September 08, 2020.
       </span>
 
     </p>

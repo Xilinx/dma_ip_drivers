@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -471,26 +471,29 @@ Below is the directory structure of the Linux QDMA Driver software.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>apps/</td>
-<td>User space application to configure and control QDMA</td>
-</tr>
-<tr class="row-odd"><td>docs/</td>
+<tr class="row-even"><td>docs/</td>
 <td>Documentation for the Xilinx QDMA Linux Driver</td>
 </tr>
-<tr class="row-even"><td>driver/src</td>
+<tr class="row-odd"><td>drv/</td>
 <td>Provides interfaces to manage the PCIe device and
 exposes character driver interface to perform QDMA transfers</td>
 </tr>
-<tr class="row-odd"><td>driver/libqdma/</td>
+<tr class="row-even"><td>libqdma/</td>
 <td>QDMA library to configure and control the QDMA IP</td>
 </tr>
-<tr class="row-even"><td>scripts/</td>
+<tr class="row-odd"><td>scripts/</td>
 <td>Sample scripts for perform DMA operations</td>
 </tr>
-<tr class="row-odd"><td>Makefile</td>
+<tr class="row-even"><td>user/</td>
+<td>User space application to configure and control QDMA</td>
+</tr>
+<tr class="row-odd"><td>tools/</td>
+<td>Tools to perform DMA operations</td>
+</tr>
+<tr class="row-even"><td>Makefile</td>
 <td>Makefile to compile the driver</td>
 </tr>
-<tr class="row-even"><td>RELEASE.txt</td>
+<tr class="row-odd"><td>RELEASE.txt</td>
 <td>Release Notes</td>
 </tr>
 </tbody>
@@ -499,14 +502,14 @@ exposes character driver interface to perform QDMA transfers</td>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp;&amp; make
 </pre></div>
 </div>
-<p>Upon executing make, A sub-directory <code class="docutils literal"><span class="pre">bin</span></code> is created with the list of executable listed in below tables.
+<p>Upon executing make, A sub-directory <code class="docutils literal"><span class="pre">build</span></code> is created in <code class="docutils literal"><span class="pre">linux-kernel</span></code> with the list of executable listed in below tables.
 Individual executables can also be built with commands listed against each component in below tables.</p>
 <p><strong>Kernel modules:</strong></p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="27%" />
+<col width="35%" />
+<col width="37%" />
 <col width="28%" />
-<col width="45%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Executable</th>
@@ -515,24 +518,22 @@ Individual executables can also be built with commands listed against each compo
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>qdma-pf.ko</td>
+<tr class="row-even"><td>qdma.ko</td>
 <td>PF Driver</td>
-<td>make driver MODULE=mod_pf</td>
+<td>make pf</td>
 </tr>
-<tr class="row-odd"><td>qdma-vf.ko</td>
+<tr class="row-odd"><td>qdma_vf.ko</td>
 <td>VF Driver</td>
-<td>make driver MODULE=mod_vf</td>
+<td>make vf</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Applications:</strong></p>
-<p>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">apps</span></code> to compile all the below applications.
-Applications can be compiled individually as mentioned after entering the respective application directory.</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="21%" />
-<col width="55%" />
-<col width="24%" />
+<col width="23%" />
+<col width="60%" />
+<col width="17%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Executable</th>
@@ -543,70 +544,43 @@ Applications can be compiled individually as mentioned after entering the respec
 <tbody valign="top">
 <tr class="row-even"><td>dma-ctl</td>
 <td>QDMA control and configuration application</td>
-<td>make dma-ctl</td>
+<td>make user</td>
 </tr>
 <tr class="row-odd"><td>dma-to-device</td>
 <td>Performs a host-to-card transaction for MM or ST</td>
-<td>make dma-to-device</td>
+<td>make tools</td>
 </tr>
 <tr class="row-even"><td>dma-from-device</td>
 <td>Performs a card-to-host transaction for MM or ST</td>
-<td>make dma-from-device</td>
+<td>make tools</td>
 </tr>
 <tr class="row-odd"><td>dma-perf</td>
 <td>Measures the performance of QDMA IP</td>
-<td>make dma-perf</td>
-</tr>
-<tr class="row-even"><td>dma-latency</td>
-<td>Measures the ping pong latency for ST transfers</td>
-<td>make dma-latency</td>
-</tr>
-<tr class="row-odd"><td>dma-xfer</td>
-<td>Sample transfer application</td>
-<td>make dma-xfer</td>
+<td>make tools</td>
 </tr>
 </tbody>
 </table>
 <p>Install the executable by running “make install”</p>
 <ul class="simple">
-<li>PF/VF kernel modules and application binaries are generated in <code class="docutils literal"><span class="pre">bin</span></code> and can be individually loaded</li>
-<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">install-apps</span></code> installs the applications in <code class="docutils literal"><span class="pre">/user/local/sbin</span></code>.</li>
-<li><code class="docutils literal"><span class="pre">make</span> <span class="pre">install-mods</span></code> copies the <code class="docutils literal"><span class="pre">qdma-pf.ko</span></code> and <code class="docutils literal"><span class="pre">qdma-vf.ko</span></code> in <code class="docutils literal"><span class="pre">/lib/modules/&lt;kernel</span> <span class="pre">version&gt;/qdma/</span></code></li>
+<li>The <code class="docutils literal"><span class="pre">dma-ctl</span></code>, <code class="docutils literal"><span class="pre">dma-from-device</span></code> and <code class="docutils literal"><span class="pre">dma-to-device</span></code> tools will be installed in <code class="docutils literal"><span class="pre">/user/local/sbin</span></code>.</li>
+<li>Individual components can be installed by using the appropriate install target.</li>
 </ul>
-<p>Ex: <code class="docutils literal"><span class="pre">/lib/modules/4.15.0-51-generic/qdma/</span></code></p>
+<p>Ex: “make install-user” will install all user applications</p>
+<ul class="simple">
+<li>PF/VF kernel modules are generated in <code class="docutils literal"><span class="pre">build</span></code> and can be individually loaded as below</li>
+</ul>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# insmod build/qdma.ko
+[xilinx@]# insmod build/qdma_vf.ko
+</pre></div>
+</div>
 </div>
 <div class="section" id="loading-the-qdma-driver-module">
 <h2>Loading the QDMA Driver Module<a class="headerlink" href="#loading-the-qdma-driver-module" title="Permalink to this headline">¶</a></h2>
 <p>Before loading the QDMA driver, make sure that the target board is connected to the Host System and required bit stream is loaded on to the board.</p>
-<p>Make sure to install the <code class="docutils literal"><span class="pre">qdma-pf.ko</span></code> and <code class="docutils literal"><span class="pre">qdma-vf.ko</span></code> modules using the <code class="docutils literal"><span class="pre">make</span> <span class="pre">install-mods</span></code> command.</p>
-<p>For loading the driver, execute the following command:</p>
-<p>PF Driver:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>modprobe qdma-pf
-</pre></div>
-</div>
-<p>VF Driver:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>modprobe qdma-vf
-</pre></div>
-</div>
 <p>QDMA driver supports the following list of module parameters that can be specified while loading the driver into the Linux kernel.
 - Mode
 - Master PF
 - Dynamic config BAR</p>
-<p>In order to pass the module parameters while loading a driver, a config file <code class="docutils literal"><span class="pre">qdma.conf</span></code> needs to be placed in /etc/modprobe.d directory.
-The format of the conf file would be :</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options &lt;module_name&gt; mode=&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,.....
-options &lt;module_name&gt; config_bar=&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,.....
-options &lt;module_name&gt; master_pf=&lt;bus_num&gt;:&lt;master_pf&gt;,&lt;bus_num&gt;:&lt;master_pf&gt;
-</pre></div>
-</div>
-<ul class="simple">
-<li>module_name:  Name of the mode. For PF: qdma-pf and for VF: qdma-vf</li>
-<li>bus_num : Bus number of the PCIe endpoint card</li>
-<li>func_num : Function number of the corressponding bus_num</li>
-<li>mode: Mode in which the driver needs to be loaded</li>
-<li>config_bar: Config bar number</li>
-<li>master_pf: Master PF</li>
-</ul>
 <div class="section" id="mode">
 <h3>1. <strong>Mode</strong><a class="headerlink" href="#mode" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">mode</span></code> module parameter is used to specify how the completions must be processed.
@@ -638,89 +612,100 @@ Each PF can be configured to function in following different modes</p>
 </div></blockquote>
 </li>
 </ol>
-<p>By default, the mode is set to auto mode for both of the PF and VF drivers. To set other modes, the <code class="docutils literal"><span class="pre">mode</span></code> entry needs to be added in the <code class="docutils literal"><span class="pre">qdma.conf</span></code>
-file in the following format.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf mode=&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,.....
-options qdma-vf mode=&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;mode&gt;,.....
+<p>By default, the mode is set to auto mode for both of the PF and VF drivers. To set other modes, use the <code class="docutils literal"><span class="pre">mode</span></code> module parameter in the following format.</p>
+<p><code class="docutils literal"><span class="pre">mode</span></code> takes the input as an array of 32 bit numbers and enables the user to specify the mode for multiple devices connected to the host system.</p>
+<p>ex: 0x00011111, 0x00012222, 0x00013333</p>
+<p>Each 32bit number is divided as below for PF driver.</p>
+<img alt="_images/pf_modes.PNG" class="align-center" src="_images/pf_modes.PNG" />
+<p>Use the below command to load the PF driver and set the modes for different PFs.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# insmod qdma.ko mode=0x&lt;device_bus_number&gt;&lt;PF0_mode&gt;&lt;PF1_mode&gt;&lt;PF2_mode&gt;&lt;PF3_mode&gt;
 </pre></div>
 </div>
-<p>For example, if <code class="docutils literal"><span class="pre">modprobe</span></code> command is executed with the following config file:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf mode=0x06:0:2,0x06:1:3,0x06:2:0,0x07:2:1
-options qdma-vf mode=0x06:0:2,0x06:1:3
+<p>Each 32 bit number is divided as below for VF driver where all VFs corresponding to PF0 is named as VFG0, the mode of all VFs corresponding to PF1 is named as VFG1 and so on …</p>
+<img alt="_images/vf_modes.PNG" class="align-center" src="_images/vf_modes.PNG" />
+<p>Use the below command to load the VF driver and set the modes for different VFs</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# insmod qdma_vf.ko mode=0x&lt;device_bus_number&gt;&lt;VFG0_mode&gt;&lt;VFG1_mode&gt;&lt;VFG2_mode&gt;&lt;VFG3_mode&gt;
 </pre></div>
 </div>
-<ul class="simple">
-<li>PF0 of bus number 6 is loaded in Direct Interrupt mode (2)</li>
-<li>PF1 of bus number 6 is loaded in Indirect Interrupt mode (3)</li>
-<li>PF2 of bus number 6 is loaded in Auto mode (0)</li>
-<li>PF2 of bus number 7 is loaded in Poll mode (1)</li>
-<li>PF0’s VF group of bus number 6 is loaded in Direct Interrupt Mode (2)</li>
-<li>PF1’s VF group of bus number 6 is loaded in Indirect Interrupt Mode (3)</li>
-<li>Rest all, which are not specified, are loaded in Auto mode by default.</li>
-</ul>
+<p>Refer to the example below:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>To set the mode as poll mode for all PFs, use the below command.</p>
+<p>Ex: insmod qdma.ko mode=0x011111</p>
+<p>To set themode as Interrupt Aggregation Mode for all PFs, use the below command.</p>
+<p>Ex: insmod qdma.ko mode=0x013333</p>
+<p>To load the PF driver with PF0 in Auto mode, PF1 in poll mode, PF2 in Direct Interrupt mode and PF3 in Interrupt Aggregation Mode, use the below command.</p>
+<p>Ex: insmod qdma.ko mode=0x010123</p>
+<p>When multiple cards are connected to the same host system and mode needs to be set for each card, use the command as below.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+02:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: insmod qdma.ko mode=0x011111,0x023333</p>
+<p>Follow the same for VF driver by appropriately choosing each VFG mode.</p>
 </div>
 <div class="section" id="master-pf">
 <h3>2. <strong>Master PF</strong><a class="headerlink" href="#master-pf" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">master_pf</span></code> module parameter is used to set the master PF for QDMA driver
 By default, <code class="docutils literal"><span class="pre">master_pf</span></code> is set to PF0(First device in the PF list)</p>
-<p>To set other PF as a <code class="docutils literal"><span class="pre">master_pf</span></code>, its entry needs to be added in the <code class="docutils literal"><span class="pre">qdma.conf</span></code> file in the following format.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf master_pf=&lt;bus_num&gt;:&lt;master_pf&gt;,&lt;bus_num&gt;:&lt;master_pf&gt;
+<p>master_pf takes the input as an array of 32 bit numbers and enables the user to mention the master_pf for multiple cards connected to the host system by comma seperated values.</p>
+<p>ex: 0x00010001, 0x00020002, 0x00030003</p>
+<p>Each 32 bit number is divided as below for PF driver.</p>
+<img alt="_images/master_pf.PNG" class="align-center" src="_images/master_pf.PNG" />
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# insmod qdma.ko master_pf=&lt;device_bus_number&gt;&lt;device_master_pf_number&gt;
 </pre></div>
 </div>
-<p>For example, if <code class="docutils literal"><span class="pre">modprobe</span></code> command is executed with the following config file:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf master_pf=0x06:0,0x07:1
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
 </pre></div>
 </div>
-<ul class="simple">
-<li>Master PF of bus number 6 is set as PF0</li>
-<li>Master PF of bus number 7 is set as PF1</li>
-</ul>
+<p>Ex: insmod qdma.ko master_pf=0x010001</p>
+<p>To set any other PF as master_pf, use the module parameter as below</p>
+<p>Ex: insmod qdma.ko master_pf=0x010003</p>
+<p>When multiple cards are connected to the same host system and master_pf needs to be updated for each card, use the command as below.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+02:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: insmod qdma.ko master_pf=0x010001, 0x020001</p>
 </div>
 <div class="section" id="dynamic-config-bar">
 <h3>3. <strong>Dynamic Config Bar</strong><a class="headerlink" href="#dynamic-config-bar" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">config_bar</span></code> module parameter is used to set the DMA bar of the QDMA device.
 QDMA IP supports changing the DMA bar while creating the bit stream.</p>
 <p>For 64-bit bars, DMA bar can be 0|2|4 .
-By default, the QDMA driver sets BAR0 as the DMA BAR</p>
-<p>To set other config bar, the <code class="docutils literal"><span class="pre">config_bar</span></code> entry needs to be added in the <code class="docutils literal"><span class="pre">qdma.conf</span></code> file in the following format.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf config_bar=&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,.....
-options qdma-vf config_bar=&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,&lt;bus_num&gt;:&lt;pf_num&gt;:&lt;config_bar&gt;,.....
+By default, the QDMA driver sets BAR0 as the DMA BAR if the <code class="docutils literal"><span class="pre">config_bar</span></code> module parameter is not set.</p>
+<p>If BAR2 or BAR4 is configured as DMA BAR, pass the config_bar as a module number by mentioning the BAR number</p>
+<p>config_bar takes the input as an array of 32 bit numbers and enables the user to mention the config_bar for multiple cards connected to the host system.</p>
+<p>ex: 0x00010000, 0x00022222, 0x00034444</p>
+<p>Each 32 bit number is divided as below for PF driver.</p>
+<img alt="_images/pf_configbar.PNG" class="align-center" src="_images/pf_configbar.PNG" />
+<p>Each 32bit number is divided as below for VF driver.</p>
+<img alt="_images/vf_configbar.PNG" class="align-center" src="_images/vf_configbar.PNG" />
+<p>Ex: Let uss assume the host system has a single card connected and PF0 has BAR2 as config_bar, PF1 has the BAR0 as config_bar, PF2 has BAR4 as config_bar and PF3 has BAR0 as config_bar.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
 </pre></div>
 </div>
-<p>For example, if <code class="docutils literal"><span class="pre">modprobe</span></code> command is executed with the following config file:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf config_bar=0x06:0:0,0x06:1:2,0x06:2:4,0x07:2:0
-options qdma-vf config_bar=0x06:0:2,0x06:1:0
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# insmod qdma.ko config_bar=0x00012040
 </pre></div>
 </div>
+<p>When multiple cards are connected to the same host system and config_bar needs to be updated for each device, use the command as below.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep Xilinx
+01:00.1 Memory controller: Xilinx Corporation Device 913f
+02:00.1 Memory controller: Xilinx Corporation Device 913f
+</pre></div>
+</div>
+<p>Ex: Let us assume the host system has two cards connected</p>
 <ul class="simple">
-<li>PF0 of bus number 6 is loaded with config bar set as 0</li>
-<li>PF1 of bus number 6 is loaded with config bar set as 2</li>
-<li>PF2 of bus number 6 is loaded with config bar set as 4</li>
-<li>PF2 of bus number 7 is loaded with config bar set as 0</li>
-<li>PF0’s VF group of bus number 6 is loaded with config bar set as 2</li>
-<li>PF1’s VF group of bus number 6 is loaded with config bar set as 0</li>
-<li>Rest all, which are not specified, are loaded with config bar set as 0</li>
+<li>device#1 : PF0 has BAR2 as config_bar, PF1 has BAR0 as config_bar, PF2 has BAR4 as config_bar and PF3 has BAR0 as config_bar</li>
+<li>device#2 : PF0 has BAR4 as config_bar, PF1 has BAR2 as config_bar, PF2 has BAR0 as config_bar and PF3 has BAR2 as config_bar</li>
 </ul>
-<p>From the examples above, a <code class="docutils literal"><span class="pre">qdma.conf</span></code> file would look like:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>options qdma-pf mode=0x06:0:2,0x06:1:3,0x06:2:0,0x07:2:1
-options qdma-pf master_pf=0x06:0,0x07:1
-options qdma-pf config_bar=0x06:0:0,0x06:1:2,0x06:2:4,0x07:2:0
-options qdma-vf mode=0x06:0:2,0x06:1:3
-options qdma-vf config_bar=0x06:0:2,0x06:1:0
-</pre></div>
-</div>
-<p>An auxillary script, qdma_generate_conf_file.sh has been added to the scripts folder which helps create the qdma.conf
-config file and copies it to the /etc/modprobe.d location. The script can be used as shown below -</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./scripts/qdma_generate_conf_file.sh &lt;bus_num&gt; &lt;num_pfs&gt; &lt;mode&gt; &lt;config_bar&gt; &lt;master_pf&gt;
-</pre></div>
-</div>
-<p>Please note that having the qdma-pf.ko and qdma-vf.ko files in the /lib/modules/&lt;kernel version&gt;/qdma/ will cause
-automatic loading of the driver modules at boot time. To avoid this, it is recommended to have the drivers
-blacklisted. This can be done by adding the below 2 lines in the /etc/modprobe.d/blacklist.conf file -</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>blacklist qdma-pf
-blacklist qdma-vf
-</pre></div>
-</div>
+<p>Ex: insmod qdma.ko config_bar=0x00012040,0x00024202</p>
 </div>
 </div>
 </div>
@@ -755,7 +740,7 @@ blacklist qdma-vf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 23, 2020.
+        Last updated on September 08, 2020.
       </span>
 
     </p>

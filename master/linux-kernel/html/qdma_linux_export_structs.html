@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -887,6 +887,10 @@
 <span id="doxid-structqdma-queue-conf-1a260f0d4ec91e373f3bc41711a278c175"></span><span></span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">quld</span>
 </pre>
 <p>user provided per-Q irq handler</p>
+<pre class="highlight title-code-block literal-block" id="cid-qdma-queue-conf-pidx-acc">
+<span id="doxid-structqdma-queue-conf-1a2f96bcbc59435c682ac1d8c043082a9a"></span><span></span><span class="n">u32</span> <span class="nl">pidx_acc</span> <span class="p">:</span><span class="mi">8</span>
+</pre>
+<p>acummulate PIDX to batch packets</p>
 <pre class="highlight title-code-block literal-block" id="cid-qdma-queue-conf-fp-descq-isr-top">
 <span id="doxid-structqdma-queue-conf-1abe3d85ad8047c94af9360fa4edd34b26"></span><span></span><span class="kt">void</span> <span class="p">(</span><span class="o">*</span> <span class="n">fp_descq_isr_top</span> <span class="p">)(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">quld</span><span class="p">)</span>
 </pre>
@@ -1015,6 +1019,10 @@
 <span id="doxid-structqdma-queue-conf-1aa265902a99ed9ecbc03e643482699ecb"></span><span></span><span class="n">u8</span> <span class="nl">ping_pong_en</span> <span class="p">:</span><span class="mi">1</span>
 </pre>
 <p>Ping Pong measurement</p>
+<pre class="highlight title-code-block literal-block" id="cid-qdma-queue-conf-aperture-size">
+<span id="doxid-structqdma-queue-conf-1a5ce007662077eb7bd6bae219ef30f554"></span><span></span><span class="n">u32</span> <span class="n">aperture_size</span>
+</pre>
+<p>Keyhole Aperture Size</p>
 </div>
 <div class="section" id="struct-qdma-queue-count">
 <span id="cid-qdma-queue-count"></span><span id="doxid-structqdma-queue-count"></span><span id="index-7"></span><h2>struct qdma_queue_count<a class="headerlink" href="#struct-qdma-queue-count" title="Permalink to this headline">¶</a></h2>
@@ -1044,7 +1052,7 @@
 </pre>
 <p class="rubric">Overview</p>
 <p>qdma request for read or write</p>
-<p class="rubric">Fields</p>
+<span class="target" id="cid-qdma-request-pad"><span id="doxid-structqdma-request-1a37a07f70ceae5e4288abf30ac1813463"></span></span><p class="rubric">Fields</p>
 <pre class="highlight title-code-block literal-block" id="cid-qdma-request-opaque">
 <span id="doxid-structqdma-request-1aad50743f8c56c3cd0ff9059064d28fd5"></span><span></span><span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">opaque</span> <span class="p">[</span><span class="n">QDMA_REQ_OPAQUE_SIZE</span><span class="p">]</span>
 </pre>
@@ -1084,11 +1092,15 @@
 <pre class="highlight title-code-block literal-block" id="cid-qdma-request-h2c-eot">
 <span id="doxid-structqdma-request-1aecd22d0d8c5febe656f35cf01c9beffe"></span><span></span><span class="n">u8</span> <span class="nl">h2c_eot</span> <span class="p">:</span><span class="mi">1</span>
 </pre>
-<p>user defined data present</p>
+<p>indicates end of transfer towards user kernel</p>
+<pre class="highlight title-code-block literal-block" id="cid-qdma-request-check-qstate-disabled">
+<span id="doxid-structqdma-request-1ad85cdc8854f2a79a092773e2efd38d9f"></span><span></span><span class="n">u8</span> <span class="nl">check_qstate_disabled</span> <span class="p">:</span><span class="mi">1</span>
+</pre>
+<p>state check disbaled in queue pkt API</p>
 <pre class="highlight title-code-block literal-block" id="cid-qdma-request-udd-len">
 <span id="doxid-structqdma-request-1a51a8320397525100373ba5bf7f28dc20"></span><span></span><span class="n">u8</span> <span class="n">udd_len</span>
 </pre>
-<p>indicates end of transfer towards user kernel</p>
+<p>user defined data present</p>
 <pre class="highlight title-code-block literal-block" id="cid-qdma-request-sgcnt">
 <span id="doxid-structqdma-request-1aa8a652f80c8c192588a8bb1a71c720c1"></span><span></span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">sgcnt</span>
 </pre>
@@ -1252,7 +1264,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 23, 2020.
+        Last updated on September 08, 2020.
       </span>
 
     </p>

@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -1955,10 +1955,10 @@
 <p># of bytes transferred for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-service">
-<span id="cid-qdma-queue-service"></span><span id="doxid-libqdma-export-8h-1aff766c87e522a40d34d7c2dd628d021b"></span><h2>qdma_queue_service<a class="headerlink" href="#qdma-queue-service" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-service"></span><span id="doxid-libqdma-export-8h-1a7fe9e3c1b6899c116a62181303c803d4"></span><h2>qdma_queue_service<a class="headerlink" href="#qdma-queue-service" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">void</span> <span class="n">qdma_queue_service</span> <span class="p">(</span>
+<span></span><span class="kt">int</span> <span class="n">qdma_queue_service</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
     <span class="kt">int</span> <span class="n">budget</span><span class="p">,</span>
@@ -1966,7 +1966,8 @@
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
-<p>Service the queue in the case of irq handler is registered by the user, the user should call <a class="reference internal" href="#doxid-libqdma-export-8h-1aff766c87e522a40d34d7c2dd628d021b"><span class="std std-ref">qdma_queue_service()</span></a> in its interrupt handler to service the queue</p>
+<p>Service the queue in the case of irq handler is registered by the user, the user should call <a class="reference internal" href="#doxid-libqdma-export-8h-1a7fe9e3c1b6899c116a62181303c803d4"><span class="std std-ref">qdma_queue_service()</span></a> in its interrupt handler to service the queue</p>
+<p>Return: 0 for success or &lt;0 for error</p>
 <p class="rubric">Parameters:</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
@@ -1990,16 +1991,17 @@
 </table>
 </div>
 <div class="section" id="qdma-queue-update-pointers">
-<span id="cid-qdma-queue-update-pointers"></span><span id="doxid-libqdma-export-8h-1ac8222cfeeb4dce16af8f43379a442344"></span><h2>qdma_queue_update_pointers<a class="headerlink" href="#qdma-queue-update-pointers" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-update-pointers"></span><span id="doxid-libqdma-export-8h-1aa0056ed262621009a8070ae90a96aac6"></span><h2>qdma_queue_update_pointers<a class="headerlink" href="#qdma-queue-update-pointers" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">void</span> <span class="n">qdma_queue_update_pointers</span> <span class="p">(</span>
+<span></span><span class="kt">int</span> <span class="n">qdma_queue_update_pointers</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span>
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
 <p>Update queue pointers</p>
+<p>Return: 0 for success or &lt;0 for error</p>
 <p class="rubric">Parameters:</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
@@ -2212,7 +2214,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 23, 2020.
+        Last updated on September 08, 2020.
       </span>
 
     </p>
