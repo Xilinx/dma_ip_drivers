@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #include "qdma_access_common.h"
@@ -3893,15 +3905,15 @@ int qdma_get_device_attributes(void *dev_hndl,
  *
  * Return: string - success and NULL on failure
  *****************************************************************************/
-const char *qdma_hw_get_error_name(enum qdma_error_idx err_idx)
+const char *qdma_hw_get_error_name(uint32_t err_idx)
 {
 	if (err_idx >= QDMA_ERRS_ALL) {
 		qdma_log_error("%s: err_idx=%d is invalid, returning NULL\n",
-					   __func__, err_idx);
+				__func__, (enum qdma_error_idx)err_idx);
 		return NULL;
 	}
 
-	return qdma_err_info[err_idx].err_name;
+	return qdma_err_info[(enum qdma_error_idx)err_idx].err_name;
 }
 
 /*****************************************************************************/

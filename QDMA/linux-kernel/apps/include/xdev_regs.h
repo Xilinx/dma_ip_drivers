@@ -4,12 +4,19 @@
  * Copyright (c) 2018-2020,  Xilinx, Inc.
  * All rights reserved.
  *
- * This source code is licensed under both the BSD-style license (found in the
- * LICENSE file in the root directory of this source tree) and the GPLv2 (found
- * in the COPYING file in the root directory of this source tree).
- * You may select, at your option, one of the above-listed licenses.
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
- 
+
 #ifndef __XDEV_REGS_H__
 #define __XDEV_REGS_H__
 
@@ -76,7 +83,8 @@ static struct xreg_info qdma_config_regs[] = {
 	{"GLBL_DSC_ERR_LOG2",				0x27C, 0,  0, 0, 0,},
 	{"GLBL_INTERRUPT_CFG",				0x288, 0,  0, 0, 0,},
 
-	/* QDMA_TRQ_SEL_FMAP (0x00400 - 0x7FC) * TODO: max 256, display 4 for now */
+	/* QDMA_TRQ_SEL_FMAP (0x00400 - 0x7FC) */
+	/* TODO: max 256, display 4 for now */
 	{"TRQ_SEL_FMAP",				0x400, 4, 0, 0, 0,},
 
 	/* QDMA_TRQ_SEL_IND (0x00800) */

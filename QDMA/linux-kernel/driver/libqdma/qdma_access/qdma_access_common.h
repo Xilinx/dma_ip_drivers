@@ -587,8 +587,8 @@ struct qdma_hw_access {
 					uint8_t err_intr_index);
 	int (*qdma_hw_error_intr_rearm)(void *dev_hndl);
 	int (*qdma_hw_error_enable)(void *dev_hndl,
-					enum qdma_error_idx err_idx);
-	const char *(*qdma_hw_get_error_name)(enum qdma_error_idx err_idx);
+			uint32_t err_idx);
+	const char *(*qdma_hw_get_error_name)(uint32_t err_idx);
 	int (*qdma_hw_error_process)(void *dev_hndl);
 	int (*qdma_dump_config_regs)(void *dev_hndl, uint8_t is_vf, char *buf,
 					uint32_t buflen);

@@ -12,18 +12,6 @@
  *
  * The full GNU General Public License is included in this distribution in
  * the file called "COPYING".
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #ifndef EQDMA_ACCESS_H_
@@ -255,7 +243,8 @@ int eqdma_context_buf_len(uint8_t st,
 		enum qdma_dev_q_type q_type, uint32_t *buflen);
 
 int eqdma_hw_error_process(void *dev_hndl);
-const char *eqdma_hw_get_error_name(enum qdma_error_idx err_idx);
+const char *eqdma_hw_get_error_name(uint32_t err_idx);
+int eqdma_hw_error_enable(void *dev_hndl, uint32_t err_idx);
 
 int eqdma_read_dump_queue_context(void *dev_hndl,
 		uint16_t qid_hw,

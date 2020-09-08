@@ -1,7 +1,7 @@
-RELEASE: 2020.1
-===============
+RELEASE: 2020.1 Patch 
+=====================
 
-This release is validated on QDMA4.0 2020.1 based example design and QDMA3.1 2019.2 Patch based example design
+This release is validated on QDMA4.0 2020.1 Patch based example design
 
 SUPPORTED FEATURES:
 ===================
@@ -77,11 +77,14 @@ SUPPORTED FEATURES:
 - Modified the driver interface to pass the module parameters for more than 256 functions
 - Support for Function Level Reset (FLR) of both PFs and VFs.
 
+2020.1 Patch Updates
+--------------------
+- Resolved HW errors observed with QDMA4.0 MM only design
+- Addressed VF performance issues.
 
 KNOWN ISSUES:
 =============
 - In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-- On QDMA4.0 2020.1 design, HW errors are observed in dmesg console while validating the MM only design.
 - On QDMA4.0 2020.1 design, HW error observed during the probe of the VFs
 
 DRIVER LIMITATIONS:

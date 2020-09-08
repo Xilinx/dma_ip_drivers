@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #ifndef QDMA_ACCESS_COMMON_H_
@@ -575,8 +587,8 @@ struct qdma_hw_access {
 					uint8_t err_intr_index);
 	int (*qdma_hw_error_intr_rearm)(void *dev_hndl);
 	int (*qdma_hw_error_enable)(void *dev_hndl,
-					enum qdma_error_idx err_idx);
-	const char *(*qdma_hw_get_error_name)(enum qdma_error_idx err_idx);
+			uint32_t err_idx);
+	const char *(*qdma_hw_get_error_name)(uint32_t err_idx);
 	int (*qdma_hw_error_process)(void *dev_hndl);
 	int (*qdma_dump_config_regs)(void *dev_hndl, uint8_t is_vf, char *buf,
 					uint32_t buflen);

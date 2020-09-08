@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #include "qdma_access_common.h"
@@ -1691,6 +1703,7 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 				&eqdma_indirect_intr_ctx_conf;
 		hw_access->qdma_dump_config_regs = &eqdma_dump_config_regs;
 		hw_access->qdma_dump_intr_context = &eqdma_dump_intr_context;
+		hw_access->qdma_hw_error_enable = &eqdma_hw_error_enable;
 		hw_access->qdma_hw_error_process = &eqdma_hw_error_process;
 		hw_access->qdma_hw_get_error_name = &eqdma_hw_get_error_name;
 		hw_access->qdma_hw_ctx_conf = &eqdma_hw_ctx_conf;

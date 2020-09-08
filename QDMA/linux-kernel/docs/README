@@ -256,7 +256,7 @@ _____________________________________________________________________________
     Test scripts are in scripts/ directory
 
     To use the scripts in this directory, "make" and "make install" must be run
-    install the dma_from_device and dma_to_device applications.
+    install the dma-from-device and dma-to-device applications.
 
     qdma_run_test.sh 
 	The script does the following dma operations:

@@ -221,6 +221,14 @@ struct xlnx_dma_dev {
 	char mod_name[QDMA_DEV_NAME_MAXLEN];
 	/**< Board id this device belongs to*/
 	u32 dma_device_index;
+	/**< Keeping track of last updated descq
+	 * Used only in case of auto and intr aggr driver mode
+	 * This is required because HW might prematurely raise interrupt
+	 * without actual new entries in the aggr ring and we need to
+	 * provide some update to the sw_cidx of aggr ring so that
+	 * interrupt gets triggered again
+	 */
+	struct qdma_descq *prev_descq;
 	/**< DMA device configuration */
 	struct qdma_dev_conf conf;
 	/**< csr info */

@@ -1,22 +1,30 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2020,  Xilinx, Inc.
  * All rights reserved.
  *
- * This source code is licensed under both the BSD-style license (found in the
- * LICENSE file in the root directory of this source tree) and the GPLv2 (found
- * in the COPYING file in the root directory of this source tree).
- * You may select, at your option, one of the above-listed licenses.
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
- 
+
 #ifndef QDMA_NL_H__
 #define QDMA_NL_H__
 /**
  * @file
  * @brief This file contains the declarations for qdma netlink interfaces
  *
- ** physical function name (no more than 15 characters) */
+ */
+/** physical function name (no more than 15 characters) */
 #define XNL_NAME_PF		"xnl_pf"
 /** virtual function name */
 #define XNL_NAME_VF		"xnl_vf"

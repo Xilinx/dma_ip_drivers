@@ -1246,34 +1246,52 @@ static int is_usable_queue(struct xlnx_dma_dev *xdev, int qidx,
 		reqmask |= Q_MODE_MASK;
 	if (q_type == Q_CMPT) {
 		cmptq_chkmask |= (Q_PRESENT_CMPT_MASK | Q_MODE_MASK);
-		if (refmask & cmptq_chkmask)
+		if (refmask & cmptq_chkmask) {
+			pr_err("Q_CMPT: refmask not valid");
 			goto q_reject;
+		}
 	} else if (q_type == Q_H2C) {
 		c2hq_chkmask = (Q_PRESENT_C2H_MASK | Q_MODE_MASK);
-		if (st && (refmask & Q_PRESENT_CMPT_MASK))
+		if (st && (refmask & Q_PRESENT_CMPT_MASK)) {
+			pr_err("Q_H2C: CMPT q given to MM");
 			goto q_reject; /* CMPT q given to MM */
+		}
 		if (st && (refmask & Q_PRESENT_C2H_MASK)
 				&& (refmask & c2hq_chkmask)
-						== Q_PRESENT_C2H_MASK)
+						== Q_PRESENT_C2H_MASK) {
+			pr_err("Q_H2C: MM mode c2h q present");
 			goto q_reject; /* MM mode c2h q present*/
+		}
 		if (!st && (refmask & Q_PRESENT_C2H_MASK)
-				&& (refmask & c2hq_chkmask) == c2hq_chkmask)
+				&& (refmask & c2hq_chkmask) == c2hq_chkmask) {
+			pr_err("Q_H2C: ST mode c2h q present");
 			goto q_reject; /* ST mode c2h q present*/
-		if (refmask & Q_PRESENT_H2C_MASK)
+		}
+		if (refmask & Q_PRESENT_H2C_MASK) {
+			pr_err("Q_H2C: h2c q already present");
 			goto q_reject; /* h2c q already present */
+		}
 	} else {
 		h2cq_chkmask |= (Q_PRESENT_H2C_MASK | Q_MODE_MASK);
-		if (st && (refmask & Q_PRESENT_CMPT_MASK))
+		if (st && (refmask & Q_PRESENT_CMPT_MASK)) {
+			pr_err("!Q_H2C: CMPT q given to MM");
 			goto q_reject; /* CMPT q given to MM */
+		}
 		if (st && (refmask & Q_PRESENT_H2C_MASK)
 				&& (refmask & h2cq_chkmask)
-						== Q_PRESENT_H2C_MASK)
+						== Q_PRESENT_H2C_MASK) {
+			pr_err("!Q_H2C: MM mode h2c q present");
 			goto q_reject; /* MM mode h2c q present*/
+		}
 		if (!st && (refmask & Q_PRESENT_H2C_MASK)
-				&& (refmask & h2cq_chkmask) == h2cq_chkmask)
+				&& (refmask & h2cq_chkmask) == h2cq_chkmask) {
+			pr_err("!Q_H2C: ST mode h2c q present");
 			goto q_reject; /* ST mode h2c q present*/
-		if (refmask & Q_PRESENT_C2H_MASK)
+		}
+		if (refmask & Q_PRESENT_C2H_MASK) {
+			pr_err("!Q_H2C: c2h q already present");
 			goto q_reject; /* c2h q already present */
+		}
 	}
 	return 0;
 q_reject:

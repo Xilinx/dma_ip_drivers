@@ -12,18 +12,6 @@
  *
  * The full GNU General Public License is included in this distribution in
  * the file called "COPYING".
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
  */
 
 #include "qdma_access_common.h"
@@ -4398,6 +4386,25 @@ int eqdma_get_user_bar(void *dev_hndl, uint8_t is_vf,
 
 /*****************************************************************************/
 /**
+ * eqdma_hw_get_error_name() - Function to get the error in string format
+ *
+ * @err_idx: error index
+ *
+ * Return: string - success and NULL on failure
+ *****************************************************************************/
+const char *eqdma_hw_get_error_name(uint32_t err_idx)
+{
+	if (err_idx >= EQDMA_ERRS_ALL) {
+		qdma_log_error("%s: err_idx=%d is invalid, returning NULL\n",
+				__func__, (enum eqdma_error_idx)err_idx);
+		return NULL;
+	}
+
+	return eqdma_err_info[(enum eqdma_error_idx)err_idx].err_name;
+}
+
+/*****************************************************************************/
+/**
  * eqdma_hw_error_process() - Function to find the error that got
  * triggered and call the handler qdma_hw_error_handler of that
  * particular error.
@@ -4468,21 +4475,85 @@ int eqdma_hw_error_process(void *dev_hndl)
 
 /*****************************************************************************/
 /**
- * eqdma_hw_get_error_name() - Function to get the error in string format
+ * qdma_hw_error_enable() - Function to enable all or a specific error
  *
+ * @dev_hndl: device handle
  * @err_idx: error index
  *
- * Return: string - success and NULL on failure
+ * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-const char *eqdma_hw_get_error_name(enum qdma_error_idx err_idx)
+int eqdma_hw_error_enable(void *dev_hndl, uint32_t err_idx)
 {
-	if ((enum eqdma_error_idx)err_idx >= EQDMA_ERRS_ALL) {
-		qdma_log_error("%s: err_idx=%d is invalid, returning NULL\n",
-				__func__, (enum eqdma_error_idx)err_idx);
-		return NULL;
+	uint32_t idx = 0, i = 0;
+	uint32_t reg_val = 0;
+	struct qdma_dev_attributes *dev_cap;
+
+	if (!dev_hndl) {
+		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
+				__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
 	}
 
-	return eqdma_err_info[(enum eqdma_error_idx)err_idx].err_name;
+	if (err_idx > EQDMA_ERRS_ALL) {
+		qdma_log_error("%s: err_idx=%d is invalid, err:%d\n",
+				__func__, (enum eqdma_error_idx)err_idx,
+				-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	qdma_get_device_attr(dev_hndl, &dev_cap);
+
+	if (err_idx == EQDMA_ERRS_ALL) {
+		for (i = 0; i < TOTAL_LEAF_ERROR_AGGREGATORS; i++) {
+
+			idx = all_eqdma_hw_errs[i];
+
+			/* Don't access streaming registers in
+			 * MM only bitstreams
+			 */
+			if (!dev_cap->st_en) {
+				if (idx == EQDMA_ST_C2H_ERR_ALL ||
+					idx == EQDMA_ST_FATAL_ERR_ALL ||
+					idx == EQDMA_ST_H2C_ERR_ALL)
+					continue;
+			}
+
+			reg_val = eqdma_err_info[idx].leaf_err_mask;
+			qdma_reg_write(dev_hndl,
+				eqdma_err_info[idx].mask_reg_addr, reg_val);
+
+			reg_val = qdma_reg_read(dev_hndl,
+					EQDMA_OFFSET_GLBL_ERR_MASK);
+			reg_val |= FIELD_SET(
+				eqdma_err_info[idx].global_err_mask, 1);
+			qdma_reg_write(dev_hndl, EQDMA_OFFSET_GLBL_ERR_MASK,
+					reg_val);
+		}
+
+	} else {
+		/* Don't access streaming registers in MM only bitstreams
+		 *  QDMA_C2H_ERR_MTY_MISMATCH to QDMA_H2C_ERR_ALL are all
+		 *  ST errors
+		 */
+		if (!dev_cap->st_en) {
+			if (err_idx >= EQDMA_ST_C2H_ERR_MTY_MISMATCH &&
+					err_idx <= EQDMA_ST_H2C_ERR_ALL)
+				return QDMA_SUCCESS;
+		}
+
+		reg_val = qdma_reg_read(dev_hndl,
+				eqdma_err_info[err_idx].mask_reg_addr);
+		reg_val |= FIELD_SET(eqdma_err_info[err_idx].leaf_err_mask, 1);
+		qdma_reg_write(dev_hndl,
+				eqdma_err_info[err_idx].mask_reg_addr, reg_val);
+
+		reg_val = qdma_reg_read(dev_hndl, EQDMA_OFFSET_GLBL_ERR_MASK);
+		reg_val |=
+			FIELD_SET(eqdma_err_info[err_idx].global_err_mask, 1);
+		qdma_reg_write(dev_hndl, EQDMA_OFFSET_GLBL_ERR_MASK, reg_val);
+	}
+
+	return QDMA_SUCCESS;
 }
 
 /*****************************************************************************/

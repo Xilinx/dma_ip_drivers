@@ -38,7 +38,7 @@
 
 #define QDMA_PMD_MAJOR		2020
 #define QDMA_PMD_MINOR		1
-#define QDMA_PMD_PATCHLEVEL	0
+#define QDMA_PMD_PATCHLEVEL	1
 
 #define QDMA_PMD_VERSION      \
 	qdma_stringify(QDMA_PMD_MAJOR) "." \

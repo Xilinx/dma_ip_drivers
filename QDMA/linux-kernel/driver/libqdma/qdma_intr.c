@@ -157,6 +157,7 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 	uint8_t color = 0;
 	uint8_t intr_type = 0;
 	uint32_t qid = 0;
+	uint32_t num_entries_processed = 0;
 
 	if (!coal_entry) {
 		pr_err("Failed to locate the coalescing entry for vector = %d\n",
@@ -216,7 +217,7 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 					irq, vidx, qid);
 			return;
 		}
-
+		xdev->prev_descq = descq;
 		if (descq->conf.ping_pong_en &&
 			descq->conf.q_type == Q_C2H && descq->conf.st)
 			descq->ping_pong_rx_time = timestamp;
@@ -240,13 +241,22 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 			intr_cidx_info->sw_cidx = 0;
 		} else
 			counter++;
-
+		num_entries_processed++;
 		ring_entry = (coal_entry->intr_ring_base + counter);
 	} while (1);
 
-	if (descq)
+	if (descq) {
 		queue_intr_cidx_update(descq->xdev,
 				descq->conf.qidx, &coal_entry->intr_cidx_info);
+	} else if (num_entries_processed == 0) {
+		pr_warn("No entries processed\n");
+		descq = xdev->prev_descq;
+		if (descq) {
+			pr_warn("Doing stale update\n");
+			queue_intr_cidx_update(descq->xdev,
+				descq->conf.qidx, &coal_entry->intr_cidx_info);
+		}
+	}
 }
 
 static void data_intr_direct(struct xlnx_dma_dev *xdev, int vidx, int irq,

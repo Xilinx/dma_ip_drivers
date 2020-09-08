@@ -1,5 +1,17 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
  */
 
 #ifndef QDMA_ACCESS_H_
@@ -106,9 +118,9 @@ int qdma_soft_read_dump_queue_context(void *dev_hndl,
 
 int qdma_hw_error_process(void *dev_hndl);
 
-const char *qdma_hw_get_error_name(enum qdma_error_idx err_idx);
+const char *qdma_hw_get_error_name(uint32_t err_idx);
 
-int qdma_hw_error_enable(void *dev_hndl, enum qdma_error_idx err_idx);
+int qdma_hw_error_enable(void *dev_hndl, uint32_t err_idx);
 
 int qdma_get_device_attributes(void *dev_hndl,
 		struct qdma_dev_attributes *dev_info);
