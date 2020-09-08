@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 patch
               </div>
             
           
@@ -361,6 +361,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#support-huge-page-allocation-matching">Support Huge page allocation matching</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#virtual-machine-vm-execution-and-test">Virtual Machine (VM) execution and test</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#executing-with-vfio-pci-driver-in-vm-using-qemu">Executing with vfio-pci driver in VM using QEMU</a></li>
 </ul>
@@ -909,6 +910,18 @@ Format for this commad is:</p>
 </div>
 </div>
 </div>
+<div class="section" id="support-huge-page-allocation-matching">
+<h2>Support Huge page allocation matching<a class="headerlink" href="#support-huge-page-allocation-matching" title="Permalink to this headline">¶</a></h2>
+<p>QDMA testapp application with DPDK using vfio-pci as binding driver, uses the rte_mem_event_callback_register API to create DMA memory regions for newly allocated regions of memory.
+DPDK creates internal malloc_elem structures for these allocated regions. As users malloc and free memory, DPDK will sometimes merge malloc_elems that originated from different allocations
+that were notified through the registered mem_event callback routine. This results in subsequent allocations that can span across multiple DMA memory regions.</p>
+<p>As a malloc_elem gets split and some of these elements get freed, it can also result in DPDK sending an RTE_MEM_EVENT_FREE notification for a subset of the
+original RTE_MEM_EVENT_ALLOC notification. This is also problematic for DMA memory regions, since unregistering the memory region is all-or-nothing. It is not possible
+to unregister part of a memory region.</p>
+<p>To support these types of applications, DPDK provides Hugepage allocation matching support and it is enabled by specifying the –match-allocations command-line switch to the EAL.
+When this flag is specified, malloc elements from different hugepage allocations will never be merged.
+Memory will also only be freed back to the system (with the requisite memory event callback) exactly as it was originally allocated.</p>
+</div>
 <div class="section" id="virtual-machine-vm-execution-and-test">
 <h2>Virtual Machine (VM) execution and test<a class="headerlink" href="#virtual-machine-vm-execution-and-test" title="Permalink to this headline">¶</a></h2>
 <p>Assuming that the VM image has been created with the settings outlined in Table <a class="reference internal" href="system-requirements.html#guest-system-cfg"><span class="std std-ref">Guest System Configuration</span></a>, follow below steps to execute qdma_testapp on VM.</p>
@@ -1024,7 +1037,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 08, 2020.
+        Last updated on September 08, 2020.
       </span>
 
     </p>

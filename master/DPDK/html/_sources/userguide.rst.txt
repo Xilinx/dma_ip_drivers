@@ -567,6 +567,19 @@ Commands supported by the qdma_testapp CLI
 
 	The keyboard keys ``Ctrl`` and ``D`` when pressed together quits the application.
 
+Support Huge page allocation matching
+---------------------------------------
+QDMA testapp application with DPDK using vfio-pci as binding driver, uses the rte_mem_event_callback_register API to create DMA memory regions for newly allocated regions of memory.
+DPDK creates internal malloc_elem structures for these allocated regions. As users malloc and free memory, DPDK will sometimes merge malloc_elems that originated from different allocations 
+that were notified through the registered mem_event callback routine. This results in subsequent allocations that can span across multiple DMA memory regions.
+
+As a malloc_elem gets split and some of these elements get freed, it can also result in DPDK sending an RTE_MEM_EVENT_FREE notification for a subset of the
+original RTE_MEM_EVENT_ALLOC notification. This is also problematic for DMA memory regions, since unregistering the memory region is all-or-nothing. It is not possible
+to unregister part of a memory region.
+
+To support these types of applications, DPDK provides Hugepage allocation matching support and it is enabled by specifying the --match-allocations command-line switch to the EAL.
+When this flag is specified, malloc elements from different hugepage allocations will never be merged.
+Memory will also only be freed back to the system (with the requisite memory event callback) exactly as it was originally allocated.
 
 Virtual Machine (VM) execution and test
 ---------------------------------------
