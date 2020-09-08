@@ -1,0 +1,1 @@
+KERNEL=="qdma*", GROUP="dialout", MODE="660"
