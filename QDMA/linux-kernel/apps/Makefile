@@ -1,6 +1,5 @@
 SHELL = /bin/bash
 
-CFLAGS += -g
 #CFLAGS += -O2 -fno-inline -Wall -Wstrict-prototypes
 CFLAGS += $(EXTRA_FLAGS)
 

@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <error.h>
 #include <sys/ioctl.h>
-#include </usr/include/pthread.h>
+#include <pthread.h>
 #include "dmautils.h"
 #include "qdma_nl.h"
 
