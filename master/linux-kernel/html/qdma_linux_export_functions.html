@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1 Patch',
+              VERSION:'2020.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1 Patch
+                2020.1
               </div>
             
           
@@ -725,14 +725,14 @@
 <p>0 for success &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-device-get-config">
-<span id="cid-qdma-device-get-config"></span><span id="doxid-libqdma-export-8h-1a2dadd1592658f96bfff7efcda4828dcf"></span><h2>qdma_device_get_config<a class="headerlink" href="#qdma-device-get-config" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-device-get-config"></span><span id="doxid-libqdma-export-8h-1a7153b3b7e9f3b10fc8b66ef194990e79"></span><h2>qdma_device_get_config<a class="headerlink" href="#qdma-device-get-config" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_device_get_config</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
     <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-dev-conf"><span class="std std-ref">qdma_dev_conf</span></a><span></span><span class="o">*</span> <span class="n">conf</span><span class="p">,</span>
-    <span class="kt">char</span><span class="o">*</span> <span class="n">ebuf</span><span class="p">,</span>
-    <span class="kt">int</span> <span class="n">ebuflen</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
+    <span class="kt">int</span> <span class="n">buflen</span>
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
@@ -750,10 +750,10 @@
 <tr class="row-even"><td>conf</td>
 <td>device configuration</td>
 </tr>
-<tr class="row-odd"><td>ebuflen</td>
+<tr class="row-odd"><td>buflen</td>
 <td>input buffer length</td>
 </tr>
-<tr class="row-even"><td>ebuf</td>
+<tr class="row-even"><td>buf</td>
 <td>error message buffer, can be NULL/0 (i.e., optional)</td>
 </tr>
 </tbody>
@@ -1085,13 +1085,13 @@
 <p>0 for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-device-write-config-register">
-<span id="cid-qdma-device-write-config-register"></span><span id="doxid-libqdma-export-8h-1a9038096c27be5195e1b7cf4fcd13c79b"></span><h2>qdma_device_write_config_register<a class="headerlink" href="#qdma-device-write-config-register" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-device-write-config-register"></span><span id="doxid-libqdma-export-8h-1ac51abc604d3d628c3483c90d26fdf875"></span><h2>qdma_device_write_config_register<a class="headerlink" href="#qdma-device-write-config-register" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_device_write_config_register</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">reg_addr</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">value</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">val</span>
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
@@ -1109,7 +1109,7 @@
 <tr class="row-even"><td>reg_addr</td>
 <td>register address</td>
 </tr>
-<tr class="row-odd"><td>value</td>
+<tr class="row-odd"><td>val</td>
 <td>register value to be writen</td>
 </tr>
 </tbody>
@@ -1395,13 +1395,13 @@
 <p>0 for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-get-queue-state">
-<span id="cid-qdma-get-queue-state"></span><span id="doxid-libqdma-export-8h-1a1df6cce7757d0e17f4e72f44749d3461"></span><h2>qdma_get_queue_state<a class="headerlink" href="#qdma-get-queue-state" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-get-queue-state"></span><span id="doxid-libqdma-export-8h-1a928f60c072a0684181596680d83ffea8"></span><h2>qdma_get_queue_state<a class="headerlink" href="#qdma-get-queue-state" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_get_queue_state</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
-    <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-q-state"><span class="std std-ref">qdma_q_state</span></a><span></span><span class="o">*</span> <span class="n">qstate</span><span class="p">,</span>
+    <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-q-state"><span class="std std-ref">qdma_q_state</span></a><span></span><span class="o">*</span> <span class="n">q_state</span><span class="p">,</span>
     <span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
     <span class="kt">int</span> <span class="n">buflen</span>
     <span class="p">)</span>
@@ -1421,7 +1421,7 @@
 <tr class="row-even"><td>id</td>
 <td>the opaque qhndl</td>
 </tr>
-<tr class="row-odd"><td>qstate</td>
+<tr class="row-odd"><td>q_state</td>
 <td>state of the queue</td>
 </tr>
 <tr class="row-even"><td>buflen</td>
@@ -1777,12 +1777,12 @@
 <p># of bytes transferred for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-c2h-peek">
-<span id="cid-qdma-queue-c2h-peek"></span><span id="doxid-libqdma-export-8h-1a89a84e0ce6f208cee8d0cfe20c02477e"></span><h2>qdma_queue_c2h_peek<a class="headerlink" href="#qdma-queue-c2h-peek" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-c2h-peek"></span><span id="doxid-libqdma-export-8h-1a901bbedd1825a43745ba2405e0551af7"></span><h2>qdma_queue_c2h_peek<a class="headerlink" href="#qdma-queue-c2h-peek" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_queue_c2h_peek</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">int</span><span class="o">*</span> <span class="n">udd_cnt</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">int</span><span class="o">*</span> <span class="n">pkt_cnt</span><span class="p">,</span>
     <span class="kt">unsigned</span> <span class="kt">int</span><span class="o">*</span> <span class="n">data_len</span>
@@ -1801,8 +1801,8 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
-<td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
+<tr class="row-even"><td>id</td>
+<td>queue hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
 </tr>
 <tr class="row-odd"><td>udd_cnt</td>
 <td># of udd received</td>
@@ -1819,12 +1819,12 @@
 <p># of packets received in the Q or &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-avail-desc">
-<span id="cid-qdma-queue-avail-desc"></span><span id="doxid-libqdma-export-8h-1aab58a389b171b37fccbc7e2e4b95ad0a"></span><h2>qdma_queue_avail_desc<a class="headerlink" href="#qdma-queue-avail-desc" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-avail-desc"></span><span id="doxid-libqdma-export-8h-1a65c5650bd3cd810a631808a1036c2a3d"></span><h2>qdma_queue_avail_desc<a class="headerlink" href="#qdma-queue-avail-desc" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_queue_avail_desc</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span>
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
@@ -1839,8 +1839,8 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
-<td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
+<tr class="row-even"><td>id</td>
+<td>queue hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
 </tr>
 </tbody>
 </table>
@@ -1848,12 +1848,12 @@
 <p># of available desc in the queue or &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-cmpl-ctrl">
-<span id="cid-qdma-queue-cmpl-ctrl"></span><span id="doxid-libqdma-export-8h-1acb26200610d33be4d12ea3f29093124c"></span><h2>qdma_queue_cmpl_ctrl<a class="headerlink" href="#qdma-queue-cmpl-ctrl" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-cmpl-ctrl"></span><span id="doxid-libqdma-export-8h-1aeeca2bdaab031ce6c3ff425212c4f561"></span><h2>qdma_queue_cmpl_ctrl<a class="headerlink" href="#qdma-queue-cmpl-ctrl" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_queue_cmpl_ctrl</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-cmpl-ctrl"><span class="std std-ref">qdma_cmpl_ctrl</span></a><span></span><span class="o">*</span> <span class="n">cctrl</span><span class="p">,</span>
     <span class="kt">bool</span> <span class="n">set</span>
     <span class="p">)</span>
@@ -1870,7 +1870,7 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
+<tr class="row-even"><td>id</td>
 <td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
 </tr>
 <tr class="row-odd"><td>cctrl</td>
@@ -1885,12 +1885,12 @@
 <p>0 for success or &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-packet-read">
-<span id="cid-qdma-queue-packet-read"></span><span id="doxid-libqdma-export-8h-1a965706b0516bbb840193f3fa8bc6b230"></span><h2>qdma_queue_packet_read<a class="headerlink" href="#qdma-queue-packet-read" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-packet-read"></span><span id="doxid-libqdma-export-8h-1a839035c2c14e0b95c20d304a261a5ace"></span><h2>qdma_queue_packet_read<a class="headerlink" href="#qdma-queue-packet-read" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_queue_packet_read</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-request"><span class="std std-ref">qdma_request</span></a><span></span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
     <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-cmpl-ctrl"><span class="std std-ref">qdma_cmpl_ctrl</span></a><span></span><span class="o">*</span> <span class="n">cctrl</span>
     <span class="p">)</span>
@@ -1907,8 +1907,8 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
-<td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
+<tr class="row-even"><td>id</td>
+<td>queue hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
 </tr>
 <tr class="row-odd"><td>req</td>
 <td>pointer to the request data</td>
@@ -1922,12 +1922,12 @@
 <p># of bytes transferred for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-packet-write">
-<span id="cid-qdma-queue-packet-write"></span><span id="doxid-libqdma-export-8h-1a53da6211bb91b04832ad5f0a720b9b90"></span><h2>qdma_queue_packet_write<a class="headerlink" href="#qdma-queue-packet-write" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-packet-write"></span><span id="doxid-libqdma-export-8h-1a34effa676deb355ecdbf991971fca797"></span><h2>qdma_queue_packet_write<a class="headerlink" href="#qdma-queue-packet-write" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_queue_packet_write</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-request"><span class="std std-ref">qdma_request</span></a><span></span><span class="o">*</span> <span class="n">req</span>
     <span class="p">)</span>
 </pre>
@@ -1943,8 +1943,8 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
-<td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
+<tr class="row-even"><td>id</td>
+<td>queue hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
 </tr>
 <tr class="row-odd"><td>req</td>
 <td>pointer to the list of packet data</td>
@@ -1955,18 +1955,18 @@
 <p># of bytes transferred for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-queue-service">
-<span id="cid-qdma-queue-service"></span><span id="doxid-libqdma-export-8h-1a7fe9e3c1b6899c116a62181303c803d4"></span><h2>qdma_queue_service<a class="headerlink" href="#qdma-queue-service" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-queue-service"></span><span id="doxid-libqdma-export-8h-1a3685b11813567a5ffb6f377a7ab3d02d"></span><h2>qdma_queue_service<a class="headerlink" href="#qdma-queue-service" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_queue_service</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="kt">int</span> <span class="n">budget</span><span class="p">,</span>
     <span class="kt">bool</span> <span class="n">c2h_upd_cmpl</span>
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
-<p>Service the queue in the case of irq handler is registered by the user, the user should call <a class="reference internal" href="#doxid-libqdma-export-8h-1a7fe9e3c1b6899c116a62181303c803d4"><span class="std std-ref">qdma_queue_service()</span></a> in its interrupt handler to service the queue</p>
+<p>Service the queue in the case of irq handler is registered by the user, the user should call <a class="reference internal" href="#doxid-libqdma-export-8h-1a3685b11813567a5ffb6f377a7ab3d02d"><span class="std std-ref">qdma_queue_service()</span></a> in its interrupt handler to service the queue</p>
 <p>Return: 0 for success or &lt;0 for error</p>
 <p class="rubric">Parameters:</p>
 <table border="1" class="colwidths-given docutils">
@@ -1978,8 +1978,8 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>dev_hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
-<td>hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
+<tr class="row-even"><td>id</td>
+<td>queue hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1ad4cab740315f3bf19e1674c147cb68a5"><span class="std std-ref">qdma_queue_add()</span></a></td>
 </tr>
 <tr class="row-odd"><td>budget</td>
 <td>ST C2H only, max number of completions to be processed.</td>
@@ -2064,12 +2064,12 @@
 <p>0 for success or &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-descq-get-cmpt-udd">
-<span id="cid-qdma-descq-get-cmpt-udd"></span><span id="doxid-libqdma-export-8h-1a8364bd09d2f8eb5f8833f1ea1ef618bd"></span><h2>qdma_descq_get_cmpt_udd<a class="headerlink" href="#qdma-descq-get-cmpt-udd" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-descq-get-cmpt-udd"></span><span id="doxid-libqdma-export-8h-1a2ac68559a80a2e4685f15800be52cc2a"></span><h2>qdma_descq_get_cmpt_udd<a class="headerlink" href="#qdma-descq-get-cmpt-udd" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_descq_get_cmpt_udd</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
     <span class="kt">int</span> <span class="n">buflen</span>
     <span class="p">)</span>
@@ -2086,7 +2086,7 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>dev_hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
+<tr class="row-even"><td>id</td>
 <td>queue handle</td>
 </tr>
 <tr class="row-odd"><td>buflen</td>
@@ -2101,12 +2101,12 @@
 <p>0 for success or &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-descq-read-cmpt-data">
-<span id="cid-qdma-descq-read-cmpt-data"></span><span id="doxid-libqdma-export-8h-1aadcf9da1200228f3aab01abe8940c0ce"></span><h2>qdma_descq_read_cmpt_data<a class="headerlink" href="#qdma-descq-read-cmpt-data" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-descq-read-cmpt-data"></span><span id="doxid-libqdma-export-8h-1a9cc6d7ff2a2ed5d322f0bf88ced2da59"></span><h2>qdma_descq_read_cmpt_data<a class="headerlink" href="#qdma-descq-read-cmpt-data" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_descq_read_cmpt_data</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">qhndl</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">id</span><span class="p">,</span>
     <span class="n">u32</span><span class="o">*</span> <span class="n">num_entries</span><span class="p">,</span>
     <span class="n">u8</span><span class="o">**</span> <span class="n">cmpt_entries</span><span class="p">,</span>
     <span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
@@ -2125,7 +2125,7 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>dev_hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>qhndl</td>
+<tr class="row-even"><td>id</td>
 <td>queue handle</td>
 </tr>
 <tr class="row-odd"><td>num_entries</td>
@@ -2146,12 +2146,12 @@
 <p>0 for success or &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-get-queue-count">
-<span id="cid-qdma-get-queue-count"></span><span id="doxid-libqdma-export-8h-1a9924b903090c6890f8db4a534bfd612d"></span><h2>qdma_get_queue_count<a class="headerlink" href="#qdma-get-queue-count" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-get-queue-count"></span><span id="doxid-libqdma-export-8h-1a4ff23250fd7a270627c84f2441c50fa2"></span><h2>qdma_get_queue_count<a class="headerlink" href="#qdma-get-queue-count" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">qdma_get_queue_count</span> <span class="p">(</span>
     <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
-    <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-queue-count"><span class="std std-ref">qdma_queue_count</span></a><span></span><span class="o">*</span> <span class="n">q_cnt</span><span class="p">,</span>
+    <span class="k">struct</span> <a class="reference internal" href="qdma_linux_export_structs.html#doxid-structqdma-queue-count"><span class="std std-ref">qdma_queue_count</span></a><span></span><span class="o">*</span> <span class="n">q_count</span><span class="p">,</span>
     <span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
     <span class="kt">int</span> <span class="n">buflen</span>
     <span class="p">)</span>
@@ -2168,7 +2168,7 @@
 <tr class="row-odd"><td>dev_hndl</td>
 <td>dev_hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
 </tr>
-<tr class="row-even"><td>q_cnt</td>
+<tr class="row-even"><td>q_count</td>
 <td>queue count</td>
 </tr>
 <tr class="row-odd"><td>buflen</td>
@@ -2214,7 +2214,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 08, 2020.
+        Last updated on September 15, 2020.
       </span>
 
     </p>

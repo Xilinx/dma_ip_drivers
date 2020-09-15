@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1 Patch',
+              VERSION:'2020.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1 Patch
+                2020.1
               </div>
             
           
@@ -456,7 +456,7 @@
 <ul class="simple">
 <li>2 PFs are attached to Linux driver, each PF creating 1 VF</li>
 <li>2 PFs are attached to DPDK driver, each PF creating 1 VF</li>
-<li>2 VMs are created where VF created from Linux kernel driver binded PF is attached to DPDK driver and viceversa.</li>
+<li>2 VMs are created where VF created from Linux kernel driver binded PF is attached to DPDK driver and vice versa.</li>
 </ul>
 <img alt="_images/linux_dpdk_interop.PNG" class="align-center" src="_images/linux_dpdk_interop.PNG" />
 <p>To achieve this setup,</p>
@@ -464,6 +464,14 @@
 <li>remove the [Vendor-ID:Device-ID] tuple from pci table for the required functions to be binded with DPDK in linux-kernel/drv/pci_ids.h</li>
 <li>Undefine <code class="docutils literal"><span class="pre">ENABLE_INIT_CTXT_MEMORY</span></code> in <code class="docutils literal"><span class="pre">qdma_access.c</span></code> for the driver that is loaded last</li>
 </ul>
+<div class="section" id="note">
+<h2><strong>Note</strong><a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
+<p>If any mailbox timeouts are observed during DPDK and Linux Interop testing, tweak the mailbox timeout values</p>
+<ul class="simple">
+<li>DPDK Driver:  <code class="docutils literal"><span class="pre">#define</span> <span class="pre">MBOX_OP_RSP_TIMEOUT</span> <span class="pre">(10000</span> <span class="pre">*</span> <span class="pre">MBOX_POLL_FRQ)</span></code> located in <code class="docutils literal"><span class="pre">dpdk/drivers/net/qdma/qdma_mbox.h</span></code></li>
+<li>LINUX Driver: and <code class="docutils literal"><span class="pre">#define</span> <span class="pre">QDMA_MBOX_MSG_TIMEOUT_MS</span>&#160; <span class="pre">10000</span> <span class="pre">/*</span> <span class="pre">10</span> <span class="pre">sec*/</span></code>  located in <code class="docutils literal"><span class="pre">linux_kernel/driver/libqdma/qdma_mbox.h</span></code></li>
+</ul>
+</div>
 </div>
 
 
@@ -496,7 +504,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 08, 2020.
+        Last updated on September 15, 2020.
       </span>
 
     </p>
