@@ -3994,7 +3994,7 @@ int qdma_hw_error_process(void *dev_hndl)
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-int qdma_hw_error_enable(void *dev_hndl, enum qdma_error_idx err_idx)
+int qdma_hw_error_enable(void *dev_hndl, uint32_t err_idx)
 {
 	uint32_t idx = 0, i = 0;
 	uint32_t reg_val = 0;
