@@ -24,6 +24,7 @@
  * @brief This file contains the declarations for qdma netlink interfaces
  *
  */
+
 /** physical function name (no more than 15 characters) */
 #define XNL_NAME_PF		"xnl_pf"
 /** virtual function name */
