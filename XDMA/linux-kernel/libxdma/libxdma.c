@@ -56,7 +56,7 @@ MODULE_PARM_DESC(desc_blen_max,
 #define XDMA_PERF_NUM_DESC 128
 
 /* Kernel version adaptative code */
-#if KERNEL_VERSION(4, 19, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP_ONE
 /* since 4.18, using simple wait queues is not recommended
  * except for realtime constraint (see swait.h comments)
  * and will likely be removed in future kernel versions
@@ -64,7 +64,7 @@ MODULE_PARM_DESC(desc_blen_max,
 #define xlx_wake_up	swake_up_one
 #define xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout_exclusive
-#elif KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#elif HAS_SWAKE_UP
 #define xlx_wake_up	swake_up
 #define xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout
@@ -696,7 +696,7 @@ static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 	dbg_tfr("ioread32(0x%p) (dummy read flushes writes).\n",
 		&engine->regs->status);
 
-#if KERNEL_VERSION(5, 1, 0) >= LINUX_VERSION_CODE
+#if HAS_MMIOWB
 	mmiowb();
 #endif
 
@@ -3152,7 +3152,7 @@ static int transfer_init(struct xdma_engine *engine,
 	/* lock the engine state */
 	spin_lock_irqsave(&engine->lock, flags);
 	/* initialize wait queue */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+#if HAS_SWAKE_UP
 	init_swait_queue_head(&xfer->wq);
 #else
 	init_waitqueue_head(&xfer->wq);
@@ -3229,7 +3229,7 @@ static int transfer_init_cyclic(struct xdma_engine *engine,
 	memset(xfer, 0, sizeof(*xfer));
 
 	/* initialize wait queue */
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 	init_swait_queue_head(&xfer->wq);
 #else
 	init_waitqueue_head(&xfer->wq);
@@ -4004,7 +4004,7 @@ int xdma_performance_submit(struct xdma_dev *xdev, struct xdma_engine *engine)
 	transfer->cyclic = 1;
 
 	/* initialize wait queue */
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 	init_swait_queue_head(&transfer->wq);
 #else
 	init_waitqueue_head(&transfer->wq);
@@ -4084,7 +4084,7 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 		spin_lock_init(&engine->lock);
 		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 		init_swait_queue_head(&engine->shutdown_wq);
 		init_swait_queue_head(&engine->xdma_perf_wq);
 #else
@@ -4098,7 +4098,7 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 		spin_lock_init(&engine->lock);
 		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 		init_swait_queue_head(&engine->shutdown_wq);
 		init_swait_queue_head(&engine->xdma_perf_wq);
 #else

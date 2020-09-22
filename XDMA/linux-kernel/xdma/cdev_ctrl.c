@@ -24,7 +24,7 @@
 #include "xdma_cdev.h"
 #include "cdev_ctrl.h"
 
-#if KERNEL_VERSION(5, 0, 0) <= LINUX_VERSION_CODE
+#if ACCESS_OK_2_ARGS
 #define xlx_access_ok(X, Y, Z) access_ok(Y, Z)
 #else
 #define xlx_access_ok(X, Y, Z) access_ok(X, Y, Z)
