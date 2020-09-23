@@ -107,7 +107,7 @@ static int xvsec_mcap_get_fpga_regs(struct context *xvsec_ctx,
 	struct fpga_cfg_regs *regs);
 static int xvsec_mcap_program_bitstream(struct context *xvsec_ctx,
 	struct bitstream_file *bit_files);
-static int xvsec_mcap_program(struct context *xvsec_ctx, char *fname);
+static int xvsec_mcap_program(struct context *xvsec_ctx, char *fname, bool check_compl);
 static int xvsec_write_rbt(struct context *xvsec_ctx,
 	struct file *filep, loff_t size);
 static int xvsec_write_bit(struct context *xvsec_ctx,
@@ -1053,7 +1053,7 @@ static int xvsec_mcap_program_bitstream(struct context *xvsec_ctx,
 		}
 		pr_info("Clear File Name : %s\n", bitfile);
 
-		ret = xvsec_mcap_program(xvsec_ctx, bitfile);
+		ret = xvsec_mcap_program(xvsec_ctx, bitfile, false);
 		if (ret < 0) {
 			pr_err("[xvsec_mcap] : xvsec_mcap_program ");
 			pr_err("failed for partial clear file with err : ");
@@ -1079,7 +1079,7 @@ static int xvsec_mcap_program_bitstream(struct context *xvsec_ctx,
 
 		pr_info("Bit File Name : %s\n", bitfile);
 
-		ret = xvsec_mcap_program(xvsec_ctx, bitfile);
+		ret = xvsec_mcap_program(xvsec_ctx, bitfile, true);
 		if (ret < 0) {
 			pr_err("[xvsec_mcap] : xvsec_mcap_program ");
 			pr_err("failed for bit file with err : %d\n", ret);
@@ -1393,7 +1393,7 @@ CLEANUP:
 	return err;
 }
 
-static int xvsec_mcap_program(struct context *xvsec_ctx, char *fname)
+static int xvsec_mcap_program(struct context *xvsec_ctx, char *fname, bool check_compl)
 {
 	int ret = 0;
 	loff_t file_size;
@@ -1434,13 +1434,15 @@ static int xvsec_mcap_program(struct context *xvsec_ctx, char *fname)
 			goto CLEANUP;
 	}
 
-	ret = check_for_completion(xvsec_ctx, &sts_data);
-	if ((ret != 0) ||
-		((sts_data & XVSEC_MCAP_STATUS_ERR) != 0x0) ||
-		((sts_data & XVSEC_MCAP_STATUS_FIFO_OVFL) != 0x0)) {
-		pr_err("Performing Full Reset\n");
-		xvsec_mcap_full_reset(xvsec_ctx);
-		ret = -(EIO);
+	if (check_compl) {
+		ret = check_for_completion(xvsec_ctx, &sts_data);
+		if ((ret != 0) ||
+			((sts_data & XVSEC_MCAP_STATUS_ERR) != 0x0) ||
+			((sts_data & XVSEC_MCAP_STATUS_FIFO_OVFL) != 0x0)) {
+			pr_err("Performing Full Reset\n");
+			xvsec_mcap_full_reset(xvsec_ctx);
+			ret = -(EIO);
+		}
 	}
 
 CLEANUP:
