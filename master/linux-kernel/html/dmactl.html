@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -349,6 +349,7 @@
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Control Application (dma-ctl)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#note">Note:</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#device-management-commands">Device Management Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#list-devices">List devices</a></li>
 </ul>
@@ -466,7 +467,10 @@
 <h1>DMA Control Application (dma-ctl)<a class="headerlink" href="#dma-control-application-dma-ctl" title="Permalink to this headline">¶</a></h1>
 <p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal"><span class="pre">dma-ctl</span></code> to manage the driver.</p>
 <p>The Xilinx QDMA control tool, <code class="docutils literal"><span class="pre">dma-ctl</span></code> is a command Line utility which is installed in <code class="docutils literal"><span class="pre">/usr/local/sbin/</span></code> and allows administration of the Xilinx QDMA queues. Make sure that the installation path <code class="docutils literal"><span class="pre">/usr/local/sbin/</span></code> is added to the <code class="docutils literal"><span class="pre">PATH</span></code> variable.</p>
-<p>It can perform the following functions:</p>
+<div class="section" id="note">
+<h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dmactl</span></code>. If user installed <code class="docutils literal"><span class="pre">dmactl</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dmactl</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
+<p><code class="docutils literal"><span class="pre">dma-ctl</span></code> application can perform the following functions:</p>
 <ul>
 <li><p class="first">Query the list of functions binded QDMA driver</p>
 </li>
@@ -504,6 +508,7 @@
 <p>For dma-ctl help run <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">–h</span></code></p>
 <p>For more details on the dma-ctl tool commands and options for each command, refer to dma-ctl man page.</p>
 <p>For dma-ctl man page, run <code class="docutils literal"><span class="pre">man</span> <span class="pre">dma-ctl</span></code></p>
+</div>
 <div class="section" id="device-management-commands">
 <h2>Device Management Commands<a class="headerlink" href="#device-management-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="list-devices">
@@ -1837,7 +1842,7 @@ CONFIG BAR #0
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2020.
+        Last updated on September 23, 2020.
       </span>
 
     </p>

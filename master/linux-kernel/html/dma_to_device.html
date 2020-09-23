@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -349,7 +349,10 @@
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmactl.html">DMA Control Application (dma-ctl)</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA to Device (dma-to-device)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA to Device (dma-to-device)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#note">Note:</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">DMA from Device (dma-from-device)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool (dma-perf)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dma_xfer_app.html">DMA Xfer Application (dma-xfer)</a></li>
@@ -433,6 +436,9 @@
   <div class="section" id="dma-to-device-dma-to-device">
 <h1>DMA to Device (dma-to-device)<a class="headerlink" href="#dma-to-device-dma-to-device" title="Permalink to this headline">¶</a></h1>
 <p>dma-to-device is a user application tool provided along with QDMA Linux driver to perform the Host to Card data transfers.</p>
+<div class="section" id="note">
+<h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dma_to_device</span></code>. If user installed <code class="docutils literal"><span class="pre">dma_to_device</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dma_to_device</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
 <p>usage:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-to-device [OPTIONS]
 </pre></div>
@@ -453,6 +459,7 @@
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-to-device -d /dev/qdma01000-ST-1 -s 64
 ** Average BW = 64, 0.880221
 </pre></div>
+</div>
 </div>
 </div>
 
@@ -486,7 +493,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2020.
+        Last updated on September 23, 2020.
       </span>
 
     </p>

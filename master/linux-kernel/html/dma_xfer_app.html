@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -352,7 +352,10 @@
 <li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">DMA to Device (dma-to-device)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dma_from_device.html">DMA from Device (dma-from-device)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool (dma-perf)</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Xfer Application (dma-xfer)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA Xfer Application (dma-xfer)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#note">Note:</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="dma-latency.html">DMA Latency Application (dma-latency)</a></li>
 </ul>
 </li>
@@ -434,6 +437,9 @@
 <h1>DMA Xfer Application (dma-xfer)<a class="headerlink" href="#dma-xfer-application-dma-xfer" title="Permalink to this headline">¶</a></h1>
 <p>Xilinx-developed custom application <code class="docutils literal"><span class="pre">dma-xfer</span></code> is an example application provided along with QDMA Linux Driver to demonstrate
 QDMA configuration and transfer functionality.</p>
+<div class="section" id="note">
+<h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dmaxfer</span></code>. If user installed <code class="docutils literal"><span class="pre">dmaxfer</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dmaxfer</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
 <p><code class="docutils literal"><span class="pre">dma-xfer</span></code> application internally takes care of Queues creation/destruction and performs DMA transfers on each queue one by one. If any failure occurs during the initial creation of queues or performing dma transfers on queues, application reports corresponding error and cleans up all the allocated resources then exits.</p>
 <p>The following diagram illustrates the design flow of application.</p>
 <img alt="_images/qdma_xfer_app_design_flow.png" class="align-center" src="_images/qdma_xfer_app_design_flow.png" />
@@ -498,6 +504,7 @@ outputfile=OUTPUT
 <li>Outputfile: output file name to where Card to Host dma data to be written &lt;file name of length upto 127&gt;.</li>
 </ul>
 </div>
+</div>
 
 
            </div>
@@ -529,7 +536,7 @@ outputfile=OUTPUT
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2020.
+        Last updated on September 23, 2020.
       </span>
 
     </p>

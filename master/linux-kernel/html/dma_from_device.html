@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.1 Patch',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.1 Patch
               </div>
             
           
@@ -350,7 +350,10 @@
 <li class="toctree-l1 current"><a class="reference internal" href="user-app.html">User Applications</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmactl.html">DMA Control Application (dma-ctl)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dma_to_device.html">DMA to Device (dma-to-device)</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA from Device (dma-from-device)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMA from Device (dma-from-device)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#note">Note:</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="dmaperf.html">DMA Performance Tool (dma-perf)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dma_xfer_app.html">DMA Xfer Application (dma-xfer)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dma-latency.html">DMA Latency Application (dma-latency)</a></li>
@@ -433,6 +436,9 @@
   <div class="section" id="dma-from-device-dma-from-device">
 <h1>DMA from Device (dma-from-device)<a class="headerlink" href="#dma-from-device-dma-from-device" title="Permalink to this headline">¶</a></h1>
 <p>dma-from-device is a user application tool provided along with QDMA Linux driver to perform the Card to Host data transfers.</p>
+<div class="section" id="note">
+<h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dma_from_device</span></code>. If user installed <code class="docutils literal"><span class="pre">dma_from_device</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dma_from_device</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
 <p>usage:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-from-device [OPTIONS]
 </pre></div>
@@ -456,6 +462,7 @@
 <p><strong>NOTE</strong>:
 For ST C2H, the dma-from-device application only tries to perform the C2H transfers and it does not take care of generating the packets. The Packet generation is user logic specific functionality and users of the QDMA IP and driver shall make sure the user logic functionality is implemented and integrated in the bit stream used and appropriate configuration parameters are being set before executing dma-from-device command.</p>
 <p>Ex: Xilinx example design user logic functionality requires the number of packets, packet length and queue id to be configured in user logic specific registers and packet generation needs to be triggered by configuring a specic register. This is subject to change as per the user logic design.</p>
+</div>
 </div>
 
 
@@ -488,7 +495,7 @@ For ST C2H, the dma-from-device application only tries to perform the C2H transf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2020.
+        Last updated on September 23, 2020.
       </span>
 
     </p>
