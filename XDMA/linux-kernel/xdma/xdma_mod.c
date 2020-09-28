@@ -108,6 +108,10 @@ static const struct pci_device_id pci_ids[] = {
 #ifdef INTERNAL_TESTING
 	{ PCI_DEVICE(0x1d0f, 0x1042), 0},
 #endif
+	/* aws */
+	{ PCI_DEVICE(0x1d0f, 0xf000), },
+	{ PCI_DEVICE(0x1d0f, 0xf001), },
+
 	{0,}
 };
 MODULE_DEVICE_TABLE(pci, pci_ids);

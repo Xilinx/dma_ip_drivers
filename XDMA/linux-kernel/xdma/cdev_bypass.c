@@ -16,6 +16,7 @@
  * The full GNU General Public License is included in this distribution in
  * the file called "COPYING".
  */
+#define pr_fmt(fmt)	KBUILD_MODNAME ":%s: " fmt, __func__
 
 #include "libxdma_api.h"
 #include "xdma_cdev.h"

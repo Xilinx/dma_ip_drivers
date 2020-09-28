@@ -522,7 +522,6 @@ int xpdev_create_interfaces(struct xdma_pci_dev *xpdev)
 	}
 	xpdev_flag_set(xpdev, XDF_CDEV_SG);
 
-	/* ??? Bypass */
 	/* Initialize Bypass Character Device */
 	if (xdev->bypass_bar_idx > 0) {
 		for (i = 0; i < xpdev->h2c_channel_max; i++) {

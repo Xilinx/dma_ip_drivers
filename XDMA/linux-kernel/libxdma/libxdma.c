@@ -1427,7 +1427,7 @@ static u32 engine_service_wb_monitor(struct xdma_engine *engine,
 		else if (desc_wb >= expected_wb)
 			break;
 
-		/* RTO - prevent system from hanging in polled mode */
+		/* prevent system from hanging in polled mode */
 		if (time_after(jiffies, timeout)) {
 			dbg_tfr("Polling timeout occurred");
 			dbg_tfr("desc_wb = 0x%08x, expected 0x%08x\n", desc_wb,
@@ -1681,7 +1681,7 @@ static irqreturn_t xdma_channel_irq(int irq, void *dev_id)
 	schedule_work(&engine->work);
 
 	/*
-	 * RTO - need to protect access here if multiple MSI-X are used for
+	 * need to protect access here if multiple MSI-X are used for
 	 * user interrupts
 	 */
 	xdev->irq_count++;
@@ -1933,7 +1933,7 @@ fail:
  */
 
 /*
- * RTO - code to detect if MSI/MSI-X capability exists is derived
+ * code to detect if MSI/MSI-X capability exists is derived
  * from linux/pci/msi.c - pci_msi_check_device
  */
 
@@ -2461,8 +2461,7 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 	 * remember reserved control in first descriptor, but zero
 	 * extra_adjacent!
 	 */
-	/* RTO - what's this about?  Shouldn't it be 0x0000c0ffUL? */
-	u32 control = le32_to_cpu(first->control) & 0x0000f0ffUL;
+	u32 control = le32_to_cpu(first->control) & 0x00FFC0ffUL;
 	/* second descriptor given? */
 	if (second) {
 		/*
@@ -2717,7 +2716,6 @@ static void engine_alignments(struct xdma_engine *engine)
 	dbg_init("engine %p name %s alignments=0x%08x\n", engine, engine->name,
 		 (int)w);
 
-	/* RTO  - add some macros to extract these fields */
 	align_bytes = (w & 0x00ff0000U) >> 16;
 	granularity_bytes = (w & 0x0000ff00U) >> 8;
 	address_bits = (w & 0x000000ffU);
@@ -2883,9 +2881,8 @@ static int engine_writeback_setup(struct xdma_engine *engine)
 	}
 
 	/*
-	 * RTO - doing the allocation per engine is wasteful since a full page
-	 * is allocated each time - better to allocate one page for the whole
-	 * device during probe() and set per-engine offsets here
+	 * better to allocate one page for the whole device during probe()
+	 * and set per-engine offsets here
 	 */
 	writeback = (struct xdma_poll_wb *)engine->poll_mode_addr_virt;
 	writeback->completed_desc_count = 0;
@@ -3168,7 +3165,7 @@ static int transfer_init(struct xdma_engine *engine,
 			(sizeof(struct xdma_result) * engine->desc_idx);
 	xfer->desc_index = engine->desc_idx;
 
-	/* TODO: Need to handle desc_used >= XDMA_TRANSFER_MAX_DESC */
+	/* Need to handle desc_used >= XDMA_TRANSFER_MAX_DESC */
 
 	if ((engine->desc_idx + desc_max) >= XDMA_TRANSFER_MAX_DESC)
 		desc_max = XDMA_TRANSFER_MAX_DESC - engine->desc_idx;
