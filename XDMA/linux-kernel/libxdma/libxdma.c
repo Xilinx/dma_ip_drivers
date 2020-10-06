@@ -3074,7 +3074,7 @@ static int engine_init(struct xdma_engine *engine, struct xdma_dev *xdev,
 
 	/* remember SG DMA direction */
 	engine->dir = dir;
-	sprintf(engine->name, "%d-%s%d-%s", xdev->idx,
+	snprintf(engine->name, sizeof(engine->name), "%d-%s%d-%s", xdev->idx,
 		(dir == DMA_TO_DEVICE) ? "H2C" : "C2H", channel,
 		engine->streaming ? "ST" : "MM");
 

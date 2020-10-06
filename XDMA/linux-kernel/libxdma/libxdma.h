@@ -475,7 +475,7 @@ struct xdma_request_cb {
 struct xdma_engine {
 	unsigned long magic;	/* structure ID for sanity checks */
 	struct xdma_dev *xdev;	/* parent device */
-	char name[5];		/* name of this engine */
+	char name[16];		/* name of this engine */
 	int version;		/* version of this engine */
 	//dev_t cdevno;		/* character device major:minor */
 	//struct cdev cdev;	/* character device (embedded struct) */
