@@ -40,7 +40,7 @@ MODULE_PARM_DESC(poll_mode, "Set 1 for hw polling, default is 0 (interrupts)");
 
 static unsigned int interrupt_mode;
 module_param(interrupt_mode, uint, 0644);
-MODULE_PARM_DESC(interrupt_mode, "0 - MSI-x , 1 - MSI, 2 - Legacy");
+MODULE_PARM_DESC(interrupt_mode, "0 - Auto , 1 - MSI, 2 - Legacy, 3 - MSI-x");
 
 static unsigned int enable_credit_mp = 1;
 module_param(enable_credit_mp, uint, 0644);
@@ -1992,7 +1992,7 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 		return -EINVAL;
 	}
 
-	if (!interrupt_mode && msi_msix_capable(pdev, PCI_CAP_ID_MSIX)) {
+	if ((interrupt_mode == 3 || !interrupt_mode) && msi_msix_capable(pdev, PCI_CAP_ID_MSIX)) {
 		int req_nvec = xdev->c2h_channel_max + xdev->h2c_channel_max +
 			       xdev->user_max;
 
@@ -2014,7 +2014,7 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 
 		xdev->msix_enabled = 1;
 
-	} else if (interrupt_mode == 1 &&
+	} else if ((interrupt_mode == 1 || !interrupt_mode) &&
 		   msi_msix_capable(pdev, PCI_CAP_ID_MSI)) {
 		/* enable message signalled interrupts */
 		dbg_init("pci_enable_msi()\n");
@@ -2296,11 +2296,16 @@ static int irq_legacy_setup(struct xdma_dev *xdev, struct pci_dev *pdev)
 	int rv;
 
 	pci_read_config_byte(pdev, PCI_INTERRUPT_PIN, &val);
+	if (val == 0) {
+		dbg_init("Legacy interrupt not supported\n");
+		return -EINVAL;
+	}
+
 	dbg_init("Legacy Interrupt register value = %d\n", val);
 	if (val > 1) {
 		val--;
 		w = (val << 24) | (val << 16) | (val << 8) | val;
-		/* Program IRQ Block Channel vactor and IRQ Block User vector
+		/* Program IRQ Block Channel vector and IRQ Block User vector
 		 * with Legacy interrupt value
 		 */
 		reg = xdev->bar[xdev->config_bar_idx] + 0x2080; // IRQ user
@@ -4400,15 +4405,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = probe_engines(xdev);
 	if (rv)
-		goto err_engines;
+		goto err_mask;
 
 	rv = enable_msi_msix(xdev, pdev);
 	if (rv < 0)
-		goto err_enable_msix;
+		goto err_engines;
 
 	rv = irq_setup(xdev, pdev);
 	if (rv < 0)
-		goto err_interrupts;
+		goto err_msix;
 
 	if (!poll_mode)
 		channel_interrupts_enable(xdev, ~0);
@@ -4423,9 +4428,7 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	return (void *)xdev;
 
-err_interrupts:
-	irq_teardown(xdev);
-err_enable_msix:
+err_msix:
 	disable_msi_msix(xdev, pdev);
 err_engines:
 	remove_engines(xdev);
