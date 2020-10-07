@@ -603,6 +603,35 @@ static int engine_start_mode_config(struct xdma_engine *engine)
 }
 
 /**
+ * xdma_get_next_adj()
+ *
+ * Get the number for adjacent descriptors to set in a descriptor, based on the
+ * remaining number of descriptors and the lower bits of the address of the
+ * next descriptor.
+ * Since the number of descriptors in a page (XDMA_PAGE_SIZE) is 128 and the
+ * maximum size of a block of adjacent descriptors is 64 (63 max adjacent
+ * descriptors for any descriptor), align the blocks of adjacent descriptors
+ * to the block size.
+ */
+static u32 xdma_get_next_adj(unsigned int remaining, u32 next_lo)
+{
+	unsigned int next_index;
+
+	dbg_desc("%s: remaining_desc %u, next_lo 0x%x\n",__func__, remaining,
+			next_lo);
+
+	if (remaining <= 1)
+		return 0;
+
+	/* shift right 5 times corresponds to a division by
+	 * sizeof(xdma_desc) = 32
+	 */
+	next_index = ((next_lo & (XDMA_PAGE_SIZE - 1)) >> 5) %
+		XDMA_MAX_ADJ_BLOCK_SIZE;
+	return min(XDMA_MAX_ADJ_BLOCK_SIZE - next_index - 1, remaining - 1);
+}
+
+/**
  * engine_start() - start an idle engine with its first transfer on queue
  *
  * The engine will run and process all transfers that are queued using
@@ -621,8 +650,7 @@ static int engine_start_mode_config(struct xdma_engine *engine)
 static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 {
 	struct xdma_transfer *transfer;
-	u32 w;
-	int extra_adj = 0;
+	u32 w, next_adj;
 	int rv;
 
 	if (!engine) {
@@ -682,15 +710,14 @@ static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 		       (unsigned long)(&engine->sgdma_regs->first_desc_hi) -
 			       (unsigned long)(&engine->sgdma_regs));
 
-	if (transfer->desc_adjacent > 0) {
-		extra_adj = transfer->desc_adjacent - 1;
-		if (extra_adj > MAX_EXTRA_ADJ)
-			extra_adj = MAX_EXTRA_ADJ;
-	}
-	dbg_tfr("iowrite32(0x%08x to 0x%p) (first_desc_adjacent)\n", extra_adj,
+	next_adj = xdma_get_next_adj(transfer->desc_adjacent,
+				     cpu_to_le32(PCI_DMA_L(transfer->desc_bus)));
+
+	dbg_tfr("iowrite32(0x%08x to 0x%p) (first_desc_adjacent)\n", next_adj,
 		(void *)&engine->sgdma_regs->first_desc_adjacent);
+
 	write_register(
-		extra_adj, &engine->sgdma_regs->first_desc_adjacent,
+		next_adj, &engine->sgdma_regs->first_desc_adjacent,
 		(unsigned long)(&engine->sgdma_regs->first_desc_adjacent) -
 			(unsigned long)(&engine->sgdma_regs));
 
@@ -2439,6 +2466,7 @@ static int transfer_desc_init(struct xdma_transfer *transfer, int count)
 		desc_virt[i].next_lo = cpu_to_le32(PCI_DMA_L(desc_bus));
 		desc_virt[i].next_hi = cpu_to_le32(PCI_DMA_H(desc_bus));
 		desc_virt[i].bytes = cpu_to_le32(0);
+
 		desc_virt[i].control = cpu_to_le32(DESC_MAGIC);
 	}
 	/* { i = number - 1 } */
@@ -2490,16 +2518,12 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 }
 
 /* xdma_desc_adjacent -- Set how many descriptors are adjacent to this one */
-static void xdma_desc_adjacent(struct xdma_desc *desc, int next_adjacent)
+static void xdma_desc_adjacent(struct xdma_desc *desc, u32 next_adjacent)
 {
 	/* remember reserved and control bits */
-	u32 control = le32_to_cpu(desc->control) & 0xffffc0ffUL;
-
-	if (next_adjacent)
-		next_adjacent = next_adjacent - 1;
-	if (next_adjacent > MAX_EXTRA_ADJ)
-		next_adjacent = MAX_EXTRA_ADJ;
-	control |= (next_adjacent << 8);
+	u32 control = le32_to_cpu(desc->control) & 0x0000f0ffUL;
+	/* merge adjacent and control field */
+	control |= 0xAD4B0000UL | (next_adjacent << 8);
 	/* write control and next_adjacent */
 	desc->control = cpu_to_le32(control);
 }
@@ -3142,7 +3166,6 @@ static int transfer_init(struct xdma_engine *engine,
 	unsigned int desc_max = min_t(unsigned int,
 				req->sw_desc_cnt - req->sw_desc_idx,
 				XDMA_TRANSFER_MAX_DESC);
-	unsigned int desc_align = 0;
 	int i = 0;
 	int last = 0;
 	u32 control;
@@ -3180,16 +3203,7 @@ static int transfer_init(struct xdma_engine *engine,
 		xfer, (u64)xfer->desc_bus);
 	transfer_build(engine, req, xfer, desc_max);
 
-	/*
-	 * Contiguous descriptors cannot cross PAGE boundary
-	 * The 1st descriptor may start in the middle of the page,
-	 * calculate the 1st block of adj desc accordingly
-	 */
-	desc_align = 128 - (engine->desc_idx % 128) - 1;
-	if (desc_align > (desc_max - 1))
-		desc_align = desc_max - 1;
-
-	xfer->desc_adjacent = desc_align;
+	xfer->desc_adjacent = desc_max;
 
 	/* terminate last descriptor */
 	last = desc_max - 1;
@@ -3205,11 +3219,13 @@ static int transfer_init(struct xdma_engine *engine,
 	engine->desc_used += desc_max;
 
 	/* fill in adjacent numbers */
-	for (i = 0; i < xfer->desc_num && desc_align; i++, desc_align--)
-		xdma_desc_adjacent(xfer->desc_virt + i, desc_align);
+	for (i = 0; i < xfer->desc_num; i++) {
+		u32 next_adj = xdma_get_next_adj(xfer->desc_num - i - 1,
+						(xfer->desc_virt + i)->next_lo);
 
-	for (; i < xfer->desc_num; i++)
-		xdma_desc_adjacent(xfer->desc_virt + i, xfer->desc_num - i - 1);
+		dbg_desc("set next adj at index %d to %u\n", i, next_adj);
+		xdma_desc_adjacent(xfer->desc_virt + i, next_adj);
+	}
 
 	spin_unlock_irqrestore(&engine->lock, flags);
 	return 0;
@@ -3267,8 +3283,12 @@ static int transfer_init_cyclic(struct xdma_engine *engine,
 
 	dbg_sg("transfer 0x%p has %d descriptors\n", xfer, xfer->desc_num);
 	/* fill in adjacent numbers */
-	for (i = 0; i < xfer->desc_num; i++)
-		xdma_desc_adjacent(xfer->desc_virt + i, xfer->desc_num - i - 1);
+	for (i = 0; i < xfer->desc_num; i++) {
+		u32 next_adj = xdma_get_next_adj(xfer->desc_num - i - 1,
+						(xfer->desc_virt + i)->next_lo);
+		dbg_desc("set next adj at index %d to %u\n", i, next_adj);
+		xdma_desc_adjacent(xfer->desc_virt + i, next_adj);
+	}
 
 	return 0;
 }
