@@ -31,9 +31,32 @@
 #include <linux/kernel.h>
 #include <linux/pci.h>
 #include <linux/workqueue.h>
-#if	KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+
+/* Add compatibility checking for RHEL versions */
+#if defined(RHEL_RELEASE_CODE)
+#	define ACCESS_OK_2_ARGS (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8, 0))
+#else
+#	define ACCESS_OK_2_ARGS (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0))
+#endif
+
+#if defined(RHEL_RELEASE_CODE)
+#	define HAS_MMIOWB (RHEL_RELEASE_CODE <= RHEL_RELEASE_VERSION(8, 0))
+#else
+#	define HAS_MMIOWB (LINUX_VERSION_CODE <= KERNEL_VERSION(5, 1, 0))
+#endif
+
+#if defined(RHEL_RELEASE_CODE)
+#	define HAS_SWAKE_UP_ONE (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8, 0))
+#	define HAS_SWAKE_UP (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8, 0))
+#else
+#	define HAS_SWAKE_UP_ONE (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
+#	define HAS_SWAKE_UP (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0))
+#endif
+
+#if	HAS_SWAKE_UP
 #include <linux/swait.h>
 #endif
+
 /*
  *  if the config bar is fixed, the driver does not neeed to search through
  *  all of the bars
@@ -418,7 +441,7 @@ struct xdma_transfer {
 	int desc_num;			/* number of descriptors in transfer */
 	int desc_index;			/* index for 1st desc. in transfer */
 	enum dma_data_direction dir;
-#if	KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if	HAS_SWAKE_UP
 	struct swait_queue_head wq;
 #else
 	wait_queue_head_t wq;		/* wait queue for transfer completion */
@@ -504,7 +527,7 @@ struct xdma_engine {
 	dma_addr_t poll_mode_bus;	/* bus addr for descriptor writeback */
 
 	/* Members associated with interrupt mode support */
-#if	KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if	HAS_SWAKE_UP
 	struct swait_queue_head shutdown_wq;
 #else
 	wait_queue_head_t shutdown_wq;	/* wait queue for shutdown sync */
@@ -523,7 +546,7 @@ struct xdma_engine {
 
 	/* for performance test support */
 	struct xdma_performance_ioctl *xdma_perf;	/* perf test control */
-#if	KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if	HAS_SWAKE_UP
 	struct swait_queue_head xdma_perf_wq;
 #else
 	wait_queue_head_t xdma_perf_wq;	/* Perf test sync */
