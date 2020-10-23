@@ -108,6 +108,10 @@ static const struct pci_device_id pci_ids[] = {
 #ifdef INTERNAL_TESTING
 	{ PCI_DEVICE(0x1d0f, 0x1042), 0},
 #endif
+	/* aws */
+	{ PCI_DEVICE(0x1d0f, 0xf000), },
+	{ PCI_DEVICE(0x1d0f, 0xf001), },
+
 	{0,}
 };
 MODULE_DEVICE_TABLE(pci, pci_ids);
@@ -289,7 +293,11 @@ static void xdma_error_resume(struct pci_dev *pdev)
 	struct xdma_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
 
 	pr_info("dev 0x%p,0x%p.\n", pdev, xpdev);
+#if KERNEL_VERSION(5, 7, 0) <= LINUX_VERSION_CODE
+	pci_aer_clear_nonfatal_status(pdev);
+#else
 	pci_cleanup_aer_uncorrect_error_status(pdev);
+#endif
 }
 
 #if KERNEL_VERSION(4, 13, 0) <= LINUX_VERSION_CODE

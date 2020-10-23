@@ -40,7 +40,7 @@ MODULE_PARM_DESC(poll_mode, "Set 1 for hw polling, default is 0 (interrupts)");
 
 static unsigned int interrupt_mode;
 module_param(interrupt_mode, uint, 0644);
-MODULE_PARM_DESC(interrupt_mode, "0 - MSI-x , 1 - MSI, 2 - Legacy");
+MODULE_PARM_DESC(interrupt_mode, "0 - Auto , 1 - MSI, 2 - Legacy, 3 - MSI-x");
 
 static unsigned int enable_credit_mp = 1;
 module_param(enable_credit_mp, uint, 0644);
@@ -56,7 +56,7 @@ MODULE_PARM_DESC(desc_blen_max,
 #define XDMA_PERF_NUM_DESC 128
 
 /* Kernel version adaptative code */
-#if KERNEL_VERSION(4, 19, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP_ONE
 /* since 4.18, using simple wait queues is not recommended
  * except for realtime constraint (see swait.h comments)
  * and will likely be removed in future kernel versions
@@ -64,7 +64,7 @@ MODULE_PARM_DESC(desc_blen_max,
 #define xlx_wake_up	swake_up_one
 #define xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout_exclusive
-#elif KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#elif HAS_SWAKE_UP
 #define xlx_wake_up	swake_up
 #define xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout
@@ -540,6 +540,7 @@ static int xdma_engine_stop(struct xdma_engine *engine)
 				(unsigned long)(&engine->regs));
 	/* dummy read of status register to flush all previous writes */
 	dbg_tfr("%s(%s) done\n", __func__, engine->name);
+	engine->running = 0;
 	return 0;
 }
 
@@ -602,6 +603,35 @@ static int engine_start_mode_config(struct xdma_engine *engine)
 }
 
 /**
+ * xdma_get_next_adj()
+ *
+ * Get the number for adjacent descriptors to set in a descriptor, based on the
+ * remaining number of descriptors and the lower bits of the address of the
+ * next descriptor.
+ * Since the number of descriptors in a page (XDMA_PAGE_SIZE) is 128 and the
+ * maximum size of a block of adjacent descriptors is 64 (63 max adjacent
+ * descriptors for any descriptor), align the blocks of adjacent descriptors
+ * to the block size.
+ */
+static u32 xdma_get_next_adj(unsigned int remaining, u32 next_lo)
+{
+	unsigned int next_index;
+
+	dbg_desc("%s: remaining_desc %u, next_lo 0x%x\n",__func__, remaining,
+			next_lo);
+
+	if (remaining <= 1)
+		return 0;
+
+	/* shift right 5 times corresponds to a division by
+	 * sizeof(xdma_desc) = 32
+	 */
+	next_index = ((next_lo & (XDMA_PAGE_SIZE - 1)) >> 5) %
+		XDMA_MAX_ADJ_BLOCK_SIZE;
+	return min(XDMA_MAX_ADJ_BLOCK_SIZE - next_index - 1, remaining - 1);
+}
+
+/**
  * engine_start() - start an idle engine with its first transfer on queue
  *
  * The engine will run and process all transfers that are queued using
@@ -620,8 +650,7 @@ static int engine_start_mode_config(struct xdma_engine *engine)
 static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 {
 	struct xdma_transfer *transfer;
-	u32 w;
-	int extra_adj = 0;
+	u32 w, next_adj;
 	int rv;
 
 	if (!engine) {
@@ -681,22 +710,21 @@ static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 		       (unsigned long)(&engine->sgdma_regs->first_desc_hi) -
 			       (unsigned long)(&engine->sgdma_regs));
 
-	if (transfer->desc_adjacent > 0) {
-		extra_adj = transfer->desc_adjacent - 1;
-		if (extra_adj > MAX_EXTRA_ADJ)
-			extra_adj = MAX_EXTRA_ADJ;
-	}
-	dbg_tfr("iowrite32(0x%08x to 0x%p) (first_desc_adjacent)\n", extra_adj,
+	next_adj = xdma_get_next_adj(transfer->desc_adjacent,
+				     cpu_to_le32(PCI_DMA_L(transfer->desc_bus)));
+
+	dbg_tfr("iowrite32(0x%08x to 0x%p) (first_desc_adjacent)\n", next_adj,
 		(void *)&engine->sgdma_regs->first_desc_adjacent);
+
 	write_register(
-		extra_adj, &engine->sgdma_regs->first_desc_adjacent,
+		next_adj, &engine->sgdma_regs->first_desc_adjacent,
 		(unsigned long)(&engine->sgdma_regs->first_desc_adjacent) -
 			(unsigned long)(&engine->sgdma_regs));
 
 	dbg_tfr("ioread32(0x%p) (dummy read flushes writes).\n",
 		&engine->regs->status);
 
-#if KERNEL_VERSION(5, 1, 0) >= LINUX_VERSION_CODE
+#if HAS_MMIOWB
 	mmiowb();
 #endif
 
@@ -735,7 +763,6 @@ static int engine_service_shutdown(struct xdma_engine *engine)
 		pr_err("Failed to stop engine\n");
 		return rv;
 	}
-	engine->running = 0;
 
 	/* awake task on engine's shutdown wait queue */
 	xlx_wake_up(&engine->shutdown_wq);
@@ -1427,7 +1454,7 @@ static u32 engine_service_wb_monitor(struct xdma_engine *engine,
 		else if (desc_wb >= expected_wb)
 			break;
 
-		/* RTO - prevent system from hanging in polled mode */
+		/* prevent system from hanging in polled mode */
 		if (time_after(jiffies, timeout)) {
 			dbg_tfr("Polling timeout occurred");
 			dbg_tfr("desc_wb = 0x%08x, expected 0x%08x\n", desc_wb,
@@ -1681,7 +1708,7 @@ static irqreturn_t xdma_channel_irq(int irq, void *dev_id)
 	schedule_work(&engine->work);
 
 	/*
-	 * RTO - need to protect access here if multiple MSI-X are used for
+	 * need to protect access here if multiple MSI-X are used for
 	 * user interrupts
 	 */
 	xdev->irq_count++;
@@ -1933,7 +1960,7 @@ fail:
  */
 
 /*
- * RTO - code to detect if MSI/MSI-X capability exists is derived
+ * code to detect if MSI/MSI-X capability exists is derived
  * from linux/pci/msi.c - pci_msi_check_device
  */
 
@@ -1992,7 +2019,7 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 		return -EINVAL;
 	}
 
-	if (!interrupt_mode && msi_msix_capable(pdev, PCI_CAP_ID_MSIX)) {
+	if ((interrupt_mode == 3 || !interrupt_mode) && msi_msix_capable(pdev, PCI_CAP_ID_MSIX)) {
 		int req_nvec = xdev->c2h_channel_max + xdev->h2c_channel_max +
 			       xdev->user_max;
 
@@ -2014,7 +2041,7 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 
 		xdev->msix_enabled = 1;
 
-	} else if (interrupt_mode == 1 &&
+	} else if ((interrupt_mode == 1 || !interrupt_mode) &&
 		   msi_msix_capable(pdev, PCI_CAP_ID_MSI)) {
 		/* enable message signalled interrupts */
 		dbg_init("pci_enable_msi()\n");
@@ -2296,11 +2323,16 @@ static int irq_legacy_setup(struct xdma_dev *xdev, struct pci_dev *pdev)
 	int rv;
 
 	pci_read_config_byte(pdev, PCI_INTERRUPT_PIN, &val);
+	if (val == 0) {
+		dbg_init("Legacy interrupt not supported\n");
+		return -EINVAL;
+	}
+
 	dbg_init("Legacy Interrupt register value = %d\n", val);
 	if (val > 1) {
 		val--;
 		w = (val << 24) | (val << 16) | (val << 8) | val;
-		/* Program IRQ Block Channel vactor and IRQ Block User vector
+		/* Program IRQ Block Channel vector and IRQ Block User vector
 		 * with Legacy interrupt value
 		 */
 		reg = xdev->bar[xdev->config_bar_idx] + 0x2080; // IRQ user
@@ -2434,6 +2466,7 @@ static int transfer_desc_init(struct xdma_transfer *transfer, int count)
 		desc_virt[i].next_lo = cpu_to_le32(PCI_DMA_L(desc_bus));
 		desc_virt[i].next_hi = cpu_to_le32(PCI_DMA_H(desc_bus));
 		desc_virt[i].bytes = cpu_to_le32(0);
+
 		desc_virt[i].control = cpu_to_le32(DESC_MAGIC);
 	}
 	/* { i = number - 1 } */
@@ -2461,8 +2494,7 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 	 * remember reserved control in first descriptor, but zero
 	 * extra_adjacent!
 	 */
-	/* RTO - what's this about?  Shouldn't it be 0x0000c0ffUL? */
-	u32 control = le32_to_cpu(first->control) & 0x0000f0ffUL;
+	u32 control = le32_to_cpu(first->control) & 0x00FFC0ffUL;
 	/* second descriptor given? */
 	if (second) {
 		/*
@@ -2486,16 +2518,12 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 }
 
 /* xdma_desc_adjacent -- Set how many descriptors are adjacent to this one */
-static void xdma_desc_adjacent(struct xdma_desc *desc, int next_adjacent)
+static void xdma_desc_adjacent(struct xdma_desc *desc, u32 next_adjacent)
 {
 	/* remember reserved and control bits */
-	u32 control = le32_to_cpu(desc->control) & 0xffffc0ffUL;
-
-	if (next_adjacent)
-		next_adjacent = next_adjacent - 1;
-	if (next_adjacent > MAX_EXTRA_ADJ)
-		next_adjacent = MAX_EXTRA_ADJ;
-	control |= (next_adjacent << 8);
+	u32 control = le32_to_cpu(desc->control) & 0x0000f0ffUL;
+	/* merge adjacent and control field */
+	control |= 0xAD4B0000UL | (next_adjacent << 8);
 	/* write control and next_adjacent */
 	desc->control = cpu_to_le32(control);
 }
@@ -2717,7 +2745,6 @@ static void engine_alignments(struct xdma_engine *engine)
 	dbg_init("engine %p name %s alignments=0x%08x\n", engine, engine->name,
 		 (int)w);
 
-	/* RTO  - add some macros to extract these fields */
 	align_bytes = (w & 0x00ff0000U) >> 16;
 	granularity_bytes = (w & 0x0000ff00U) >> 8;
 	address_bits = (w & 0x000000ffU);
@@ -2839,7 +2866,6 @@ struct xdma_transfer *engine_cyclic_stop(struct xdma_engine *engine)
 			pr_err("Failed to stop engine\n");
 			return NULL;
 		}
-		engine->running = 0;
 
 		if (transfer->cyclic) {
 			if (engine->xdma_perf)
@@ -2883,9 +2909,8 @@ static int engine_writeback_setup(struct xdma_engine *engine)
 	}
 
 	/*
-	 * RTO - doing the allocation per engine is wasteful since a full page
-	 * is allocated each time - better to allocate one page for the whole
-	 * device during probe() and set per-engine offsets here
+	 * better to allocate one page for the whole device during probe()
+	 * and set per-engine offsets here
 	 */
 	writeback = (struct xdma_poll_wb *)engine->poll_mode_addr_virt;
 	writeback->completed_desc_count = 0;
@@ -3141,7 +3166,6 @@ static int transfer_init(struct xdma_engine *engine,
 	unsigned int desc_max = min_t(unsigned int,
 				req->sw_desc_cnt - req->sw_desc_idx,
 				XDMA_TRANSFER_MAX_DESC);
-	unsigned int desc_align = 0;
 	int i = 0;
 	int last = 0;
 	u32 control;
@@ -3152,7 +3176,7 @@ static int transfer_init(struct xdma_engine *engine,
 	/* lock the engine state */
 	spin_lock_irqsave(&engine->lock, flags);
 	/* initialize wait queue */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+#if HAS_SWAKE_UP
 	init_swait_queue_head(&xfer->wq);
 #else
 	init_waitqueue_head(&xfer->wq);
@@ -3168,7 +3192,7 @@ static int transfer_init(struct xdma_engine *engine,
 			(sizeof(struct xdma_result) * engine->desc_idx);
 	xfer->desc_index = engine->desc_idx;
 
-	/* TODO: Need to handle desc_used >= XDMA_TRANSFER_MAX_DESC */
+	/* Need to handle desc_used >= XDMA_TRANSFER_MAX_DESC */
 
 	if ((engine->desc_idx + desc_max) >= XDMA_TRANSFER_MAX_DESC)
 		desc_max = XDMA_TRANSFER_MAX_DESC - engine->desc_idx;
@@ -3179,16 +3203,7 @@ static int transfer_init(struct xdma_engine *engine,
 		xfer, (u64)xfer->desc_bus);
 	transfer_build(engine, req, xfer, desc_max);
 
-	/*
-	 * Contiguous descriptors cannot cross PAGE boundary
-	 * The 1st descriptor may start in the middle of the page,
-	 * calculate the 1st block of adj desc accordingly
-	 */
-	desc_align = 128 - (engine->desc_idx % 128) - 1;
-	if (desc_align > (desc_max - 1))
-		desc_align = desc_max - 1;
-
-	xfer->desc_adjacent = desc_align;
+	xfer->desc_adjacent = desc_max;
 
 	/* terminate last descriptor */
 	last = desc_max - 1;
@@ -3204,11 +3219,13 @@ static int transfer_init(struct xdma_engine *engine,
 	engine->desc_used += desc_max;
 
 	/* fill in adjacent numbers */
-	for (i = 0; i < xfer->desc_num && desc_align; i++, desc_align--)
-		xdma_desc_adjacent(xfer->desc_virt + i, desc_align);
+	for (i = 0; i < xfer->desc_num; i++) {
+		u32 next_adj = xdma_get_next_adj(xfer->desc_num - i - 1,
+						(xfer->desc_virt + i)->next_lo);
 
-	for (; i < xfer->desc_num; i++)
-		xdma_desc_adjacent(xfer->desc_virt + i, xfer->desc_num - i - 1);
+		dbg_desc("set next adj at index %d to %u\n", i, next_adj);
+		xdma_desc_adjacent(xfer->desc_virt + i, next_adj);
+	}
 
 	spin_unlock_irqrestore(&engine->lock, flags);
 	return 0;
@@ -3229,7 +3246,7 @@ static int transfer_init_cyclic(struct xdma_engine *engine,
 	memset(xfer, 0, sizeof(*xfer));
 
 	/* initialize wait queue */
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 	init_swait_queue_head(&xfer->wq);
 #else
 	init_waitqueue_head(&xfer->wq);
@@ -3266,8 +3283,12 @@ static int transfer_init_cyclic(struct xdma_engine *engine,
 
 	dbg_sg("transfer 0x%p has %d descriptors\n", xfer, xfer->desc_num);
 	/* fill in adjacent numbers */
-	for (i = 0; i < xfer->desc_num; i++)
-		xdma_desc_adjacent(xfer->desc_virt + i, xfer->desc_num - i - 1);
+	for (i = 0; i < xfer->desc_num; i++) {
+		u32 next_adj = xdma_get_next_adj(xfer->desc_num - i - 1,
+						(xfer->desc_virt + i)->next_lo);
+		dbg_desc("set next adj at index %d to %u\n", i, next_adj);
+		xdma_desc_adjacent(xfer->desc_virt + i, next_adj);
+	}
 
 	return 0;
 }
@@ -4004,7 +4025,7 @@ int xdma_performance_submit(struct xdma_dev *xdev, struct xdma_engine *engine)
 	transfer->cyclic = 1;
 
 	/* initialize wait queue */
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 	init_swait_queue_head(&transfer->wq);
 #else
 	init_waitqueue_head(&transfer->wq);
@@ -4084,7 +4105,7 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 		spin_lock_init(&engine->lock);
 		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 		init_swait_queue_head(&engine->shutdown_wq);
 		init_swait_queue_head(&engine->xdma_perf_wq);
 #else
@@ -4098,7 +4119,7 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 		spin_lock_init(&engine->lock);
 		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
-#if KERNEL_VERSION(4, 6, 0) <= LINUX_VERSION_CODE
+#if HAS_SWAKE_UP
 		init_swait_queue_head(&engine->shutdown_wq);
 		init_swait_queue_head(&engine->xdma_perf_wq);
 #else
@@ -4404,15 +4425,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = probe_engines(xdev);
 	if (rv)
-		goto err_engines;
+		goto err_mask;
 
 	rv = enable_msi_msix(xdev, pdev);
 	if (rv < 0)
-		goto err_enable_msix;
+		goto err_engines;
 
 	rv = irq_setup(xdev, pdev);
 	if (rv < 0)
-		goto err_interrupts;
+		goto err_msix;
 
 	if (!poll_mode)
 		channel_interrupts_enable(xdev, ~0);
@@ -4427,9 +4448,7 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	return (void *)xdev;
 
-err_interrupts:
-	irq_teardown(xdev);
-err_enable_msix:
+err_msix:
 	disable_msi_msix(xdev, pdev);
 err_engines:
 	remove_engines(xdev);
@@ -4520,8 +4539,6 @@ void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 			rv = xdma_engine_stop(engine);
 			if (rv < 0)
 				pr_err("Failed to stop engine\n");
-			else
-				engine->running = 0;
 			spin_unlock_irqrestore(&engine->lock, flags);
 		}
 	}
@@ -4537,8 +4554,6 @@ void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 			rv = xdma_engine_stop(engine);
 			if (rv < 0)
 				pr_err("Failed to stop engine\n");
-			else
-				engine->running = 0;
 			spin_unlock_irqrestore(&engine->lock, flags);
 		}
 	}
