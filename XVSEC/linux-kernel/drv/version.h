@@ -1,7 +1,7 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2018,  Xilinx, Inc.
+ * Copyright (c) 2018-2020,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -23,8 +23,8 @@
 #define XVSEC_MODULE_NAME	"xvsec"
 #define XVSEC_MODULE_DESC	"Xilinx VSEC Library"
 
-#define XVSEC_VERSION_MAJOR	2018
-#define XVSEC_VERSION_MINOR	3
+#define XVSEC_VERSION_MAJOR	2020
+#define XVSEC_VERSION_MINOR	2
 #define XVSEC_VERSION_PATCH	0
 
 #define XVSEC_DRV_VERSION	\

@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2018,  Xilinx, Inc.
+ * Copyright (c) 2018-2020  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -13,6 +13,9 @@
 
 #ifndef __MAIN_H__
 #define __MAIN_H__
+
+#define XVSEC_DEV_STR   "" 		/*string to append for character device str i.e. /dev/xvsec0300 */
+#define XVSEC_MCAP_DEV_STR  "_mcap"     /*string to append for character device str i.e. /dev/xvsec0300_mcap */
 
 struct help_args {
 	bool flag;
@@ -76,6 +79,51 @@ struct mcap_program_bitstream {
 	char *abs_bit_file;
 };
 
+struct mcap_axi_access_reg {
+	bool flag;
+	bool write;
+	axi_access_mode_t mode;
+	uint32_t address;
+	uint32_t data[4];
+};
+
+struct mcap_file_download {
+	bool flag;
+	bool is_fixed_addr;
+	bool is_128b_mode;
+	char *file_name;
+	uint32_t dev_addr;
+	data_transfer_mode_t tr_mode;
+};
+
+struct mcap_file_upload {
+	bool flag;
+	bool is_fixed_addr;
+	char *file_name;
+	uint32_t dev_addr;
+	size_t length;
+};
+
+/* enum MCAP version info */
+enum mcap_revision {
+	XVSEC_MCAP_US = 0,
+	XVSEC_MCAP_USPLUS,
+	XVSEC_MCAP_VERSAL,
+	XVSEC_INVALID_MCAP_REVISION,
+};
+
+struct rev_id_st{
+	bool flag;
+	/* MCAP revision info */
+	enum mcap_revision mrev;
+};
+
+struct mcap_axi_cache_attr{
+	bool flag;
+	/* MCAP cache attributes */
+	axi_cache_attr_t attr;
+};
+
 struct args {
 	uint16_t			bus_no;
 	uint16_t			dev_no;
@@ -93,6 +141,11 @@ struct args {
 	struct mcap_access_reg		access_reg;
 	struct fpga_cfg_access_reg	fpga_access_reg;
 	struct mcap_program_bitstream	program;
+	struct mcap_file_download	download;
+	struct mcap_file_upload		upload;
+	struct rev_id_st		rev_id;
+	struct mcap_axi_access_reg	access_axi_reg;
+	struct mcap_axi_cache_attr	axi_cache_settings;
 };
 
 enum xvsec_operation {

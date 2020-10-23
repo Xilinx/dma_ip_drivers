@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace library which provides the
  * userspace APIs to enable the XSEC driver functionality
  *
- * Copyright (c) 2018,  Xilinx, Inc.
+ * Copyright (c) 2018-2020,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -14,6 +14,7 @@
 #define __XVSEC_INT_H__
 
 #define MAX_MCAP_REG_OFFSET	(0x2C)
+#define MAX_MCAPV2_REG_OFFSET	(0x1C)
 
 /* Internal APIs and structures */
 typedef struct handle_t
@@ -22,6 +23,7 @@ typedef struct handle_t
 	uint8_t		bus_no;		/* PCI bus number */
 	uint8_t		dev_no;		/* Device Number on PCI bus */
 	uint16_t	index;		/* Array Index of handle info */
+	uint8_t		mrev;		/* mcap rev*/
 	bool		valid;		/* Validity of the handle */
 }handle_t;
 

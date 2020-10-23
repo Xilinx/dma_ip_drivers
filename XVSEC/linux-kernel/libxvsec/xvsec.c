@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace library which provides the
  * userspace APIs to enable the XSEC driver functionality
  *
- * Copyright (c) 2018,  Xilinx, Inc.
+ * Copyright (c) 2018-2020  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -13,7 +13,9 @@
 #include "version.h"
 #include "xvsec.h"
 #include "xvsec_int.h"
-#include "xvsec_cdev.h"
+#include "xvsec_drv.h"  /* kernel character Driver layer API's*/
+#include "xvsec_mcap.h" /* kernel layer MCAP API's */
+
 
 
 #define XVSEC_MAGIC_NO		0x10EE
@@ -27,6 +29,7 @@ int no_of_devs;
 
 const char *error_codes[] = {
 	"XVSEC Success",
+	"XVSEC Operation not permitted",
 	"XVSEC Failure",
 	"XVSEC NULL Pointer",
 	"XVSEC Invalid Parameters",
@@ -49,7 +52,7 @@ int xvsec_lib_init(int max_devices)
 {
 	int			ret = XVSEC_SUCCESS;
 	int			status;
-	uint16_t		index;
+	int			index;
 	uint16_t		failed_index;
 	pthread_mutexattr_t	attr;
 
@@ -116,7 +119,7 @@ int xvsec_lib_deinit(void)
 {
 	int		ret = XVSEC_SUCCESS;
 	int		status;
-	uint16_t	index;
+	uint32_t	index;
 
 	for(index = 0; index < no_of_devs; index++)
 	{
@@ -124,7 +127,7 @@ int xvsec_lib_deinit(void)
 		if(status < 0)
 		{
 			fprintf(stderr, "[XVSEC] : pthread_mutex_destroy "
-				"failed with error %d(%s) for index %d\n",
+				"failed with error %d(%s) for index %u\n",
 				status, strerror(errno), index);
 			ret = XVSEC_ERR_LINUX_SYSTEM_CALL;
 		}
@@ -136,21 +139,21 @@ int xvsec_lib_deinit(void)
 	return ret;
 }
 
-int xvsec_open(uint16_t bus_no, uint16_t dev_no, xvsec_handle_t *handle)
+int xvsec_open(uint16_t bus_no, uint16_t dev_no, xvsec_handle_t *handle, char* dev_str)
 {
-	int		ret = XVSEC_SUCCESS;
-	int		status;
-	char		device_name[20];
-	int		fd = -1;
-	uint16_t	index;
-	uint16_t	device_index = INVALID_DEVICE_INDEX;
+	int        ret = XVSEC_SUCCESS;
+	int        status;
+	char       device_name[20];
+	int        fd;
+	uint32_t   index;
+	uint32_t   device_index = INVALID_DEVICE_INDEX;
 
 	/* Parameter checking */
-	if((bus_no > 255) || (dev_no > 255) || (handle == NULL))
+	if((bus_no > 255) || (dev_no > 255) || (handle == NULL) || (dev_str == NULL))
 	{
 		fprintf(stderr, "[XVSEC] : %s : Invalid Parameters "
-			"bus_no:0x%04X, device no : 0x%04X, handle : %p\n",
-			__func__, bus_no, dev_no, handle);
+			"bus_no:0x%04X, device no : 0x%04X, handle : %p, dev_str:%p\n",
+			__func__, bus_no, dev_no, handle, dev_str);
 
 		return XVSEC_ERR_INVALID_PARAM;
 	}
@@ -174,7 +177,7 @@ int xvsec_open(uint16_t bus_no, uint16_t dev_no, xvsec_handle_t *handle)
 	pthread_mutex_lock(&xvsec_user_ctx[device_index].mutex);
 
 	status = snprintf(device_name, sizeof(device_name),
-		"/dev/xvsec%02X%02X", bus_no, dev_no);
+		"/dev/xvsec%02X%02X%s", bus_no, dev_no, dev_str);
 	if(status < 0)
 	{
 		fprintf(stderr, "[XVSEC] : %s : snprintf returned error "
@@ -209,6 +212,7 @@ int xvsec_open(uint16_t bus_no, uint16_t dev_no, xvsec_handle_t *handle)
 	((handle_t *)handle)->bus_no		= bus_no;
 	((handle_t *)handle)->dev_no		= dev_no;
 	((handle_t *)handle)->index		= device_index;
+	((handle_t *)handle)->mrev		= 0xFF;
 	((handle_t *)handle)->valid		= true;
 
 CLEANUP:
@@ -300,24 +304,12 @@ int xvsec_get_cap_list(xvsec_handle_t *handle, xvsec_cap_list_t *cap_list)
 
 	for(index = 0; index < cap_list->no_of_caps; index++)
 	{
-		cap_list->cap_info[index].cap_id = xvsec_caps.capability_id[index];
-		switch(cap_list->cap_info[index].cap_id) {
-		case 0x0001:
-			snprintf(cap_list->cap_info[index].cap_name,
-				sizeof(cap_list->cap_info[index].cap_name),
-				"MCAP");
-		break;
-		case 0x0008:
-			snprintf(cap_list->cap_info[index].cap_name,
-				sizeof(cap_list->cap_info[index].cap_name),
-				"XVC");
-			break;
-		default:
-			snprintf(cap_list->cap_info[index].cap_name,
-				sizeof(cap_list->cap_info[index].cap_name),
-				"UNKNOWN");
-			break;
-		}
+		cap_list->cap_info[index].is_supported = xvsec_caps.vsec_info[index].is_supported;
+		cap_list->cap_info[index].cap_id = xvsec_caps.vsec_info[index].cap_id;
+		cap_list->cap_info[index].rev_id = xvsec_caps.vsec_info[index].rev_id;
+
+		snprintf(cap_list->cap_info[index].cap_name, XVSEC_MAX_VSEC_STR_LEN,
+			"%s", xvsec_caps.vsec_info[index].name);
 	}
 
 CLEANUP:
@@ -331,7 +323,7 @@ int xvsec_show_device(xvsec_handle_t *handle)
 	int			ret = XVSEC_SUCCESS;
 	int			status;
 	int			device_index;
-	struct device_info	dev_info;
+	union device_info	dev_info;
 
 	/* Parameter Validation */
 	if(handle == NULL)
@@ -346,7 +338,7 @@ int xvsec_show_device(xvsec_handle_t *handle)
 	pthread_mutex_lock(&xvsec_user_ctx[device_index].mutex);
 
 	status = ioctl(xvsec_user_ctx[device_index].fd,
-			IOC_GET_DEVICE_INFO, &dev_info);
+			IOC_XVSEC_GET_DEVICE_INFO, &dev_info);
 	if(status < 0)
 	{
 		fprintf(stderr, "[XVSEC] : %s : ioctl for "

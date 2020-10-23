@@ -2,7 +2,7 @@ SHELL = /bin/bash
 build_dir = $(PWD)/../build
 lib_dir = $(build_dir)/lib
 CFLAGS += -O2 -fno-inline -Wall -Wstrict-prototypes
-CFLAGS += -I. -I../include -I../drv/
+CFLAGS += -I. -I../include -I../drv/ -I../drv/xvsec_mcap/
 CFLAGS += $(EXTRA_FLAGS)
 
 XVSEC = libxvsec

@@ -1,18 +1,47 @@
-Release: 2018.3
-===========================
+Release: 2020.2
+============================
 
 NOTE:
-	This release is based on the 2018.3 XVSEC-MCAP Design
+	This release is based on the 2020.2 XVSEC-MCAP Design.
 
-	XVSEC driver is implemented as a single character device per PCIe Device
-
-
-DRIVER LIMITATIONS:
-===================
-- Unique character device per VSEC functionality is not implemented
+	XVSEC driver is implemented to support Ultrascale, Ultrascale+, and Versal devices.
 
 SUPPORTED FEATURES:
 ===================
+
+Release: 2020.2
+---------------
+- The XVSEC kernel driver 2020.2 Supports
+	- US/US+ devices (MCAP Rev 0 and 1)
+	- Versal device (MCAP Rev 2)
+- Supports Multiple VSECs on the same device
+- Supports Multiple devices connected on the same host
+
+- Generic VSEC functionality
+	- Lists the supported VSECs by the device
+	- Verbose information about the device
+
+- The following MCAP operations supported for Versal devices
+	- MCAP Module Reset
+	- List MCAP Register set
+	- File Download at user specified address
+		- Fixed Address download for FIFO devices
+		- Increment Address download
+		- 32b mode download for 32b supported devices
+		- 128b mode download for 128b suppported devices
+		- Slow and Fast download mode supported
+	- File Upload from user specified address
+		- Fixed Address upload for FIFO devices
+		- Increment Address upload
+	- Access(Read/Write) any MCAP register by providing offset
+	- Access(Read/Write) any Device register connected to AXI bus by providing address
+	- Set the AXI cache and protections bits
+
+Release: 2018.3
+---------------
+- The XVSEC kernel driver 2018.3 Supports
+	- US/US+ devices (MCAP Rev 0 and 1)
+
 - MCAP VSEC functionality is implemented as part of the XVSEC driver
 - Multiple Devices on the Same Host supported
 	- Unique character device gets created per device
@@ -31,6 +60,10 @@ SUPPORTED FEATURES:
 	- Program partial clear bitstream
 	- Program Stage-2/partial reconfigurable bitstream
 
-KNOWN BUGS:
+DRIVER LIMITATIONS:
+===================
+- Only MCAP VSEC is supported
+
+KNOWN Issues:
 ===========
-None
+XVSEC kernel driver 2020.2 does not support Fast download mode for Versal devices.

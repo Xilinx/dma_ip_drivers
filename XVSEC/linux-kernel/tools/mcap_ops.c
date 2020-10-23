@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2018,  Xilinx, Inc.
+ * Copyright (c) 2020 Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -25,6 +25,7 @@
 #include "main.h"
 #include "mcap_ops.h"
 
+/* US/US+ MCAP registers display strings */
 static const char *MCAP_reg_names[] = {
 	"Ext Capability",
 	"VSEC Header",
@@ -76,6 +77,37 @@ static const uint32_t fpga_cfg_reg_num[] = {
 	0x1F
 };
 
+/* Versal MCAP registers display strings */
+static const char *MCAPV2_reg_names[] = {
+	"Ext Capability",
+	"VSEC Header",
+	"Status",
+	"Control",
+	"MCAP RW Adrr register",
+	"MCAP Write Data",
+	"MCAP Read Data",
+};
+
+static const char *MCAPV2_sts_fields[] = {
+	"MCAP Read/Write Status",
+	"MCAP Read Complete",
+	"MCAP FIFO Occupancy",
+	"MCAP Write FIFO Full",
+	"Write FIFO Almost Full",
+	"Write FIFO Almost Empty",
+	"MCAP Write FIFO Empty",
+	"Write FIFO Overflow"
+};
+
+static const char *MCAPV2_ctl_fields[] = {
+	"MCAP Read Enable",
+	"MCAP Write Enable",
+	"MCAP 128-bit Mode",
+	"MCAP Reset",
+	"MCAP AXI Cache",
+	"MCAP AXI Protect"
+};
+
 static int execute_mcap_reset_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
 static int execute_mcap_module_reset_cmd(xvsec_handle_t *xvsec_handle,
@@ -84,6 +116,8 @@ static int execute_mcap_full_reset_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
 static int execute_mcap_data_regs_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
+static int execute_mcap_get_revision_cmd(xvsec_handle_t *xvsec_handle,
+        struct args *args);
 static int execute_mcap_regs_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
 static int execute_mcap_fpga_cfg_regs_cmd(xvsec_handle_t *xvsec_handle,
@@ -94,21 +128,38 @@ static int execute_mcap_fpga_cfg_access_reg_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
 static int execute_mcap_program_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
+static int execute_mcap_access_axi_reg_cmd(xvsec_handle_t *xvsec_handle,
+	struct args *args);
+static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
+	struct args *args);
+static int execute_mcap_file_upload_cmd(xvsec_handle_t *xvsec_handle,
+	struct args *args);
+static int execute_mcap_set_axi_cache_attr_cmd(xvsec_handle_t *xvsec_handle,
+        struct args *args);
+
 
 static void print_mcap_sts_fields(uint32_t val);
 static void print_mcap_ctl_fields(uint32_t val);
 
+static void print_mcapv2_sts_fields(uint32_t val);
+static void print_mcapv2_ctl_fields(uint32_t val);
+
 struct mcap_ops mcap_ops[] = {
-	{MCAP_RESET,			execute_mcap_reset_cmd              },
-	{MCAP_MODULE_RESET,		execute_mcap_module_reset_cmd       },
-	{MCAP_FULL_RESET,		execute_mcap_full_reset_cmd         },
-	{MCAP_GET_DATA_REGS,		execute_mcap_data_regs_cmd          },
-	{MCAP_GET_REGS,			execute_mcap_regs_cmd               },
-	{MCAP_GET_FPGA_CFG_REGS,	execute_mcap_fpga_cfg_regs_cmd      },
-	{MCAP_ACCESS_REG,		execute_mcap_access_reg_cmd         },
-	{MCAP_ACCESS_FPGA_CFG_REG,	execute_mcap_fpga_cfg_access_reg_cmd},
-	{MCAP_PROGRAM_BITSTREAM,	execute_mcap_program_cmd            },
-	{MCAP_OP_END,			NULL                                }
+	{MCAP_RESET,                execute_mcap_reset_cmd                },
+	{MCAP_MODULE_RESET,         execute_mcap_module_reset_cmd         },
+	{MCAP_FULL_RESET,           execute_mcap_full_reset_cmd           },
+	{MCAP_GET_REVISION,         execute_mcap_get_revision_cmd         },
+	{MCAP_GET_DATA_REGS,        execute_mcap_data_regs_cmd            },
+	{MCAP_GET_REGS,             execute_mcap_regs_cmd                 },
+	{MCAP_GET_FPGA_CFG_REGS,    execute_mcap_fpga_cfg_regs_cmd        },
+	{MCAP_ACCESS_REG,           execute_mcap_access_reg_cmd           },
+	{MCAP_ACCESS_FPGA_CFG_REG,  execute_mcap_fpga_cfg_access_reg_cmd  },
+	{MCAP_PROGRAM_BITSTREAM,    execute_mcap_program_cmd              },
+	{MCAP_ACCESS_AXI_REG,       execute_mcap_access_axi_reg_cmd       },
+	{MCAP_FILE_DOWNLOAD,        execute_mcap_file_download_cmd        },
+	{MCAP_FILE_UPLOAD,          execute_mcap_file_upload_cmd          },
+	{MCAP_SET_AXI_CACHE_ATTR,   execute_mcap_set_axi_cache_attr_cmd},
+	{MCAP_OP_END,               NULL                                  }
 };
 
 static int execute_mcap_reset_cmd(xvsec_handle_t *xvsec_handle,
@@ -181,6 +232,46 @@ static int execute_mcap_full_reset_cmd(xvsec_handle_t *xvsec_handle,
 	return 0;
 }
 
+
+static int execute_mcap_get_revision_cmd(xvsec_handle_t *xvsec_handle,
+		struct args *args)
+{
+	int ret = 0;
+
+	if(args->rev_id.flag == false)
+		return XVSEC_FAILURE;
+
+	ret = xvsec_mcap_get_revision(xvsec_handle,
+			&args->rev_id.mrev);
+	if(ret < 0)
+	{
+		fprintf(stderr, "xvsec_mcap_get_revision "
+			"failed with error %d(%s) handle : 0x%lX\n",
+			ret, error_codes[-ret], *xvsec_handle);
+	}
+	return ret;
+}
+
+static int execute_mcap_set_axi_cache_attr_cmd(xvsec_handle_t *xvsec_handle,
+		struct args *args)
+{
+	int ret = 0;
+
+	if(args->axi_cache_settings.flag  == false)
+		return XVSEC_FAILURE;
+
+	ret = xvsec_mcap_set_axi_cache_attr(xvsec_handle,
+			&args->axi_cache_settings.attr);
+	if(ret < 0)
+	{
+		fprintf(stderr, "xvsec_mcap_set_axi_cache_attr "
+				"failed with error %d(%s) handle : 0x%lX\n",
+				ret, error_codes[-ret], *xvsec_handle);
+	}
+	return ret;
+}
+
+
 static int execute_mcap_data_regs_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args)
 {
@@ -236,17 +327,42 @@ static int execute_mcap_regs_cmd(xvsec_handle_t *xvsec_handle,
 	else
 	{
 		reg_count = sizeof(args->reg_dump.mcap_regs)/sizeof(uint32_t);
-		reg_value = (uint32_t *)&args->reg_dump.mcap_regs;
+		if(args->rev_id.mrev == XVSEC_MCAP_VERSAL) {
+			reg_count = sizeof(args->reg_dump.mcap_regs.v2)/sizeof(uint32_t);
+			reg_value = (uint32_t *)&args->reg_dump.mcap_regs.v2 ;
+		}
+		else {
+			reg_count = sizeof(args->reg_dump.mcap_regs.v1)/sizeof(uint32_t);
+			reg_value = (uint32_t *)&args->reg_dump.mcap_regs.v1;
+		}
+
 		fprintf(stdout, "BYTE OFFSET\tRegister Name\t\tData Value\n");
 		fprintf(stdout, "-----------\t----------------\t----------\n");
-		for(index = 0; index < reg_count; index++)
+
+		if(args->rev_id.mrev == XVSEC_MCAP_VERSAL)
 		{
-			fprintf(stdout, "0x%04X\t\t%-20s\t0x%08X\n",
-				index*4, MCAP_reg_names[index], reg_value[index]);
-			if((index*4) == MCAP_STS_REG_OFFSET)
-				print_mcap_sts_fields(reg_value[index]);
-			if((index*4) == MCAP_CTL_REG_OFFSET)
-				print_mcap_ctl_fields(reg_value[index]);
+			for(index = 0; index < reg_count; index++)
+			{
+				fprintf(stdout, "0x%04X\t\t%-20s\t0x%08X\n",
+					index*4, MCAPV2_reg_names[index], reg_value[index]);
+				if((index*4) == MCAPV2_STS_REG_OFFSET)
+					print_mcapv2_sts_fields(reg_value[index]);
+				if((index*4) == MCAPV2_CTL_REG_OFFSET)
+					print_mcapv2_ctl_fields(reg_value[index]);
+			}
+		}
+		else
+		{
+			for(index = 0; index < reg_count; index++)
+			{
+		 			
+				fprintf(stdout, "0x%04X\t\t%-20s\t0x%08X\n",
+					index*4, MCAP_reg_names[index], reg_value[index]);
+				if((index*4) == MCAP_STS_REG_OFFSET)
+					print_mcap_sts_fields(reg_value[index]);
+				if((index*4) == MCAP_CTL_REG_OFFSET)
+					print_mcap_ctl_fields(reg_value[index]);
+			}	
 		}
 	}
 	return 0;
@@ -274,7 +390,7 @@ static int execute_mcap_fpga_cfg_regs_cmd(xvsec_handle_t *xvsec_handle,
 	else
 	{
 		reg_count = sizeof(fpga_cfg_reg_num)/sizeof(uint32_t);
-		reg_value = (uint32_t *)&args->fpga_reg_dump.fpga_cfg_regs;
+		reg_value = (uint32_t *)&args->fpga_reg_dump.fpga_cfg_regs.v1;  /* fpga cfg for US/US+ devices */
 
 		fprintf(stdout, "FPGA CFG Registers Dump "
 			"(see Configuration User Guide for "
@@ -343,25 +459,31 @@ static int execute_mcap_access_reg_cmd(xvsec_handle_t *xvsec_handle,
 	}
 	else
 	{
+		char* dstr = NULL;
+		if(args->rev_id.mrev == XVSEC_MCAP_VERSAL)
+			dstr = (char*)MCAPV2_reg_names[args->access_reg.offset/4];
+		else
+			dstr = (char*)MCAP_reg_names[args->access_reg.offset/4];
+
 		if(access == ACCESS_WORD)
 		{
 			snprintf(print_buf, 200, "0x%04X\t\t%-20s\t0x%08X\n",
 				args->access_reg.offset,
-				MCAP_reg_names[args->access_reg.offset/4],
+				dstr,
 				args->access_reg.data);
 		}
 		else if(access == ACCESS_SHORT)
 		{
 			snprintf(print_buf, 200, "0x%04X\t\t%-20s\t0x%04X\n",
 				args->access_reg.offset,
-				MCAP_reg_names[args->access_reg.offset/4],
+				dstr,
 				args->access_reg.data);
 		}
 		else if(access == ACCESS_BYTE)
 		{
 			snprintf(print_buf, 200, "0x%04X\t\t%-20s\t0x%02X\n",
 				args->access_reg.offset,
-				MCAP_reg_names[args->access_reg.offset/4],
+				dstr,
 				args->access_reg.data);
 		}
 		fprintf(stdout, "BYTE OFFSET\tRegister Name\t\tData Value\n");
@@ -435,7 +557,46 @@ static int execute_mcap_fpga_cfg_access_reg_cmd(xvsec_handle_t *xvsec_handle,
 			args->fpga_access_reg.data);
 	}
 CLEANUP:
-	return 0;
+	return ret;
+}
+
+
+static int execute_mcap_access_axi_reg_cmd(xvsec_handle_t *xvsec_handle,
+		struct args *args)
+{
+	int ret = 0;
+
+	if(args->access_axi_reg.flag == false)
+		return XVSEC_FAILURE;
+
+	ret = xvsec_mcap_access_axi_reg(
+			xvsec_handle, args->access_axi_reg.address,
+			(void *)&args->access_axi_reg.data,
+			args->access_axi_reg.write, args->access_axi_reg.mode);
+
+	if(ret < 0)
+	{
+		fprintf(stderr,
+			"xvsec_mcap_access_axi_reg "
+			"failed with error %d(%s) handle : 0x%lX\n",
+			ret, error_codes[-ret], *xvsec_handle);
+
+		goto CLEANUP;
+	}
+
+	fprintf(stdout, "axi address:\tData Value\n");
+	fprintf(stdout, "------------\t----------\n");
+
+	fprintf(stdout, "0x%08X:\t0x%08X\n", args->access_axi_reg.address, args->access_axi_reg.data[0]);
+	if((args->access_axi_reg.write == true) && (args->access_axi_reg.mode == XVSEC_MCAP_AXI_MODE_128B))
+	{
+		fprintf(stdout, "0x%08X:\t0x%08X\n", args->access_axi_reg.address + 0x4, args->access_axi_reg.data[1]);
+		fprintf(stdout, "0x%08X:\t0x%08X\n", args->access_axi_reg.address + 0x8, args->access_axi_reg.data[2]);
+		fprintf(stdout, "0x%08X:\t0x%08X\n", args->access_axi_reg.address + 0xc, args->access_axi_reg.data[3]);
+	}
+
+CLEANUP:
+	return ret;
 }
 
 static int execute_mcap_program_cmd(xvsec_handle_t *xvsec_handle,
@@ -470,28 +631,122 @@ static int execute_mcap_program_cmd(xvsec_handle_t *xvsec_handle,
 	return 0;
 }
 
+/* US/US+ registers display strings */
 static void print_mcap_sts_fields(uint32_t val)
 {
 	xvsec_mcap_sts_reg_t *reg = (xvsec_mcap_sts_reg_t*)&val;
 
-	fprintf(stdout, "   bit  0\t%-20s\t%10d\n", MCAP_sts_fields[0], reg->err);
-	fprintf(stdout, "   bit  1\t%-20s\t%10d\n", MCAP_sts_fields[1], reg->eos);
-	fprintf(stdout, "   bit  4\t%-20s\t%10d\n", MCAP_sts_fields[2], reg->read_complete);
-	fprintf(stdout, "   bit 5:7\t%-20s\t%10d\n", MCAP_sts_fields[3], reg->read_count);
-	fprintf(stdout, "   bit  8\t%-20s\t%10d\n", MCAP_sts_fields[4], reg->fifo_ovfl);
-	fprintf(stdout, "   bit 12:15\t%-20s\t%10d\n", MCAP_sts_fields[5], reg->fifo_occu);
-	fprintf(stdout, "   bit 24\t%-20s\t%10d\n", MCAP_sts_fields[6], reg->req4mcap_rel);
+	fprintf(stdout, "   bit  0\t%-20s\t%10d\n", MCAP_sts_fields[0], reg->v1.err);
+	fprintf(stdout, "   bit  1\t%-20s\t%10d\n", MCAP_sts_fields[1], reg->v1.eos);
+	fprintf(stdout, "   bit  4\t%-20s\t%10d\n", MCAP_sts_fields[2], reg->v1.read_complete);
+	fprintf(stdout, "   bit 5:7\t%-20s\t%10d\n", MCAP_sts_fields[3], reg->v1.read_count);
+	fprintf(stdout, "   bit  8\t%-20s\t%10d\n", MCAP_sts_fields[4], reg->v1.fifo_ovfl);
+	fprintf(stdout, "   bit 12:15\t%-20s\t%10d\n", MCAP_sts_fields[5], reg->v1.fifo_occu);
+	fprintf(stdout, "   bit 24\t%-20s\t%10d\n", MCAP_sts_fields[6], reg->v1.req4mcap_rel);
 }
 
 static void print_mcap_ctl_fields(uint32_t val)
 {
 	xvsec_mcap_ctl_reg_t *reg = (xvsec_mcap_ctl_reg_t *)&val;
 
-	fprintf(stdout, "   bit  0\t%-20s\t%10d\n", MCAP_ctl_fields[0], reg->enable);
-	fprintf(stdout, "   bit  1\t%-20s\t%10d\n", MCAP_ctl_fields[1], reg->rd_enable);
-	fprintf(stdout, "   bit  4\t%-20s\t%10d\n", MCAP_ctl_fields[2], reg->reset);
-	fprintf(stdout, "   bit  5\t%-20s\t%10d\n", MCAP_ctl_fields[3], reg->module_reset);
-	fprintf(stdout, "   bit  8\t%-20s\t%10d\n", MCAP_ctl_fields[4], reg->req4mcap_pcie);
-	fprintf(stdout, "   bit 12\t%-20s\t%10d\n", MCAP_ctl_fields[5], reg->cfg_desgn_sw);
-	fprintf(stdout, "   bit 16\t%-20s\t%10d\n", MCAP_ctl_fields[6], reg->wr_reg_enable);
+	fprintf(stdout, "   bit  0\t%-20s\t%10d\n", MCAP_ctl_fields[0], reg->v1.enable);
+	fprintf(stdout, "   bit  1\t%-20s\t%10d\n", MCAP_ctl_fields[1], reg->v1.rd_enable);
+	fprintf(stdout, "   bit  4\t%-20s\t%10d\n", MCAP_ctl_fields[2], reg->v1.reset);
+	fprintf(stdout, "   bit  5\t%-20s\t%10d\n", MCAP_ctl_fields[3], reg->v1.module_reset);
+	fprintf(stdout, "   bit  8\t%-20s\t%10d\n", MCAP_ctl_fields[4], reg->v1.req4mcap_pcie);
+	fprintf(stdout, "   bit 12\t%-20s\t%10d\n", MCAP_ctl_fields[5], reg->v1.cfg_desgn_sw);
+	fprintf(stdout, "   bit 16\t%-20s\t%10d\n", MCAP_ctl_fields[6], reg->v1.wr_reg_enable);
+}
+
+/* Versal MCAP registers display strings */
+static void print_mcapv2_sts_fields(uint32_t val)
+{
+	xvsec_mcap_sts_reg_t *reg = (xvsec_mcap_sts_reg_t*)&val;
+
+	fprintf(stdout, "   bit 5:4\t%-20s\t%10d\n",	MCAPV2_sts_fields[0], reg->v2.rw_status);
+	fprintf(stdout, "   bit  8\t%-20s\t%10d\n",	MCAPV2_sts_fields[1], reg->v2.rd_complete);
+	fprintf(stdout, "   bit 20:16\t%-20s\t%10d\n",	MCAPV2_sts_fields[2], reg->v2.fifo_occupancy);
+	fprintf(stdout, "   bit 21\t%-20s\t%10d\n",	MCAPV2_sts_fields[3], reg->v2.wr_fifo_full);
+	fprintf(stdout, "   bit 22\t%-20s\t%10d\n",	MCAPV2_sts_fields[4], reg->v2.wr_fifo_almost_full);
+	fprintf(stdout, "   bit 23\t%-20s\t%10d\n",	MCAPV2_sts_fields[5], reg->v2.wr_fifo_almost_empty);
+	fprintf(stdout, "   bit 24\t%-20s\t%10d\n",	MCAPV2_sts_fields[6], reg->v2.wr_fifo_empty);
+	fprintf(stdout, "   bit 25\t%-20s\t%10d\n",	MCAPV2_sts_fields[7], reg->v2.wr_fifo_overflow);
+}
+
+static void print_mcapv2_ctl_fields(uint32_t val)
+{
+	xvsec_mcap_ctl_reg_t *reg = (xvsec_mcap_ctl_reg_t *)&val;
+
+	fprintf(stdout, "   bit  0\t%-20s\t%10d\n",     MCAPV2_ctl_fields[0], reg->v2.rd_enable);
+	fprintf(stdout, "   bit  4\t%-20s\t%10d\n",     MCAPV2_ctl_fields[1], reg->v2.wr_enable);
+	fprintf(stdout, "   bit  5\t%-20s\t%10d\n",     MCAPV2_ctl_fields[2], reg->v2.mode);
+	fprintf(stdout, "   bit  8\t%-20s\t%10d\n",     MCAPV2_ctl_fields[3], reg->v2.reset);
+	fprintf(stdout, "   bit  19:16\t%-20s\t%10d\n", MCAPV2_ctl_fields[4], reg->v2.axi_cache);
+	fprintf(stdout, "   bit  22:20\t%-20s\t%10d\n", MCAPV2_ctl_fields[5], reg->v2.axi_protect);
+}
+
+static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
+	struct args *args)
+{
+	int ret = 0;
+	file_operation_status_t  status = XVSEC_MCAP_FILE_OP_FAILED;
+	size_t err_index = 0;
+
+	if(args->download.flag == false)
+		return XVSEC_FAILURE;
+
+	ret = xvsec_mcap_file_download(xvsec_handle,
+		args->download.is_fixed_addr, args->download.is_128b_mode,
+		args->download.file_name, args->download.dev_addr,
+		args->download.tr_mode, &status, &err_index);
+	if(ret < 0)
+	{
+		fprintf(stderr, "xvsec_mcap_file_download "
+			"failed with error %d(%s)\n", ret, error_codes[-ret]);
+
+		if((args->download.tr_mode == XVSEC_MCAP_DATA_TR_MODE_FAST) &&
+				((status == XVSEC_MCAP_FILE_OP_FAIL_SLVERR) ||
+				 (status == XVSEC_MCAP_FILE_OP_FAIL_DECERR) ||
+				 (status == XVSEC_MCAP_FILE_OP_HW_BUSY) ||
+				 (status == XVSEC_MCAP_FILE_OP_FAILED))) {
+			fprintf(stdout, "Please try PDI transfer using download "
+				        "option <tr_mode slow>\n");
+		}
+
+	}
+	else
+	{
+		fprintf(stdout, "File Download successful\n");
+	}
+
+
+	return ret;
+}
+
+static int execute_mcap_file_upload_cmd(xvsec_handle_t *xvsec_handle,
+	struct args *args)
+{
+	int ret = 0;
+	file_operation_status_t  status;
+	size_t err_index;
+
+	if(args->upload.flag == false)
+		return XVSEC_FAILURE;
+
+	ret = xvsec_mcap_file_upload(xvsec_handle,
+			args->upload.is_fixed_addr,args->upload.file_name,
+			args->upload.dev_addr, args->upload.length,
+			&status, &err_index);
+	if(ret < 0)
+	{
+		fprintf(stderr, "xvsec_mcap_file_upload "
+			"failed with error %d(%s)\n", ret, error_codes[-ret]);
+	}
+	else
+	{
+		fprintf(stdout, "File Upload successful\n");
+	}
+
+
+	return ret;
 }
