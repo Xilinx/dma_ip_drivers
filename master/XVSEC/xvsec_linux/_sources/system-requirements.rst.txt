@@ -1,0 +1,44 @@
+.. _sys_req:
+
+System Requirements
+===================
+
+Xilinx Accelerator Cards
+------------------------
+
+1. US/US+ devices
+
+- VCU1525
+
+2. S80 Versal devices
+
+- VCK5000
+
+Host Platform
+-------------
+
+x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 16GB RAM
+
+
+Host System Configuration
+-------------------------
+
+Linux XVSEC Driver release is verified on following Host system configuration
+
++--------------------------+-------------------------------------------------------------+
+| Host System              | Configuration Details                                       |
++==========================+=============================================================+
+| Operating System         | Ubuntu 18.04 LTS, Ubuntu 16.04 LTS                          |
++--------------------------+-------------------------------------------------------------+
+| Linux Kernel             | 4.15.0-23-generic, 4.4.0-93-generic                         |
++--------------------------+-------------------------------------------------------------+
+| RAM                      | 16GB                                                        |
++--------------------------+-------------------------------------------------------------+
+
+The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.
+
+- Timer Functions
+- PCIe Functions
+- Kernel Memory functions
+- Memory and GFP Functions
+

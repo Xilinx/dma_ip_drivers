@@ -1,0 +1,185 @@
+.. _usr_app:
+
+User Application
+================
+
+“xvsecctl” command options
+--------------------------
+
+xvsecctl support common VSEC functionality and MCAP functionality.
+This section describes the details of each option provided for xvsecctl commands
+
++--------------------------+---------------------------+---------------------------------+
+| **Formt**                | **Parameter**             | **Description/Range**           +
++==========================+===========================+=================================+
+| -h/H                     | --                        | Prints the usage of the tool    |
++--------------------------+---------------------------+---------------------------------+
+| -b <bus number>          | Bus number                | PCI bus number                  |
++--------------------------+---------------------------+---------------------------------+
+| -F <device number>       | Device number             | Device number in the PCI bus    |
++--------------------------+---------------------------+---------------------------------+
+| -l                       | --                        | List the supported VSECs        |
++--------------------------+---------------------------+---------------------------------+
+| -v                       | --                        | Prints the verbose information  |
+|                          |                           | about the device                |
++--------------------------+---------------------------+---------------------------------+
+| -c <capability ID>       | Capability Identifier     | This ID can be identified from  |
++--------------------------+---------------------------+---------------------------------+
+|**US/US+ MCAP Specific Options:**                                                       |
++--------------------------+---------------------------+---------------------------------+
+| -r                       | --                        | MCAP Option to reset the        |
+|                          |                           | configuration logic area        |
++--------------------------+---------------------------+---------------------------------+
+| -m                       | --                        | MCAP option to reset            |
+|                          |                           | the MCAP module                 |
++--------------------------+---------------------------+---------------------------------+
+| -f                       | --                        | MCAP option to reset both       |
+|                          |                           | configuration logic and         |
+|                          |                           | MCAP module                     |
++--------------------------+---------------------------+---------------------------------+
+| -D                       | --                        | MCAP option to dump Read Data   |
+|                          |                           | Registers                       |
++--------------------------+---------------------------+---------------------------------+
+| -d                       | --                        | MCAP option to dump the MCAP    |
+|                          |                           | Registers                       |
++--------------------------+---------------------------+---------------------------------+
+| -o                       | --                        | MCAP option to dump FPGA        |
+|                          |                           | configuration registers         |
++--------------------------+---------------------------+---------------------------------+
+| -a <offset> <access>     | **offset:** MCAP VSEC     | MCAP option to                  |
+| [data]                   | offset                    | Read the data at given          |
+|                          |                           | VSEC offset                     |
+|                          | **access:**               |                                 |
+|                          |                           |                                 |
+|                          | - b -- for byte access    | (or)                            |
+|                          |                           |                                 |
+|                          | - h -- for short access   | Writes the given data at        |
+|                          |                           | given VSEC offset               |
+|                          | - w -- for word access    |                                 |
+|                          |                           |                                 |
+|                          | **data:**                 |                                 |
+|                          | Data to perform write     |                                 |
+|                          | operation /               |                                 |
+|                          | NA to perform read        |                                 |
+|                          | operation                 |                                 |
++--------------------------+---------------------------+---------------------------------+
+| -s <register number>     | **register number:**      | MCAP option to                  |
+| [w] [data]               | Valid FPGA CFG Reg No     | Read the data at given          |
+|                          |                           | register number                 |
+|                          |                           |                                 |
+|                          | **w:**  command which     |                                 |
+|                          | indicates write operation | (or)                            |
+|                          |                           |                                 |
+|                          |                           | Writes the data at given        |
+|                          | **data:**                 | register number with given data |
+|                          | data to write at          |                                 |
+|                          | given register            |                                 |
++--------------------------+---------------------------+---------------------------------+
+| -C <partial clear file>  | **Partial clear file:**   | MCAP option to                  |
+|                          | Clear bitstream file to   | Program the partial clear       |
+|                          | program                   | bitstream                       |
+|                          |                           |                                 |
+|                          | Supported formats are     |                                 |
+|                          | **.bit**, **.bin**,       |                                 |
+|                          | **.rbt**                  |                                 |
+|                          |                           |                                 |
++--------------------------+---------------------------+---------------------------------+
+| -p <bit stream>          | **Bitstream:**            | MCAP option to                  |
+|                          | bitstream file to         | Programs the bitstream          |
+|                          | program                   |                                 |
+|                          |                           |                                 |
+|                          | Supported formats are     |                                 |
+|                          | **.bit**, **.bin**,       |                                 |
+|                          | **.rbt**                  |                                 |
+|                          |                           |                                 |
++--------------------------+---------------------------+---------------------------------+
+|**Versal MCAP Specific Options:**                                                       |
++--------------------------+---------------------------+---------------------------------+
+| -m                       | --                        | Performs Module Reset           |
++--------------------------+---------------------------+---------------------------------+
+| -d                       | --                        | Print the contents of the MCAP  |
+|                          |                           | Registers                       |
++--------------------------+---------------------------+---------------------------------+
+| -p mode <32b/128b>       | **pdi file:**             | Download the specified          |
+| type <fixed/incr>        | pdi file to               | File (.pdi) at given address    |
+|                          | download                  |                                 |
+| <address> <file>         |                           |                                 |
+| [tr_mode <slow/fast>]    | Supported formats are     |                                 |
+|                          | **.pdi**                  |                                 |
+|                          |                           |                                 |
+|                          | **mode <32b>** - 32-bit   |                                 |
+|                          | mode should be used       |                                 |
+|                          |                           |                                 |
+|                          | **mode <128b>** - 128-bit |                                 |
+|                          | mode should be used       |                                 |
+|                          |                           |                                 |
+|                          | **type <fixed>** -        |                                 |
+|                          | Address is fixed          |                                 |
+|                          |                           |                                 |
+|                          | **type <incr>** - Address |                                 |
+|                          | should be incremented     |                                 |
+|                          | based on specified mode   |                                 |
+|                          |                           |                                 |
+|                          | **tr_mode** - optional    |                                 |
+|                          | slow/fast download mode   |                                 |
+|                          | option                    |                                 |
++--------------------------+---------------------------+---------------------------------+
+|                          |                           |                                 |
+| -\t  type <fixed/incr>   | **file:**                 | Read the contents at given      |
+| <address> <len> <file>   | pdi file to upload        | address for the given           |
+|                          |                           | len into given file(*.pdi)      |
+|                          | **type <fixed>** - Address|                                 |
+|                          | is fixed                  |                                 |
+|                          |                           |                                 |
+|                          | **type <incr>**  - Address|                                 |
+|                          | hould be incremented      |                                 |
+|                          | based on specified mode   |                                 |
++--------------------------+---------------------------+---------------------------------+
+| -a <offset> <access>     | **offset:** MCAP VSEC     | MCAP option to                  |
+| [data]                   | offset                    | Read the data at given          |
+|                          |                           | VSEC offset                     |
+|                          | **access:**               |                                 |
+|                          |                           |                                 |
+|                          | - b -- for byte access    | (or)                            |
+|                          |                           |                                 |
+|                          | - h -- for short access   | Writes the given data at        |
+|                          |                           | given VSEC offset               |
+|                          | - w -- for word access    |                                 |
+|                          |                           |                                 |
+|                          | **data:**                 |                                 |
+|                          | Data to perform write     |                                 |
+|                          | operation /               |                                 |
+|                          | NA to perform read        |                                 |
+|                          | operation                 |                                 |
++--------------------------+---------------------------+---------------------------------+
+| -\x  [mode <32b/128b>]   | **[mode <32b/128b>]:**    |                                 |
+| <address> [w [data]]     |                           |                                 |
+|                          | - here mode is valid      |  Access the AXI Registers       |
+|                          |   only for 32b/128b write |                                 |
+|                          |                           |                                 |
+|                          | - Not valid for Read      |                                 |
+|                          |   Operation               |                                 |
+|                          |                           |                                 |
+|                          | **here [w [data]]:**      |                                 |
+|                          |                           |                                 |
+|                          | - Write operation with    |                                 |
+|                          |   data                    |                                 |
+|                          |                           |                                 |
+|                          | - Read Operation if       |                                 |
+|                          |   'w' not given           |                                 |
+|                          |                           |                                 |
++--------------------------+---------------------------+---------------------------------+
+| -\q  [axi_cache <data>   | **axi_cache** valid range |                                 |
+| axi_prot <data>]         | 0 to 15, **axi_prot**     |  Set the AXI cache and          |
+|                          | valid range 0 to 7        |  protections bits               |
+|                          |                           |                                 |
+|                          |                           |                                 |
++--------------------------+---------------------------+---------------------------------+
+
+
+
+Note:
+	- <> is a mandatory parameter to the requested operation
+	- [] is an optional parameter to the requested operation
+	- Except for -p and -C options, all other options are supported one at a time. i.e.,It is not suggested to request two options in a single command, in such scenario only first option will get executed
+

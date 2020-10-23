@@ -1,0 +1,69 @@
+========================
+Xilinx XVSEC Software
+========================
+
+Xilinx Vendor Specific Capabilities(**XVSEC**) are extended features added to
+PCI Express configuration space. Some of these capabilities includes
+MCAP, ZERO VSEC, etc.,
+
+**Media Configuration Access Port(MCAP)**:
+The Media Configuration Access Port (MCAP) is a new configuration interface
+available for UltraScale, UltraScale+ and Versal devices. This interface is integrated
+into the PCI Express hard block and provides access to the FPGA configuration
+logic through the PCI Express hard block when enabled. 
+
+**The XVSEC kernel driver 2020.2.0 Supports**
+ - US/US+ devices (MCAP Rev 0 and 1)
+ - S80 Versal device (MCAP Rev 2)
+
+XVSEC(MCAP) driver can be used with XDMA,
+QDMA, AXI-Bridge and BASE Core configurations, but not dependent on any of them.
+The use of MCAP or other VSEC is typically independent of the DMA or bridge mode.
+In the Future other VSECs may be added by customers.
+
+
+**Xilinx XVSEC Solution consists of**:
+
+**User space utility**:
+ - XVSEC CLI tool to demonstrate vendor specific features and its functionality.
+ - This includes MCAP functionality.
+ - In future, the tool will be expanded with new extended vendor specific capabilities.
+
+**Userspace Library**:
+ - This library provides APIs for all Xilinx PCIe Vendor specific capabilities (Ex: MCAP, Generic VSEC, etc.,).
+
+**Driver Interface**:
+ - XVSEC character driver interface per PCIe device.
+ - XVSEC driver can be loaded independently.
+ - It is also possible to load XVSEC driver integrated with any other Kernel Driver (Ex: XDMA, QDMA, etc.,).
+ - By default one generic char-dev gets created, if driver finds any VSECs supported by it, then it will create a char-dev per VSEC.
+
+ - For eaxmple the system having VCU1525(US+) card connected on bus 0x03 and device number 0x00 will have char dev nodes as below :	
+	
+   - Default generic char device node - **/dev/xvsec0300**
+   - For US+ MCAP specific functionalities - **/dev/xvsec0300_mcap**.
+ - XVSEC kernel driver is able to load and create generic XVSEC device node even in the absense of any MCAP device.
+ - Generic XVSEC device node will provide functionalities like Listing the supported VSECs by HW and
+   Verbose Information of the given device.
+ - XVSEC MCAP device node will provide MCAP related functionalties like to reset the MCAP, configure MCAP,
+   Program the FPGA or upload/download PDI's over AXI interface, etc...
+ - Supports Multiple VSECs on the same device
+ - Supports Multiple devices connected on the same host
+
+- Refer to :ref:`userguide` for more details on the list of supported functionalities.
+
+.. image:: /images/xvsec_linux_driver_architecture.png
+   :align: center
+
+----------------------------------------------------------------------------
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Table of Contents
+
+   system-requirements.rst
+   build.rst
+   userguide.rst
+   devguide.rst
+   user_app.rst

@@ -1,0 +1,53 @@
+*****************************************
+DMA Asynchronous read and write (dma-arw)
+*****************************************
+
+adma-rw is a user application tool provided along with QDMA Windows driver to demonstrate asynchronous DMA read and write operations.
+
+usage: 
+
+::
+
+	PS H:\> dma_arw qdma<N> mode <0 | 1> <DEVNODE> <read|write> <ADDR> [OPTIONS] [DATA]
+
+
+**Parameters**
+
+::
+
+	- qdma<N>   : unique qdma device name (<N> is BBDDF where BB -> PCI Bus No, DD -> PCI Dev No, F -> PCI Fun No)
+	- mode      : 0 : this mode uses ReadFile and WriteFile async implementation
+	            : 1 : this mode uses ReadFileEx and WriteFileEx async implementation
+	- DEVNODE   : One of: queue_mm_ | queue_st_*
+	              where the * is a numeric wildcard (0 - 511for queue).
+	- ADDR      : The target offset address of the read/write operation.
+	              Applicable only for control, user, queue_mm device nodes.
+	              Can be in hex or decimal.
+	- OPTIONS   :
+	              -a set alignment requirement for host-side buffer (default: PAGE_SIZE)
+	              -b open file as binary
+	              -f use contents of file as input or write output into file.
+	              -l length of data to read/write (default: 4 bytes or whole file if '-f' flag is used)
+	- DATA      : Space separated bytes (big endian) in decimal or hex,
+	              e.g.: 17 34 51 68
+	              or:   0x11 0x22 0x33 0x44
+
+Read and Write on MM configured queue
+-------------------------------------
+
+::
+
+	PS H:\> .\dma-arw.exe qdma04000 mode 0 queue_mm_0 read 0 -l 10
+	0
+	Asynchronous Read completed :
+	------------------------------
+	0x0000:  00 00 00 00 00 00 00 00 00 00                       ..........
+	PS H:\> .\dma-arw.exe qdma04000 mode 0 queue_mm_0 write 0 0x11 0x22 0x33 0x44 0x55 0x66
+	0
+	Asynchronous Write completed :
+	------------------------------
+	PS H:\> .\dma-arw.exe qdma04000 mode 0 queue_mm_0 read 0 -l 10
+	0
+	Asynchronous Read completed :
+	------------------------------
+	0x0000:  11 22 33 44 55 66 00 00 00 00                       ."3DUf....
