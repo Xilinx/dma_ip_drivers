@@ -176,11 +176,13 @@ static int xnl_connect(struct xnl_cb *cb, int vf, void (*log_err)(const char *))
 
 	if (vf) {
         	attr->nla_len = strlen(XNL_NAME_VF) + 1 + NLA_HDRLEN;
-        	strcpy((char *)(attr + 1), XNL_NAME_VF);
+            // Use memcpy to avoid a fortify source error
+        	memcpy((char *)(attr + 1), XNL_NAME_VF, strlen(XNL_NAME_VF) + 1);
 
 	} else {
         	attr->nla_len = strlen(XNL_NAME_PF) + 1 + NLA_HDRLEN;
-        	strcpy((char *)(attr + 1), XNL_NAME_PF);
+            // Use memcpy to avoid a fortify source error
+        	memcpy((char *)(attr + 1), XNL_NAME_PF, strlen(XNL_NAME_PF) + 1);
 	}
         hdr->n.nlmsg_len += NLMSG_ALIGN(attr->nla_len);
 
