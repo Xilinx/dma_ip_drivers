@@ -351,7 +351,7 @@ static struct pci_driver pci_driver = {
 	.err_handler = &xdma_err_handler,
 };
 
-static int __init xdma_mod_init(void)
+static int xdma_mod_init(void)
 {
 	int rv;
 
@@ -369,7 +369,7 @@ static int __init xdma_mod_init(void)
 	return pci_register_driver(&pci_driver);
 }
 
-static void __exit xdma_mod_exit(void)
+static void xdma_mod_exit(void)
 {
 	/* unregister this driver from the PCI bus driver */
 	dbg_init("pci_unregister_driver.\n");
