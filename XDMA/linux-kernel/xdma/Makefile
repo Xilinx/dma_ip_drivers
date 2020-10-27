@@ -28,7 +28,7 @@ all :
 
 clean:
 	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) clean
-	@/bin/rm -f *.o.ur-safe
+	@/bin/rm -f *.ko modules.order *.mod.c *.o *.o.ur-safe .*.o.cmd
 
 install: all
 	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) modules_install
