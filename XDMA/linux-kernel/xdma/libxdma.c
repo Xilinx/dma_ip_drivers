@@ -64,14 +64,20 @@ MODULE_PARM_DESC(desc_blen_max,
 #define xlx_wake_up	swake_up_one
 #define xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout_exclusive
+#define xlx_wait_event_interruptible \
+			swait_event_interruptible_exclusive
 #elif HAS_SWAKE_UP
 #define xlx_wake_up	swake_up
 #define xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout
+#define xlx_wait_event_interruptible \
+			swait_event_interruptible
 #else
 #define xlx_wake_up	wake_up_interruptible
 #define xlx_wait_event_interruptible_timeout \
 			wait_event_interruptible_timeout
+#define xlx_wait_event_interruptible \
+			wait_event_interruptible
 #endif
 
 
@@ -3551,10 +3557,13 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			}
 
 		} else {
-			xlx_wait_event_interruptible_timeout(
-				xfer->wq,
+			if (timeout_ms > 0)
+				xlx_wait_event_interruptible_timeout(xfer->wq,
 				(xfer->state != TRANSFER_STATE_SUBMITTED),
 				msecs_to_jiffies(timeout_ms));
+			else
+				xlx_wait_event_interruptible(xfer->wq,
+				(xfer->state != TRANSFER_STATE_SUBMITTED));
 		}
 
 		spin_lock_irqsave(&engine->lock, flags);
@@ -3642,10 +3651,8 @@ unmap_sgl:
 	if (req)
 		xdma_request_free(req);
 
-	if (rv < 0)
-		return rv;
-
-	return done;
+	/* as long as some data is processed, return the count */
+	return done ? done : rv;
 }
 
 ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
@@ -4744,20 +4751,31 @@ static int transfer_monitor_cyclic(struct xdma_engine *engine,
 			dbg_tfr("%s: rx_head=%d,rx_tail=%d, wait ...\n",
 				engine->name, engine->rx_head, engine->rx_tail);
 
-			rc = xlx_wait_event_interruptible_timeout(
-				transfer->wq,
-				(engine->rx_head != engine->rx_tail ||
-				 engine->rx_overrun),
-				msecs_to_jiffies(timeout_ms));
+			if (timeout_ms > 0) 
+				rc = xlx_wait_event_interruptible_timeout(
+					transfer->wq,
+					(engine->rx_head != engine->rx_tail ||
+				 	engine->rx_overrun),
+					msecs_to_jiffies(timeout_ms));
+			else
+				rc = xlx_wait_event_interruptible(
+					transfer->wq,
+					(engine->rx_head != engine->rx_tail ||
+				 	engine->rx_overrun));
 
 			dbg_tfr("%s: wait returns %d, rx %d/%d, overrun %d.\n",
 				engine->name, rc, engine->rx_head,
 				engine->rx_tail, engine->rx_overrun);
 		} else {
-			rc = xlx_wait_event_interruptible_timeout(
-				transfer->wq,
-				engine->eop_found,
-				msecs_to_jiffies(timeout_ms));
+			if (timeout_ms > 0) 
+				rc = xlx_wait_event_interruptible_timeout(
+					transfer->wq,
+					engine->eop_found,
+					msecs_to_jiffies(timeout_ms));
+			else
+				rc = xlx_wait_event_interruptible(
+					transfer->wq,
+					engine->eop_found);
 
 			dbg_tfr("%s: wait returns %d, eop_found %d.\n",
 				engine->name, rc, engine->eop_found);

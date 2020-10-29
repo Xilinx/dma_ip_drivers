@@ -55,7 +55,8 @@
 #define MAGIC_BITSTREAM 0xBBBBBBBBUL
 
 extern unsigned int desc_blen_max;
-extern unsigned int sgdma_timeout;
+extern unsigned int h2c_timeout;
+extern unsigned int c2h_timeout;
 
 struct xdma_cdev {
 	unsigned long magic;		/* structure ID for sanity checks */
