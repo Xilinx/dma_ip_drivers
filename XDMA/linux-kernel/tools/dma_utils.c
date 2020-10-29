@@ -66,23 +66,28 @@ ssize_t read_to_buffer(char *fname, int fd, char *buffer, uint64_t size,
 
 		/* read data from file into memory buffer */
 		rc = read(fd, buf, bytes);
-		if (rc != bytes) {
-			fprintf(stderr, "%s, R off 0x%lx, 0x%lx != 0x%lx.\n",
-				fname, count, rc, bytes);
-				perror("read file");
+		if (rc < 0) {
+			fprintf(stderr, "%s, read 0x%lx @ 0x%lx failed %d.\n",
+				fname, bytes, offset, rc);
+			perror("read file");
 			return -EIO;
 		}
 
-		count += bytes;
+		count += rc;
+		if (rc != bytes) {
+			fprintf(stderr, "%s, read underflow 0x%lx/0x%lx, off 0x%lx.\n",
+				fname, rc, bytes, offset);
+			break;
+		}
+
 		buf += bytes;
 		offset += bytes;
 	}	 
 
-	if (count != size) {
-		fprintf(stderr, "%s, R failed 0x%lx != 0x%lx.\n",
-				fname, count, size);
-		return -EIO;
-	}
+	if (count != size)
+		fprintf(stderr, "%s, read underflow 0x%lx != 0x%lx.\n",
+			fname, count, size);
+
 	return count;
 }
 
@@ -112,23 +117,27 @@ ssize_t write_from_buffer(char *fname, int fd, char *buffer, uint64_t size,
 
 		/* write data to file from memory buffer */
 		rc = write(fd, buf, bytes);
-		if (rc != bytes) {
-			fprintf(stderr, "%s, W off 0x%lx, 0x%lx != 0x%lx.\n",
-				fname, offset, rc, bytes);
-				perror("write file");
+		if (rc < 0) {
+			fprintf(stderr, "%s, write 0x%lx @ 0x%lx failed %d.\n",
+				fname, bytes, offset, rc);
+			perror("write file");
 			return -EIO;
 		}
 
-		count += bytes;
+		count += rc;
+		if (rc != bytes) {
+			fprintf(stderr, "%s, write underflow 0x%lx/0x%lx, off 0x%lx.\n",
+				fname, rc, bytes, offset);
+			break;
+		}
 		buf += bytes;
 		offset += bytes;
 	}	 
 
-	if (count != size) {
-		fprintf(stderr, "%s, R failed 0x%lx != 0x%lx.\n",
-				fname, count, size);
-		return -EIO;
-	}
+	if (count != size)
+		fprintf(stderr, "%s, write underflow 0x%lx != 0x%lx.\n",
+			fname, count, size);
+
 	return count;
 }
 

@@ -46,8 +46,8 @@ static struct option const long_opts[] = {
 };
 
 static int test_dma(char *devname, uint64_t addr, uint64_t aperture, 
-					uint64_t size, uint64_t offset, uint64_t count,
-					char *ofname);
+		uint64_t size, uint64_t offset, uint64_t count,
+		char *ofname);
 static int no_write = 0;
 
 static void usage(const char *name)
@@ -156,8 +156,8 @@ int main(int argc, char *argv[])
 }
 
 static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
-					uint64_t size, uint64_t offset, uint64_t count,
-					char *ofname)
+			uint64_t size, uint64_t offset, uint64_t count,
+			char *ofname)
 {
 	ssize_t rc;
 	uint64_t i;
@@ -170,6 +170,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 	long total_time = 0;
 	float result;
 	float avg_time = 0;
+	int underflow = 0;
 
 	if (fpga_fd < 0) {
                 fprintf(stderr, "unable to open device %s, %d.\n",
@@ -210,20 +211,25 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			char *buf = buffer;
 
 			for (j = 0; j < apt_loop; j++, len -= aperture, buf += aperture) {
-				/* lseek & read data from AXI MM into buffer using SGDMA */
+				uint64_t bytes = (len > aperture) ? aperture : len,
 				rc = read_to_buffer(devname, fpga_fd, buf,
-									(len > aperture) ? aperture : len,
-									addr);
+						bytes, addr);
 				if (rc < 0)
 					goto out;
+
+				if (!underflow && rc < bytes)
+					underflow = 1;
 			}
 		} else {
-			/* lseek & read data from AXI MM into buffer using SGDMA */
 			rc = read_to_buffer(devname, fpga_fd, buffer, size, addr);
 			if (rc < 0)
 				goto out;
+
+			if (!underflow && rc < size)
+				underflow = 1;
 		}
 		clock_gettime(CLOCK_MONOTONIC, &ts_end);
+
 
 		/* subtract the start time from the end time */
 		timespec_sub(&ts_end, &ts_start);
@@ -231,8 +237,8 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 		/* a bit less accurate but side-effects are accounted for */
 		if (verbose)
 		fprintf(stdout,
-			"#%lu: CLOCK_MONOTONIC %ld.%09ld sec. read %ld bytes\n",
-			i, ts_end.tv_sec, ts_end.tv_nsec, size);
+			"#%lu: CLOCK_MONOTONIC %ld.%09ld sec. read %ld/%ld bytes\n",
+			i, ts_end.tv_sec, ts_end.tv_nsec, rc, size);
 
 		/* file argument given? */
 		if ((out_fd >= 0) & (no_write == 0)) {
@@ -242,14 +248,17 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 				goto out;
 		}
 	}
-	avg_time = (float)total_time/(float)count;
-	result = ((float)size)*1000/avg_time;
-	if (verbose)
-	printf("** Avg time device %s, total time %ld nsec, avg_time = %f, size = %lu, BW = %f \n",
-		devname, total_time, avg_time, size, result);
-	printf("** Average BW = %lu, %f\n", size, result);
-	rc = 0;
 
+	if (!underflow) {
+		avg_time = (float)total_time/(float)count;
+		result = ((float)size)*1000/avg_time;
+		if (verbose)
+			printf("** Avg time device %s, total time %ld nsec, avg_time = %f, size = %lu, BW = %f \n",
+				devname, total_time, avg_time, size, result);
+		printf("%s ** Average BW = %lu, %f\n", devname, size, result);
+	}
+
+	rc = 0;
 out:
 	close(fpga_fd);
 	if (out_fd >= 0)

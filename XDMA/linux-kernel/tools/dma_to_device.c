@@ -183,6 +183,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 	long total_time = 0;
 	float result;
 	float avg_time = 0;
+	int underflow = 0;
 
 	if (fpga_fd < 0) {
 		fprintf(stderr, "unable to open device %s, %d.\n",
@@ -243,17 +244,23 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 
 			for (j = 0; j < apt_loop; j++, len -= aperture,
 					buf += aperture) {
+				uint64_t bytes = (len > aperture) ? aperture : len,
 				rc = write_from_buffer(devname, fpga_fd, buf,
-					(len > aperture) ? aperture : len,
-					addr);
+							bytes, addr);
 				if (rc < 0)
 					goto out;
+
+				if (!underflow && rc < bytes)
+					underflow = 1;
 			}
 		} else {
 			rc = write_from_buffer(devname, fpga_fd, buffer, size,
 				      	 	addr);
 			if (rc < 0)
 				goto out;
+
+			if (!underflow && rc < size)
+				underflow = 1;
 		}
 
 		rc = clock_gettime(CLOCK_MONOTONIC, &ts_end);
@@ -273,13 +280,15 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 				goto out;
 		}
 	}
-	avg_time = (float)total_time/(float)count;
-	result = ((float)size)*1000/avg_time;
-	if (verbose)
-	printf("** Avg time device %s, total time %ld nsec, avg_time = %f, size = %lu, BW = %f \n",
-		devname, total_time, avg_time, size, result);
 
-	printf("** Average BW = %lu, %f\n",size, result);
+	if (!underflow) {
+		avg_time = (float)total_time/(float)count;
+		result = ((float)size)*1000/avg_time;
+		if (verbose)
+			printf("** Avg time device %s, total time %ld nsec, avg_time = %f, size = %lu, BW = %f \n",
+			devname, total_time, avg_time, size, result);
+		printf("%s ** Average BW = %lu, %f\n", devname, size, result);
+	}
 	rc = 0;
 
 out:
