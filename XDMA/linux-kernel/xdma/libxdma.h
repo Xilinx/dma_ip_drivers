@@ -508,19 +508,8 @@ struct xdma_engine {
 	/* Members applicable to AXI-ST C2H (cyclic) transfers */
 	struct xdma_result *cyclic_result;
 	dma_addr_t cyclic_result_bus;	/* bus addr for transfer */
-	struct xdma_request_cb *cyclic_req;
-	struct sg_table cyclic_sgt;
 	u8 *perf_buf_virt;
 	dma_addr_t perf_buf_bus; /* bus address */
-
-	u8 eop_found; /* used only for cyclic(rx:c2h) */
-	int eop_count;
-	int rx_tail;	/* follows the HW */
-	int rx_head;	/* where the SW reads from */
-	int rx_overrun;	/* flag if overrun occured */
-
-	/* for copy from cyclic buffer to user buffer */
-	unsigned int user_buffer_index;
 
 	/* Members associated with polled mode support */
 	u8 *poll_mode_addr_virt;	/* virt addr for descriptor writeback */
@@ -681,10 +670,6 @@ struct xdma_transfer *engine_cyclic_stop(struct xdma_engine *engine);
 void enable_perf(struct xdma_engine *engine);
 void get_perf_stats(struct xdma_engine *engine);
 
-int xdma_cyclic_transfer_setup(struct xdma_engine *engine);
-int xdma_cyclic_transfer_teardown(struct xdma_engine *engine);
-ssize_t xdma_engine_read_cyclic(struct xdma_engine *engine,
-		char __user *buf, size_t count, int timeout_ms);
 int engine_addrmode_set(struct xdma_engine *engine, unsigned long arg);
 int engine_service_poll(struct xdma_engine *engine, u32 expected_desc_count);
 #endif /* XDMA_LIB_H */

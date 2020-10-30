@@ -807,11 +807,8 @@ static int char_sgdma_close(struct inode *inode, struct file *file)
 
 	engine = xcdev->engine;
 
-	if (engine->streaming && engine->dir == DMA_FROM_DEVICE) {
+	if (engine->streaming && engine->dir == DMA_FROM_DEVICE)
 		engine->device_open = 0;
-		if (engine->cyclic_req)
-			return xdma_cyclic_transfer_teardown(engine);
-	}
 
 	return 0;
 }
