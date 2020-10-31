@@ -22,7 +22,7 @@
 
 #define DRV_MOD_MAJOR		2020
 #define DRV_MOD_MINOR		1
-#define DRV_MOD_PATCHLEVEL	08
+#define DRV_MOD_PATCHLEVEL	8
 
 #define DRV_MODULE_VERSION      \
 	__stringify(DRV_MOD_MAJOR) "." \
