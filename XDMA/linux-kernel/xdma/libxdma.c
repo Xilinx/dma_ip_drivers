@@ -95,12 +95,20 @@ static DEFINE_SPINLOCK(xdev_rcu_lock);
 #define list_last_entry(ptr, type, member) list_entry((ptr)->prev, type, member)
 #endif
 
-static inline void xdev_list_add(struct xdma_dev *xdev)
+static inline int xdev_list_add(struct xdma_dev *xdev)
 {
 	mutex_lock(&xdev_mutex);
-	if (list_empty(&xdev_list))
+	if (list_empty(&xdev_list)) {
 		xdev->idx = 0;
-	else {
+		if (poll_mode) {
+			int rv = xdma_threads_create(xdev->h2c_channel_max +
+					xdev->c2h_channel_max);
+			if (rv < 0) {
+				mutex_unlock(&xdev_mutex);
+				return rv;
+			}
+		}
+	} else {
 		struct xdma_dev *last;
 
 		last = list_last_entry(&xdev_list, struct xdma_dev, list_head);
@@ -115,6 +123,8 @@ static inline void xdev_list_add(struct xdma_dev *xdev)
 	spin_lock(&xdev_rcu_lock);
 	list_add_tail_rcu(&xdev->rcu_node, &xdev_rcu_list);
 	spin_unlock(&xdev_rcu_lock);
+
+	return 0;
 }
 
 #undef list_last_entry
@@ -123,6 +133,8 @@ static inline void xdev_list_remove(struct xdma_dev *xdev)
 {
 	mutex_lock(&xdev_mutex);
 	list_del(&xdev->list_head);
+	if (poll_mode && list_empty(&xdev_list))
+		xdma_threads_destroy();
 	mutex_unlock(&xdev_mutex);
 
 	spin_lock(&xdev_rcu_lock);
@@ -526,6 +538,10 @@ static int xdma_engine_stop(struct xdma_engine *engine)
 	}
 	dbg_tfr("%s(engine=%p)\n", __func__, engine);
 
+	if (enable_credit_mp && engine->streaming &&
+	    engine->dir == DMA_FROM_DEVICE)
+		write_register(0, &engine->sgdma_regs->credits, 0);
+
 	w = 0;
 	w |= (u32)XDMA_CTRL_IE_DESC_ALIGN_MISMATCH;
 	w |= (u32)XDMA_CTRL_IE_MAGIC_STOPPED;
@@ -871,8 +887,9 @@ static int engine_err_handle(struct xdma_engine *engine,
 	if (engine->status & XDMA_STAT_BUSY) {
 		value = read_register(&engine->regs->status);
 		if ((value & XDMA_STAT_BUSY))
-			printk_ratelimited(KERN_INFO "%s has errors but is still BUSY\n",
-				engine->name);
+			printk_ratelimited(KERN_INFO
+					"%s has errors but is still BUSY\n",
+					engine->name);
 	}
 
 	printk_ratelimited(KERN_INFO "%s, s 0x%x, aborted xfer 0x%p, cmpl %d/%d\n",
@@ -908,6 +925,7 @@ engine_service_final_transfer(struct xdma_engine *engine,
 			*pdesc_completed);
 		return NULL;
 	}
+
 	if (((engine->dir == DMA_FROM_DEVICE) &&
 	     (engine->status & XDMA_STAT_C2H_ERR_MASK)) ||
 	    ((engine->dir == DMA_TO_DEVICE) &&
@@ -925,10 +943,42 @@ engine_service_final_transfer(struct xdma_engine *engine,
 
 	/* the engine stopped on current transfer? */
 	if (*pdesc_completed < transfer->desc_num) {
-		transfer->state = TRANSFER_STATE_FAILED;
-		pr_info("%s, xfer 0x%p, stopped half-way, %d/%d.\n",
-			engine->name, transfer, *pdesc_completed,
-			transfer->desc_num);
+		if (engine->eop_flush) {
+			/* check if eop received */
+			struct xdma_result *result = transfer->res_virt;
+			int i;
+			int max = *pdesc_completed;
+
+			for (i = 0; i < max; i++) {
+				if ((result[i].status & RX_STATUS_EOP) != 0) {
+					transfer->flags |=
+						XFER_FLAG_ST_C2H_EOP_RCVED;
+					break;
+				}
+			}
+
+			transfer->desc_cmpl += *pdesc_completed;
+			if (!(transfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED)) {
+				return NULL;
+			}
+
+			/* mark transfer as successfully completed */
+			engine_service_shutdown(engine);
+
+			transfer->state = TRANSFER_STATE_COMPLETED;
+
+			engine->desc_dequeued += transfer->desc_cmpl;
+
+		} else {
+			transfer->state = TRANSFER_STATE_FAILED;
+			pr_info("%s, xfer 0x%p, stopped half-way, %d/%d.\n",
+				engine->name, transfer, *pdesc_completed,
+				transfer->desc_num);
+
+			/* add dequeued number of descriptors during this run */
+			engine->desc_dequeued += transfer->desc_num;
+			transfer->desc_cmpl = *pdesc_completed;
+		}
 	} else {
 		dbg_tfr("engine %s completed transfer\n", engine->name);
 		dbg_tfr("Completed transfer ID = 0x%p\n", transfer);
@@ -944,13 +994,14 @@ engine_service_final_transfer(struct xdma_engine *engine,
 		}
 		/* mark transfer as successfully completed */
 		transfer->state = TRANSFER_STATE_COMPLETED;
+		transfer->desc_cmpl = transfer->desc_num;
+		/* add dequeued number of descriptors during this run */
+		engine->desc_dequeued += transfer->desc_num;
 	}
 
 transfer_del:
 	/* remove completed transfer from list */
 	list_del(engine->transfer_list.next);
-	/* add to dequeued number of descriptors during this run */
-	engine->desc_dequeued += transfer->desc_num;
 
 	/*
 	 * Complete transfer - sets transfer to NULL if an asynchronous
@@ -1021,13 +1072,8 @@ static int engine_service_resume(struct xdma_engine *engine)
 			dbg_tfr("no pending transfers, %s engine stays idle.\n",
 				engine->name);
 		}
-	} else {
-		/* engine is still running? */
-		if (list_empty(&engine->transfer_list)) {
-			pr_warn("no queued transfers but %s engine running!\n",
-				engine->name);
-			WARN_ON(1);
-		}
+	} else if (list_empty(&engine->transfer_list)) {
+		engine_service_shutdown(engine);
 	}
 	return 0;
 }
@@ -1046,23 +1092,18 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 	u32 desc_count = desc_writeback & WB_COUNT_MASK;
 	u32 err_flag = desc_writeback & WB_ERR_MASK;
 	int rv = 0;
-	struct xdma_poll_wb *wb_data;
 
 	if (!engine) {
 		pr_err("dma engine NULL\n");
 		return -EINVAL;
 	}
 
-	/* If polling detected an error, signal to the caller */
-	if (err_flag)
-		rv = -1;
-
 	/* Service the engine */
 	if (!engine->running) {
 		dbg_tfr("Engine was not running!!! Clearing status\n");
 		rv = engine_status_read(engine, 1, 0);
 		if (rv < 0) {
-			pr_err("Failed to read engine status\n");
+			pr_err("%s failed to read status\n", engine->name);
 			return rv;
 		}
 		return 0;
@@ -1086,13 +1127,14 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 	 * shut down
 	 */
 	if ((engine->running && !(engine->status & XDMA_STAT_BUSY)) ||
-	    (desc_count != 0)) {
+	    (!engine->eop_flush && desc_count != 0)) {
 		rv = engine_service_shutdown(engine);
 		if (rv < 0) {
 			pr_err("Failed to shutdown engine\n");
 			return rv;
 		}
 	}
+
 	/*
 	 * If called from the ISR, or if an error occurred, the descriptor
 	 * count will be zero.  In this scenario, read the descriptor count
@@ -1101,7 +1143,12 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 	 */
 	if (!desc_count)
 		desc_count = read_register(&engine->regs->completed_desc_count);
-	dbg_tfr("desc_count = %d\n", desc_count);
+	dbg_tfr("%s wb 0x%x, desc_count %u, err %u, dequeued %u.\n",
+		engine->name, desc_writeback, desc_count, err_flag,
+		engine->desc_dequeued);
+
+	if (!desc_count)
+		goto done;
 
 	/* transfers on queue? */
 	if (!list_empty(&engine->transfer_list)) {
@@ -1135,18 +1182,16 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 	 */
 	transfer = engine_service_final_transfer(engine, transfer, &desc_count);
 
-	/* Before starting engine again, clear the writeback data */
-	if (poll_mode) {
-		wb_data = (struct xdma_poll_wb *)engine->poll_mode_addr_virt;
-		wb_data->completed_desc_count = 0;
+	/* Restart the engine following the servicing */
+	if (!engine->eop_flush) {
+		rv = engine_service_resume(engine);
+		if (rv < 0)
+			pr_err("Failed to resume engine\n");
 	}
 
-	/* Restart the engine following the servicing */
-	rv = engine_service_resume(engine);
-	if (rv < 0)
-		pr_err("Failed to resume engine\n");
-
-	return rv;
+done:
+	/* If polling detected an error, signal to the caller */
+	return err_flag ? -1 : 0;
 }
 
 /* engine_service_work */
@@ -1214,6 +1259,9 @@ static u32 engine_service_wb_monitor(struct xdma_engine *engine,
 	while (expected_wb != 0) {
 		desc_wb = wb_data->completed_desc_count;
 
+		if (desc_wb)
+			wb_data->completed_desc_count = 0;
+
 		if (desc_wb & WB_ERR_MASK)
 			break;
 		else if (desc_wb >= expected_wb)
@@ -1248,7 +1296,6 @@ static u32 engine_service_wb_monitor(struct xdma_engine *engine,
 int engine_service_poll(struct xdma_engine *engine,
 			       u32 expected_desc_count)
 {
-	struct xdma_poll_wb *writeback_data;
 	u32 desc_wb = 0;
 	unsigned long flags;
 	int rv = 0;
@@ -1264,13 +1311,6 @@ int engine_service_poll(struct xdma_engine *engine,
 		return -EINVAL;
 	}
 
-	writeback_data = (struct xdma_poll_wb *)engine->poll_mode_addr_virt;
-
-	if ((expected_desc_count & WB_COUNT_MASK) != expected_desc_count) {
-		dbg_tfr("Queued descriptor count is larger than supported\n");
-		return -1;
-	}
-
 	/*
 	 * Poll the writeback location for the expected number of
 	 * descriptors / error events This loop is skipped for cyclic mode,
@@ -1279,6 +1319,8 @@ int engine_service_poll(struct xdma_engine *engine,
 	 */
 
 	desc_wb = engine_service_wb_monitor(engine, expected_desc_count);
+	if (!desc_wb)
+		return 0;
 
 	spin_lock_irqsave(&engine->lock, flags);
 	dbg_tfr("%s service.\n", engine->name);
@@ -2957,6 +2999,14 @@ static int transfer_init(struct xdma_engine *engine,
 	control |= XDMA_DESC_COMPLETED;
 	xdma_desc_control_set(xfer->desc_virt + last, control);
 
+	if (engine->eop_flush) {
+		for (i = 0; i < last; i++)
+			xdma_desc_control_set(xfer->desc_virt + i,
+					XDMA_DESC_COMPLETED);
+		xfer->desc_cmpl_th = 1;
+	} else
+		xfer->desc_cmpl_th = desc_max;
+
 	xfer->desc_num = desc_max;
 	engine->desc_idx = (engine->desc_idx + desc_max) %
 					XDMA_TRANSFER_MAX_DESC;
@@ -3101,7 +3151,6 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 	int nents;
 	enum dma_data_direction dir = write ? DMA_TO_DEVICE : DMA_FROM_DEVICE;
 	struct xdma_request_cb *req = NULL;
-	struct xdma_result *result;
 
 	if (!dev_hndl)
 		return -EINVAL;
@@ -3213,34 +3262,16 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			goto unmap_sgl;
 		}
 
-		/*
-		 * When polling, determine how many descriptors have been queued
-		 * on the engine to determine the writeback value expected
-		 */
-		if (poll_mode) {
-			unsigned int desc_count;
+		if (engine->cmplthp)
+			xdma_kthread_wakeup(engine->cmplthp);
 
-			spin_lock_irqsave(&engine->lock, flags);
-			desc_count = xfer->desc_num;
-			spin_unlock_irqrestore(&engine->lock, flags);
-			dbg_tfr("%s poll desc_count=%d\n", engine->name,
-				desc_count);
-			rv = engine_service_poll(engine, desc_count);
-			if (rv < 0) {
-				mutex_unlock(&engine->desc_lock);
-				pr_err("Failed to service polling\n");
-				goto unmap_sgl;
-			}
-
-		} else {
-			if (timeout_ms > 0)
-				xlx_wait_event_interruptible_timeout(xfer->wq,
+		if (timeout_ms > 0)
+			xlx_wait_event_interruptible_timeout(xfer->wq,
 				(xfer->state != TRANSFER_STATE_SUBMITTED),
 				msecs_to_jiffies(timeout_ms));
-			else
-				xlx_wait_event_interruptible(xfer->wq,
+		else
+			xlx_wait_event_interruptible(xfer->wq,
 				(xfer->state != TRANSFER_STATE_SUBMITTED));
-		}
 
 		spin_lock_irqsave(&engine->lock, flags);
 
@@ -3248,8 +3279,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 		case TRANSFER_STATE_COMPLETED:
 			spin_unlock_irqrestore(&engine->lock, flags);
 
-			result = xfer->res_virt;
-
+			rv = 0;
 			dbg_tfr("transfer %p, %u, ep 0x%llx compl, +%lu.\n",
 				xfer, xfer->len, req->ep_addr - xfer->len,
 				done);
@@ -3257,12 +3287,17 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			/* For C2H streaming use writeback results */
 			if (engine->streaming &&
 			    engine->dir == DMA_FROM_DEVICE) {
-				for (i = 0; i < xfer->desc_num; i++)
+				struct xdma_result *result = xfer->res_virt;
+
+				for (i = 0; i < xfer->desc_cmpl; i++)
 					done += result[i].length;
+
+				/* finish the whole request */
+				if (engine->eop_flush)
+					nents = 0;
 			} else
 				done += xfer->len;
 
-			rv = 0;
 			break;
 		case TRANSFER_STATE_FAILED:
 			pr_info("xfer 0x%p,%u, failed, ep 0x%llx.\n", xfer,
@@ -4053,7 +4088,6 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	xdev->c2h_channel_max = *c2h_channel_max;
 
 	xdma_device_flag_set(xdev, XDEV_FLAG_OFFLINE);
-	xdev_list_add(xdev);
 
 	if (xdev->user_max == 0 || xdev->user_max > MAX_USER_IRQ)
 		xdev->user_max = MAX_USER_IRQ;
@@ -4063,6 +4097,10 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	if (xdev->c2h_channel_max == 0 ||
 	    xdev->c2h_channel_max > XDMA_CHANNEL_NUM_MAX)
 		xdev->c2h_channel_max = XDMA_CHANNEL_NUM_MAX;
+
+	rv = xdev_list_add(xdev);
+	if (rv < 0)
+		goto free_xdev;
 
 	rv = pci_enable_device(pdev);
 	if (rv) {
@@ -4145,6 +4183,7 @@ err_regions:
 		pci_disable_device(pdev);
 err_enable:
 	xdev_list_remove(xdev);
+free_xdev:
 	kfree(xdev);
 	return NULL;
 }

@@ -39,7 +39,7 @@ static int xdma_thread_cmpl_status_pend(struct list_head *work_item)
 	unsigned long flags;
 
 	spin_lock_irqsave(&engine->lock, flags);
-		pend = !list_empty(&engine->transfer_list);
+	pend = !list_empty(&engine->transfer_list);
 	spin_unlock_irqrestore(&engine->lock, flags);
 
 	return pend;
@@ -53,11 +53,10 @@ static int xdma_thread_cmpl_status_proc(struct list_head *work_item)
 	engine = list_entry(work_item, struct xdma_engine, cmplthp_list);
 	transfer = list_entry(engine->transfer_list.next, struct xdma_transfer,
 			entry);
-	engine_service_poll(engine, transfer->desc_num);
+	if (transfer)
+		engine_service_poll(engine, transfer->desc_cmpl_th);
 	return 0;
 }
-
-
 
 static inline int xthread_work_pending(struct xdma_kthread *thp)
 {
@@ -66,7 +65,6 @@ static inline int xthread_work_pending(struct xdma_kthread *thp)
 	/* any work items assigned to this thread? */
 	if (list_empty(&thp->work_list))
 		return 0;
-
 
 	/* any work item has pending work to do? */
 	list_for_each_safe(work_item, next, &thp->work_list) {
@@ -100,7 +98,6 @@ static int xthread_main(void *data)
 
 	if (thp->finit)
 		thp->finit(thp);
-
 
 	while (!kthread_should_stop()) {
 
@@ -150,8 +147,10 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 	}
 
 	len = snprintf(thp->name, sizeof(thp->name), "%s%d", name, id);
-	if (len < 0)
+	if (len < 0) {
+		pr_err("thread %d, error in snprintf name %s.\n", id, name);
 		return -EINVAL;
+	}
 
 	thp->id = id;
 
@@ -179,7 +178,6 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 	wake_up_process(thp->task);
 	return 0;
 }
-
 
 int xdma_kthread_stop(struct xdma_kthread *thp)
 {
@@ -234,8 +232,6 @@ void xdma_thread_remove_work(struct xdma_engine *engine)
 		cmpl_thread->work_cnt--;
 		unlock_thread(cmpl_thread);
 	}
-
-
 }
 
 void xdma_thread_add_work(struct xdma_engine *engine)
@@ -275,7 +271,6 @@ void xdma_thread_add_work(struct xdma_engine *engine)
 	spin_lock_irqsave(&engine->lock, flags);
 	engine->cmplthp = thp;
 	spin_unlock_irqrestore(&engine->lock, flags);
-
 }
 
 int xdma_threads_create(unsigned int num_threads)
@@ -289,12 +284,12 @@ int xdma_threads_create(unsigned int num_threads)
 		return 0;
 	}
 
-	pr_info("xdma_threads_create\n");
-
 	cs_threads = kzalloc(num_threads * sizeof(struct xdma_kthread),
 					GFP_KERNEL);
-	if (!cs_threads)
+	if (!cs_threads) {
+		pr_err("OOM, # threads %u.\n", num_threads);
 		return -ENOMEM;
+	}
 
 	/* N dma writeback monitoring threads */
 	thp = cs_threads;

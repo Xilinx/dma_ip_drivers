@@ -93,6 +93,10 @@ static void usage(const char *name)
 	fprintf(stdout, "  -%c (--%s) verbose output\n",
 		long_opts[i].val, long_opts[i].name);
 	i++;
+
+	fprintf(stdout, "\nReturn code:\n");
+	fprintf(stdout, "  0: all bytes were dma'ed successfully\n");
+	fprintf(stdout, "  < 0: error\n\n");
 }
 
 int main(int argc, char *argv[])
@@ -173,6 +177,8 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 {
 	uint64_t i;
 	ssize_t rc;
+	size_t bytes_done = 0;
+	size_t out_offset = 0;
 	uint64_t apt_loop = aperture ? (size + aperture - 1) / aperture : 0;
 	char *buffer = NULL;
 	char *allocated = NULL;
@@ -229,7 +235,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 
 	if (infile_fd >= 0) {
 		rc = read_to_buffer(infname, infile_fd, buffer, size, 0);
-		if (rc < 0)
+		if (rc < 0 || rc < size)
 			goto out;
 	}
 
@@ -242,6 +248,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			uint64_t len = size;
 		       	char *buf = buffer;
 
+			bytes_done = 0;
 			for (j = 0; j < apt_loop; j++, len -= aperture,
 					buf += aperture) {
 				uint64_t bytes = (len > aperture) ? aperture : len,
@@ -250,6 +257,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 				if (rc < 0)
 					goto out;
 
+				bytes_done += rc;
 				if (!underflow && rc < bytes)
 					underflow = 1;
 			}
@@ -259,7 +267,8 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			if (rc < 0)
 				goto out;
 
-			if (!underflow && rc < size)
+			bytes_done = rc;
+			if (!underflow && bytes_done < size)
 				underflow = 1;
 		}
 
@@ -275,9 +284,10 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			
 		if (outfile_fd >= 0) {
 			rc = write_from_buffer(ofname, outfile_fd, buffer,
-						 size, i * size);
-			if (rc < 0)
+						 bytes_done, out_offset);
+			if (rc < 0 || rc < bytes_done)
 				goto out;
+			out_offset += bytes_done;
 		}
 	}
 
@@ -289,7 +299,6 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			devname, total_time, avg_time, size, result);
 		printf("%s ** Average BW = %lu, %f\n", devname, size, result);
 	}
-	rc = 0;
 
 out:
 	close(fpga_fd);
@@ -299,5 +308,8 @@ out:
 		close(outfile_fd);
 	free(allocated);
 
-	return rc;
+	if (rc < 0)
+		return rc;
+	/* treat underflow as error */
+	return underflow ? -EIO : 0;
 }

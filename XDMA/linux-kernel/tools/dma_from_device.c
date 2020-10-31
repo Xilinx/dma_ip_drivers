@@ -40,6 +40,7 @@ static struct option const long_opts[] = {
 	{"offset", required_argument, NULL, 'o'},
 	{"count", required_argument, NULL, 'c'},
 	{"file", required_argument, NULL, 'f'},
+	{"eop_flush", no_argument, NULL, 'e'},
 	{"help", no_argument, NULL, 'h'},
 	{"verbose", no_argument, NULL, 'v'},
 	{0, 0, 0, 0}
@@ -48,7 +49,7 @@ static struct option const long_opts[] = {
 static int test_dma(char *devname, uint64_t addr, uint64_t aperture, 
 		uint64_t size, uint64_t offset, uint64_t count,
 		char *ofname);
-static int no_write = 0;
+static int eop_flush = 0;
 
 static void usage(const char *name)
 {
@@ -80,12 +81,25 @@ static void usage(const char *name)
 		"  -%c (--%s) file to write the data of the transfers\n",
 		long_opts[i].val, long_opts[i].name);
 	i++;
+	fprintf(stdout,
+		 "  -%c (--%s) end dma when ST end-of-packet(eop) is rcved\n",
+		long_opts[i].val, long_opts[i].name);
+	fprintf(stdout,
+		 "\t\t* streaming only, ignored for memory-mapped channels\n");
+	fprintf(stdout,
+		 "\t\t* acutal # of bytes dma'ed could be smaller than specified\n");
+	i++;
 	fprintf(stdout, "  -%c (--%s) print usage help and exit\n",
 		long_opts[i].val, long_opts[i].name);
 	i++;
 	fprintf(stdout, "  -%c (--%s) verbose output\n",
 		long_opts[i].val, long_opts[i].name);
 	i++;
+
+	fprintf(stdout, "\nReturn code:\n");
+	fprintf(stdout, "  0: all bytes were dma'ed successfully\n");
+	fprintf(stdout, "     * with -e set, the bytes dma'ed could be smaller\n");
+	fprintf(stdout, "  < 0: error\n\n");
 }
 
 int main(int argc, char *argv[])
@@ -99,7 +113,7 @@ int main(int argc, char *argv[])
 	uint64_t count = COUNT_DEFAULT;
 	char *ofname = NULL;
 
-	while ((cmd_opt = getopt_long(argc, argv, "vhxc:f:d:a:k:s:o:", long_opts,
+	while ((cmd_opt = getopt_long(argc, argv, "vhec:f:d:a:k:s:o:", long_opts,
 			    NULL)) != -1) {
 		switch (cmd_opt) {
 		case 0:
@@ -133,11 +147,11 @@ int main(int argc, char *argv[])
 			ofname = strdup(optarg);
 			break;
 			/* print usage help and exit */
-    		case 'x':
-			no_write++;
-			break;
 		case 'v':
 			verbose = 1;
+			break;
+		case 'e':
+			eop_flush = 1;
 			break;
 		case 'h':
 		default:
@@ -159,18 +173,29 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			uint64_t size, uint64_t offset, uint64_t count,
 			char *ofname)
 {
-	ssize_t rc;
+	ssize_t rc = 0;
+	size_t out_offset = 0;
+	size_t bytes_done = 0;
 	uint64_t i;
 	uint64_t apt_loop = aperture ? (size + aperture - 1) / aperture : 0;
 	char *buffer = NULL;
 	char *allocated = NULL;
 	struct timespec ts_start, ts_end;
 	int out_fd = -1;
-	int fpga_fd = open(devname, O_RDWR | O_NONBLOCK);
+	int fpga_fd;
 	long total_time = 0;
 	float result;
 	float avg_time = 0;
 	int underflow = 0;
+
+	/*
+	 * use O_TRUNC to indicate to the driver to flush the data up based on
+	 * EOP (end-of-packet), streaming mode only
+	 */
+	if (eop_flush)
+		fpga_fd = open(devname, O_RDWR | O_TRUNC);
+	else
+		fpga_fd = open(devname, O_RDWR);
 
 	if (fpga_fd < 0) {
                 fprintf(stderr, "unable to open device %s, %d.\n",
@@ -210,6 +235,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			uint64_t len = size;
 			char *buf = buffer;
 
+			bytes_done = 0;
 			for (j = 0; j < apt_loop; j++, len -= aperture, buf += aperture) {
 				uint64_t bytes = (len > aperture) ? aperture : len,
 				rc = read_to_buffer(devname, fpga_fd, buf,
@@ -219,13 +245,15 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 
 				if (!underflow && rc < bytes)
 					underflow = 1;
+				bytes_done += rc;
 			}
 		} else {
 			rc = read_to_buffer(devname, fpga_fd, buffer, size, addr);
 			if (rc < 0)
 				goto out;
+			bytes_done = rc;
 
-			if (!underflow && rc < size)
+			if (!underflow && bytes_done < size)
 				underflow = 1;
 		}
 		clock_gettime(CLOCK_MONOTONIC, &ts_end);
@@ -238,14 +266,15 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 		if (verbose)
 		fprintf(stdout,
 			"#%lu: CLOCK_MONOTONIC %ld.%09ld sec. read %ld/%ld bytes\n",
-			i, ts_end.tv_sec, ts_end.tv_nsec, rc, size);
+			i, ts_end.tv_sec, ts_end.tv_nsec, bytes_done, size);
 
 		/* file argument given? */
-		if ((out_fd >= 0) & (no_write == 0)) {
+		if (out_fd >= 0) {
 			rc = write_from_buffer(ofname, out_fd, buffer,
-					 size, i*size);
-			if (rc < 0)
+					 bytes_done, out_offset);
+			if (rc < 0 || rc < bytes_done)
 				goto out;
+			out_offset += bytes_done;
 		}
 	}
 
@@ -256,9 +285,13 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			printf("** Avg time device %s, total time %ld nsec, avg_time = %f, size = %lu, BW = %f \n",
 				devname, total_time, avg_time, size, result);
 		printf("%s ** Average BW = %lu, %f\n", devname, size, result);
-	}
+		rc = 0;
+	} else if (eop_flush) {
+		/* allow underflow with -e option */
+		rc = 0;
+	} else 
+		rc = -EIO;
 
-	rc = 0;
 out:
 	close(fpga_fd);
 	if (out_fd >= 0)

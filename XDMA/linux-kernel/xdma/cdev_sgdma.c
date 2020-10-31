@@ -485,7 +485,6 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 	return -EIOCBQUEUED;
 }
 
-
 static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 				unsigned long count, loff_t pos)
 {
@@ -790,6 +789,8 @@ static int char_sgdma_open(struct inode *inode, struct file *file)
 		if (engine->device_open == 1)
 			return -EBUSY;
 		engine->device_open = 1;
+
+		engine->eop_flush = (file->f_flags & O_TRUNC) ? 1 : 0;
 	}
 
 	return 0;

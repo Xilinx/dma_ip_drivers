@@ -619,8 +619,6 @@ int xdma_cdev_init(void)
 		return -ENOMEM;
 	}
 
-	xdma_threads_create(num_online_cpus());
-
 	return 0;
 }
 
@@ -631,6 +629,4 @@ void xdma_cdev_cleanup(void)
 
 	if (g_xdma_class)
 		class_destroy(g_xdma_class);
-
-	xdma_threads_destroy();
 }

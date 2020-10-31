@@ -431,6 +431,8 @@ struct sw_desc {
 };
 
 /* Describes a (SG DMA) single transfer for the engine */
+#define XFER_FLAG_NEED_UNMAP		0x1
+#define XFER_FLAG_ST_C2H_EOP_RCVED	0x2	/* ST c2h only */ 
 struct xdma_transfer {
 	struct list_head entry;		/* queue of non-completed transfers */
 	struct xdma_desc *desc_virt;	/* virt addr of the 1st descriptor */
@@ -440,6 +442,8 @@ struct xdma_transfer {
 	int desc_adjacent;		/* adjacent descriptors at desc_bus */
 	int desc_num;			/* number of descriptors in transfer */
 	int desc_index;			/* index for 1st desc. in transfer */
+	int desc_cmpl;			/* completed descriptors */
+	int desc_cmpl_th;		/* completed descriptor threshold */
 	enum dma_data_direction dir;
 #if	HAS_SWAKE_UP
 	struct swait_queue_head wq;
@@ -449,7 +453,6 @@ struct xdma_transfer {
 
 	enum transfer_state state;	/* state of the transfer */
 	unsigned int flags;
-#define XFER_FLAG_NEED_UNMAP	0x1
 	int cyclic;			/* flag if transfer is cyclic */
 	int last_in_request;		/* flag if last within request */
 	unsigned int len;
@@ -477,8 +480,6 @@ struct xdma_engine {
 	struct xdma_dev *xdev;	/* parent device */
 	char name[16];		/* name of this engine */
 	int version;		/* version of this engine */
-	//dev_t cdevno;		/* character device major:minor */
-	//struct cdev cdev;	/* character device (embedded struct) */
 
 	/* HW register address offsets */
 	struct engine_regs *regs;		/* Control reg BAR offset */
@@ -488,14 +489,17 @@ struct xdma_engine {
 	/* Engine state, configuration and flags */
 	enum shutdown_state shutdown;	/* engine shutdown mode */
 	enum dma_data_direction dir;
-	int device_open;	/* flag if engine node open, ST mode only */
-	int running;		/* flag if the driver started engine */
-	int non_incr_addr;	/* flag if non-incremental addressing used */
-	int streaming;
-	int addr_align;		/* source/dest alignment in bytes */
-	int len_granularity;	/* transfer length multiple */
-	int addr_bits;		/* HW datapath address width */
-	int channel;		/* engine indices */
+	u8 addr_align;		/* source/dest alignment in bytes */
+	u8 len_granularity;	/* transfer length multiple */
+	u8 addr_bits;		/* HW datapath address width */
+	u8 channel:2;		/* engine indices */
+	u8 streaming:1;
+	u8 device_open:1;	/* flag if engine node open, ST mode only */
+	u8 running:1;		/* flag if the driver started engine */
+	u8 non_incr_addr:1;	/* flag if non-incremental addressing used */
+	u8 eop_flush:1;		/* st c2h only, flush up the data with eop */
+	u8 filler:1;
+
 	int max_extra_adj;	/* descriptor prefetch capability */
 	int desc_dequeued;	/* num descriptors of completed transfers */
 	u32 status;		/* last known status of device */
