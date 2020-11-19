@@ -114,7 +114,7 @@ install-apps:
 	@install -v -m 755 bin/dma-latency $(apps_install_path)
 	@echo "MAN PAGES:"
 	@mkdir -p -m 755 $(docs_install_path)
-	@install -v -m 644 docs/dmactl.8.gz $(docs_install_path)
+	@install -v -m 644 docs/dma-ctl.8.gz $(docs_install_path)
 
 .PHONY: install-dev
 install-dev:
