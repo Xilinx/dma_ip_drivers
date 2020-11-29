@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	target = strtoul(argv[2], 0, 0);
 	printf("address: 0x%08x\n", (unsigned int)target);
 
-	printf("access type: %s\n", argc >= 4 ? "write" : "read");
+	printf("access type: %s\n", argc >= 5 ? "write" : "read");
 
 	/* data given? */
 	if (argc >= 4) {
