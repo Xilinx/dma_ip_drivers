@@ -295,6 +295,8 @@ static void xdma_error_resume(struct pci_dev *pdev)
 	struct xdma_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
 
 	pr_info("dev 0x%p,0x%p.\n", pdev, xpdev);
+	pci_restore_state(pdev);
+	pci_save_state(pdev);
 #if KERNEL_VERSION(5, 7, 0) <= LINUX_VERSION_CODE
 	pci_aer_clear_nonfatal_status(pdev);
 #else
