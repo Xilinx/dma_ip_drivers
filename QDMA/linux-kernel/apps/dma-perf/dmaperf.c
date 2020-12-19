@@ -32,7 +32,7 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
-#include </usr/include/pthread.h>
+#include <pthread.h>
 #include <libaio.h>
 #include <sys/sysinfo.h>
 #include "dmautils.h"
