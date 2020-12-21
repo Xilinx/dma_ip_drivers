@@ -544,7 +544,7 @@ int qdma_identify_bars(struct rte_eth_dev *dev)
 		return -1;
 	}
 
-	/* Find user bar*/
+	/* Find AXI Master Lite(user bar) */
 	ret = dma_priv->hw_access->qdma_get_user_bar(dev,
 			dma_priv->is_vf, dma_priv->func_id, &usr_bar);
 	if ((ret != QDMA_SUCCESS) ||
@@ -556,12 +556,12 @@ int qdma_identify_bars(struct rte_eth_dev *dev)
 				dma_priv->user_bar_idx = 1;
 		} else {
 			dma_priv->user_bar_idx = -1;
-			PMD_DRV_LOG(INFO, "Cannot find User BAR");
+			PMD_DRV_LOG(INFO, "Cannot find AXI Master Lite BAR");
 		}
 	} else
 		dma_priv->user_bar_idx = usr_bar;
 
-	/* Find bypass bar*/
+	/* Find AXI Bridge Master bar(bypass bar) */
 	for (i = 0; i < QDMA_NUM_BARS; i++) {
 		bar_len = pci_dev->mem_resource[i].len;
 		if (!bar_len) /* Bar not enabled ? */
@@ -575,8 +575,9 @@ int qdma_identify_bars(struct rte_eth_dev *dev)
 
 	PMD_DRV_LOG(INFO, "QDMA config bar idx :%d\n",
 			dma_priv->config_bar_idx);
-	PMD_DRV_LOG(INFO, "QDMA user bar idx :%d\n", dma_priv->user_bar_idx);
-	PMD_DRV_LOG(INFO, "QDMA bypass bar idx :%d\n",
+	PMD_DRV_LOG(INFO, "QDMA AXI Master Lite bar idx :%d\n",
+			dma_priv->user_bar_idx);
+	PMD_DRV_LOG(INFO, "QDMA AXI Bridge Master bar idx :%d\n",
 			dma_priv->bypass_bar_idx);
 
 	return 0;
@@ -590,7 +591,7 @@ int qdma_get_hw_version(struct rte_eth_dev *dev)
 	dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
 	ret = dma_priv->hw_access->qdma_get_version(dev,
 			dma_priv->is_vf, &version_info);
-	if (ret != QDMA_SUCCESS)
+	if (ret < 0)
 		return dma_priv->hw_access->qdma_get_error_code(ret);
 
 	dma_priv->rtl_version = version_info.rtl_version;

@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -121,6 +121,9 @@
 #include "testapp.h"
 #include "../../drivers/net/qdma/rte_pmd_qdma.h"
 
+#define ALIGN_TO_WORD_BYTES                  (4)
+#define NUMERICAL_BASE_HEXADECIMAL       (16)
+
 /* Command help */
 struct cmd_help_result {
 	cmdline_fixed_string_t help;
@@ -162,6 +165,8 @@ static void cmd_help_parsed(__attribute__((unused)) void *parsed_result,
 			":To Receive\n"
 			"\treg_dump             <port-id>  "
 			":To dump all the valid registers\n"
+			"\treg_info_read        <port-id> <reg-addr> <num-regs> "
+			":Reads the field info for the specified number of registers\n"
 			"\tqueue_dump           <port-id> <queue-id>  "
 			":To dump the queue-context of a queue-number\n"
 			"\tdesc_dump            <port-id> <queue-id>  "
@@ -475,9 +480,9 @@ static void cmd_obj_reg_read_parsed(void *parsed_result,
 	cmdline_printf(cl, "Read Port:%s, BAR-index:%s, Address:%s\n\n",
 				res->port_id, res->bar_id, res->addr);
 
-	int addr   = strtol(res->addr, NULL, 16);
+	int addr   = strtol(res->addr, NULL, NUMERICAL_BASE_HEXADECIMAL);
 
-	if (addr % 4) {
+	if (addr % ALIGN_TO_WORD_BYTES) {
 		cmdline_printf(cl, "ERROR: Read address must aligned to "
 					"a 4-byte boundary.\n\n");
 	} else {
@@ -540,17 +545,17 @@ static void cmd_obj_reg_write_parsed(void *parsed_result,
 
 	int bar_id = atoi(res->bar_id);
 	int port_id = atoi(res->port_id);
-	int addr   = strtol(res->address, NULL, 16);
+	int addr   = strtol(res->address, NULL, NUMERICAL_BASE_HEXADECIMAL);
 	if (port_id >= num_ports) {
 		cmdline_printf(cl, "Error: port-id:%d not supported\n "
 				"Please enter valid port-id\n", port_id);
 		return;
 	}
-	if (addr % 4) {
+	if (addr % ALIGN_TO_WORD_BYTES) {
 		cmdline_printf(cl, "ERROR: Write address must aligned to a "
 				"4-byte boundary.\n\n");
 	} else{
-		int value  = strtol(res->value, NULL, 16);
+		int value  = strtol(res->value, NULL, NUMERICAL_BASE_HEXADECIMAL);
 		PciWrite(bar_id, addr, value, port_id);
 		int result = PciRead(bar_id, addr, port_id);
 		cmdline_printf(cl, "Read (%d:0x%08x) = 0x%08x\n", port_id, addr,
@@ -1090,6 +1095,67 @@ cmdline_parse_inst_t cmd_obj_reg_dump = {
 
 };
 
+
+/* Command Read Info addr */
+struct cmd_obj_reg_info_read_result {
+	cmdline_fixed_string_t action;
+	cmdline_fixed_string_t port_id;
+	cmdline_fixed_string_t reg_addr;
+	cmdline_fixed_string_t num_regs;
+};
+
+static void cmd_obj_reg_info_read_parsed(void *parsed_result,
+			       struct cmdline *cl,
+			       __attribute__((unused)) void *data)
+{
+	struct cmd_obj_reg_info_read_result *res = parsed_result;
+
+	cmdline_printf(cl, "Read Reg info Port:%s, Address:%s, Num Regs: %s\n\n",
+				res->port_id, res->reg_addr, res->num_regs);
+
+	int reg_addr = strtol(res->reg_addr, NULL, NUMERICAL_BASE_HEXADECIMAL);
+
+	if (reg_addr % ALIGN_TO_WORD_BYTES) {
+		cmdline_printf(cl, "ERROR: Read address must aligned to "
+					"a 4-byte boundary.\n\n");
+	} else {
+		int port_id = atoi(res->port_id);
+		int num_regs = atoi(res->num_regs);
+		if (port_id >= num_ports) {
+			cmdline_printf(cl, "Error: port-id:%d not supported\n "
+					"Please enter valid port-id\n",
+					port_id);
+			return;
+		}
+		rte_pmd_qdma_dbg_reg_info_dump(port_id, num_regs,reg_addr);
+	}
+}
+
+cmdline_parse_token_string_t cmd_obj_action_reg_info_read =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_reg_info_read_result, action,
+					"reg_info_read");
+cmdline_parse_token_string_t cmd_obj_reg_info_read_port_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_reg_info_read_result, port_id, NULL);
+cmdline_parse_token_string_t cmd_obj_reg_info_read_reg_addr =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_reg_info_read_result, reg_addr, NULL);
+cmdline_parse_token_string_t cmd_obj_reg_info_read_num_regs =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_reg_info_read_result, num_regs, NULL);
+
+cmdline_parse_inst_t cmd_obj_reg_info_read = {
+	.f = cmd_obj_reg_info_read_parsed,  /* function to call */
+	.data = NULL,      /* 2nd arg of func */
+	.help_str = "reg_info_read port-id reg-addr",
+	.tokens = {        /* token list, NULL terminated */
+		(void *)&cmd_obj_action_reg_info_read,
+		(void *)&cmd_obj_reg_info_read_port_id,
+		(void *)&cmd_obj_reg_info_read_reg_addr,
+		(void *)&cmd_obj_reg_info_read_num_regs,
+		NULL,
+	},
+
+};
+
+
 /*Command queue-context dump*/
 
 struct cmd_obj_queue_dump_result {
@@ -1297,6 +1363,7 @@ cmdline_parse_ctx_t main_ctx[] = {
 	(cmdline_parse_inst_t *)&cmd_obj_dma_to_device,
 	(cmdline_parse_inst_t *)&cmd_obj_dma_from_device,
 	(cmdline_parse_inst_t *)&cmd_obj_reg_dump,
+	(cmdline_parse_inst_t *)&cmd_obj_reg_info_read,
 	(cmdline_parse_inst_t *)&cmd_obj_queue_dump,
 	(cmdline_parse_inst_t *)&cmd_obj_desc_dump,
 	(cmdline_parse_inst_t *)&cmd_obj_load_cmds,

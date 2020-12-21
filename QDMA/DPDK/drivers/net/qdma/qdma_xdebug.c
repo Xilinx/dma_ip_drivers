@@ -64,6 +64,12 @@ struct xdebug_desc_param {
 	enum rte_pmd_qdma_xdebug_desc_type type;
 };
 
+const char *qdma_desc_eng_mode_info[QDMA_DESC_ENG_MODE_MAX] = {
+	"Internal and Bypass mode",
+	"Bypass only mode",
+	"Internal only mode"
+};
+
 static void print_header(const char *str)
 {
 	xdebug_info("\n\n%s\n\n", str);
@@ -375,9 +381,9 @@ static int qdma_device_dump(uint8_t port_id)
 
 	xdebug_info("\t\t config BAR index         :%x\n",
 			qdma_dev->config_bar_idx);
-	xdebug_info("\t\t user BAR index           :%x\n",
+	xdebug_info("\t\t AXI Master Lite BAR index           :%x\n",
 			qdma_dev->user_bar_idx);
-	xdebug_info("\t\t bypass BAR index         :%x\n",
+	xdebug_info("\t\t AXI Bridge Master BAR index         :%x\n",
 			qdma_dev->bypass_bar_idx);
 	xdebug_info("\t\t qsets enable             :%x\n",
 			qdma_dev->qsets_en);
@@ -427,6 +433,10 @@ static int qdma_device_dump(uint8_t port_id)
 			qdma_dev->dev_cap.mailbox_en);
 	xdebug_info("\t\t Num of MM channels       :%x\n",
 			qdma_dev->dev_cap.mm_channel_max);
+	xdebug_info("\t\t Descriptor engine mode   :%s\n",
+		qdma_desc_eng_mode_info[qdma_dev->dev_cap.desc_eng_mode]);
+	xdebug_info("\t\t Debug mode enable        :%x\n",
+			qdma_dev->dev_cap.debug_mode);
 
 	return 0;
 }
@@ -779,7 +789,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 			for (x = param->start; x < param->end; x++) {
 				uint8_t *rx_bypass =
 						&rx_ring_bypass[x];
-				sprintf(str, "\nDescriptor ID %d\t", x);
+				snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 				rte_hexdump(stdout, str,
 					(const void *)rx_bypass,
 					rxq->bypass_desc_sz);
@@ -793,7 +804,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				for (x = param->start; x < param->end; x++) {
 					struct qdma_ul_st_c2h_desc *rx_st =
 						&rx_ring_st[x];
-					sprintf(str, "\nDescriptor ID %d\t", x);
+					snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 					(const void *)rx_st,
 					sizeof(struct qdma_ul_st_c2h_desc));
@@ -803,7 +815,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 					(struct qdma_ul_mm_desc *)rxq->rx_ring;
 				xdebug_info("\n====== C2H ring descriptors======\n");
 				for (x = param->start; x < param->end; x++) {
-					sprintf(str, "\nDescriptor ID %d\t", x);
+					snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 						(const void *)&rx_ring_mm[x],
 						sizeof(struct qdma_ul_mm_desc));
@@ -847,7 +860,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				uint32_t *cmpt_ring = (uint32_t *)
 					((uint64_t)(rxq->cmpt_ring) +
 					((uint64_t)x * rxq->cmpt_desc_len));
-				sprintf(str, "\nDescriptor ID %d\t", x);
+				snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 				rte_hexdump(stdout, str,
 						(const void *)cmpt_ring,
 						rxq->cmpt_desc_len);
@@ -890,7 +904,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 			for (x = param->start; x < param->end; x++) {
 				uint8_t *tx_bypass =
 					&tx_ring_bypass[x];
-				sprintf(str, "\nDescriptor ID %d\t", x);
+				snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 				rte_hexdump(stdout, str,
 					(const void *)tx_bypass,
 					txq->bypass_desc_sz);
@@ -901,7 +916,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				(struct qdma_ul_st_h2c_desc *)txq->tx_ring;
 				xdebug_info("\n====== H2C ring descriptors=====\n");
 				for (x = param->start; x < param->end; x++) {
-					sprintf(str, "\nDescriptor ID %d\t", x);
+					snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 					(const void *)&qdma_h2c_ring[x],
 					sizeof(struct qdma_ul_st_h2c_desc));
@@ -911,7 +927,8 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 					(struct qdma_ul_mm_desc *)txq->tx_ring;
 				xdebug_info("\n===== H2C ring descriptors=====\n");
 				for (x = param->start; x < param->end; x++) {
-					sprintf(str, "\nDescriptor ID %d\t", x);
+					snprintf(str, sizeof(str),
+						"\nDescriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 						(const void *)&tx_ring_mm[x],
 						sizeof(struct qdma_ul_mm_desc));
@@ -940,6 +957,47 @@ int rte_pmd_qdma_dbg_regdump(uint8_t port_id)
 		xdebug_error("Error dumping Global registers\n");
 		return err;
 	}
+	return 0;
+}
+
+int rte_pmd_qdma_dbg_reg_info_dump(uint8_t port_id,
+	uint32_t num_regs, uint32_t reg_addr)
+{
+	struct rte_eth_dev *dev;
+	struct qdma_pci_dev *qdma_dev;
+	enum qdma_ip_type ip_type;
+	char *buf = NULL;
+	int buflen = QDMA_MAX_BUFLEN;
+	int ret;
+
+	if (port_id >= rte_eth_dev_count_avail()) {
+		xdebug_error("Wrong port id %d\n", port_id);
+		return -EINVAL;
+	}
+
+	dev = &rte_eth_devices[port_id];
+	qdma_dev = dev->data->dev_private;
+	ip_type = (enum qdma_ip_type)qdma_dev->ip_type;
+
+	/*allocate memory for register dump*/
+	buf = (char *)rte_zmalloc("QDMA_DUMP_BUF_REG_INFO", buflen,
+			RTE_CACHE_LINE_SIZE);
+	if (!buf) {
+		xdebug_error("Unable to allocate memory for reg info dump "
+				"size %d\n", buflen);
+		return -ENOMEM;
+	}
+
+	ret = qdma_acc_dump_reg_info(dev, ip_type,
+		reg_addr, num_regs, buf, buflen);
+	if (ret < 0) {
+		xdebug_error("Failed to dump reg field values\n");
+		rte_free(buf);
+		return qdma_get_error_code(ret);
+	}
+	xdebug_info("%s\n", buf);
+	rte_free(buf);
+
 	return 0;
 }
 

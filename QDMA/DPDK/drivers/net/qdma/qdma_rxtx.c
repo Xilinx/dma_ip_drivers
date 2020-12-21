@@ -243,7 +243,8 @@ static int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 		fl_desc = free_cnt;
 
 	if ((id + fl_desc) < (txq->nb_tx_desc - 1)) {
-		for (count = 0; count < fl_desc; count++) {
+		for (count = 0; count < ((uint16_t)fl_desc & 0xFFFF);
+				count++) {
 			rte_pktmbuf_free(txq->sw_ring[id]);
 			txq->sw_ring[id++] = NULL;
 		}
@@ -255,7 +256,8 @@ static int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 		}
 
 		id -= (txq->nb_tx_desc - 1);
-		for (count = 0; count < fl_desc; count++) {
+		for (count = 0; count < ((uint16_t)fl_desc & 0xFFFF);
+				count++) {
 			rte_pktmbuf_free(txq->sw_ring[id]);
 			txq->sw_ring[id++] = NULL;
 		}
@@ -282,7 +284,7 @@ static uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
 		memset(&tx_ring_st_bypass[id * (txq->bypass_desc_sz)],
 				((id  % 255) + 1), txq->bypass_desc_sz);
 
-		sprintf(fln, "q_%u_%s", txq->queue_id,
+		snprintf(fln, sizeof(fln), "q_%u_%s", txq->queue_id,
 				"h2c_desc_data.txt");
 		ofd = open(fln, O_RDWR | O_CREAT | O_APPEND | O_SYNC,
 				0666);
@@ -756,11 +758,13 @@ static struct rte_mbuf *prepare_segmented_packet(struct qdma_rx_queue *rxq,
 	struct rte_mbuf *first_seg = NULL;
 	struct rte_mbuf *last_seg = NULL;
 	uint16_t id = *tail;
+	uint16_t length;
 	uint16_t rx_buff_size = rxq->rx_buff_size;
 
 	do {
 		mb = rxq->sw_ring[id];
 		rxq->sw_ring[id++] = NULL;
+		length = pkt_length;
 
 		if (unlikely(id >= (rxq->nb_rx_desc - 1)))
 			id -= (rxq->nb_rx_desc - 1);
@@ -776,7 +780,7 @@ static struct rte_mbuf *prepare_segmented_packet(struct qdma_rx_queue *rxq,
 		if (first_seg == NULL) {
 			first_seg = mb;
 			first_seg->nb_segs = 1;
-			first_seg->pkt_len = pkt_length;
+			first_seg->pkt_len = length;
 			first_seg->packet_type = 0;
 			first_seg->ol_flags = 0;
 			first_seg->port = rxq->port_id;
@@ -952,7 +956,6 @@ static uint16_t prepare_packets_v(struct qdma_rx_queue *rxq,
 		mb = prepare_single_packet(rxq, count);
 		if (mb)
 			rx_pkts[count_pkts++] = mb;
-		count++;
 	}
 
 	return count_pkts;
@@ -1027,7 +1030,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 	__m128i head_room = _mm_set_epi64x(RTE_PKTMBUF_HEADROOM,
 			RTE_PKTMBUF_HEADROOM);
 
-	for (mbuf_index = 0; mbuf_index < rearm_cnt;
+	for (mbuf_index = 0; mbuf_index < ((uint16_t)rearm_cnt  & 0xFFFF);
 			mbuf_index += RTE_QDMA_DESCS_PER_LOOP,
 			id += RTE_QDMA_DESCS_PER_LOOP) {
 		__m128i vaddr0, vaddr1;
@@ -1099,7 +1102,8 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 			return -1;
 		}
 
-		for (mbuf_index = 0; mbuf_index < rearm_descs;
+		for (mbuf_index = 0;
+				mbuf_index < ((uint16_t)rearm_descs & 0xFFFF);
 				mbuf_index++, id++) {
 			mb = rxq->sw_ring[id];
 			mb->data_off = RTE_PKTMBUF_HEADROOM;

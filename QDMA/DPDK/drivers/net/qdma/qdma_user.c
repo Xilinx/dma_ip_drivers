@@ -111,7 +111,7 @@ int qdma_ul_process_immediate_data_st(void *qhndl, void *cmpt_entry,
 	uint16_t queue_id = 0;
 
 	queue_id = qdma_get_rx_queue_id(qhndl);
-	sprintf(fln, "q_%d_%s", queue_id,
+	snprintf(fln, sizeof(fln), "q_%d_%s", queue_id,
 			"immmediate_data.txt");
 	ofd = open(fln, O_RDWR | O_CREAT | O_APPEND |
 			O_SYNC, 0666);

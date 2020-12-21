@@ -1,24 +1,37 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
+ * BSD LICENSE
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of the copyright holder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LIBQDMA_QDMA_PLATFORM_H_
-#define LIBQDMA_QDMA_PLATFORM_H_
-
-#include "qdma_access_common.h"
-#include "qdma_platform_env.h"
+#ifndef __QDMA_PLATFORM_H_
+#define __QDMA_PLATFORM_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +43,8 @@ extern "C" {
  * Header file *qdma_platform_env.h* defines function signatures that are
  * required to be implemented by platform specific drivers.
  */
+
+#include "qdma_access_common.h"
 
 /*****************************************************************************/
 /**
@@ -132,28 +147,6 @@ void qdma_udelay(uint32_t delay_usec);
 
 /*****************************************************************************/
 /**
- * qdma_hw_error_handler() - function to handle the hardware errors
- *
- * @dev_hndl:   device handle
- * @err_idx: error index
- *
- * Return:	0   - success and < 0 - failure
- *****************************************************************************/
-void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx);
-
-/*****************************************************************************/
-/**
- * qdma_get_device_attr() - function to get the device attributes
- *
- * @dev_hndl:   device handle
- * @dev_cap: pointer to hold the device capabilities
- *
- * Return:	0   - success and < 0 - failure
- *****************************************************************************/
-void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap);
-
-/*****************************************************************************/
-/**
  * qdma_get_hw_access() - function to get the qdma_hw_access
  *
  * @dev_hndl:   device handle
@@ -188,4 +181,4 @@ int qdma_get_err_code(int acc_err_code);
 }
 #endif
 
-#endif /* LIBQDMA_QDMA_PLATFORM_H_ */
+#endif /* __QDMA_PLATFORM_H_ */

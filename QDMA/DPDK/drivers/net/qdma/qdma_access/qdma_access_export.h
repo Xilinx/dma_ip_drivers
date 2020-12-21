@@ -1,27 +1,43 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
+ * BSD LICENSE
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of the copyright holder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QDMA_ACCESS_EXPORT_H_
-#define QDMA_ACCESS_EXPORT_H_
-
-#include "qdma_platform_env.h"
+#ifndef __QDMA_ACCESS_EXPORT_H_
+#define __QDMA_ACCESS_EXPORT_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "qdma_platform_env.h"
 
 /** QDMA Global CSR array size */
 #define QDMA_GLOBAL_CSR_ARRAY_SZ        16
@@ -44,6 +60,12 @@ struct qdma_dev_attributes {
 	uint8_t mm_cmpt_en:1;
 	/** @mailbox_en - Mailbox supported or not? */
 	uint8_t mailbox_en:1;
+	/** @debug_mode - Debug mode is enabled/disabled for IP */
+	uint8_t debug_mode:1;
+	/** @desc_eng_mode - Descriptor Engine mode:
+	 * Internal only/Bypass only/Internal & Bypass
+	 */
+	uint8_t desc_eng_mode:2;
 	/** @mm_channel_max - Num of MM channels */
 	uint8_t mm_channel_max;
 
@@ -202,6 +224,8 @@ enum qdma_vivado_release_id {
 	QDMA_VIVADO_2019_2,
 	/** @QDMA_VIVADO_2020_1 - Vivado version 2020.1  */
 	QDMA_VIVADO_2020_1,
+	/** @QDMA_VIVADO_2020_2 - Vivado version 2020.2  */
+	QDMA_VIVADO_2020_2,
 	/** @QDMA_VIVADO_NONE - Not a valid Vivado version*/
 	QDMA_VIVADO_NONE
 };
@@ -229,137 +253,19 @@ enum qdma_device_type {
 	QDMA_DEVICE_NONE
 };
 
-/**
- * enum qdma_error_idx - qdma errors
- */
-enum qdma_error_idx {
-	/* Descriptor errors */
-	QDMA_DSC_ERR_POISON,
-	QDMA_DSC_ERR_UR_CA,
-	QDMA_DSC_ERR_PARAM,
-	QDMA_DSC_ERR_ADDR,
-	QDMA_DSC_ERR_TAG,
-	QDMA_DSC_ERR_FLR,
-	QDMA_DSC_ERR_TIMEOUT,
-	QDMA_DSC_ERR_DAT_POISON,
-	QDMA_DSC_ERR_FLR_CANCEL,
-	QDMA_DSC_ERR_DMA,
-	QDMA_DSC_ERR_DSC,
-	QDMA_DSC_ERR_RQ_CANCEL,
-	QDMA_DSC_ERR_DBE,
-	QDMA_DSC_ERR_SBE,
-	QDMA_DSC_ERR_ALL,
-
-	/* TRQ Errors */
-	QDMA_TRQ_ERR_UNMAPPED,
-	QDMA_TRQ_ERR_QID_RANGE,
-	QDMA_TRQ_ERR_VF_ACCESS,
-	QDMA_TRQ_ERR_TCP_TIMEOUT,
-	QDMA_TRQ_ERR_ALL,
-
-	/* C2H Errors */
-	QDMA_ST_C2H_ERR_MTY_MISMATCH,
-	QDMA_ST_C2H_ERR_LEN_MISMATCH,
-	QDMA_ST_C2H_ERR_QID_MISMATCH,
-	QDMA_ST_C2H_ERR_DESC_RSP_ERR,
-	QDMA_ST_C2H_ERR_ENG_WPL_DATA_PAR_ERR,
-	QDMA_ST_C2H_ERR_MSI_INT_FAIL,
-	QDMA_ST_C2H_ERR_ERR_DESC_CNT,
-	QDMA_ST_C2H_ERR_PORTID_CTXT_MISMATCH,
-	QDMA_ST_C2H_ERR_PORTID_BYP_IN_MISMATCH,
-	QDMA_ST_C2H_ERR_CMPT_INV_Q_ERR,
-	QDMA_ST_C2H_ERR_CMPT_QFULL_ERR,
-	QDMA_ST_C2H_ERR_CMPT_CIDX_ERR,
-	QDMA_ST_C2H_ERR_CMPT_PRTY_ERR,
-	QDMA_ST_C2H_ERR_ALL,
-
-	/* Fatal Errors */
-	QDMA_ST_FATAL_ERR_MTY_MISMATCH,
-	QDMA_ST_FATAL_ERR_LEN_MISMATCH,
-	QDMA_ST_FATAL_ERR_QID_MISMATCH,
-	QDMA_ST_FATAL_ERR_TIMER_FIFO_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_PFCH_II_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_CMPT_CTXT_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_PFCH_CTXT_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_DESC_REQ_FIFO_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_INT_CTXT_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_CMPT_COAL_DATA_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_TUSER_FIFO_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_QID_FIFO_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_PAYLOAD_FIFO_RAM_RDBE,
-	QDMA_ST_FATAL_ERR_WPL_DATA_PAR,
-	QDMA_ST_FATAL_ERR_ALL,
-
-	/* H2C Errors */
-	QDMA_ST_H2C_ERR_ZERO_LEN_DESC,
-	QDMA_ST_H2C_ERR_CSI_MOP,
-	QDMA_ST_H2C_ERR_NO_DMA_DSC,
-	QDMA_ST_H2C_ERR_SBE,
-	QDMA_ST_H2C_ERR_DBE,
-	QDMA_ST_H2C_ERR_ALL,
-
-	/* Single bit errors */
-	QDMA_SBE_ERR_MI_H2C0_DAT,
-	QDMA_SBE_ERR_MI_C2H0_DAT,
-	QDMA_SBE_ERR_H2C_RD_BRG_DAT,
-	QDMA_SBE_ERR_H2C_WR_BRG_DAT,
-	QDMA_SBE_ERR_C2H_RD_BRG_DAT,
-	QDMA_SBE_ERR_C2H_WR_BRG_DAT,
-	QDMA_SBE_ERR_FUNC_MAP,
-	QDMA_SBE_ERR_DSC_HW_CTXT,
-	QDMA_SBE_ERR_DSC_CRD_RCV,
-	QDMA_SBE_ERR_DSC_SW_CTXT,
-	QDMA_SBE_ERR_DSC_CPLI,
-	QDMA_SBE_ERR_DSC_CPLD,
-	QDMA_SBE_ERR_PASID_CTXT_RAM,
-	QDMA_SBE_ERR_TIMER_FIFO_RAM,
-	QDMA_SBE_ERR_PAYLOAD_FIFO_RAM,
-	QDMA_SBE_ERR_QID_FIFO_RAM,
-	QDMA_SBE_ERR_TUSER_FIFO_RAM,
-	QDMA_SBE_ERR_WRB_COAL_DATA_RAM,
-	QDMA_SBE_ERR_INT_QID2VEC_RAM,
-	QDMA_SBE_ERR_INT_CTXT_RAM,
-	QDMA_SBE_ERR_DESC_REQ_FIFO_RAM,
-	QDMA_SBE_ERR_PFCH_CTXT_RAM,
-	QDMA_SBE_ERR_WRB_CTXT_RAM,
-	QDMA_SBE_ERR_PFCH_LL_RAM,
-	QDMA_SBE_ERR_H2C_PEND_FIFO,
-	QDMA_SBE_ERR_ALL,
-
-	/* Double bit Errors */
-	QDMA_DBE_ERR_MI_H2C0_DAT,
-	QDMA_DBE_ERR_MI_C2H0_DAT,
-	QDMA_DBE_ERR_H2C_RD_BRG_DAT,
-	QDMA_DBE_ERR_H2C_WR_BRG_DAT,
-	QDMA_DBE_ERR_C2H_RD_BRG_DAT,
-	QDMA_DBE_ERR_C2H_WR_BRG_DAT,
-	QDMA_DBE_ERR_FUNC_MAP,
-	QDMA_DBE_ERR_DSC_HW_CTXT,
-	QDMA_DBE_ERR_DSC_CRD_RCV,
-	QDMA_DBE_ERR_DSC_SW_CTXT,
-	QDMA_DBE_ERR_DSC_CPLI,
-	QDMA_DBE_ERR_DSC_CPLD,
-	QDMA_DBE_ERR_PASID_CTXT_RAM,
-	QDMA_DBE_ERR_TIMER_FIFO_RAM,
-	QDMA_DBE_ERR_PAYLOAD_FIFO_RAM,
-	QDMA_DBE_ERR_QID_FIFO_RAM,
-	QDMA_DBE_ERR_TUSER_FIFO_RAM,
-	QDMA_DBE_ERR_WRB_COAL_DATA_RAM,
-	QDMA_DBE_ERR_INT_QID2VEC_RAM,
-	QDMA_DBE_ERR_INT_CTXT_RAM,
-	QDMA_DBE_ERR_DESC_REQ_FIFO_RAM,
-	QDMA_DBE_ERR_PFCH_CTXT_RAM,
-	QDMA_DBE_ERR_WRB_CTXT_RAM,
-	QDMA_DBE_ERR_PFCH_LL_RAM,
-	QDMA_DBE_ERR_H2C_PEND_FIFO,
-	QDMA_DBE_ERR_ALL,
-
-	QDMA_ERRS_ALL
+enum qdma_desc_eng_mode {
+	/** @QDMA_DESC_ENG_INTERNAL_BYPASS - Internal and Bypass mode */
+	QDMA_DESC_ENG_INTERNAL_BYPASS,
+	/** @QDMA_DESC_ENG_BYPASS_ONLY - Only Bypass mode  */
+	QDMA_DESC_ENG_BYPASS_ONLY,
+	/** @QDMA_DESC_ENG_INTERNAL_ONLY - Only Internal mode  */
+	QDMA_DESC_ENG_INTERNAL_ONLY,
+	/** @QDMA_DESC_ENG_MODE_MAX - Max of desc engine modes  */
+	QDMA_DESC_ENG_MODE_MAX
 };
-
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* QDMA_ACCESS_EXPORT_H_ */
+#endif /* __QDMA_ACCESS_EXPORT_H_ */

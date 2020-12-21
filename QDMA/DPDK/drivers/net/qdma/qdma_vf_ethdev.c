@@ -298,7 +298,7 @@ static int qdma_vf_set_qrange(struct rte_eth_dev *dev)
 		return -ENOMEM;
 
 	qdma_mbox_compose_vf_fmap_prog(qdma_dev->func_id,
-					qdma_dev->dev_cap.num_qs,
+					(uint16_t)qdma_dev->qsets_en,
 					(int)qdma_dev->queue_base,
 					m->raw_data);
 	rv = qdma_mbox_msg_send(dev, m, MBOX_OP_RSP_TIMEOUT);
@@ -1105,7 +1105,7 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 		return -EINVAL;
 	}
 
-	/* Store BAR address and length of User BAR */
+	/* Store BAR address and length of AXI Master Lite BAR(user bar)*/
 	if (dma_priv->user_bar_idx >= 0) {
 		baseaddr = (uint8_t *)
 			     pci_dev->mem_resource[dma_priv->user_bar_idx].addr;

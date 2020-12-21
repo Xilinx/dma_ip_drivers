@@ -1,21 +1,41 @@
 /*
  * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
  *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
+ * BSD LICENSE
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * The full GNU General Public License is included in this distribution in
- * the file called "COPYING".
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of the copyright holder nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QDMA_MBOX_PROTOCOL_H_
-#define QDMA_MBOX_PROTOCOL_H_
+#ifndef __QDMA_MBOX_PROTOCOL_H_
+#define __QDMA_MBOX_PROTOCOL_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * DOC: QDMA message box handling interface definitions
@@ -24,9 +44,9 @@
  * signatures exported for QDMA Mbox message handling.
  */
 
-#include "qdma_platform_env.h"
-#include "qdma_access_common.h"
+#include "qdma_platform.h"
 #include "qdma_resource_mgmt.h"
+
 
 #define QDMA_MBOX_VF_ONLINE			(1)
 #define QDMA_MBOX_VF_OFFLINE		(-1)
@@ -154,7 +174,7 @@ void qdma_mbox_hw_init(void *dev_hndl, uint8_t is_vf);
 /**
  * qdma_mbox_pf_rcv_msg_handler(): handles the raw message received in pf
  *
- * @pci_bus_num:  pci bus number
+ * @dma_device_index:  pci bus number
  * @dev_hndl:  device handle
  * @func_id:   own function id
  * @rcv_msg:   received raw message
@@ -162,7 +182,7 @@ void qdma_mbox_hw_init(void *dev_hndl, uint8_t is_vf);
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
-int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
+int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t dma_device_index,
 				 uint16_t func_id, uint32_t *rcv_msg,
 				 uint32_t *resp_msg);
 
@@ -683,4 +703,8 @@ int qdma_mbox_vf_rcv_msg_handler(uint32_t *rcv_msg, uint32_t *resp_msg);
  *****************************************************************************/
 uint8_t qdma_mbox_out_status(void *dev_hndl, uint8_t is_vf);
 
-#endif /* QDMA_MBOX_PROTOCOL_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __QDMA_MBOX_PROTOCOL_H_ */

@@ -120,8 +120,8 @@ static int8_t qdma_get_trigger_mode(enum rte_pmd_qdma_tigger_mode_t mode)
  *
  * @param	port_id : Port ID
  * @param	config_bar_idx : Config BAR index
- * @param	user_bar_idx   : User BAR index
- * @param	bypass_bar_idx : Bypass BAR index
+ * @param	user_bar_idx   : AXI Master Lite BAR(user bar) index
+ * @param	bypass_bar_idx : AXI Bridge Master BAR(bypass bar) index
  *
  * @return	'0' on success and '< 0' on failure.
  *
@@ -1147,6 +1147,8 @@ int rte_pmd_qdma_get_device_capabilities(int port_id,
 	dev_attr->mm_cmpt_en = qdma_dev->dev_cap.mm_cmpt_en;
 	dev_attr->mailbox_en = qdma_dev->dev_cap.mailbox_en;
 	dev_attr->mm_channel_max = qdma_dev->dev_cap.mm_channel_max;
+	dev_attr->debug_mode = qdma_dev->dev_cap.debug_mode;
+	dev_attr->desc_eng_mode = qdma_dev->dev_cap.desc_eng_mode;
 	dev_attr->cmpt_ovf_chk_dis = qdma_dev->dev_cap.cmpt_ovf_chk_dis;
 	dev_attr->sw_desc_64b = qdma_dev->dev_cap.sw_desc_64b;
 	dev_attr->cmpt_desc_64b = qdma_dev->dev_cap.cmpt_desc_64b;
@@ -1512,7 +1514,7 @@ static int qdma_pf_cmptq_context_write(struct rte_eth_dev *dev, uint32_t qid)
 	/* Set Completion Context */
 	err = qdma_dev->hw_access->qdma_cmpt_ctx_conf(dev, (qid + queue_base),
 				&q_cmpt_ctxt, QDMA_HW_ACCESS_WRITE);
-	if (err != QDMA_SUCCESS)
+	if (err < 0)
 		return qdma_dev->hw_access->qdma_get_error_code(err);
 
 	cmptq->cmpt_cidx_info.counter_idx = cmptq->threshidx;

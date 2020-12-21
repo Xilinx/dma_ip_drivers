@@ -44,9 +44,6 @@
 #include <rte_memzone.h>
 #include <linux/pci.h>
 #include "qdma_user.h"
-#include "qdma_soft_reg.h"
-#include "eqdma_soft_reg.h"
-#include "qdma_s80_hard_reg.h"
 #include "qdma_resource_mgmt.h"
 #include "qdma_mbox.h"
 #include "rte_pmd_qdma.h"
@@ -83,6 +80,8 @@
 #define WB_TIMEOUT			(100000)
 #define RESET_TIMEOUT		(60000)
 #define SHUTDOWN_TIMEOUT	(60000)
+
+#define QDMA_MAX_BUFLEN     (2048 * 10)
 
 #ifdef spin_lock_init
 #undef spin_lock_init

@@ -61,6 +61,8 @@
 #define PCI_CONFIG_BRIDGE_DEVICE              (6)
 #define PCI_CONFIG_CLASS_CODE_SHIFT        (16)
 
+#define MAX_PCIE_CAPABILITY    (48)
+
 static void qdma_device_attributes_get(struct rte_eth_dev *dev);
 
 /* Poll for any QDMA errors */
@@ -273,23 +275,25 @@ static inline uint8_t pcie_find_cap(const struct rte_pci_device *pci_dev,
 {
 	uint8_t pcie_cap_pos = 0;
 	uint8_t pcie_cap_id = 0;
+	int ttl = MAX_PCIE_CAPABILITY;
+	int ret;
 
-	if (rte_pci_read_config(pci_dev, &pcie_cap_pos, sizeof(uint8_t),
-				PCI_CAPABILITY_LIST) < 0) {
+	ret = rte_pci_read_config(pci_dev, &pcie_cap_pos, sizeof(uint8_t),
+		PCI_CAPABILITY_LIST);
+	if (ret < 0) {
 		PMD_DRV_LOG(ERR, "PCIe config space read failed..\n");
 		return 0;
 	}
 
-	if (pcie_cap_pos < 0x40)
-		return 0;
-
-	while (pcie_cap_pos >= 0x40) {
+	while (ttl-- && pcie_cap_pos >= PCI_STD_HEADER_SIZEOF) {
 		pcie_cap_pos &= ~3;
 
-		if (rte_pci_read_config(pci_dev, &pcie_cap_id, sizeof(uint8_t),
-					pcie_cap_pos + PCI_CAP_LIST_ID) < 0) {
+		ret = rte_pci_read_config(pci_dev,
+			&pcie_cap_id, sizeof(uint8_t),
+			(pcie_cap_pos + PCI_CAP_LIST_ID));
+		if (ret < 0) {
 			PMD_DRV_LOG(ERR, "PCIe config space read failed..\n");
-			goto ret;
+			return 0;
 		}
 
 		if (pcie_cap_id == 0xff)
@@ -298,14 +302,15 @@ static inline uint8_t pcie_find_cap(const struct rte_pci_device *pci_dev,
 		if (pcie_cap_id == cap)
 			return pcie_cap_pos;
 
-		if (rte_pci_read_config(pci_dev, &pcie_cap_pos, sizeof(uint8_t),
-					pcie_cap_pos + PCI_CAP_LIST_NEXT) < 0) {
+		ret = rte_pci_read_config(pci_dev,
+			&pcie_cap_pos, sizeof(uint8_t),
+			(pcie_cap_pos + PCI_CAP_LIST_NEXT));
+		if (ret < 0) {
 			PMD_DRV_LOG(ERR, "PCIe config space read failed..\n");
-			goto ret;
+			return 0;
 		}
 	}
 
-ret:
 	return 0;
 }
 
@@ -402,16 +407,10 @@ static int parse_pci_addr_format(const char *buf,
 	*splitaddr.function++ = '\0';
 
 	/* now convert to int values */
-	errno = 0;
 	addr->domain = strtoul(splitaddr.domain, NULL, 16);
 	addr->bus = strtoul(splitaddr.bus, NULL, 16);
 	addr->devid = strtoul(splitaddr.devid, NULL, 16);
 	addr->function = strtoul(splitaddr.function, NULL, 10);
-	if (errno != 0) {
-		PMD_DRV_LOG(ERR,
-			"Failed to convert pci address to int values\n");
-		goto error;
-	}
 
 	free(buf_copy); /* free the copy made with strdup */
 	return 0;
@@ -440,8 +439,8 @@ static int get_max_pci_bus_num(uint8_t start_bus, uint8_t *end_bus)
 	/* Open pci devices directory */
 	dir = opendir(rte_pci_get_sysfs_path());
 	if (dir == NULL) {
-		PMD_DRV_LOG(ERR, "%s(): opendir failed: %s\n",
-			__func__, strerror(errno));
+		PMD_DRV_LOG(ERR, "%s(): opendir failed\n",
+			__func__);
 		return -1;
 	}
 
@@ -471,8 +470,8 @@ static int get_max_pci_bus_num(uint8_t start_bus, uint8_t *end_bus)
 					"%s/config", dirname);
 			fd = open(cfgname, O_RDWR);
 			if (fd < 0) {
-				PMD_DRV_LOG(ERR, "Failed to open %s: %s\n",
-					cfgname, strerror(errno));
+				PMD_DRV_LOG(ERR, "Failed to open %s\n",
+					cfgname);
 				goto error;
 			}
 
@@ -493,7 +492,6 @@ static int get_max_pci_bus_num(uint8_t start_bus, uint8_t *end_bus)
 				close(fd);
 				goto error;
 			}
-			close(fd);
 
 			/* Get max bus number by checking if given bus number
 			 * falls in between secondary and subordinate bus
@@ -502,9 +500,12 @@ static int get_max_pci_bus_num(uint8_t start_bus, uint8_t *end_bus)
 			if ((start_bus >= sec_bus_num) &&
 					(start_bus <= sub_bus_num)) {
 				*end_bus = sub_bus_num;
+				close(fd);
 				closedir(dir);
 				return 0;
 			}
+
+			close(fd);
 		}
 	}
 
@@ -621,7 +622,7 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 		return -EINVAL;
 	}
 
-	/* Store BAR address and length of User BAR */
+	/* Store BAR address and length of AXI Master Lite BAR(user bar) */
 	if (dma_priv->user_bar_idx >= 0) {
 		baseaddr = (uint8_t *)
 			    pci_dev->mem_resource[dma_priv->user_bar_idx].addr;
@@ -699,8 +700,23 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 			}
 		}
 
-		dma_priv->hw_access->qdma_init_ctxt_memory(dev);
-		dma_priv->hw_access->qdma_hw_error_enable(dev, QDMA_ERRS_ALL);
+		ret = dma_priv->hw_access->qdma_init_ctxt_memory(dev);
+		if (ret < 0) {
+			PMD_DRV_LOG(ERR,
+				"%s: Failed to initialize ctxt memory, err = %d\n",
+				__func__, ret);
+			return -EINVAL;
+		}
+
+		dma_priv->hw_access->qdma_hw_error_enable(dev,
+				dma_priv->hw_access->qdma_max_errors);
+		if (ret < 0) {
+			PMD_DRV_LOG(ERR,
+				"%s: Failed to enable hw errors, err = %d\n",
+				__func__, ret);
+			return -EINVAL;
+		}
+
 		rte_eal_alarm_set(QDMA_ERROR_POLL_FRQ, qdma_check_errors,
 							(void *)dev);
 		dma_priv->is_master = 1;

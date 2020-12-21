@@ -1,6 +1,6 @@
 #   BSD LICENSE
 #
-#   Copyright(c) 2017-2018 Xilinx, Inc. All rights reserved.
+#   Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions

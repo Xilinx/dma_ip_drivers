@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -227,14 +227,14 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 	 *
 	 * As per this when testing sizes beyond 28KB, one needs to split it
 	 * up in chunks of 28KB, example : to test 56KB data size, set 28KB
-	 * as packet length in USER BAR 0x04 register and no of packets as 2
-	 * in user BAR 0x20 register this would give you completions or
+	 * as packet length in AXI Master Lite BAR(user bar) 0x04 register and no of packets as 2
+	 * in AXI Master Lite BAR(user bar) 0x20 register this would give you completions or
 	 * packets, which needs to be combined as one in application.
 	 */
 
 	max_completion_size = pinfo[port_id].buff_size * 7;
 
-	/* Calculate number of packets to receive and programming user bar */
+	/* Calculate number of packets to receive and programming AXI Master Lite bar(user bar) */
 	if (input_size == 0) /* zerobyte support uses one descriptor */
 		num_pkts = 1;
 	else if (input_size % max_completion_size != 0) {
@@ -914,8 +914,8 @@ int port_init(int port_id, int num_queues, int st_queues,
 		rte_exit(EXIT_FAILURE, "rte_pmd_qdma_get_bar_details failed\n");
 
 	printf("QDMA Config bar idx: %d\n", pinfo[port_id].config_bar_idx);
-	printf("QDMA User bar idx: %d\n", pinfo[port_id].user_bar_idx);
-	printf("QDMA Bypass bar idx: %d\n", pinfo[port_id].bypass_bar_idx);
+	printf("QDMA AXI Master Lite bar idx: %d\n", pinfo[port_id].user_bar_idx);
+	printf("QDMA AXI Bridge Master bar idx: %d\n", pinfo[port_id].bypass_bar_idx);
 
 	/* configure the device to use # queues */
 	diag = rte_eth_dev_configure(port_id, num_queues, num_queues,

@@ -204,41 +204,6 @@ void qdma_udelay(uint32_t delay_usec)
 
 /*****************************************************************************/
 /**
- * qdma_hw_error_handler() - function to handle the hardware errors
- *
- * @dev_hndl:   device handle
- * @err_idx: error index
- *
- * Return:	None
- *****************************************************************************/
-void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx)
-{
-	struct qdma_pci_dev *qdma_dev;
-	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
-
-	rte_log(RTE_LOG_ERR, RTE_LOGTYPE_PMD,
-		"%s(): Detected %s\n", __func__,
-		qdma_dev->hw_access->qdma_hw_get_error_name(err_idx));
-}
-/*****************************************************************************/
-/**
- * qdma_get_device_attr() - function to retrive device attributes
- *
- * @dev_hndl:   device handle
- * @dev_cap:    pointer to the device attributes structure
- *
- * Return:	None
- *****************************************************************************/
-void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap)
-{
-	struct qdma_pci_dev *qdma_dev;
-	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
-	*dev_cap = &qdma_dev->dev_cap;
-
-}
-
-/*****************************************************************************/
-/**
  * qdma_get_hw_access() - function to get the qdma_hw_access
  *
  * @dev_hndl:   device handle
@@ -270,11 +235,16 @@ void qdma_strncpy(char *dest, const char *src, size_t n)
 /**
  * qdma_get_err_code() - function to get the qdma access mapped error code
  *
- * @acc_err_code: qdma access error code
+ * @acc_err_code: qdma access error code which is a negative input value
  *
  * Return:   returns the platform specific error code
  *****************************************************************************/
 int qdma_get_err_code(int acc_err_code)
 {
+	/* Multiply acc_err_code with -1 to convert it to a postive number
+	 * and use it as an array index for error codes.
+	 */
+	acc_err_code *= -1;
+
 	return -(error_code_map_list[acc_err_code].err_code);
 }

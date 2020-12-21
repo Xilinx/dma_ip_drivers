@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2019 Xilinx, Inc. All rights reserved.
+ *   Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -48,7 +48,7 @@
 #define MP_CACHE_SZ     512
 #define MBUF_POOL_NAME_PORT   "mbuf_pool_%d"
 
-/* User bar registers */
+/* AXI Master Lite bar(user bar) registers */
 #define C2H_ST_QID_REG    0x0
 #define C2H_ST_LEN_REG    0x4
 #define C2H_CONTROL_REG              0x8
