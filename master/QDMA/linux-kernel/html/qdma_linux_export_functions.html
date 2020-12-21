@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.2
               </div>
             
           
@@ -405,6 +405,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#qdma-descq-get-cmpt-udd">qdma_descq_get_cmpt_udd</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#qdma-descq-read-cmpt-data">qdma_descq_read_cmpt_data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#qdma-get-queue-count">qdma_get_queue_count</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#qdma-config-reg-info-dump">qdma_config_reg_info_dump</a></li>
 </ul>
 </li>
 </ul>
@@ -1177,10 +1178,13 @@
 <p>0 for success and &lt;0 for error</p>
 </div>
 <div class="section" id="qdma-software-version-info">
-<span id="cid-qdma-software-version-info"></span><span id="doxid-libqdma-export-8h-1a45bc93c2e5c9708edae602e21b915ac6"></span><h2>qdma_software_version_info<a class="headerlink" href="#qdma-software-version-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-software-version-info"></span><span id="doxid-libqdma-export-8h-1af666ae5739179031a7c07bea4f5eb7cf"></span><h2>qdma_software_version_info<a class="headerlink" href="#qdma-software-version-info" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">int</span> <span class="n">qdma_software_version_info</span> <span class="p">(</span><span class="kt">char</span><span class="o">*</span> <span class="n">software_version</span><span class="p">)</span>
+<span></span><span class="kt">int</span> <span class="n">qdma_software_version_info</span> <span class="p">(</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">software_version</span><span class="p">,</span>
+    <span class="kt">int</span> <span class="n">length</span>
+    <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
 <p>Retrieve the software version</p>
@@ -1194,6 +1198,9 @@
 <tbody valign="top">
 <tr class="row-odd"><td>software_version</td>
 <td>A pointer to a null-terminated string</td>
+</tr>
+<tr class="row-even"><td>length</td>
+<td>Length of the version name string</td>
 </tr>
 </tbody>
 </table>
@@ -2182,6 +2189,47 @@
 <p class="rubric">Returns:</p>
 <p>0 for success or &lt;0 for error</p>
 </div>
+<div class="section" id="qdma-config-reg-info-dump">
+<span id="cid-qdma-config-reg-info-dump"></span><span id="doxid-libqdma-export-8h-1af66d733e21564fbd53372fc722f5fbd2"></span><h2>qdma_config_reg_info_dump<a class="headerlink" href="#qdma-config-reg-info-dump" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_config_reg_info_dump</span> <span class="p">(</span>
+    <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">dev_hndl</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">reg_addr</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">num_regs</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span>
+    <span class="kt">int</span> <span class="n">buflen</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>Function to print out detailed information for register value</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev_hndl</td>
+<td>dev_hndl returned from <a class="reference internal" href="#doxid-libqdma-export-8h-1a1f891b6e4d189bfdec60edafc9679f64"><span class="std std-ref">qdma_device_open()</span></a></td>
+</tr>
+<tr class="row-even"><td>reg_addr</td>
+<td>register address</td>
+</tr>
+<tr class="row-odd"><td>num_regs</td>
+<td>num of registerse to be dumped</td>
+</tr>
+<tr class="row-even"><td>buf</td>
+<td>message bufferuffer</td>
+</tr>
+<tr class="row-odd"><td>buflen</td>
+<td>length of the input buffer</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 for success or &lt;0 for error</p>
+</div>
 </div>
 
 
@@ -2214,7 +2262,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>

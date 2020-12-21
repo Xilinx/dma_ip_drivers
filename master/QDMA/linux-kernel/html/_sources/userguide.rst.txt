@@ -146,38 +146,6 @@ To set value 2 to intr_rngsz:
 	[xilinx@]# echo 2 > /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
 
 
-5. **Set Write Back Interval**
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``cmpt_intrvl`` indicated the interval at which write backs are generated for an MM or H2C Stream queue running in non-bypass mode.
-User can set any of the following list of values for this configuration parameter.
-
-| 3'h0: 4
-| 3'h1: 8
-| 3'h2: 16
-| 3'h3: 32
-| 3'h4: 64
-| 3'h5: 128
-| 3'h6: 256
-| 3'h7: 512
-
-Accumulation can be disabled via queue context.
-
-
-Display the current value:
-
-::
-
-	[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/cmpt_intrvl
-	0
-	
-To set value 2 to cmpt_intrvl:
-
-::
-
-	[xilinx@]# echo 2 > /sys/bus/pci/devices/0000:81:00.0/qdma/cmpt_intrvl
-
-
 Queue Management
 ----------------
 

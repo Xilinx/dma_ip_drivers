@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1',
+              VERSION:'2020.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.2
               </div>
             
           
@@ -464,21 +464,24 @@
 /sys/kernel/debug/qdma_vf
 </pre></div>
 </div>
-<p>In driver module initialization, during PCIe probe, when a device that is to be handled by QDMA driver is detected, a directory with the name b:d.f format will be created in qdma_&lt;df&gt; directory. Ex: when qdma device 01000 is detected, a directory is created in qdma_pf <code class="docutils literal"><span class="pre">/sys/kernel/debug/qdma_pf/01:00.0/</span></code></p>
+<p>In driver module initialization, during PCIe probe, when a device that is to be handled by QDMA driver is detected, a directory with the name b:d.f format will be created in qdma_&lt;df&gt; directory. Ex: when qdma device 01000 is detected, a directory is created in qdma_pf <code class="docutils literal"><span class="pre">/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/</span></code></p>
 <p>Below files and directories are created during the device initialization.</p>
 <ul class="simple">
-<li><strong>info</strong> : This file will give all the information specific to the device. For example, function number, is master PF, Q base and Qmax configured for the device etc.</li>
-<li><strong>regs</strong>: This file will dump all the registers corresponding to the device. The registers are the configuration space and user space of the device. These also include global registers, which are common across all the devices.</li>
+<li><strong>qdma_info</strong> : This file will give all the information specific to the device. For example, function number, is master PF, Q base and Qmax configured for the device etc.</li>
+<li><strong>qdma_regs</strong>: This file will dump all the registers corresponding to the device. The registers are the configuration space and user space of the device. These also include global registers, which are common across all the devices.</li>
 <li><strong>queues</strong>: This is the directory and is created to hold queues information attached to the device. The qdma_dev_conf structure will also hold pointer to this directory in dbgfs_queues_root, which would help to create queue information when a queue is added to the device.</li>
+<li><strong>qdma_reg_info</strong>: This file will dump all the registers with the individual field breakdown for all the registers. Note that the support is for QDMA4.0 and for the Config Bar registers only.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/01:00.0/info
-/sys/kernel/debug/qdma_pf/01:00.0/regs
-/sys/kernel/debug/qdma_pf/01:00.0/queues
+<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/qdma_info
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/qdma_regs
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/dma_reg_info
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/intr_rings
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues
 </pre></div>
 </div>
 <p>When a queue is added to a QDMA device, per say, through dma-ctl, a directory with the qid is created in the corresponding <code class="docutils literal"><span class="pre">queues</span></code> directory of the device. This will be used to create further directories under ‘qid’ directory.</p>
 <p>For example, if a queue with qid 2 is added to device qdma01000, the directory with name ‘2’ is created in queues directory</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/01:00.0/queues/2
+<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2
 </pre></div>
 </div>
 <p>When a queue is added to a QDMA device, a direction directory with the name corresponding to the direction, c2h, h2c and cmpt, is created under qid directory.</p>
@@ -489,9 +492,9 @@
 <li>Lastly, if a bidirectional queues are added in streaming mode, then a ‘cmpt’ directory is also created in the respective qid directory.</li>
 </ul>
 <p>For example, if a queue with qid 2 is created in bi direction ST, then all c2h, h2c and cmpt directories are created</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/01:00.0/queues/2/h2c
-/sys/kernel/debug/qdma_pf/01:00.0/queues/2/c2h
-/sys/kernel/debug/qdma_pf/01:00.0/queues/2/cmpt
+<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2/h2c
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2/c2h
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2/cmpt
 </pre></div>
 </div>
 <ul class="simple">
@@ -499,9 +502,9 @@
 <li><strong>cntxt</strong>: This file will dump the contexts corresponding the queue. <code class="docutils literal"><span class="pre">cntxt</span></code> in <code class="docutils literal"><span class="pre">cmpt</span></code> directory will only dump the C2H ST completion context.</li>
 <li><strong>desc</strong>:  This file will dump the descriptor contents of the ring.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/01:00.0/queues/2/h2c/info
-/sys/kernel/debug/qdma_pf/01:00.0/queues/2/h2c/cntxt
-/sys/kernel/debug/qdma_pf/01:00.0/queues/2/h2c/desc
+<div class="highlight-none"><div class="highlight"><pre><span></span>/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2/h2c/info
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2/h2c/cntxt
+/sys/kernel/debug/qdma_pf/0000\:01\:00\.0/queues/2/h2c/desc
 </pre></div>
 </div>
 <p>use <code class="docutils literal"><span class="pre">cat</span></code> command for displaying the contents of these leaf node debug files. Example is provided below.</p>
@@ -575,7 +578,7 @@ HARDWARE CTXT:
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>

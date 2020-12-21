@@ -4,6 +4,11 @@ DMA Performance Tool (dma-perf)
 
 Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic. 
 
+=====
+Note:
+=====
+The name of the application in previous releases before 2020.1 was ``dmaperf``. If user installed ``dmaperf`` application aleady in ``/usr/local/sbin`` area, make sure to uninstall the old application(s). Using ``dmaperf`` aginst latest driver would lead to undefined behaviour and errors may be observed.
+
 Standard IO tools such as ``fio`` can be used for performing IO operations using the char device interface. 
 
 However, most of the tools are limited to sending / receiving 1 packet at a time and wait for the processing of the packet to complete, so they are not able to keep the driver/ HW busy enough for performance measurement. Although fio also supports asynchronous interfaces, it does not continuously submit IO requests while polling for the completion in parallel.

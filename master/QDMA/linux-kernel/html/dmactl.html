@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1 Patch',
+              VERSION:'2020.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1 Patch
+                2020.2
               </div>
             
           
@@ -377,7 +377,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#register-commands">Register Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#read-a-register">Read a Register</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#write-a-register">Write a Register</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#dump-the-queue-registers">Dump the Queue registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-the-function-registers">Dump the function registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-detailed-register-info">Dump detailed register info</a></li>
 </ul>
 </li>
 </ul>
@@ -555,13 +556,13 @@ qdmavf01004     0000:01:00.4    max QP: 100, 400~499
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 cap
 =============Hardware Version============
 
-RTL Version         : RTL Base
+RTL Version         : RTL Patch
 Vivado ReleaseID    : vivado 2019.2
-Everest IP          : Soft IP
-
+QDMA Device Type    : Soft IP
+QDMA IP Type    : QDMA Soft IP
 ============Software Version============
 
-qdma driver version : 2019.2.125.213.
+qdma driver version : 2020.2.0.0.
 
 =============Hardware Capabilities============
 
@@ -573,6 +574,8 @@ ST enabled                             : yes
 MM enabled                             : yes
 Mailbox enabled                        : yes
 MM completion enabled                  : no
+Debug Mode enabled                     : no
+Desc Engine Mode                       : Internal and Bypass mode
 </pre></div>
 </div>
 </div>
@@ -583,10 +586,13 @@ MM completion enabled                  : no
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 stat
 
 qdma01000:statistics
-Total MM H2C packets processed = 312220
-Total MM C2H packets processed = 312220
-Total ST H2C packets processed = 64127
-Total ST C2H packets processed = 100954
+Total MM H2C packets processed = 0
+Total MM C2H packets processed = 0
+Total ST H2C packets processed = 0
+Total ST C2H packets processed = 0
+Min Ping Pong Latency = 0
+Max Ping Pong Latency = 0
+Avg Ping Pong Latency = 0
 </pre></div>
 </div>
 <p>Use <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma01000</span> <span class="pre">stat</span> <span class="pre">clear</span></code> to clear the statistics collected</p>
@@ -634,9 +640,10 @@ Added 4 Queues.
 <p>This command allows the user to start a queue.</p>
 <p>command:</p>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">\</span>
-<span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]\</span>
-<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span> <span class="pre">\</span> <span class="pre">[cmpl_ovf_dis]</span></code></div></blockquote>
+<div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
+<span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]</span>
+<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
+<span class="pre">[cmpl_ovf_dis]</span> <span class="pre">[mm_chn</span> <span class="pre">&lt;0:1&gt;]</span> <span class="pre">[aperture_sz</span> <span class="pre">&lt;Power</span> <span class="pre">of</span> <span class="pre">2</span> <span class="pre">aperture</span> <span class="pre">size&gt;]</span></code></div></blockquote>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
@@ -659,7 +666,14 @@ Added 4 Queues.
 <li>dis_cmpt_stat : Disable completion status ( 1: Disable, 0: Enable )</li>
 <li>c2h_cmpl_intr_en : Enable c2h completion interval ( 0: Disable, 1: Enable )</li>
 <li>cmpl_ovf_dis : Disable completion over flow check ( 1: Disable, 0: Enable )</li>
+<li>mm_chn : MM Channel to be used(0/1)</li>
+<li>aperture_sz :  aperture size power of 2 for keyhole feature</li>
 </ul>
+<dl class="docutils">
+<dt>Note on keyhole feature</dt>
+<dd>Provides support of programming over PCIe. QDMA SW provides a capability to program a .pdi file to a specific aperture within a Versal device.
+This enables the DMA to write data to a fixed size FPGA aperture. When the end of the user specified aperture size is reached, transactions continue to transfer data by looping back to the start of the aperture window. This is repeated until all data has been programmed into the user specified aperture window. <code class="docutils literal"><span class="pre">dma-to-device</span></code> can be used to write to a specific offset in the RAM with the aperture specified at the time when the Q is started.</dd>
+</dl>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start idx 4 dir h2c
 dma-ctl: Info: Default ring size set to 2048
 
@@ -671,9 +685,10 @@ dma-ctl: Info: Default ring size set to 2048
 <h3>Start a List of Queues<a class="headerlink" href="#start-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
 <p>command:</p>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">\</span>
-<span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]\</span>
-<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span> <span class="pre">\</span> <span class="pre">[cmpl_ovf_dis]</span></code></div></blockquote>
+<div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
+<span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]</span>
+<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
+<span class="pre">[cmpl_ovf_dis]</span> <span class="pre">[mm_chn</span> <span class="pre">&lt;0:1&gt;]</span> <span class="pre">[aperture_sz</span> <span class="pre">&lt;Power</span> <span class="pre">of</span> <span class="pre">2</span> <span class="pre">aperture</span> <span class="pre">size&gt;]</span></code></div></blockquote>
 <p>This command allows the user to start a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -696,6 +711,8 @@ dma-ctl: Info: Default ring size set to 2048
 <li>dis_cmpt_stat : Disable completion status ( 1: Disable, 0: Enable )</li>
 <li>c2h_cmpl_intr_en : Enable c2h completion interval ( 0: Disable, 1: Enable )</li>
 <li>cmpl_ovf_dis : Disable completion over flow check ( 1: Disable, 0: Enable )</li>
+<li>mm_chn : MM Channel to be used(0/1))</li>
+<li>aperture_sz :  aperture size power of 2</li>
 </ul>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start list 1 4 dir h2c
 
@@ -1435,8 +1452,8 @@ qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
 </pre></div>
 </div>
 </div>
-<div class="section" id="dump-the-queue-registers">
-<h3>Dump the Queue registers<a class="headerlink" href="#dump-the-queue-registers" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="dump-the-function-registers">
+<h3>Dump the function registers<a class="headerlink" href="#dump-the-function-registers" title="Permalink to this headline">¶</a></h3>
 <p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">dump</span></code></p>
 <p>This command allows the user to dump the DMA BAR and User BAR registers.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg dump
@@ -1809,6 +1826,40 @@ CONFIG BAR #0
 </pre></div>
 </div>
 </div>
+<div class="section" id="dump-detailed-register-info">
+<h3>Dump detailed register info<a class="headerlink" href="#dump-detailed-register-info" title="Permalink to this headline">¶</a></h3>
+<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;BDF&gt;</span> <span class="pre">reg</span> <span class="pre">info</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span> <span class="pre">[num_regs</span> <span class="pre">&lt;M&gt;]</span></code></p>
+<p>For QDMA4.0 designs there is an additional option to print detailed breakdown of
+individual registers</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma06000 reg info bar 0 0x00 num_regs 5
+CFG_BLK_IDENTIFIER                       0x0       0x1fd30001 533921793
+CFG_BLK_IDENTIFIER                       [31,20]   0x1fd
+CFG_BLK_IDENTIFIER_1                     [19,16]   0x3
+CFG_BLK_IDENTIFIER_RSVD_1                [15, 8]   0x0
+CFG_BLK_IDENTIFIER_VERSION               [ 7, 0]   0x1
+
+CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x51       81
+CFG_BLK_IDENTIFIER                       [31, 7]   0x0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x1
+
+CFG_BLK_PCIE_MAX_READ_REQ_SIZE           0xc       0x52       82
+CFG_BLK_IDENTIFIER                       [31, 7]   0x0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x2
+
+CFG_BLK_SYSTEM_ID                        0x10      0xff01     65281
+CFG_BLK_IDENTIFIER                       [31,17]   0x0
+CFG_BLK_IDENTIFIER_1                     [   16]   0x0
+CFG_BLK_IDENTIFIER_RSVD_1                [15, 0]   0xff01
+
+CFG_BLK_MSIX_ENABLE                      0x14      0xf        15
+CFG_BLK_IDENTIFIER                       [31, 0]   0xf
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 
@@ -1842,7 +1893,7 @@ CONFIG BAR #0
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 23, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>

@@ -71,6 +71,12 @@ Once driver sources are downloaded, compile the QDMA Driver software
 Upon executing make, A sub-directory ``bin`` is created with the list of executable listed in below tables.
 Individual executables can also be built with commands listed against each component in below tables.
 
+Optionally to enable debug mode for more detailed logs, build with the following command 
+
+::
+	
+	[xilinx@]# make clean & make DEBUG=1
+
 **Kernel modules:**
 
 +-------------------+--------------------+--------------------------------+
@@ -154,7 +160,7 @@ The format of the conf file would be :
 - mode: Mode in which the driver needs to be loaded
 - config_bar: Config bar number
 - master_pf: Master PF  
-	
+- num_threads: number of threads for monitoring the writeback of completions	
 
 1. **Mode**
 ~~~~~~~~~~~

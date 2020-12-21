@@ -5,6 +5,11 @@ DMA Xfer Application (dma-xfer)
 Xilinx-developed custom application ``dma-xfer`` is an example application provided along with QDMA Linux Driver to demonstrate
 QDMA configuration and transfer functionality.
 
+=====
+Note:
+=====
+The name of the application in previous releases before 2020.1 was ``dmaxfer``. If user installed ``dmaxfer`` application aleady in ``/usr/local/sbin`` area, make sure to uninstall the old application(s). Using ``dmaxfer`` aginst latest driver would lead to undefined behaviour and errors may be observed.
+
 ``dma-xfer`` application internally takes care of Queues creation/destruction and performs DMA transfers on each queue one by one. If any failure occurs during the initial creation of queues or performing dma transfers on queues, application reports corresponding error and cleans up all the allocated resources then exits.
 
 

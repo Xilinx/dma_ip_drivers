@@ -6,7 +6,13 @@ QDMA driver comes with a command-line configuration utility called ``dma-ctl`` t
 
 The Xilinx QDMA control tool, ``dma-ctl`` is a command Line utility which is installed in ``/usr/local/sbin/`` and allows administration of the Xilinx QDMA queues. Make sure that the installation path ``/usr/local/sbin/`` is added to the ``PATH`` variable.
 
-It can perform the following functions:
+=====
+Note:
+=====
+The name of the application in previous releases before 2020.1 was ``dmactl``. If user installed ``dmactl`` application aleady in ``/usr/local/sbin`` area, make sure to uninstall the old application(s). Using ``dmactl`` aginst latest driver would lead to undefined behaviour and errors may be observed.
+
+
+``dma-ctl`` application can perform the following functions:
 
 - Query the list of functions binded QDMA driver 
 - Query control and configuration 
@@ -96,13 +102,13 @@ This command lists hardware and software version details and device capabilities
 	[xilinx@]# dma-ctl qdma01000 cap
 	=============Hardware Version============
 
-	RTL Version         : RTL Base
+	RTL Version         : RTL Patch
 	Vivado ReleaseID    : vivado 2019.2
-	Everest IP          : Soft IP
-
+	QDMA Device Type    : Soft IP
+	QDMA IP Type    : QDMA Soft IP
 	============Software Version============
 
-	qdma driver version : 2019.2.125.213.
+	qdma driver version : 2020.2.0.0.
 
 	=============Hardware Capabilities============
 
@@ -114,7 +120,8 @@ This command lists hardware and software version details and device capabilities
 	MM enabled                             : yes
 	Mailbox enabled                        : yes
 	MM completion enabled                  : no
-
+	Debug Mode enabled                     : no
+	Desc Engine Mode                       : Internal and Bypass mode
 
 
 List Device Statistics
@@ -125,13 +132,16 @@ command: ``dma-ctl qdma<bbddf> stat``
 This command lists the statistics accumulated for this device
 ::
 
-   [xilinx@]# dma-ctl qdma01000 stat
+	[xilinx@]# dma-ctl qdma01000 stat
 
-   qdma01000:statistics
-   Total MM H2C packets processed = 312220
-   Total MM C2H packets processed = 312220
-   Total ST H2C packets processed = 64127
-   Total ST C2H packets processed = 100954
+	qdma01000:statistics
+	Total MM H2C packets processed = 0
+	Total MM C2H packets processed = 0
+	Total ST H2C packets processed = 0
+	Total ST C2H packets processed = 0
+	Min Ping Pong Latency = 0
+	Max Ping Pong Latency = 0
+	Avg Ping Pong Latency = 0
 
 Use ``dma-ctl qdma01000 stat clear`` to clear the statistics collected
 
@@ -185,9 +195,10 @@ This command allows the user to start a queue.
 
 command: 
 
-   ``dma-ctl qdma<bbddf> q start idx <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] \
-   [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]\
-   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] \ [cmpl_ovf_dis]``
+   ``dma-ctl qdma<bbddf> q start idx <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]
+   [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]
+   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en]
+   [cmpl_ovf_dis] [mm_chn <0:1>] [aperture_sz <Power of 2 aperture size>]``
 
 
 **Parameters**
@@ -212,6 +223,12 @@ command:
 - dis_cmpt_stat : Disable completion status \( 1: Disable, 0: Enable \)
 - c2h_cmpl_intr_en : Enable c2h completion interval \( 0: Disable, 1: Enable \)
 - cmpl_ovf_dis : Disable completion over flow check \( 1: Disable, 0: Enable \)
+- mm_chn : MM Channel to be used(0/1)
+- aperture_sz :  aperture size power of 2 for keyhole feature
+
+Note on keyhole feature 
+  Provides support of programming over PCIe. QDMA SW provides a capability to program a .pdi file to a specific aperture within a Versal device.
+  This enables the DMA to write data to a fixed size FPGA aperture. When the end of the user specified aperture size is reached, transactions continue to transfer data by looping back to the start of the aperture window. This is repeated until all data has been programmed into the user specified aperture window. ``dma-to-device`` can be used to write to a specific offset in the RAM with the aperture specified at the time when the Q is started.
 
 ::
 
@@ -225,9 +242,10 @@ Start a List of Queues
 
 command:
 
-   ``dma-ctl qdma<bbddf> q start list <start_idx> <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] \
-   [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]\
-   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en] \ [cmpl_ovf_dis]``
+   ``dma-ctl qdma<bbddf> q start list <start_idx> <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] 
+   [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]
+   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en]
+   [cmpl_ovf_dis] [mm_chn <0:1>] [aperture_sz <Power of 2 aperture size>]``
 
 This command allows the user to start a list of queues.
 
@@ -252,6 +270,8 @@ This command allows the user to start a list of queues.
 - dis_cmpt_stat : Disable completion status \( 1: Disable, 0: Enable \)
 - c2h_cmpl_intr_en : Enable c2h completion interval \( 0: Disable, 1: Enable \)
 - cmpl_ovf_dis : Disable completion over flow check \( 1: Disable, 0: Enable \)
+- mm_chn : MM Channel to be used(0/1)\)
+- aperture_sz :  aperture size power of 2
 
 ::
 
@@ -1044,8 +1064,8 @@ Write a value to into the given register.
 	[xilinx@]# dma-ctl qdma17000 reg write bar 2 0x0 0
 	qdma17000, 17:00.00, bar#2, reg 0x0 -> 0x0, read back 0x0.
 	
-Dump the Queue registers
-------------------------
+Dump the function registers
+---------------------------
 
 command: ``dma-ctl qdma<bbddf> reg dump``
 
@@ -1420,4 +1440,43 @@ This command allows the user to dump the DMA BAR and User BAR registers.
 	[ 0x2c74] MSG_OUT_29                                      0x0        0
 	[ 0x2c78] MSG_OUT_30                                      0x0        0
 	[ 0x2c7c] MSG_OUT_31                                      0x0        0
+
+
 	
+Dump detailed register info
+---------------------------
+
+command: ``dma-ctl qdma<BDF> reg info bar <N> <addr> [num_regs <M>]``
+
+For QDMA4.0 designs there is an additional option to print detailed breakdown of 
+individual registers
+
+::
+
+        [xilinx@]# dma-ctl qdma06000 reg info bar 0 0x00 num_regs 5
+        CFG_BLK_IDENTIFIER                       0x0       0x1fd30001 533921793
+        CFG_BLK_IDENTIFIER                       [31,20]   0x1fd
+        CFG_BLK_IDENTIFIER_1                     [19,16]   0x3
+        CFG_BLK_IDENTIFIER_RSVD_1                [15, 8]   0x0
+        CFG_BLK_IDENTIFIER_VERSION               [ 7, 0]   0x1
+
+        CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x51       81
+        CFG_BLK_IDENTIFIER                       [31, 7]   0x0
+        CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+        CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
+        CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x1
+
+        CFG_BLK_PCIE_MAX_READ_REQ_SIZE           0xc       0x52       82
+        CFG_BLK_IDENTIFIER                       [31, 7]   0x0
+        CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+        CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
+        CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x2
+        
+        CFG_BLK_SYSTEM_ID                        0x10      0xff01     65281
+        CFG_BLK_IDENTIFIER                       [31,17]   0x0
+        CFG_BLK_IDENTIFIER_1                     [   16]   0x0
+        CFG_BLK_IDENTIFIER_RSVD_1                [15, 0]   0xff01
+        
+        CFG_BLK_MSIX_ENABLE                      0x14      0xf        15
+        CFG_BLK_IDENTIFIER                       [31, 0]   0xf
+

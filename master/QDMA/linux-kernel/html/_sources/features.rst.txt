@@ -48,6 +48,11 @@ Features Supported only in QDMA3.1 Design
 
 * Flexible BAR mapping for QDMA configuration register space
 		
+Features Supported only in QDMA4.0 Design
+=========================================
+
+* Debug mode, with extra registers for debug purposes
+* Descriptor Engine can be configured in Internal Mode only
 
 For details on Hardware Features refer to QDMA_Product_Guide_.
 
