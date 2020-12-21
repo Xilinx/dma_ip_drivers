@@ -51,3 +51,6 @@ Software Features
 * Device and queue configuration through additional driver APIs
 * Interoperability between Linux driver (as PF/VF) and DPDK driver (as PF/VF)
 * SW versioning
+* Added support for detailed register dump
+* Added support for post processing HW error messages
+* Added support for Debug mode and Internal only mode

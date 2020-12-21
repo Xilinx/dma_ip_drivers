@@ -306,7 +306,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.2
               </div>
             
           
@@ -347,6 +347,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-is-device-online">qdma_is_device_online</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#read-bar">read_bar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#write-bar">write_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#get-bar-info">get_bar_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-queues-state">qdma_get_queues_state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-add-queue">qdma_add_queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-start-queue">qdma_start_queue</a></li>
@@ -368,6 +369,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-device-version-info">qdma_device_version_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-set-qmax">qdma_set_qmax</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-qstats-info">qdma_get_qstats_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-reg-info">qdma_get_reg_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#create-qdma-device">create_qdma_device</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#remove-qdma-device">remove_qdma_device</a></li>
 </ul>
@@ -459,15 +461,18 @@
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#enum-xlnx-qdma-queue-dir">enum xlnx::qdma_queue_dir</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#enum-xlnx-qdma-trig-mode">enum xlnx::qdma_trig_mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#enum-xlnx-queue-op-mode">enum xlnx::queue_op_mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#enum-xlnx-queue-state">enum xlnx::queue_state</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#enum-xlnx-st-c2h-pkt-type">enum xlnx::st_c2h_pkt_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-cmpt-info">struct xlnx::qdma_cmpt_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-ctx-info">struct xlnx::qdma_ctx_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-desc-info">struct xlnx::qdma_desc_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-device-attributes-info">struct xlnx::qdma_device_attributes_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-drv-config">struct xlnx::qdma_drv_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-glbl-csr-conf">struct xlnx::qdma_glbl_csr_conf</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-intr-ring-info">struct xlnx::qdma_intr_ring_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-qstat-info">struct xlnx::qdma_qstat_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-reg-dump-info">struct xlnx::qdma_reg_dump_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-reg-info">struct xlnx::qdma_reg_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-qdma-version-info">struct xlnx::qdma_version_info</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-queue-config">struct xlnx::queue_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_win_exports_namespace.html#struct-xlnx-st-c2h-pkt-fragment">struct xlnx::st_c2h_pkt_fragment</a></li>
@@ -484,6 +489,7 @@
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-is-device-online">qdma_is_device_online</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#read-bar">read_bar</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#write-bar">write_bar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#get-bar-info">get_bar_info</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-queues-state">qdma_get_queues_state</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-add-queue">qdma_add_queue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-start-queue">qdma_start_queue</a></li>
@@ -505,6 +511,7 @@
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-device-version-info">qdma_device_version_info</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-set-qmax">qdma_set_qmax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-qstats-info">qdma_get_qstats_info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-reg-info">qdma_get_reg_info</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#create-qdma-device">create_qdma_device</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qdma_win_export_apis.html#remove-qdma-device">remove_qdma_device</a></li>
 </ul>
@@ -541,7 +548,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 05, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>

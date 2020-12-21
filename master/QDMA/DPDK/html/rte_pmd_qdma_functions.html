@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1 patch',
+              VERSION:'2020.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1 patch
+                2020.2
               </div>
             
           
@@ -469,16 +469,17 @@
 <p>‘0’ on success and “&lt; 0” on failure</p>
 </div>
 <div class="section" id="rte-pmd-qdma-dbg-reg-info-dump">
-<span id="cid-rte-pmd-qdma-dbg-reg-info-dump"></span><span id="doxid-group-rte-pmd-qdma-func-1gaaf1e8d6e1ad349f52fa0ce914f4e92e5"></span><h2>rte_pmd_qdma_dbg_reg_info_dump<a class="headerlink" href="#rte-pmd-qdma-dbg-reg-info-dump" title="Permalink to this headline">¶</a></h2>
+<span id="cid-rte-pmd-qdma-dbg-reg-info-dump"></span><span id="doxid-group-rte-pmd-qdma-func-1ga4b272106e96b4602950ec65cdbc22fd1"></span><h2>rte_pmd_qdma_dbg_reg_info_dump<a class="headerlink" href="#rte-pmd-qdma-dbg-reg-info-dump" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
 <span></span><span class="kt">int</span> <span class="n">rte_pmd_qdma_dbg_reg_info_dump</span> <span class="p">(</span>
     <span class="kt">uint8_t</span> <span class="n">port_id</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">num_regs</span><span class="p">,</span>
     <span class="kt">uint32_t</span> <span class="n">reg_addr</span>
     <span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
-<p>Dumps the QDMA register information for a given register offset</p>
+<p>Dumps the QDMA register field information for a given register offset</p>
 <p>None</p>
 <p class="rubric">Parameters:</p>
 <table border="1" class="colwidths-given docutils">
@@ -622,10 +623,10 @@
 <td>Config BAR index</td>
 </tr>
 <tr class="row-odd"><td>user_bar_idx</td>
-<td>User BAR index</td>
+<td>AXI Master Lite BAR(user bar) index</td>
 </tr>
 <tr class="row-even"><td>bypass_bar_idx</td>
-<td>Bypass BAR index</td>
+<td>AXI Bridge Master BAR(bypass bar) index</td>
 </tr>
 </tbody>
 </table>
@@ -1276,7 +1277,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 08, 2020.
+        Last updated on December 18, 2020.
       </span>
 
     </p>

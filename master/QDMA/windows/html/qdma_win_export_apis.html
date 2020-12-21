@@ -306,7 +306,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.2
               </div>
             
           
@@ -350,6 +350,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#qdma-is-device-online">qdma_is_device_online</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#read-bar">read_bar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#write-bar">write_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-bar-info">get_bar_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-get-queues-state">qdma_get_queues_state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-add-queue">qdma_add_queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-start-queue">qdma_start_queue</a></li>
@@ -371,6 +372,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#qdma-device-version-info">qdma_device_version_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-set-qmax">qdma_set_qmax</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#qdma-get-qstats-info">qdma_get_qstats_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#qdma-get-reg-info">qdma_get_reg_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#create-qdma-device">create_qdma_device</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#remove-qdma-device">remove_qdma_device</a></li>
 </ul>
@@ -466,15 +468,11 @@
 </div>
 </div>
 <div class="section" id="init">
-<span id="cid-xlnx-qdma-interface-init"></span><span id="doxid-classxlnx-1-1qdma-interface-1ae061a23e68600f8164a4fc0345b21480"></span><h1>init<a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h1>
+<span id="cid-xlnx-qdma-interface-init"></span><span id="doxid-classxlnx-1-1qdma-interface-1a89628b8da03c4d3ef80fc922bed171c4"></span><h1>init<a class="headerlink" href="#init" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">init</span> <span class="p">(</span>
-    <a class="reference internal" href="qdma_win_exports_namespace.html#doxid-qdma-exports-8h-1a8e7a720823699366f2e9fd109c5d7892"><span class="std std-ref">queue_op_mode</span></a><span></span> <span class="n">operation_mode</span><span class="p">,</span>
-    <span class="n">UINT8</span> <span class="n">cfg_bar</span><span class="p">,</span>
-    <span class="n">UINT16</span> <span class="n">qsets_max</span>
-    <span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
+<pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">init</span> <span class="p">(</span><a class="reference internal" href="qdma_win_exports_namespace.html#doxid-structxlnx-1-1qdma-drv-config"><span class="std std-ref">qdma_drv_config</span></a><span></span> <span class="n">conf</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
 <p class="rubric">Details:</p>
-<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1ae061a23e68600f8164a4fc0345b21480"><span class="std std-ref">init()</span></a> - Initializes the qdma device with operation mode and config bar number to use</p>
+<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1a89628b8da03c4d3ef80fc922bed171c4"><span class="std std-ref">init()</span></a> - Initializes the qdma device with operation mode and config bar number to use</p>
 <p class="rubric">Parameters:</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -482,14 +480,8 @@
 <col style="width: 80%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p>operation_mode</p></td>
-<td><p>queue oper mode (poll, intr, aggr)</p></td>
-</tr>
-<tr class="row-even"><td><p>cfg_bar</p></td>
-<td><p>config bar number for qdma device</p></td>
-</tr>
-<tr class="row-odd"><td><p>qsets_max</p></td>
-<td><p>Maximum number of queues requested for this device</p></td>
+<tr class="row-odd"><td><p>conf</p></td>
+<td><p>Device operation configuration</p></td>
 </tr>
 </tbody>
 </table>
@@ -615,16 +607,48 @@
 <p class="rubric">Returns:</p>
 <p>STATUS_SUCCESS for success else error</p>
 </div>
+<div class="section" id="get-bar-info">
+<span id="cid-xlnx-qdma-interface-get-bar-info"></span><span id="doxid-classxlnx-1-1qdma-interface-1a84f40d70b7f038797a3969d450aace10"></span><h1>get_bar_info<a class="headerlink" href="#get-bar-info" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">get_bar_info</span> <span class="p">(</span>
+    <a class="reference internal" href="qdma_win_exports_namespace.html#doxid-qdma-exports-8h-1a61ed8a5377bef794c95e50b0402ef9c4"><span class="std std-ref">qdma_bar_type</span></a><span></span> <span class="n">bar_type</span><span class="p">,</span>
+    <span class="n">PVOID</span><span class="o">&amp;</span> <span class="n">bar_base</span><span class="p">,</span>
+    <span class="kt">size_t</span><span class="o">&amp;</span> <span class="n">bar_length</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
+<p class="rubric">Details:</p>
+<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1a7bfccb9ed33d905254ebc6a9d987a344"><span class="std std-ref">write_bar()</span></a> - Performs PCIe write operation on specified BAR number at requested offset of requested size</p>
+<p class="rubric">Parameters:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>bar_type</p></td>
+<td><p>BAR Type</p></td>
+</tr>
+<tr class="row-even"><td><p>bar_base</p></td>
+<td><p>BAR base mapped address</p></td>
+</tr>
+<tr class="row-odd"><td><p>bar_lenght</p></td>
+<td><p>Bar length(in bytes)</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>STATUS_SUCCESS for success else error</p>
+</div>
 <div class="section" id="qdma-get-queues-state">
-<span id="cid-xlnx-qdma-interface-qdma-get-queues-state"></span><span id="doxid-classxlnx-1-1qdma-interface-1aed0172c4e04471c782c7c62a98d4d5b3"></span><h1>qdma_get_queues_state<a class="headerlink" href="#qdma-get-queues-state" title="Permalink to this headline">¶</a></h1>
+<span id="cid-xlnx-qdma-interface-qdma-get-queues-state"></span><span id="doxid-classxlnx-1-1qdma-interface-1a0b534e54284930d51bf04920faf24afd"></span><h1>qdma_get_queues_state<a class="headerlink" href="#qdma-get-queues-state" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">qdma_get_queues_state</span> <span class="p">(</span>
     <span class="n">UINT16</span> <span class="n">qid</span><span class="p">,</span>
+    <span class="k">enum</span> <a class="reference internal" href="qdma_win_exports_namespace.html#doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edb"><span class="std std-ref">queue_state</span></a><span></span><span class="o">*</span> <span class="n">qstate</span><span class="p">,</span>
     <span class="kt">char</span><span class="o">*</span> <span class="n">state</span><span class="p">,</span>
     <span class="kt">size_t</span> <span class="n">sz</span>
     <span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
 <p class="rubric">Details:</p>
-<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1aed0172c4e04471c782c7c62a98d4d5b3"><span class="std std-ref">qdma_get_queues_state()</span></a> - Retrieves the state of the specified queue</p>
+<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1a0b534e54284930d51bf04920faf24afd"><span class="std std-ref">qdma_get_queues_state()</span></a> - Retrieves the state of the specified queue</p>
 <p class="rubric">Parameters:</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -635,10 +659,13 @@
 <tr class="row-odd"><td><p>qid</p></td>
 <td><p>queue id relative to this QDMA device</p></td>
 </tr>
-<tr class="row-even"><td><p>state</p></td>
+<tr class="row-even"><td><p>qstate</p></td>
+<td><p>state of the queue specified as enumeration</p></td>
+</tr>
+<tr class="row-odd"><td><p>state</p></td>
 <td><p>state of the queue specified as character string</p></td>
 </tr>
-<tr class="row-odd"><td><p>sz</p></td>
+<tr class="row-even"><td><p>sz</p></td>
 <td><p>size of the state character array</p></td>
 </tr>
 </tbody>
@@ -758,7 +785,7 @@
 <p>STATUS_SUCCESS for success else error</p>
 </div>
 <div class="section" id="qdma-enqueue-mm-request">
-<span id="cid-xlnx-qdma-interface-qdma-enqueue-mm-request"></span><span id="doxid-classxlnx-1-1qdma-interface-1a0cbea408083b277155737691da6892cb"></span><h1>qdma_enqueue_mm_request<a class="headerlink" href="#qdma-enqueue-mm-request" title="Permalink to this headline">¶</a></h1>
+<span id="cid-xlnx-qdma-interface-qdma-enqueue-mm-request"></span><span id="doxid-classxlnx-1-1qdma-interface-1addfc5f4cbd8ce97eaac740ae817c7143"></span><h1>qdma_enqueue_mm_request<a class="headerlink" href="#qdma-enqueue-mm-request" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">qdma_enqueue_mm_request</span> <span class="p">(</span>
     <span class="n">UINT16</span> <span class="n">qid</span><span class="p">,</span>
@@ -766,11 +793,10 @@
     <span class="n">PSCATTER_GATHER_LIST</span> <span class="n">sg_list</span><span class="p">,</span>
     <span class="n">LONGLONG</span> <span class="n">device_offset</span><span class="p">,</span>
     <a class="reference internal" href="qdma_win_exports_namespace.html#doxid-qdma-exports-8h-1a7663f97817e791c745baf0198ffab55f"><span class="std std-ref">dma_completion_cb</span></a><span></span> <span class="n">compl_cb</span><span class="p">,</span>
-    <span class="n">VOID</span><span class="o">*</span> <span class="n">priv</span><span class="p">,</span>
-    <span class="kt">size_t</span><span class="o">&amp;</span> <span class="n">xfered_len</span>
+    <span class="n">VOID</span><span class="o">*</span> <span class="n">priv</span>
     <span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
 <p class="rubric">Details:</p>
-<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1a0cbea408083b277155737691da6892cb"><span class="std std-ref">qdma_enqueue_mm_request()</span></a> - enqueues an MM request into specified queue</p>
+<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1addfc5f4cbd8ce97eaac740ae817c7143"><span class="std std-ref">qdma_enqueue_mm_request()</span></a> - enqueues an MM request into specified queue</p>
 <p class="rubric">Parameters:</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -796,26 +822,22 @@
 <tr class="row-even"><td><p>priv</p></td>
 <td><p>private data that gets passed to compl_cb function</p></td>
 </tr>
-<tr class="row-odd"><td><p>xfered_len</p></td>
-<td><p>If status is NT_SUCCESS, then number of bytes for a request successfully enqueued</p></td>
-</tr>
 </tbody>
 </table>
 <p class="rubric">Returns:</p>
 <p>STATUS_SUCCESS for success else error</p>
 </div>
 <div class="section" id="qdma-enqueue-st-tx-request">
-<span id="cid-xlnx-qdma-interface-qdma-enqueue-st-tx-request"></span><span id="doxid-classxlnx-1-1qdma-interface-1a81154303be542e0105efcb2001778e76"></span><h1>qdma_enqueue_st_tx_request<a class="headerlink" href="#qdma-enqueue-st-tx-request" title="Permalink to this headline">¶</a></h1>
+<span id="cid-xlnx-qdma-interface-qdma-enqueue-st-tx-request"></span><span id="doxid-classxlnx-1-1qdma-interface-1ae287281e38602e461abb76baad56d6bb"></span><h1>qdma_enqueue_st_tx_request<a class="headerlink" href="#qdma-enqueue-st-tx-request" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">qdma_enqueue_st_tx_request</span> <span class="p">(</span>
     <span class="n">UINT16</span> <span class="n">qid</span><span class="p">,</span>
     <span class="n">PSCATTER_GATHER_LIST</span> <span class="n">sg_list</span><span class="p">,</span>
     <a class="reference internal" href="qdma_win_exports_namespace.html#doxid-qdma-exports-8h-1a7663f97817e791c745baf0198ffab55f"><span class="std std-ref">dma_completion_cb</span></a><span></span> <span class="n">compl_cb</span><span class="p">,</span>
-    <span class="n">VOID</span><span class="o">*</span> <span class="n">priv</span><span class="p">,</span>
-    <span class="kt">size_t</span><span class="o">&amp;</span> <span class="n">xfered_len</span>
+    <span class="n">VOID</span><span class="o">*</span> <span class="n">priv</span>
     <span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
 <p class="rubric">Details:</p>
-<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1a81154303be542e0105efcb2001778e76"><span class="std std-ref">qdma_enqueue_st_tx_request()</span></a> - enqueues an ST write request into specified queue</p>
+<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1ae287281e38602e461abb76baad56d6bb"><span class="std std-ref">qdma_enqueue_st_tx_request()</span></a> - enqueues an ST write request into specified queue</p>
 <p class="rubric">Parameters:</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
@@ -834,9 +856,6 @@
 </tr>
 <tr class="row-even"><td><p>priv</p></td>
 <td><p>private data that gets passed to compl_cb function</p></td>
-</tr>
-<tr class="row-odd"><td><p>xfered_len</p></td>
-<td><p>If status is NT_SUCCESS, then number of bytes for a request successfully enqueued.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1154,6 +1173,27 @@
 <p class="rubric">Returns:</p>
 <p>STATUS_SUCCESS for success else error</p>
 </div>
+<div class="section" id="qdma-get-reg-info">
+<span id="cid-xlnx-qdma-interface-qdma-get-reg-info"></span><span id="doxid-classxlnx-1-1qdma-interface-1a7ea1e01748e170ee8a37bc949d5fb457"></span><h1>qdma_get_reg_info<a class="headerlink" href="#qdma-get-reg-info" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block"><span></span><span class="k">virtual</span> <span class="n">NTSTATUS</span> <span class="n">qdma_get_reg_info</span> <span class="p">(</span><a class="reference internal" href="qdma_win_exports_namespace.html#doxid-structxlnx-1-1qdma-reg-info"><span class="std std-ref">qdma_reg_info</span></a><span></span><span class="o">*</span> <span class="n">reg_info</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span></pre>
+<p class="rubric">Details:</p>
+<p><a class="reference internal" href="#doxid-classxlnx-1-1qdma-interface-1a7ea1e01748e170ee8a37bc949d5fb457"><span class="std std-ref">qdma_get_reg_info()</span></a> - Retrieves the requested QDMA registers information</p>
+<p class="rubric">Parameters:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>reg_info</p></td>
+<td><p>Register information (Address, Len, etc.,)</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>STATUS_SUCCESS for success else error</p>
+</div>
 <div class="section" id="create-qdma-device">
 <span id="cid-xlnx-qdma-interface-create-qdma-device"></span><span id="doxid-classxlnx-1-1qdma-interface-1ad8618bf207010f5f9bb862ddddbe8c1b"></span><h1>create_qdma_device<a class="headerlink" href="#create-qdma-device" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Syntax:</p>
@@ -1215,7 +1255,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 05, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>

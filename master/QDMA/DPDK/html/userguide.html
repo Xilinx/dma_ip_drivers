@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.1 patch',
+              VERSION:'2020.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.1 patch
+                2020.2
               </div>
             
           
@@ -361,7 +361,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#support-huge-page-allocation-matching">Support Huge page allocation matching</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#virtual-machine-vm-execution-and-test">Virtual Machine (VM) execution and test</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#executing-with-vfio-pci-driver-in-vm-using-qemu">Executing with vfio-pci driver in VM using QEMU</a></li>
 </ul>
@@ -858,6 +857,19 @@ Format for this commad is:</p>
 The first PCIe function that is bound has port id as 0.</p>
 </div></blockquote>
 </li>
+<li><p class="first"><strong>reg_info_read</strong></p>
+<blockquote>
+<div><p>This command reads the field info for the specified number of registers of the given port on console.
+Format for this commad is:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>reg_info_read &lt;port-id&gt; &lt;reg-addr&gt; &lt;num-regs&gt;
+</pre></div>
+</div>
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+The first PCIe function that is bound has port id as 0.</p>
+<p><strong>reg-addr</strong> represents offset of the register in the PCIe BAR <cite>bar-num</cite></p>
+<p><strong>rum-regs</strong> represents number of registers to read</p>
+</div></blockquote>
+</li>
 <li><p class="first"><strong>queue_dump</strong></p>
 <blockquote>
 <div><p>This command dumps the queue context of the specified queue number of the given port.
@@ -909,18 +921,6 @@ Format for this commad is:</p>
 </ol>
 </div>
 </div>
-</div>
-<div class="section" id="support-huge-page-allocation-matching">
-<h2>Support Huge page allocation matching<a class="headerlink" href="#support-huge-page-allocation-matching" title="Permalink to this headline">¶</a></h2>
-<p>QDMA testapp application with DPDK using vfio-pci as binding driver, uses the rte_mem_event_callback_register API to create DMA memory regions for newly allocated regions of memory.
-DPDK creates internal malloc_elem structures for these allocated regions. As users malloc and free memory, DPDK will sometimes merge malloc_elems that originated from different allocations
-that were notified through the registered mem_event callback routine. This results in subsequent allocations that can span across multiple DMA memory regions.</p>
-<p>As a malloc_elem gets split and some of these elements get freed, it can also result in DPDK sending an RTE_MEM_EVENT_FREE notification for a subset of the
-original RTE_MEM_EVENT_ALLOC notification. This is also problematic for DMA memory regions, since unregistering the memory region is all-or-nothing. It is not possible
-to unregister part of a memory region.</p>
-<p>To support these types of applications, DPDK provides Hugepage allocation matching support and it is enabled by specifying the –match-allocations command-line switch to the EAL.
-When this flag is specified, malloc elements from different hugepage allocations will never be merged.
-Memory will also only be freed back to the system (with the requisite memory event callback) exactly as it was originally allocated.</p>
 </div>
 <div class="section" id="virtual-machine-vm-execution-and-test">
 <h2>Virtual Machine (VM) execution and test<a class="headerlink" href="#virtual-machine-vm-execution-and-test" title="Permalink to this headline">¶</a></h2>
@@ -1037,7 +1037,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 08, 2020.
+        Last updated on December 18, 2020.
       </span>
 
     </p>

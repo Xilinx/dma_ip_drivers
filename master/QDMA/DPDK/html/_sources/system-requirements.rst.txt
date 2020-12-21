@@ -7,6 +7,7 @@ Xilinx Accelerator Card
 -----------------------
 
 1. VCU1525
+2. U200
 
 Host System
 -----------

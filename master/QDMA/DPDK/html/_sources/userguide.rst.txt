@@ -515,7 +515,23 @@ Commands supported by the qdma_testapp CLI
 	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
 	The first PCIe function that is bound has port id as 0.
 
-10. **queue_dump**
+10. **reg_info_read**
+
+	This command reads the field info for the specified number of registers of the given port on console.
+	Format for this commad is:
+
+	::
+
+		reg_info_read <port-id> <reg-addr> <num-regs>
+
+	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
+	The first PCIe function that is bound has port id as 0.
+
+	**reg-addr** represents offset of the register in the PCIe BAR `bar-num`
+
+	**rum-regs** represents number of registers to read
+
+11. **queue_dump**
 
 	This command dumps the queue context of the specified queue number of the given port.
 	Format for this commad is:
@@ -529,7 +545,7 @@ Commands supported by the qdma_testapp CLI
 
 	**queue-id** represents the queue number relative to the port, whose context information needs to be logged
 
-11. **desc_dump**
+12. **desc_dump**
 
 	This command dumps the descriptors of the C2H and H2C rings of the specified queue number of the given port.
 	Format for this commad is:
@@ -543,7 +559,7 @@ Commands supported by the qdma_testapp CLI
 
 	**queue-id** represents the queue number relative to the port, whose C2H and H2C ring descriptors needs to be dumped
 
-12. **load_cmds**
+13. **load_cmds**
 
 	This command executes the list of CLI commands from the given file.
 	Format for this commad is:
@@ -554,7 +570,7 @@ Commands supported by the qdma_testapp CLI
 
 	**file_name** represents path to a valid file containing list of above described CLI commands to be executed in sequence.
 
-13. **help**
+14. **help**
 
 	This command dumps the help menu with supported commands and their format.
 	Format for this commad is:
@@ -563,23 +579,10 @@ Commands supported by the qdma_testapp CLI
 
 		help
 
-14. **ctrl+d**
+15. **ctrl+d**
 
 	The keyboard keys ``Ctrl`` and ``D`` when pressed together quits the application.
 
-Support Huge page allocation matching
----------------------------------------
-QDMA testapp application with DPDK using vfio-pci as binding driver, uses the rte_mem_event_callback_register API to create DMA memory regions for newly allocated regions of memory.
-DPDK creates internal malloc_elem structures for these allocated regions. As users malloc and free memory, DPDK will sometimes merge malloc_elems that originated from different allocations 
-that were notified through the registered mem_event callback routine. This results in subsequent allocations that can span across multiple DMA memory regions.
-
-As a malloc_elem gets split and some of these elements get freed, it can also result in DPDK sending an RTE_MEM_EVENT_FREE notification for a subset of the
-original RTE_MEM_EVENT_ALLOC notification. This is also problematic for DMA memory regions, since unregistering the memory region is all-or-nothing. It is not possible
-to unregister part of a memory region.
-
-To support these types of applications, DPDK provides Hugepage allocation matching support and it is enabled by specifying the --match-allocations command-line switch to the EAL.
-When this flag is specified, malloc elements from different hugepage allocations will never be merged.
-Memory will also only be freed back to the system (with the requisite memory event callback) exactly as it was originally allocated.
 
 Virtual Machine (VM) execution and test
 ---------------------------------------

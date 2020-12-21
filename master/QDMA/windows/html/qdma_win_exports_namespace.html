@@ -306,7 +306,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.2
               </div>
             
           
@@ -347,15 +347,18 @@
 <li class="toctree-l4"><a class="reference internal" href="#enum-xlnx-qdma-queue-dir">enum xlnx::qdma_queue_dir</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enum-xlnx-qdma-trig-mode">enum xlnx::qdma_trig_mode</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enum-xlnx-queue-op-mode">enum xlnx::queue_op_mode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enum-xlnx-queue-state">enum xlnx::queue_state</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enum-xlnx-st-c2h-pkt-type">enum xlnx::st_c2h_pkt_type</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-cmpt-info">struct xlnx::qdma_cmpt_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-ctx-info">struct xlnx::qdma_ctx_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-desc-info">struct xlnx::qdma_desc_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-device-attributes-info">struct xlnx::qdma_device_attributes_info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-drv-config">struct xlnx::qdma_drv_config</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-glbl-csr-conf">struct xlnx::qdma_glbl_csr_conf</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-intr-ring-info">struct xlnx::qdma_intr_ring_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-qstat-info">struct xlnx::qdma_qstat_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-reg-dump-info">struct xlnx::qdma_reg_dump_info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-reg-info">struct xlnx::qdma_reg_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-qdma-version-info">struct xlnx::qdma_version_info</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-queue-config">struct xlnx::queue_config</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xlnx-st-c2h-pkt-fragment">struct xlnx::st_c2h_pkt_fragment</a></li>
@@ -369,6 +372,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-is-device-online">qdma_is_device_online</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#read-bar">read_bar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#write-bar">write_bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#get-bar-info">get_bar_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-queues-state">qdma_get_queues_state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-add-queue">qdma_add_queue</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-start-queue">qdma_start_queue</a></li>
@@ -390,6 +394,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-device-version-info">qdma_device_version_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-set-qmax">qdma_set_qmax</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-qstats-info">qdma_get_qstats_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#qdma-get-reg-info">qdma_get_reg_info</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#create-qdma-device">create_qdma_device</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_win_export_apis.html#remove-qdma-device">remove_qdma_device</a></li>
 </ul>
@@ -492,12 +497,12 @@ QDMA Configuration BAR (Contains all QDMA configuration Registers)</p>
 <p id="cid-xlnx-qdma-bar-type-user-bar"><span id="doxid-dummy-1a61ed8a5377bef794c95e50b0402ef9c4a0539c52b0b74af80f3136d66196f7a04"></span><span class="raw-html"><tr><td></span>
 USER_BAR</p>
 <p><span class="raw-html"></td><td></span>
-QDMA User BAR (Contains User Logic Registers)</p>
+QDMA AXI Master Lite BAR (Contains User Logic Registers)</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p id="cid-xlnx-qdma-bar-type-bypass-bar"><span id="doxid-dummy-1a61ed8a5377bef794c95e50b0402ef9c4a01ebb0edf56d6abfa32c34201a4e8bbd"></span><span class="raw-html"><tr><td></span>
 BYPASS_BAR</p>
 <p><span class="raw-html"></td><td></span>
-QDMA Bypass BAR (Contains Bypass Registers to bypass QDMA)</p>
+QDMA AXI Bridge Master BAR (Contains Bypass Registers to bypass QDMA)</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
 </div>
@@ -533,22 +538,22 @@ QDMA Bypass BAR (Contains Bypass Registers to bypass QDMA)</p>
 <p id="cid-xlnx-qdma-q-type-qdma-q-type-h2c"><span id="doxid-qdma-exports-8h-1a4f4556f000ee06271c3228753c0a8e43a23c9f9a39a83d519a0bf406a2bb7683a"></span><span class="raw-html"><tr><td></span>
 QDMA_Q_TYPE_H2C</p>
 <p><span class="raw-html"></td><td></span>
-QDMA_Q_TYPE_H2C: H2C Q</p>
+: H2C Q</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p id="cid-xlnx-qdma-q-type-qdma-q-type-c2h"><span id="doxid-qdma-exports-8h-1a4f4556f000ee06271c3228753c0a8e43a29e142e4330cdd1d8d55e35e3c95a2d7"></span><span class="raw-html"><tr><td></span>
 QDMA_Q_TYPE_C2H</p>
 <p><span class="raw-html"></td><td></span>
-QDMA_Q_TYPE_C2H: C2H Q</p>
+: C2H Q</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p id="cid-xlnx-qdma-q-type-qdma-q-type-cmpt"><span id="doxid-qdma-exports-8h-1a4f4556f000ee06271c3228753c0a8e43afcaebcb60d298fd033e435a067d5b4f3"></span><span class="raw-html"><tr><td></span>
 QDMA_Q_TYPE_CMPT</p>
 <p><span class="raw-html"></td><td></span>
-QDMA_Q_TYPE_CMPT: CMPT Q</p>
+: CMPT Q</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p id="cid-xlnx-qdma-q-type-qdma-q-type-max"><span id="doxid-qdma-exports-8h-1a4f4556f000ee06271c3228753c0a8e43a36b92041230f92ce0097cd6fe4f4e068"></span><span class="raw-html"><tr><td></span>
 QDMA_Q_TYPE_MAX</p>
 <p><span class="raw-html"></td><td></span>
-QDMA_Q_TYPE_MAX: Total Q types</p>
+: Total Q types</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
 </div>
@@ -614,8 +619,48 @@ Indirect Interrupt Mode(Aggregation)</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
 </div>
+<div class="section" id="enum-xlnx-queue-state">
+<span id="cid-xlnx-queue-state"></span><span id="doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edb"></span><span id="index-8"></span><h2>enum xlnx::queue_state<a class="headerlink" href="#enum-xlnx-queue-state" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Overview</p>
+<p>queue_state - State of the QDMA queue</p>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="c1">// enum values</span>
+
+<a class="reference internal" href="#doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba0c02f3442d25e70e8bf72a4df12e869b"><span class="std std-ref">QUEUE_AVAILABLE</span></a><span></span>
+<a class="reference internal" href="#doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba8c49517b99f8e9422cb5d7172f5cae54"><span class="std std-ref">QUEUE_ADDED</span></a><span></span>
+<a class="reference internal" href="#doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba66f102c009f2614c5054b63e8b9fe448"><span class="std std-ref">QUEUE_STARTED</span></a><span></span>
+<a class="reference internal" href="#doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba71ae72937b3b30ce6e1d7032a6757e31"><span class="std std-ref">QUEUE_BUSY</span></a><span></span>
+<a class="reference internal" href="#doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba6330852c5a95a5abd01371fdd688d31c"><span class="std std-ref">QUEUE_INVALID_STATE</span></a></pre>
+<p class="rubric" id="details-doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edb">Enum values</p>
+<p><span class="raw-html"><table><tr><th>Value</th><th>Description</th></tr></span></p>
+<p id="cid-xlnx-queue-state-queue-available"><span id="doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba0c02f3442d25e70e8bf72a4df12e869b"></span><span class="raw-html"><tr><td></span>
+QUEUE_AVAILABLE</p>
+<p><span class="raw-html"></td><td></span>
+Queue is available to configure</p>
+<p><span class="raw-html"></td></tr></span></p>
+<p id="cid-xlnx-queue-state-queue-added"><span id="doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba8c49517b99f8e9422cb5d7172f5cae54"></span><span class="raw-html"><tr><td></span>
+QUEUE_ADDED</p>
+<p><span class="raw-html"></td><td></span>
+Queue is added with resources</p>
+<p><span class="raw-html"></td></tr></span></p>
+<p id="cid-xlnx-queue-state-queue-started"><span id="doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba66f102c009f2614c5054b63e8b9fe448"></span><span class="raw-html"><tr><td></span>
+QUEUE_STARTED</p>
+<p><span class="raw-html"></td><td></span>
+Queue is programmed and started</p>
+<p><span class="raw-html"></td></tr></span></p>
+<p id="cid-xlnx-queue-state-queue-busy"><span id="doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba71ae72937b3b30ce6e1d7032a6757e31"></span><span class="raw-html"><tr><td></span>
+QUEUE_BUSY</p>
+<p><span class="raw-html"></td><td></span>
+Queue critical operation is in progress</p>
+<p><span class="raw-html"></td></tr></span></p>
+<p id="cid-xlnx-queue-state-queue-invalid-state"><span id="doxid-qdma-exports-8h-1ad5f8ebb7c782183ce8ce1a3cfc3d5edba6330852c5a95a5abd01371fdd688d31c"></span><span class="raw-html"><tr><td></span>
+QUEUE_INVALID_STATE</p>
+<p><span class="raw-html"></td><td></span>
+Invalid Queue State</p>
+<p><span class="raw-html"></td></tr></span></p>
+<p><span class="raw-html"></table></span></p>
+</div>
 <div class="section" id="enum-xlnx-st-c2h-pkt-type">
-<span id="cid-xlnx-st-c2h-pkt-type"></span><span id="doxid-qdma-exports-8h-1acb4caa00d42791c36f90884df7495f6f"></span><span id="index-8"></span><h2>enum xlnx::st_c2h_pkt_type<a class="headerlink" href="#enum-xlnx-st-c2h-pkt-type" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-st-c2h-pkt-type"></span><span id="doxid-qdma-exports-8h-1acb4caa00d42791c36f90884df7495f6f"></span><span id="index-9"></span><h2>enum xlnx::st_c2h_pkt_type<a class="headerlink" href="#enum-xlnx-st-c2h-pkt-type" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Overview</p>
 <p>Streaming card to host packet type</p>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="c1">// enum values</span>
@@ -637,7 +682,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p><span class="raw-html"></table></span></p>
 </div>
 <div class="section" id="struct-xlnx-qdma-cmpt-info">
-<span id="cid-xlnx-qdma-cmpt-info"></span><span id="doxid-structxlnx-1-1qdma-cmpt-info"></span><span id="index-9"></span><h2>struct xlnx::qdma_cmpt_info<a class="headerlink" href="#struct-xlnx-qdma-cmpt-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-cmpt-info"></span><span id="doxid-structxlnx-1-1qdma-cmpt-info"></span><span id="index-10"></span><h2>struct xlnx::qdma_cmpt_info<a class="headerlink" href="#struct-xlnx-qdma-cmpt-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-cmpt-info"><span class="std std-ref">qdma_cmpt_info</span></a> - Structure contains required members to retrieve completion ring information</p>
@@ -657,7 +702,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>Buffer to hold Completion Descriptors</p>
 </div>
 <div class="section" id="struct-xlnx-qdma-ctx-info">
-<span id="cid-xlnx-qdma-ctx-info"></span><span id="doxid-structxlnx-1-1qdma-ctx-info"></span><span id="index-10"></span><h2>struct xlnx::qdma_ctx_info<a class="headerlink" href="#struct-xlnx-qdma-ctx-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-ctx-info"></span><span id="doxid-structxlnx-1-1qdma-ctx-info"></span><span id="index-11"></span><h2>struct xlnx::qdma_ctx_info<a class="headerlink" href="#struct-xlnx-qdma-ctx-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-ctx-info"><span class="std std-ref">qdma_ctx_info</span></a> - Structure contains required members to retrieve QDMA queue context information</p>
@@ -677,7 +722,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>Buffer to hold context information</p>
 </div>
 <div class="section" id="struct-xlnx-qdma-desc-info">
-<span id="cid-xlnx-qdma-desc-info"></span><span id="doxid-structxlnx-1-1qdma-desc-info"></span><span id="index-11"></span><h2>struct xlnx::qdma_desc_info<a class="headerlink" href="#struct-xlnx-qdma-desc-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-desc-info"></span><span id="doxid-structxlnx-1-1qdma-desc-info"></span><span id="index-12"></span><h2>struct xlnx::qdma_desc_info<a class="headerlink" href="#struct-xlnx-qdma-desc-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-desc-info"><span class="std std-ref">qdma_desc_info</span></a> - Structure contains required members to retrieve descriptor information</p>
@@ -703,7 +748,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>Size of the data returned</p>
 </div>
 <div class="section" id="struct-xlnx-qdma-device-attributes-info">
-<span id="cid-xlnx-qdma-device-attributes-info"></span><span id="doxid-structxlnx-1-1qdma-device-attributes-info"></span><span id="index-12"></span><h2>struct xlnx::qdma_device_attributes_info<a class="headerlink" href="#struct-xlnx-qdma-device-attributes-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-device-attributes-info"></span><span id="doxid-structxlnx-1-1qdma-device-attributes-info"></span><span id="index-13"></span><h2>struct xlnx::qdma_device_attributes_info<a class="headerlink" href="#struct-xlnx-qdma-device-attributes-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-device-attributes-info"><span class="std std-ref">qdma_device_attributes_info</span></a> - Device Attributes/Features</p>
@@ -722,11 +767,20 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>MM Completion Feature enabled</p>
 <pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-device-attributes-info-mailbox-en"><span id="doxid-structxlnx-1-1qdma-device-attributes-info-1aa8ef630171be6637bfc9fd4c047a8243"></span><span></span><span class="kt">bool</span> <span class="n">mailbox_en</span></pre>
 <p>Mailbox Feature enabled</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-device-attributes-info-debug-mode"><span id="doxid-structxlnx-1-1qdma-device-attributes-info-1a567a0944b94d0df509c5af13e73e4586"></span><span></span><span class="kt">bool</span> <span class="n">debug_mode</span></pre>
+<p>Debug mode is enabled/disabled for IP</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-device-attributes-info-desc-eng-mode"><span id="doxid-structxlnx-1-1qdma-device-attributes-info-1af1e3a7964fc30a7ede58aaac6046ca36"></span><span></span><span class="n">UINT8</span> <span class="n">desc_eng_mode</span></pre>
+<p>Descriptor Engine mode: Internal only/Bypass only/Internal &amp; Bypass</p>
 <pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-device-attributes-info-num-mm-channels"><span id="doxid-structxlnx-1-1qdma-device-attributes-info-1ae511629b409beeff3db88298510711b8"></span><span></span><span class="n">UINT16</span> <span class="n">num_mm_channels</span></pre>
 <p>Number of MM channels supported</p>
 </div>
+<div class="section" id="struct-xlnx-qdma-drv-config">
+<span id="cid-xlnx-qdma-drv-config"></span><span id="doxid-structxlnx-1-1qdma-drv-config"></span><span id="index-14"></span><h2>struct xlnx::qdma_drv_config<a class="headerlink" href="#struct-xlnx-qdma-drv-config" title="Permalink to this headline">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
+<p>dev_config - qdma device configuration needed to initialize the device</p>
+<span class="target" id="cid-xlnx-qdma-drv-config-user-interrupt-disable-handler"><span id="doxid-structxlnx-1-1qdma-drv-config-1a6ad5f0775dd1a063f6fe25a62c91785f"></span><span id="cid-xlnx-qdma-drv-config-user-interrupt-enable-handler"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1ab762b4bb417caf08723085faeb249204"></span><span id="cid-xlnx-qdma-drv-config-user-isr-handler"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1a29edd798a5005c750510fef73aaf69f6"></span><span id="cid-xlnx-qdma-drv-config-user-data"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1a700561581b4b77fec191882df9cde34c"></span><span id="cid-xlnx-qdma-drv-config-data-msix-max"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1a622eeff3beddd83e47545a314b119641"></span><span id="cid-xlnx-qdma-drv-config-user-msix-max"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1abec1e53df670e4a2cd163e4d598da54f"></span><span id="cid-xlnx-qdma-drv-config-qsets-max"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1a9ea2a7d96b5c5d1fbdae0fff6bf5d942"></span><span id="cid-xlnx-qdma-drv-config-cfg-bar"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1ae4d10b71432807e0aeb978cbd39f1b58"></span><span id="cid-xlnx-qdma-drv-config-operation-mode"></span><span id="doxid-structxlnx-1-1qdma-drv-config-1ab1c1d7d039dbf21999d7b0868ff9dc07"></span></span></div>
 <div class="section" id="struct-xlnx-qdma-glbl-csr-conf">
-<span id="cid-xlnx-qdma-glbl-csr-conf"></span><span id="doxid-structxlnx-1-1qdma-glbl-csr-conf"></span><span id="index-13"></span><h2>struct xlnx::qdma_glbl_csr_conf<a class="headerlink" href="#struct-xlnx-qdma-glbl-csr-conf" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-glbl-csr-conf"></span><span id="doxid-structxlnx-1-1qdma-glbl-csr-conf"></span><span id="index-15"></span><h2>struct xlnx::qdma_glbl_csr_conf<a class="headerlink" href="#struct-xlnx-qdma-glbl-csr-conf" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-glbl-csr-conf"><span class="std std-ref">qdma_glbl_csr_conf</span></a> - Provides the available CSR connfiguration registers</p>
@@ -743,7 +797,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>Writeback interval timeout register</p>
 </div>
 <div class="section" id="struct-xlnx-qdma-intr-ring-info">
-<span id="cid-xlnx-qdma-intr-ring-info"></span><span id="doxid-structxlnx-1-1qdma-intr-ring-info"></span><span id="index-14"></span><h2>struct xlnx::qdma_intr_ring_info<a class="headerlink" href="#struct-xlnx-qdma-intr-ring-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-intr-ring-info"></span><span id="doxid-structxlnx-1-1qdma-intr-ring-info"></span><span id="index-16"></span><h2>struct xlnx::qdma_intr_ring_info<a class="headerlink" href="#struct-xlnx-qdma-intr-ring-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-intr-ring-info"><span class="std std-ref">qdma_intr_ring_info</span></a> - Structure contains required members to retrieve Interrupt ring information.</p>
@@ -764,7 +818,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>Buffer to hold interrupt ring information</p>
 </div>
 <div class="section" id="struct-xlnx-qdma-qstat-info">
-<span id="cid-xlnx-qdma-qstat-info"></span><span id="doxid-structxlnx-1-1qdma-qstat-info"></span><span id="index-15"></span><h2>struct xlnx::qdma_qstat_info<a class="headerlink" href="#struct-xlnx-qdma-qstat-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-qstat-info"></span><span id="doxid-structxlnx-1-1qdma-qstat-info"></span><span id="index-17"></span><h2>struct xlnx::qdma_qstat_info<a class="headerlink" href="#struct-xlnx-qdma-qstat-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>qdma_queue_stats - Structure contains required members to retrieve queue stats information</p>
@@ -782,7 +836,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>Active completion queues for this device</p>
 </div>
 <div class="section" id="struct-xlnx-qdma-reg-dump-info">
-<span id="cid-xlnx-qdma-reg-dump-info"></span><span id="doxid-structxlnx-1-1qdma-reg-dump-info"></span><span id="index-16"></span><h2>struct xlnx::qdma_reg_dump_info<a class="headerlink" href="#struct-xlnx-qdma-reg-dump-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-reg-dump-info"></span><span id="doxid-structxlnx-1-1qdma-reg-dump-info"></span><span id="index-18"></span><h2>struct xlnx::qdma_reg_dump_info<a class="headerlink" href="#struct-xlnx-qdma-reg-dump-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-reg-dump-info"><span class="std std-ref">qdma_reg_dump_info</span></a> - Structure contains required members to retrieve register dump information</p>
@@ -797,8 +851,27 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-dump-info-pbuffer"><span id="doxid-structxlnx-1-1qdma-reg-dump-info-1a8281e22324a1c1c059f6395c38839c14"></span><span></span><span class="kt">char</span><span class="o">*</span> <span class="n">pbuffer</span></pre>
 <p>Buffer to hold regsiter dump information</p>
 </div>
+<div class="section" id="struct-xlnx-qdma-reg-info">
+<span id="cid-xlnx-qdma-reg-info"></span><span id="doxid-structxlnx-1-1qdma-reg-info"></span><span id="index-19"></span><h2>struct xlnx::qdma_reg_info<a class="headerlink" href="#struct-xlnx-qdma-reg-info" title="Permalink to this headline">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
+<p class="rubric">Overview</p>
+<p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-reg-info"><span class="std std-ref">qdma_reg_info</span></a> - Structure contains required members to retrieve requested qdma registers information</p>
+<p class="rubric">Fields</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-info-bar-no"><span id="doxid-structxlnx-1-1qdma-reg-info-1a646bc45135b47dc3bd1eb9ca1f117cf2"></span><span></span><span class="n">UINT32</span> <span class="n">bar_no</span></pre>
+<p>PCIe bar number</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-info-address"><span id="doxid-structxlnx-1-1qdma-reg-info-1aa760d87f2ef5f0e7c17da921914ede4b"></span><span></span><span class="n">UINT32</span> <span class="n">address</span></pre>
+<p>Register address offset</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-info-reg-cnt"><span id="doxid-structxlnx-1-1qdma-reg-info-1a8a75ce00afa1b61ba962d6b31d7d24f7"></span><span></span><span class="n">UINT32</span> <span class="n">reg_cnt</span></pre>
+<p>number of registers to retrieve</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-info-buf-len"><span id="doxid-structxlnx-1-1qdma-reg-info-1a5d57843441799e74945873502986666f"></span><span></span><span class="kt">size_t</span> <span class="n">buf_len</span></pre>
+<p>Length of the buffer pointed by pbuffer</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-info-ret-len"><span id="doxid-structxlnx-1-1qdma-reg-info-1a6cd88ddc3678de4482471da5b5dd7e56"></span><span></span><span class="kt">size_t</span> <span class="n">ret_len</span></pre>
+<p>Length of the data present in pbuffer</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-reg-info-pbuffer"><span id="doxid-structxlnx-1-1qdma-reg-info-1a4a7615dfced29a1a0c62e8c8c01dd6f7"></span><span></span><span class="kt">char</span><span class="o">*</span> <span class="n">pbuffer</span></pre>
+<p>output buffer to copy the register info</p>
+</div>
 <div class="section" id="struct-xlnx-qdma-version-info">
-<span id="cid-xlnx-qdma-version-info"></span><span id="doxid-structxlnx-1-1qdma-version-info"></span><span id="index-17"></span><h2>struct xlnx::qdma_version_info<a class="headerlink" href="#struct-xlnx-qdma-version-info" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-qdma-version-info"></span><span id="doxid-structxlnx-1-1qdma-version-info"></span><span id="index-20"></span><h2>struct xlnx::qdma_version_info<a class="headerlink" href="#struct-xlnx-qdma-version-info" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1qdma-version-info"><span class="std std-ref">qdma_version_info</span></a> - QDMA HW and SW version information</p>
@@ -815,7 +888,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>QDMA SW Version string</p>
 </div>
 <div class="section" id="struct-xlnx-queue-config">
-<span id="cid-xlnx-queue-config"></span><span id="doxid-structxlnx-1-1queue-config"></span><span id="index-18"></span><h2>struct xlnx::queue_config<a class="headerlink" href="#struct-xlnx-queue-config" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-queue-config"></span><span id="doxid-structxlnx-1-1queue-config"></span><span id="index-21"></span><h2>struct xlnx::queue_config<a class="headerlink" href="#struct-xlnx-queue-config" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1queue-config"><span class="std std-ref">queue_config</span></a> - qdma queue configuration needed to add a queue</p>
@@ -852,7 +925,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
 <p>ST UDD data only call back function</p>
 </div>
 <div class="section" id="struct-xlnx-st-c2h-pkt-fragment">
-<span id="cid-xlnx-st-c2h-pkt-fragment"></span><span id="doxid-structxlnx-1-1st-c2h-pkt-fragment"></span><span id="index-19"></span><h2>struct xlnx::st_c2h_pkt_fragment<a class="headerlink" href="#struct-xlnx-st-c2h-pkt-fragment" title="Permalink to this headline">¶</a></h2>
+<span id="cid-xlnx-st-c2h-pkt-fragment"></span><span id="doxid-structxlnx-1-1st-c2h-pkt-fragment"></span><span id="index-22"></span><h2>struct xlnx::st_c2h_pkt_fragment<a class="headerlink" href="#struct-xlnx-st-c2h-pkt-fragment" title="Permalink to this headline">¶</a></h2>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;qdma_exports.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p><a class="reference internal" href="#doxid-structxlnx-1-1st-c2h-pkt-fragment"><span class="std std-ref">st_c2h_pkt_fragment</span></a> - C2H Packet Details</p>
@@ -940,6 +1013,63 @@ C2H USER DEFINED DATA Packet MACRO</p>
 </table>
 <p class="rubric">Returns:</p>
 <p>void</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-fp-user-isr-handler"><span id="doxid-qdma-exports-8h-1a7246fb4c9d7fcf5a4607bdd79ea93c33"></span><span></span><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="p">(</span><span class="n">ULONG</span> <span class="n">event_id</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span><span class="n">user_data</span><span class="p">)</span> <span class="n">fp_user_isr_handler</span></pre>
+<p><a class="reference internal" href="#doxid-qdma-exports-8h-1a7246fb4c9d7fcf5a4607bdd79ea93c33"><span class="std std-ref">fp_user_isr_handler()</span></a> - User defined user ISR handler</p>
+<p class="rubric">Parameters:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>event_id</p></td>
+<td><p>Event identifier</p></td>
+</tr>
+<tr class="row-even"><td><p>user_data</p></td>
+<td><p>Driver provided user data</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>void</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-fp-user-interrupt-enable-handler"><span id="doxid-qdma-exports-8h-1a51ecf11933f17a7f5df3df409f9304aa"></span><span></span><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="p">(</span><span class="n">ULONG</span> <span class="n">event_id</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span><span class="n">user_data</span><span class="p">)</span> <span class="n">fp_user_interrupt_enable_handler</span></pre>
+<p><a class="reference internal" href="#doxid-qdma-exports-8h-1a51ecf11933f17a7f5df3df409f9304aa"><span class="std std-ref">fp_user_interrupt_enable_handler()</span></a> - User defined user ISR handler</p>
+<p class="rubric">Parameters:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>event_id</p></td>
+<td><p>Event identifier</p></td>
+</tr>
+<tr class="row-even"><td><p>user_data</p></td>
+<td><p>Driver provided user data</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>void</p>
+<pre class="highlight title-code-block literal-block" id="cid-xlnx-fp-user-interrupt-disable-handler"><span id="doxid-qdma-exports-8h-1a66ce3debe916340b24db0a6998a4bd45"></span><span></span><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="p">(</span><span class="n">ULONG</span> <span class="n">event_id</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span><span class="n">user_data</span><span class="p">)</span> <span class="n">fp_user_interrupt_disable_handler</span></pre>
+<p><a class="reference internal" href="#doxid-qdma-exports-8h-1a66ce3debe916340b24db0a6998a4bd45"><span class="std std-ref">fp_user_interrupt_disable_handler()</span></a> - User defined user ISR handler</p>
+<p class="rubric">Parameters:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>event_id</p></td>
+<td><p>Event identifier</p></td>
+</tr>
+<tr class="row-even"><td><p>user_data</p></td>
+<td><p>Driver provided user data</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>void</p>
 <p>Global Variables</p>
 <pre class="highlight title-code-block literal-block" id="cid-xlnx-qdma-glbl-csr-reg-cnt"><span id="doxid-qdma-exports-8h-1a799a74ea07ac7506793b39e4694b9003"></span><span></span><span class="k">static</span> <span class="k">constexpr</span> <span class="kt">size_t</span> <span class="n">QDMA_GLBL_CSR_REG_CNT</span></pre>
 <p>Specifies No of CSR Global Registers avalable</p>
@@ -976,7 +1106,7 @@ C2H USER DEFINED DATA Packet MACRO</p>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 05, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>

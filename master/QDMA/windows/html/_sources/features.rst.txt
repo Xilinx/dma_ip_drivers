@@ -72,3 +72,4 @@ QDMA Software Features
 - Dynamic driver configuration, refer to Interface file, qdma_exports.h
 - Asynchronous and Synchronous IO support
 - Display the Version details for SW and HW
+- Debug mode and Internal only mode support

@@ -306,7 +306,7 @@
             
             
               <div class="version">
-                2020.1
+                2020.2
               </div>
             
           
@@ -355,6 +355,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#dump-queue-descriptor-information">Dump Queue Descriptor Information</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dump-the-interrupt-ring-information">Dump the Interrupt Ring Information</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dump-the-queue-registers">Dump the Queue registers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dump-the-registers-bit-field-wise">Dump the registers bit-field wise</a></li>
 </ul>
 </li>
 </ul>
@@ -657,7 +658,7 @@ Deleted Queue 0 Successfull
 <div class="section" id="dump-qdma-queue-context">
 <h3>Dump QDMA Queue Context<a class="headerlink" href="#dump-qdma-queue-context" title="Permalink to this headline">¶</a></h3>
 <p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">queue</span> <span class="pre">dump</span> <span class="pre">qid</span> <span class="pre">&lt;N&gt;</span> <span class="pre">ctx</span> <span class="pre">type</span> <span class="pre">&lt;h2c|c2h&gt;</span></code></p>
-<p>C:UsersarayajigDocumentseqdmabindma-ctl.exe qdma04000 queue dump qid 1 ctx type c2h
+<p>dma-ctl.exe qdma04000 queue dump qid 1 ctx type c2h
 Dumps the information for multiple queues</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -756,7 +757,7 @@ Valid                                           0x1        1
 <h3>Dump Queue Descriptor Information<a class="headerlink" href="#dump-queue-descriptor-information" title="Permalink to this headline">¶</a></h3>
 <p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">queue</span> <span class="pre">dump</span> <span class="pre">qid</span> <span class="pre">&lt;N&gt;</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h&gt;</span> <span class="pre">desc</span> <span class="pre">&lt;start&gt;</span> <span class="pre">&lt;end&gt;</span></code>
 <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">queue</span> <span class="pre">dump</span> <span class="pre">qid</span> <span class="pre">&lt;N&gt;</span> <span class="pre">cmpt</span> <span class="pre">&lt;start&gt;</span> <span class="pre">&lt;end&gt;</span></code></p>
-<p>PS H:&gt; C:UsersarayajigDocumentseqdmabindma-ctl.exe qdma04000 queue dump qid 0 dir c2h desc 0 10</p>
+<p>dma-ctl.exe qdma04000 queue dump qid 0 dir c2h desc 0 10</p>
 <p>Dump the queue descriptor information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -803,7 +804,7 @@ PS H:\&gt; .\dma-ctl.exe qdma04000 queue dump qid 0 cmpt 0 10
 <li><p>&lt;start_idx&gt; : Range start index</p></li>
 <li><p>&lt;end_idx&gt; : Range end index</p></li>
 </ul>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>PS H:\&gt; C:\Users\arayajig\Documents\eqdma\bin\dma-ctl.exe qdma04000 intring dump vector 1 0 30
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>PS H:\&gt; dma-ctl.exe qdma04000 intring dump vector 1 0 30
     0 : 00000000 00000000
     1 : 00000000 00000000
     2 : 00000000 00000000
@@ -1180,6 +1181,65 @@ PS H:\&gt; .\dma-ctl.exe qdma04000 queue dump qid 0 cmpt 0 10
 </pre></div>
 </div>
 </div>
+<div class="section" id="dump-the-registers-bit-field-wise">
+<h3>Dump the registers bit-field wise<a class="headerlink" href="#dump-the-registers-bit-field-wise" title="Permalink to this headline">¶</a></h3>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">info</span> <span class="pre">bar</span> <span class="pre">&lt;bar_no&gt;</span> <span class="pre">addr</span> <span class="pre">&lt;ADDR&gt;</span> <span class="pre">[num_regs</span> <span class="pre">&lt;cnt&gt;]</span></code></p>
+<p>This command allows the user to dump the bit-field specific details of QDMA registers.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>PS H:\&gt; dma-ctl.exe qdma17000 reg info bar 0 0x0 num_regs 10
+CFG_BLK_IDENTIFIER                       0x0       0x1fd30001 533921793
+CFG_BLK_IDENTIFIER                       [31,20]   0x1fd
+CFG_BLK_IDENTIFIER_1                     [19,16]   0x3
+CFG_BLK_IDENTIFIER_RSVD_1                [15, 8]   0
+CFG_BLK_IDENTIFIER_VERSION               [ 7, 0]   0x1
+
+CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x51       81
+CFG_BLK_IDENTIFIER                       [31, 7]   0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x1
+
+CFG_BLK_PCIE_MAX_READ_REQ_SIZE           0xc       0x52       82
+CFG_BLK_IDENTIFIER                       [31, 7]   0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x2
+
+CFG_BLK_SYSTEM_ID                        0x10      0xff01     65281
+CFG_BLK_IDENTIFIER                       [31,17]   0
+CFG_BLK_IDENTIFIER_1                     [   16]   0
+CFG_BLK_IDENTIFIER_RSVD_1                [15, 0]   0xff01
+
+CFG_BLK_MSIX_ENABLE                      0x14      0xf        15
+CFG_BLK_IDENTIFIER                       [31, 0]   0xf
+
+CFG_PCIE_DATA_WIDTH                      0x18      0x3        3
+CFG_BLK_IDENTIFIER                       [31, 3]   0
+CFG_BLK_IDENTIFIER_1                     [ 2, 0]   0x3
+
+CFG_PCIE_CTL                             0x1c      0x1        1
+CFG_BLK_IDENTIFIER                       [31,18]   0
+CFG_BLK_IDENTIFIER_1                     [17,16]   0
+CFG_BLK_IDENTIFIER_RSVD_1                [15, 2]   0
+CFG_BLK_IDENTIFIER_VERSION               [    1]   0
+CFG_BLK_PCIE_MAX_PLD_SIZE_RSVD_1         [    0]   0x1
+
+CFG_BLK_MSI_ENABLE                       0x20      0          0
+CFG_BLK_IDENTIFIER                       [31, 0]   0
+
+CFG_AXI_USER_MAX_PLD_SIZE                0x40      0x55       85
+CFG_BLK_IDENTIFIER                       [31, 7]   0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x5
+
+CFG_AXI_USER_MAX_READ_REQ_SIZE           0x44      0x55       85
+CFG_BLK_IDENTIFIER                       [31, 7]   0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x5
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 
@@ -1213,7 +1273,7 @@ PS H:\&gt; .\dma-ctl.exe qdma04000 queue dump qid 0 cmpt 0 10
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 05, 2020.
+        Last updated on December 21, 2020.
       </span>
 
     </p>
