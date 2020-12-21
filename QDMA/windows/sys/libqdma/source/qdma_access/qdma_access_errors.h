@@ -14,9 +14,12 @@
  * under the License.
  */
 
-#ifndef QDMA_ACCESS_ERRORS_H_
-#define QDMA_ACCESS_ERRORS_H_
+#ifndef __QDMA_ACCESS_ERRORS_H_
+#define __QDMA_ACCESS_ERRORS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * DOC: QDMA common library error codes definitions
@@ -62,4 +65,8 @@ enum qdma_access_error_codes {
 	QDMA_ERR_MBOX_ALL_ZERO_MSG,			/* 25 */
 };
 
-#endif /* QDMA_ACCESS_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __QDMA_ACCESS_ERRORS_H_ */

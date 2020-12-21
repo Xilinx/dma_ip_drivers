@@ -21,7 +21,7 @@
 #undef  VER_PRODUCTMAJORVERSION
 #define VER_PRODUCTMAJORVERSION            (2020)
 #undef  VER_PRODUCTMINORVERSION
-#define VER_PRODUCTMINORVERSION            (1)
+#define VER_PRODUCTMINORVERSION            (2)
 #undef  VER_PRODUCTREVISION
 #define VER_PRODUCTREVISION                (0)
 #undef  VER_PRODUCTBUILD
@@ -56,11 +56,11 @@
 
 // Version number (in format needed for version resources)
 #undef  VER_PRODUCTVERSION
-#define VER_PRODUCTVERSION                 2020,1,0,0
+#define VER_PRODUCTVERSION                 2020,2,0,0
 
 // Version number string
 #undef  VER_PRODUCTVERSION_STR
-#define VER_PRODUCTVERSION_STR             "2020.1.0.0"
+#define VER_PRODUCTVERSION_STR             "2020.2.0.0"
 
 /** File Details ************************************************************/
 

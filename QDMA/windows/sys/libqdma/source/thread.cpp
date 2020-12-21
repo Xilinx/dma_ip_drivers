@@ -32,7 +32,7 @@ VOID qdma_poll_thread(
     KAFFINITY affinity = (KAFFINITY)1 << th->id;
     KeSetSystemAffinityThread(affinity);
 
-    TraceVerbose(TRACE_THREAD, "Active thread ID : %lu", th->id);
+    TraceVerbose(TRACE_THREAD, "Thread active on CPU core : %lu", th->id);
 
     while (1) {
 
@@ -45,7 +45,7 @@ VOID qdma_poll_thread(
         InterlockedDecrement(&th->sem_count);
 
         if (th->terminate) {
-            TraceInfo(TRACE_THREAD, "Terminating thread : %lu", th->id);
+            TraceVerbose(TRACE_THREAD, "Terminating thread on CPU core: %lu", th->id);
             PsTerminateSystemThread(STATUS_SUCCESS);
         }
 
@@ -96,7 +96,7 @@ NTSTATUS thread_manager::create_sys_threads(queue_op_mode mode)
 
     threads = static_cast<qdma_thread *>(qdma_calloc(active_processors, sizeof(qdma_thread)));
     if (nullptr == threads) {
-        return STATUS_MEMORY_NOT_ALLOCATED;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     for (i = 0; i < active_processors; ++i) {
@@ -116,7 +116,7 @@ NTSTATUS thread_manager::create_sys_threads(queue_op_mode mode)
                                       qdma_poll_thread,
                                       &threads[i]);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_THREAD, "Failed to create thread %d - %!STATUS!", i, status);
+            TraceError(TRACE_THREAD, "Failed to create thread on cpu core %d - %!STATUS!", i, status);
             break;
         }
 
@@ -131,7 +131,7 @@ NTSTATUS thread_manager::create_sys_threads(queue_op_mode mode)
 
         status = WdfSpinLockCreate(WDF_NO_OBJECT_ATTRIBUTES, &threads[i].lock);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_THREAD, "Failed to create thread %d - %!STATUS!", i, status);
+            TraceError(TRACE_THREAD, "Failed to create thread spinlock for CPU core %d - %!STATUS!", i, status);
             active_threads = i + 1;
             goto ErrExit;
         }
@@ -206,7 +206,7 @@ void err_poll_thread(PVOID context)
         ctx->device->hw.qdma_hw_error_process(ctx->device);
 
         if (ctx->terminate) {
-            TraceInfo(TRACE_THREAD, "Terminating Err thread");
+            TraceVerbose(TRACE_THREAD, "ctx->terminate");
             PsTerminateSystemThread(STATUS_SUCCESS);
         }
 
@@ -218,7 +218,7 @@ NTSTATUS thread_manager::create_err_poll_thread(qdma_device *device)
 {
     err_th_para = static_cast<err_thread *>(qdma_calloc(1, sizeof(err_thread)));
     if (nullptr == err_th_para) {
-        return STATUS_MEMORY_NOT_ALLOCATED;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* THREAD DATA INITIALIZATION */
@@ -233,7 +233,7 @@ NTSTATUS thread_manager::create_err_poll_thread(qdma_device *device)
                                        err_poll_thread,
                                        err_th_para);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_THREAD, "Failed to create Err thread - %!STATUS!", status);
+        TraceError(TRACE_THREAD, "Failed to create Error handling thread - %!STATUS!", status);
         qdma_memfree(err_th_para);
         err_th_para = nullptr;
         return status;
@@ -248,14 +248,14 @@ NTSTATUS thread_manager::create_err_poll_thread(qdma_device *device)
 
     ZwClose(err_th_para->th_handle);
 
-    TraceVerbose(TRACE_THREAD, "Err Thread Init Successfull");
+    TraceVerbose(TRACE_THREAD, "Error handling Thread Active");
 
     return STATUS_SUCCESS;
 }
 
 void thread_manager::terminate_err_poll_thread(void)
 {
-    TraceVerbose(TRACE_THREAD, "terminate_err_poll_thread called");
+    TraceVerbose(TRACE_THREAD, "terminating error handling thread");
 
     if (err_th_para == nullptr)
         return;

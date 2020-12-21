@@ -87,6 +87,18 @@ static constexpr unsigned int mm_c2h_completion_weight = 2048;
 static constexpr unsigned int st_h2c_completion_weight = 2048;
 static constexpr unsigned int st_c2h_completion_weight = 2048;
 
+static constexpr unsigned int max_req_service_cnt = 10;
+
+/**
+ * Structure to hold the driver name and mode
+ */
+struct drv_mode_name {
+    /**  Mode of the function */
+    queue_op_mode mode;
+    /**  Driver Name */
+    char name[20];
+};
+
 class qdma_device;
 struct queue_pair;
 
@@ -111,6 +123,9 @@ struct queue_pair;
 #define LIST_FOR_EACH_ENTRY_SAFE(list_head, n, entry)   \
     for ((entry) = (list_head)->Flink, (n) = (entry)->Flink; (entry) != (list_head); (entry) = (n), (n) = (entry)->Flink)
 
+#define LIST_GET_ENTRY(entry, type, member)  \
+    CONTAINING_RECORD(entry, type, member)
+
 /** queue_type - QDMA queue type */
 enum class queue_type {
     /** Memory mapped queue type */
@@ -121,30 +136,25 @@ enum class queue_type {
     NONE
 };
 
-/** queue_state - State of the QDMA queue */
-enum queue_state {
-    /** Queue is available to configure */
-    QUEUE_AVAILABLE,
-    /** Queue is added with resources */
-    QUEUE_ADDED,
-    /** Queue is programmed and started */
-    QUEUE_STARTED,
-    /** Queue critical operation is in progress */
-    QUEUE_BUSY
-};
-
 /** device_state - State of the QDMA device */
 enum device_state {
-    /** Device is online */
-    DEVICE_ONLINE,
+    /** Device is in Init State */
+    DEVICE_INIT,
     /** Device is offline */
     DEVICE_OFFLINE,
+    /** Device is online */
+    DEVICE_ONLINE,
 };
 
 /**
  *    Maxinum length of the QDMA device name
  */
 #define QDMA_DEV_NAME_MAXLEN    32
+
+ /**
+  * QDMA_QUEUE_NAME_MAXLEN - Maximum queue name length
+  */
+#define QDMA_QUEUE_NAME_MAXLEN	32
 
  /**
   * qdma_dev_conf - defines the per-device qdma property.
@@ -200,7 +210,6 @@ struct ring_buffer {
     struct {
         UINT32 tot_desc_accepted;
         UINT32 tot_desc_processed;
-        UINT32 tot_desc_dropped;
     }stats;
 
     PFORCEINLINE void advance_idx(volatile UINT32& idx);
@@ -312,12 +321,40 @@ struct st_c2h_pkt_buffer {
     PVOID get_va(void);
 };
 
+struct dma_request {
+    /** Linked list entry to form request queue */
+    LIST_ENTRY              list_entry;
+    /** DMA Mode (ST/MM) */
+    bool                    is_st;
+    /** Direction of DMA */
+    WDF_DMA_DIRECTION       direction;
+    /** SG list of request */
+    PSCATTER_GATHER_LIST    sg_list;
+    /** Completion callback handler */
+    dma_completion_cb       compl_cb;
+    /** Private data to pass during completion callback */
+    VOID                    *priv;
+    /** The device address to/from DMA
+     *  (Only Valid for MM transfers) */
+    LONGLONG                device_offset;
+    /** Holds the next index to resume
+      * request transfer for split request */
+    UINT32                  sg_index;
+    /** Holds the next device offset to resume
+      * request transfer for split request
+      * (Only valid for MM transfers ) */
+    LONGLONG                offset_idx;
+};
+
 struct h2c_queue {
     queue_config user_conf;
     libqdma_queue_config lib_config;
 
     ring_buffer desc_ring;
     dma_req_tracker req_tracker;
+
+    /** This forms a chain of h2c requests */
+    LIST_ENTRY req_list_head;
 
     /* This lock is to ensure enqueueing/adding
        the requests to the descriptor ring properly
@@ -326,6 +363,7 @@ struct h2c_queue {
        request tracker design will make sure proper execution
     */
     WDFSPINLOCK lock = nullptr;
+    poll_operation_entry *req_proc_entry;
     poll_operation_entry *poll_entry;
     qdma_q_pidx_reg_info csr_pidx_info;
 
@@ -341,6 +379,9 @@ struct c2h_queue {
     ring_buffer desc_ring;
     dma_req_tracker req_tracker;
 
+    /** This forms a chain of c2h requests */
+    LIST_ENTRY req_list_head;
+
     /* This lock is to ensure MM enqueueing/adding
        the requests to the descriptor ring properly
 
@@ -348,7 +389,8 @@ struct c2h_queue {
        request tracker design takes care
     */
     WDFSPINLOCK lock = nullptr;
-    poll_operation_entry * poll_entry;
+    poll_operation_entry *req_proc_entry;
+    poll_operation_entry *poll_entry;
     qdma_q_pidx_reg_info csr_pidx_info;
     qdma_q_cmpt_cidx_reg_info csr_cmpt_cidx_info;
     bool is_cmpt_valid = false;
@@ -380,6 +422,7 @@ struct queue_pair {
     qdma_device *qdma = nullptr;
 
     queue_type type;
+    char name[QDMA_QUEUE_NAME_MAXLEN];
     volatile LONG state;
 
     UINT16 idx = 0;     /* queue index - relative to this PF */
@@ -399,14 +442,18 @@ struct queue_pair {
     PFORCEINLINE void update_sw_index_with_csr_c2h_pidx(UINT32 new_pidx);
 
     /** Transfer initiate functions */
-    NTSTATUS enqueue_mm_request(const WDF_DMA_DIRECTION direction, PSCATTER_GATHER_LIST sg_list, LONGLONG device_offset, dma_completion_cb compl_cb, VOID *priv, size_t &xfered_len);
-    NTSTATUS enqueue_st_tx_request(PSCATTER_GATHER_LIST sg_list, dma_completion_cb compl_cb, VOID *priv, size_t &xfered_len);
-    NTSTATUS enqueue_st_rx_request(size_t length, st_rx_completion_cb compl_cb, void *priv);
+    NTSTATUS enqueue_dma_request(dma_request *request);
+    NTSTATUS enqueue_dma_request(size_t length, st_rx_completion_cb compl_cb, void *priv);
+
+    /** Transfer processing functions */
+    service_status process_mm_request(dma_request* request, size_t* xfer_len);
+    service_status process_st_h2c_request(dma_request* request, size_t* xfer_len);
+    NTSTATUS process_st_c2h_data_pkt(void* udd_ptr, const UINT32 length);
 
     /** Transfer completion functions */
-    service_status service_mm_st_h2c_completions(ring_buffer *desc_ring, dma_req_tracker *tracker, UINT32 budget);
+    service_status service_mm_st_h2c_completions(ring_buffer *desc_ring, dma_req_tracker *tracker, UINT32 budget, UINT32& proc_desc_cnt);
     service_status st_service_c2h_queue(UINT32 budget);
-    NTSTATUS process_st_c2h_data_pkt(void *udd_ptr, const UINT32 length);
+
     PFORCEINLINE void update_c2h_pidx_in_batch(UINT32 processed_desc_cnt);
     NTSTATUS check_cmpt_error(c2h_wb_header_8B *cmpt_data);
 
@@ -443,9 +490,11 @@ public:
     qdma_dev_conf dev_conf;
     /** Structure that contains QDMA global CSR registers information */
     qdma_glbl_csr_conf csr_conf;
+    /** Structure that contains QDMA driver configuration */
+    qdma_drv_config drv_conf;
 
     /** DMA Initialization/Teardown APIs */
-    NTSTATUS init(queue_op_mode operation_mode, UINT8 cfg_bar, UINT16 qsets_max);
+    NTSTATUS init(qdma_drv_config conf);
     NTSTATUS open(WDFDEVICE device, WDFCMRESLIST resources, WDFCMRESLIST resources_translated);
     void close(void);
     bool qdma_is_device_online(void);
@@ -455,6 +504,7 @@ public:
     NTSTATUS write_bar(qdma_bar_type bar_type, size_t offset, void* data, size_t size);
     ULONG qdma_conf_reg_read(size_t offset);
     void qdma_conf_reg_write(size_t offset, ULONG data);
+    NTSTATUS get_bar_info(qdma_bar_type bar_type, PVOID &bar_base, size_t &bar_length);
 
     /** Queue Configuration APIs (Add, Start Stop, Delete, state) */
     NTSTATUS qdma_add_queue(UINT16 qid, queue_config& conf);
@@ -462,12 +512,12 @@ public:
     NTSTATUS qdma_stop_queue(UINT16 qid);
     NTSTATUS qdma_remove_queue(UINT16 qid);
     NTSTATUS qdma_is_queue_in_range(UINT16 qid);
-    NTSTATUS qdma_get_queues_state(UINT16 qid, CHAR *str, size_t str_maxlen);
+    NTSTATUS qdma_get_queues_state(UINT16 qid, enum queue_state *qstate, CHAR *str, size_t str_maxlen);
     NTSTATUS qdma_set_qmax(UINT32 queue_max);
 
     /** DMA transfer APIs (From Device and To Device) */
-    NTSTATUS qdma_enqueue_mm_request(UINT16 qid, WDF_DMA_DIRECTION direction, PSCATTER_GATHER_LIST sg_list, LONGLONG device_offset, dma_completion_cb compl_cb, VOID *priv, size_t &xfered_len);
-    NTSTATUS qdma_enqueue_st_tx_request(UINT16 qid, PSCATTER_GATHER_LIST sg_list, dma_completion_cb compl_cb, VOID *priv, size_t &xfered_len);
+    NTSTATUS qdma_enqueue_mm_request(UINT16 qid, WDF_DMA_DIRECTION direction, PSCATTER_GATHER_LIST sg_list, LONGLONG device_offset, dma_completion_cb compl_cb, VOID *priv);
+    NTSTATUS qdma_enqueue_st_tx_request(UINT16 qid, PSCATTER_GATHER_LIST sg_list, dma_completion_cb compl_cb, VOID *priv);
     NTSTATUS qdma_enqueue_st_rx_request(UINT16 qid, size_t length, st_rx_completion_cb compl_cb, VOID *priv);
 
     /** DMA Completion ring APIs */
@@ -486,6 +536,7 @@ public:
     NTSTATUS qdma_intring_dump(qdma_intr_ring_info *intring_info);
     NTSTATUS qdma_regdump(qdma_reg_dump_info *regdump_info);
     NTSTATUS qdma_get_qstats_info(qdma_qstat_info &qstats);
+    NTSTATUS qdma_get_reg_info(qdma_reg_info *reg_info);
 
     /** DMA Versioning APIs */
     NTSTATUS qdma_device_version_info(qdma_version_info &version_info);
@@ -497,8 +548,6 @@ private:
     LIST_ENTRY list_entry;
     /** Identifier returned by resource manager */
     UINT32 dma_dev_index = 0;
-    /** Maximum number of queues for this device */
-    UINT32 qmax;
     /** Start/base queue number for this device */
     INT32 qbase = -1;
     /** Device state */
@@ -506,8 +555,6 @@ private:
 
     xpcie_device pcie;
     WDFDEVICE wdf_dev = nullptr;
-    queue_op_mode op_mode;
-    UINT8 config_bar = 0;
     qdma_hw_version_info hw_version_info;
     queue_pair *queue_pairs = nullptr;
     interrupt_manager irq_mgr;
@@ -544,7 +591,7 @@ private:
     void destroy_func(void);
     void destroy_resource_manager(void);
 
-    NTSTATUS configure_irq(PIRQ_CONTEXT irq_context, ULONG vec);
+    NTSTATUS configure_irq(PQDMA_IRQ_CONTEXT irq_context, ULONG vec);
     NTSTATUS intr_setup(WDFCMRESLIST resources, const WDFCMRESLIST resources_translated);
     void intr_teardown(void);
     NTSTATUS setup_legacy_interrupt(WDFCMRESLIST resources, const WDFCMRESLIST resources_translated);

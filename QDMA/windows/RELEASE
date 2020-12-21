@@ -1,7 +1,7 @@
-Release: 2020.1
+Release: 2020.2
 ================
 
-This release is validated on QDMA4.0 2020.1 based example design,
+This release is validated on QDMA4.0 2020.2 based example design and
 QDMA3.1 2019.2 patch based example design.
 
 QDMA Windows driver is supported in poll mode by default
@@ -53,12 +53,19 @@ SUPPORTED FEATURES:
 - Updated and validated the example design with marker changes for QDMA4.0 and without marker changes for QDMA3.1
 - Support multiple bus numbers on single card
 
+2020.2 Updates
+--------------
+- Support larger MM & ST packet transfer support
+- Added support for detailed register dump
+- Added support for post processing HW error messages
+- Added support for Debug mode and Internal only mode
+
+
 KNOWN ISSUES:
 =============
 - Driver installation gives warning due to test signature.
 - In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-- On QDMA4.0 2020.1 design, HW errors are observed in trace logs while validating the MM only design.
-- On QDMA4.0 2020.1 design, User logic fails to generate C2H streaming packets when multiple threads try
+- On QDMA4.0 2020.2 design, User logic fails to generate C2H streaming packets when multiple threads try
   to generate packets on multiple active queues.
 
 DRIVER LIMITATIONS:

@@ -20,7 +20,7 @@
 #define __QDMARW_VERSION_H
 
 #define PROGNAME "dma-arw"
-#define VERSION "2020.1.0"
+#define VERSION "2020.2.0"
 #define COPYRIGHT "Copyright (c) 2020 Xilinx Inc."
 
 #endif /*__QDMARW_VERSION_H*/

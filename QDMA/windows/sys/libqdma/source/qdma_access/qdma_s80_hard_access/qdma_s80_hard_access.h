@@ -14,14 +14,151 @@
  * under the License.
  */
 
-#ifndef QDMA_S80_HARD_ACCESS_H_
-#define QDMA_S80_HARD_ACCESS_H_
-
-#include "qdma_access_common.h"
+#ifndef __QDMA_S80_HARD_ACCESS_H_
+#define __QDMA_S80_HARD_ACCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "qdma_platform.h"
+
+/**
+ * enum qdma_error_idx - qdma errors
+ */
+enum qdma_s80_hard_error_idx {
+	/* Descriptor errors */
+	QDMA_S80_HARD_DSC_ERR_POISON,
+	QDMA_S80_HARD_DSC_ERR_UR_CA,
+	QDMA_S80_HARD_DSC_ERR_PARAM,
+	QDMA_S80_HARD_DSC_ERR_ADDR,
+	QDMA_S80_HARD_DSC_ERR_TAG,
+	QDMA_S80_HARD_DSC_ERR_FLR,
+	QDMA_S80_HARD_DSC_ERR_TIMEOUT,
+	QDMA_S80_HARD_DSC_ERR_DAT_POISON,
+	QDMA_S80_HARD_DSC_ERR_FLR_CANCEL,
+	QDMA_S80_HARD_DSC_ERR_DMA,
+	QDMA_S80_HARD_DSC_ERR_DSC,
+	QDMA_S80_HARD_DSC_ERR_RQ_CANCEL,
+	QDMA_S80_HARD_DSC_ERR_DBE,
+	QDMA_S80_HARD_DSC_ERR_SBE,
+	QDMA_S80_HARD_DSC_ERR_ALL,
+
+	/* TRQ Errors */
+	QDMA_S80_HARD_TRQ_ERR_UNMAPPED,
+	QDMA_S80_HARD_TRQ_ERR_QID_RANGE,
+	QDMA_S80_HARD_TRQ_ERR_VF_ACCESS_ERR,
+	QDMA_S80_HARD_TRQ_ERR_TCP_TIMEOUT,
+	QDMA_S80_HARD_TRQ_ERR_ALL,
+
+	/* C2H Errors */
+	QDMA_S80_HARD_ST_C2H_ERR_MTY_MISMATCH,
+	QDMA_S80_HARD_ST_C2H_ERR_LEN_MISMATCH,
+	QDMA_S80_HARD_ST_C2H_ERR_QID_MISMATCH,
+	QDMA_S80_HARD_ST_C2H_ERR_DESC_RSP_ERR,
+	QDMA_S80_HARD_ST_C2H_ERR_ENG_WPL_DATA_PAR_ERR,
+	QDMA_S80_HARD_ST_C2H_ERR_MSI_INT_FAIL,
+	QDMA_S80_HARD_ST_C2H_ERR_ERR_DESC_CNT,
+	QDMA_S80_HARD_ST_C2H_ERR_PORTID_CTXT_MISMATCH,
+	QDMA_S80_HARD_ST_C2H_ERR_PORTID_BYP_IN_MISMATCH,
+	QDMA_S80_HARD_ST_C2H_ERR_WRB_INV_Q_ERR,
+	QDMA_S80_HARD_ST_C2H_ERR_WRB_QFULL_ERR,
+	QDMA_S80_HARD_ST_C2H_ERR_WRB_CIDX_ERR,
+	QDMA_S80_HARD_ST_C2H_ERR_WRB_PRTY_ERR,
+	QDMA_S80_HARD_ST_C2H_ERR_ALL,
+
+	/* Fatal Errors */
+	QDMA_S80_HARD_ST_FATAL_ERR_MTY_MISMATCH,
+	QDMA_S80_HARD_ST_FATAL_ERR_LEN_MISMATCH,
+	QDMA_S80_HARD_ST_FATAL_ERR_QID_MISMATCH,
+	QDMA_S80_HARD_ST_FATAL_ERR_TIMER_FIFO_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_PFCH_II_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_WRB_CTXT_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_PFCH_CTXT_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_DESC_REQ_FIFO_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_INT_CTXT_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_INT_QID2VEC_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_WRB_COAL_DATA_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_TUSER_FIFO_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_QID_FIFO_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_PAYLOAD_FIFO_RAM_RDBE,
+	QDMA_S80_HARD_ST_FATAL_ERR_WPL_DATA_PAR_ERR,
+	QDMA_S80_HARD_ST_FATAL_ERR_ALL,
+
+	/* H2C Errors */
+	QDMA_S80_HARD_ST_H2C_ERR_ZERO_LEN_DESC_ERR,
+	QDMA_S80_HARD_ST_H2C_ERR_SDI_MRKR_REQ_MOP_ERR,
+	QDMA_S80_HARD_ST_H2C_ERR_NO_DMA_DSC,
+	QDMA_S80_HARD_ST_H2C_ERR_DBE,
+	QDMA_S80_HARD_ST_H2C_ERR_SBE,
+	QDMA_S80_HARD_ST_H2C_ERR_ALL,
+
+	/* Single bit errors */
+	QDMA_S80_HARD_SBE_ERR_MI_H2C0_DAT,
+	QDMA_S80_HARD_SBE_ERR_MI_C2H0_DAT,
+	QDMA_S80_HARD_SBE_ERR_H2C_RD_BRG_DAT,
+	QDMA_S80_HARD_SBE_ERR_H2C_WR_BRG_DAT,
+	QDMA_S80_HARD_SBE_ERR_C2H_RD_BRG_DAT,
+	QDMA_S80_HARD_SBE_ERR_C2H_WR_BRG_DAT,
+	QDMA_S80_HARD_SBE_ERR_FUNC_MAP,
+	QDMA_S80_HARD_SBE_ERR_DSC_HW_CTXT,
+	QDMA_S80_HARD_SBE_ERR_DSC_CRD_RCV,
+	QDMA_S80_HARD_SBE_ERR_DSC_SW_CTXT,
+	QDMA_S80_HARD_SBE_ERR_DSC_CPLI,
+	QDMA_S80_HARD_SBE_ERR_DSC_CPLD,
+	QDMA_S80_HARD_SBE_ERR_PASID_CTXT_RAM,
+	QDMA_S80_HARD_SBE_ERR_TIMER_FIFO_RAM,
+	QDMA_S80_HARD_SBE_ERR_PAYLOAD_FIFO_RAM,
+	QDMA_S80_HARD_SBE_ERR_QID_FIFO_RAM,
+	QDMA_S80_HARD_SBE_ERR_TUSER_FIFO_RAM,
+	QDMA_S80_HARD_SBE_ERR_WRB_COAL_DATA_RAM,
+	QDMA_S80_HARD_SBE_ERR_INT_QID2VEC_RAM,
+	QDMA_S80_HARD_SBE_ERR_INT_CTXT_RAM,
+	QDMA_S80_HARD_SBE_ERR_DESC_REQ_FIFO_RAM,
+	QDMA_S80_HARD_SBE_ERR_PFCH_CTXT_RAM,
+	QDMA_S80_HARD_SBE_ERR_WRB_CTXT_RAM,
+	QDMA_S80_HARD_SBE_ERR_PFCH_LL_RAM,
+	QDMA_S80_HARD_SBE_ERR_ALL,
+
+	/* Double bit Errors */
+	QDMA_S80_HARD_DBE_ERR_MI_H2C0_DAT,
+	QDMA_S80_HARD_DBE_ERR_MI_C2H0_DAT,
+	QDMA_S80_HARD_DBE_ERR_H2C_RD_BRG_DAT,
+	QDMA_S80_HARD_DBE_ERR_H2C_WR_BRG_DAT,
+	QDMA_S80_HARD_DBE_ERR_C2H_RD_BRG_DAT,
+	QDMA_S80_HARD_DBE_ERR_C2H_WR_BRG_DAT,
+	QDMA_S80_HARD_DBE_ERR_FUNC_MAP,
+	QDMA_S80_HARD_DBE_ERR_DSC_HW_CTXT,
+	QDMA_S80_HARD_DBE_ERR_DSC_CRD_RCV,
+	QDMA_S80_HARD_DBE_ERR_DSC_SW_CTXT,
+	QDMA_S80_HARD_DBE_ERR_DSC_CPLI,
+	QDMA_S80_HARD_DBE_ERR_DSC_CPLD,
+	QDMA_S80_HARD_DBE_ERR_PASID_CTXT_RAM,
+	QDMA_S80_HARD_DBE_ERR_TIMER_FIFO_RAM,
+	QDMA_S80_HARD_DBE_ERR_PAYLOAD_FIFO_RAM,
+	QDMA_S80_HARD_DBE_ERR_QID_FIFO_RAM,
+	QDMA_S80_HARD_DBE_ERR_WRB_COAL_DATA_RAM,
+	QDMA_S80_HARD_DBE_ERR_INT_QID2VEC_RAM,
+	QDMA_S80_HARD_DBE_ERR_INT_CTXT_RAM,
+	QDMA_S80_HARD_DBE_ERR_DESC_REQ_FIFO_RAM,
+	QDMA_S80_HARD_DBE_ERR_PFCH_CTXT_RAM,
+	QDMA_S80_HARD_DBE_ERR_WRB_CTXT_RAM,
+	QDMA_S80_HARD_DBE_ERR_PFCH_LL_RAM,
+	QDMA_S80_HARD_DBE_ERR_ALL,
+
+	QDMA_S80_HARD_ERRS_ALL
+};
+
+struct qdma_s80_hard_hw_err_info {
+	enum qdma_s80_hard_error_idx idx;
+	const char *err_name;
+	uint32_t mask_reg_addr;
+	uint32_t stat_reg_addr;
+	uint32_t leaf_err_mask;
+	uint32_t global_err_mask;
+	void (*qdma_s80_hard_hw_err_process)(void *dev_hndl);
+};
+
 
 int qdma_s80_hard_init_ctxt_memory(void *dev_hndl);
 
@@ -77,10 +214,14 @@ int qdma_s80_hard_get_device_attributes(void *dev_hndl,
 uint32_t qdma_s80_hard_reg_dump_buf_len(void);
 
 int qdma_s80_hard_context_buf_len(uint8_t st,
-		enum qdma_dev_q_type q_type, uint32_t *buflen);
+		enum qdma_dev_q_type q_type, uint32_t *req_buflen);
 
 int qdma_s80_hard_dump_config_regs(void *dev_hndl, uint8_t is_vf,
 		char *buf, uint32_t buflen);
+
+int qdma_s80_hard_hw_error_process(void *dev_hndl);
+const char *qdma_s80_hard_hw_get_error_name(uint32_t err_idx);
+int qdma_s80_hard_hw_error_enable(void *dev_hndl, uint32_t err_idx);
 
 int qdma_s80_hard_dump_queue_context(void *dev_hndl,
 		uint8_t st,
@@ -100,17 +241,38 @@ int qdma_s80_hard_read_dump_queue_context(void *dev_hndl,
 		char *buf, uint32_t buflen);
 
 int qdma_s80_hard_dump_config_reg_list(void *dev_hndl,
-		uint32_t num_regs,
+		uint32_t total_regs,
 		struct qdma_reg_data *reg_list,
 		char *buf, uint32_t buflen);
 
 int qdma_s80_hard_read_reg_list(void *dev_hndl, uint8_t is_vf,
-		uint16_t reg_rd_group,
+		uint16_t reg_rd_slot,
 		uint16_t *total_regs,
 		struct qdma_reg_data *reg_list);
+
+int qdma_s80_hard_global_csr_conf(void *dev_hndl, uint8_t index,
+				uint8_t count,
+				uint32_t *csr_val,
+				enum qdma_global_csr_type csr_type,
+				enum qdma_hw_access_type access_type);
+
+int qdma_s80_hard_global_writeback_interval_conf(void *dev_hndl,
+				enum qdma_wrb_interval *wb_int,
+				enum qdma_hw_access_type access_type);
+
+int qdma_s80_hard_mm_channel_conf(void *dev_hndl, uint8_t channel,
+				uint8_t is_c2h,
+				uint8_t enable);
+
+int qdma_s80_hard_dump_reg_info(void *dev_hndl, uint32_t reg_addr,
+				uint32_t num_regs, char *buf, uint32_t buflen);
+
+uint32_t qdma_s80_hard_get_config_num_regs(void);
+
+struct xreg_info *qdma_s80_hard_get_config_regs(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* QDMA_S80_HARD_ACCESS_H_ */
+#endif /* __QDMA_S80_HARD_ACCESS_H_ */

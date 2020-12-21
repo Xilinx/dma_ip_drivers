@@ -20,7 +20,7 @@
 #define __QDMATOOL_VERSION_H
 
 #define PROGNAME "dma-ctl"
-#define VERSION "2020.1.0"
+#define VERSION "2020.2.0"
 #define COPYRIGHT "Copyright (c) 2020 Xilinx Inc."
 
 #endif /* __QDMATOOL_VERSION_H */

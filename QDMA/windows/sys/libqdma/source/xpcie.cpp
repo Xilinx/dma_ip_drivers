@@ -55,7 +55,7 @@ NTSTATUS xpcie_device::map(
                 TraceError(TRACE_PCIE, "MmMapIoSpace returned NULL! for BAR%u", num_bars);
                 return STATUS_DEVICE_CONFIGURATION_ERROR;
             }
-            TraceInfo(TRACE_PCIE, "MM BAR %d (addr:0x%lld, length:%llu) mapped at 0x%08p",
+            TraceVerbose(TRACE_PCIE, "MM BAR %d (addr:0x%lld, length:%llu) mapped at 0x%08p",
                       num_bars, resource->u.Memory.Start.QuadPart, bars[num_bars].length, bars[num_bars].base);
             num_bars++;
         }
@@ -69,7 +69,7 @@ void xpcie_device::unmap(void)
     /* Unmap any I/O ports. Disconnecting from the interrupt will be done automatically by the framework. */
     for (unsigned int i = 0; i < num_bars; i++) {
         if (bars[i].base != nullptr) {
-            TraceInfo(TRACE_PCIE, "Unmapping BAR%d, VA:(%p) Length %llu", i, bars[i].base, bars[i].length);
+            TraceVerbose(TRACE_PCIE, "Unmapping BAR%d, VA:(%p) Length %llu", i, bars[i].base, bars[i].length);
             MmUnmapIoSpace(bars[i].base, bars[i].length);
             bars[i].base = nullptr;
         }
@@ -191,7 +191,7 @@ NTSTATUS xpcie_device::assign_bar_types(const UINT8 user_bar_idx)
 
     if (num_bars > 1) {
         user_bar = &bars[user_bar_idx];
-        TraceVerbose(TRACE_PCIE, "User assigned at %u", user_bar_idx);
+        TraceInfo(TRACE_PCIE, "AXI Master Lite BAR %u", (user_bar_idx * 2));
 
         if (num_bars > 2) {
             for (auto i = 0u; i < num_bars; ++i) {
@@ -199,7 +199,7 @@ NTSTATUS xpcie_device::assign_bar_types(const UINT8 user_bar_idx)
                     continue;
 
                 bypass_bar = &bars[i];
-                TraceVerbose(TRACE_PCIE, "Found bypass bar at %d", i);
+                TraceInfo(TRACE_PCIE, "AXI Bridge Master BAR %d", (i * 2));
                 break;
             }
         }
@@ -266,6 +266,33 @@ NTSTATUS xpcie_device::write_bar(
         return STATUS_INVALID_PARAMETER;
 
     return bar->write(offset, data, size);
+}
+
+NTSTATUS xpcie_device::get_bar_info(
+    qdma_bar_type bar_type,
+    PVOID &bar_base,
+    size_t &bar_length) const
+{
+    switch (bar_type) {
+    case qdma_bar_type::CONFIG_BAR:
+        bar_base = (PVOID)config_bar->base;
+        bar_length = config_bar->length;
+        break;
+    case qdma_bar_type::USER_BAR:
+        bar_base = (PVOID)user_bar->base;
+        bar_length = user_bar->length;
+        break;
+    case qdma_bar_type::BYPASS_BAR:
+        bar_base = (PVOID)bypass_bar->base;
+        bar_length = bypass_bar->length;
+        break;
+    default:
+        bar_base = NULL;
+        bar_length = (size_t)0;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 ULONG xpcie_device::conf_reg_read(size_t offset) const

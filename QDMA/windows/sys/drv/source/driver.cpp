@@ -60,7 +60,7 @@ DriverEntry(
         return status;
     }
 
-    TraceInfo(TRACE_DRIVER, "%!FUNC! Exit");
+    TraceVerbose(TRACE_DRIVER, "%!FUNC! Exit");
 
     return status;
 }
@@ -92,7 +92,7 @@ qdma_evt_driver_context_cleanup(
     UNREFERENCED_PARAMETER(driver_object);
 #endif
 
-    TraceInfo(TRACE_DRIVER, "%!FUNC! Entry");
+    TraceVerbose(TRACE_DRIVER, "%!FUNC! Entry");
     /** Stop WPP Tracing */
     WPP_CLEANUP(WdfDriverWdmGetDriverObject(static_cast<WDFDRIVER>(driver_object)));
 }

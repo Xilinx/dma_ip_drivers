@@ -119,5 +119,11 @@
     <ClCompile Include="source\xpcie.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\qdma_access\eqdma_soft_access\eqdma_soft_reg_dump.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\qdma_access\qdma_s80_hard_access\qdma_s80_hard_reg_dump.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

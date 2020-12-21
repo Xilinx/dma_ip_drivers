@@ -148,6 +148,39 @@ ErrExit:
     return status;
 }
 
+//_Use_decl_annotations_
+static void
+qdma_user_isr_handler(
+    ULONG event_id,
+    void *user_data)
+{
+    UNREFERENCED_PARAMETER(event_id);
+    UNREFERENCED_PARAMETER(user_data);
+    TraceInfo(TRACE_DEVICE, "In %s", __func__);
+}
+
+//_Use_decl_annotations_
+static void
+qdma_user_interrupt_enable(
+    ULONG event_id,
+    void *user_data)
+{
+    UNREFERENCED_PARAMETER(event_id);
+    UNREFERENCED_PARAMETER(user_data);
+    TraceInfo(TRACE_DEVICE, "In %s", __func__);
+}
+
+//_Use_decl_annotations_
+static void
+qdma_user_interrupt_disable(
+    ULONG event_id,
+    void *user_data)
+{
+    UNREFERENCED_PARAMETER(event_id);
+    UNREFERENCED_PARAMETER(user_data);
+    TraceInfo(TRACE_DEVICE, "In %s", __func__);
+}
+
 NTSTATUS qdma_evt_device_prepare_hardware(
     const WDFDEVICE device,
     const WDFCMRESLIST resources,
@@ -155,26 +188,42 @@ NTSTATUS qdma_evt_device_prepare_hardware(
 {
     PAGED_CODE();
 
-    device_context* ctx = get_device_context(device);
+    qdma_drv_config  drv_conf = {};
+    device_context   *ctx = get_device_context(device);
 
     ctx->qdma = qdma_interface::create_qdma_device();
+    if (ctx->qdma == nullptr) {
+        TraceError(TRACE_DEVICE, "qdma device memory allocation failed");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
 
     NTSTATUS status = read_reg_params(ctx->config.op_mode, ctx->config.config_bar);
     if (!NT_SUCCESS(status)) {
         TraceError(TRACE_DEVICE, "failed to read registry params %!STATUS!", status);
-        return STATUS_INTERNAL_ERROR;
+        return status;
     }
 
-    status = ctx->qdma->init(ctx->config.op_mode, ctx->config.config_bar, QDMA_MAX_QUEUES_PER_PF);
+    drv_conf.operation_mode = ctx->config.op_mode;
+    drv_conf.cfg_bar = ctx->config.config_bar;
+    drv_conf.qsets_max = QDMA_MAX_QUEUES_PER_PF;
+    drv_conf.user_msix_max = QDMA_MAX_USER_INTR;
+    drv_conf.data_msix_max = QDMA_MAX_DATA_INTR;
+    drv_conf.user_data = (void*)device;
+    drv_conf.user_isr_handler = qdma_user_isr_handler;
+    drv_conf.user_interrupt_enable_handler = qdma_user_interrupt_enable;
+    drv_conf.user_interrupt_disable_handler = qdma_user_interrupt_disable;
+
+    status = ctx->qdma->init(drv_conf);
     if (!NT_SUCCESS(status)) {
         TraceError(TRACE_DEVICE, "qdma.init() failed! %!STATUS!", status);
-        return STATUS_INTERNAL_ERROR;
+        return status;
     }
 
     status = ctx->qdma->open(device, resources, resources_translated);
     if (!NT_SUCCESS(status)) {
         TraceError(TRACE_DEVICE, "qdma.open() failed! %!STATUS!", status);
-        return STATUS_INTERNAL_ERROR;
+        return status;
     }
 
     return STATUS_SUCCESS;

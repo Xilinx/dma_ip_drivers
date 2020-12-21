@@ -44,6 +44,20 @@ enum qdma_q_type {
     QDMA_Q_TYPE_MAX
 };
 
+/** queue_state - State of the QDMA queue */
+enum queue_state {
+    /** Queue is available to configure */
+    QUEUE_AVAILABLE,
+    /** Queue is added with resources */
+    QUEUE_ADDED,
+    /** Queue is programmed and started */
+    QUEUE_STARTED,
+    /** Queue critical operation is in progress */
+    QUEUE_BUSY,
+    /** Invalid Queue State */
+    QUEUE_INVALID_STATE
+};
+
 /** Streaming card to host packet type */
 enum class st_c2h_pkt_type {
     /** C2H DATA Packet MACRO */
@@ -116,11 +130,11 @@ enum class qdma_bar_type {
      *  (Contains all QDMA configuration Registers)
      */
     CONFIG_BAR,
-    /** QDMA User BAR
+    /** QDMA AXI Master Lite BAR
      *  (Contains User Logic Registers)
      */
     USER_BAR,
-    /** QDMA Bypass BAR
+    /** QDMA AXI Bridge Master BAR
      * (Contains Bypass Registers to bypass QDMA)
      */
     BYPASS_BAR
@@ -177,6 +191,68 @@ using st_rx_completion_cb = void(*)(const st_c2h_pkt_fragment *rx_frags, size_t 
  * @return void
  */
 using proc_st_udd_only_cb = void(*)(UINT16 qid, void *udd_addr, void *priv);
+
+/**
+ * fp_user_isr_handler() - User defined user ISR handler
+ *
+ * @param[in]   event_id: Event identifier
+ * @param[in]   user_data: Driver provided user data
+ *
+ * @return void
+ */
+using fp_user_isr_handler = void(*)(ULONG event_id, void *user_data);
+
+/**
+ * fp_user_interrupt_enable_handler() - User defined user ISR handler
+ *
+ * @param[in]   event_id: Event identifier
+ * @param[in]   user_data: Driver provided user data
+ *
+ * @return void
+ */
+using fp_user_interrupt_enable_handler = void(*)(ULONG event_id, void *user_data);
+
+/**
+ * fp_user_interrupt_disable_handler() - User defined user ISR handler
+ *
+ * @param[in]   event_id: Event identifier
+ * @param[in]   user_data: Driver provided user data
+ *
+ * @return void
+ */
+using fp_user_interrupt_disable_handler = void(*)(ULONG event_id, void *user_data);
+
+/** dev_config - qdma device configuration
+ *               needed to initialize the device
+ */
+struct qdma_drv_config {
+    /* Queue operation mode */
+    queue_op_mode operation_mode;
+
+    /* Config BAR index */
+    UINT8 cfg_bar;
+
+    /* Maximum queues for the device */
+    UINT32 qsets_max;
+
+    /* Maximum user MSIx vector to use */
+    UINT16 user_msix_max;
+
+    /* Maximum data MSIx vector to use */
+    UINT16 data_msix_max;
+
+    /* User data for user interrupt callback functions */
+    void *user_data;
+
+    /* User ISR handler */
+    fp_user_isr_handler user_isr_handler;
+
+    /* User interrupt enable handler */
+    fp_user_interrupt_enable_handler user_interrupt_enable_handler;
+
+    /* User interrupt disable handler */
+    fp_user_interrupt_disable_handler user_interrupt_disable_handler;
+};
 
 /** queue_config - qdma queue configuration
  *                 needed to add a queue
@@ -248,6 +324,12 @@ struct qdma_device_attributes_info {
     bool mm_cmpl_en;
     /** Mailbox Feature enabled */
     bool mailbox_en;
+    /** Debug mode is enabled/disabled for IP */
+    bool debug_mode;
+    /** Descriptor Engine mode:
+     *  Internal only/Bypass only/Internal & Bypass
+     */
+    UINT8 desc_eng_mode;
     /** Number of MM channels supported */
     UINT16 num_mm_channels;
 };
@@ -429,6 +511,24 @@ struct qdma_qstat_info {
     UINT32 active_cmpt_queues;
 };
 
+/** qdma_reg_info - Structure contains required members to
+ *  retrieve requested qdma registers information
+ */
+struct qdma_reg_info {
+    /** PCIe bar number */
+    UINT32  bar_no;
+    /** Register address offset */
+    UINT32  address;
+    /** number of registers to retrieve */
+    UINT32  reg_cnt;
+    /** Length of the buffer pointed by pbuffer */
+    size_t  buf_len;
+    /** Length of the data present in pbuffer */
+    size_t  ret_len;
+    /** output buffer to copy the register info */
+    char    *pbuffer;
+};
+
 /**
  * qdma_interface - libqdma interface class
  *
@@ -445,14 +545,11 @@ public:
      * init() - Initializes the qdma device with operation mode and
      *          config bar number to use
      *
-     * @param[in]   operation_mode: queue oper mode (poll, intr, aggr)
-     * @param[in]   cfg_bar:        config bar number for qdma device
-     * @param[in]   qsets_max:      Maximum number of queues requested for this
-     *                              device
+     * @param[in]   conf: Device operation configuration
      *
      * @return  STATUS_SUCCESS for success else error
      *****************************************************************************/
-    virtual NTSTATUS init(queue_op_mode operation_mode, UINT8 cfg_bar, UINT16 qsets_max) = 0;
+    virtual NTSTATUS init(qdma_drv_config conf) = 0;
 
     /*****************************************************************************/
     /**
@@ -519,15 +616,29 @@ public:
 
     /*****************************************************************************/
     /**
+     * write_bar() - Performs PCIe write operation on specified BAR number at
+     *               requested offset of requested size
+     *
+     * @param[in]   bar_type:   BAR Type
+     * @param[out]  bar_base:   BAR base mapped address
+     * @param[out]  bar_lenght: Bar length(in bytes)
+     *
+     * @return  STATUS_SUCCESS for success else error
+     *****************************************************************************/
+    virtual NTSTATUS get_bar_info(qdma_bar_type bar_type, PVOID &bar_base, size_t &bar_length) = 0;
+
+    /*****************************************************************************/
+    /**
      * qdma_get_queues_state() - Retrieves the state of the specified queue
      *
      * @param[in]   qid:    queue id relative to this QDMA device
+     * @param[out]  qstate: state of the queue specified as enumeration
      * @param[out]  state:  state of the queue specified as character string
      * @param[in]   sz:     size of the state character array
      *
      * @return  STATUS_SUCCESS for success else error
      *****************************************************************************/
-    virtual NTSTATUS qdma_get_queues_state(UINT16 qid, char *state, size_t sz) = 0;
+    virtual NTSTATUS qdma_get_queues_state(UINT16 qid, enum queue_state *qstate, char *state, size_t sz) = 0;
 
     /*****************************************************************************/
     /**
@@ -595,12 +706,10 @@ public:
      * @param[in]   compl_cb:       completion call back function
      * @param[in]   priv:           private data that gets passed to
      *                              compl_cb function
-     * @param[out]  xfered_len:     If status is NT_SUCCESS, then number
-     *                              of bytes for a request successfully enqueued
      *
      * @return  STATUS_SUCCESS for success else error
      *****************************************************************************/
-    virtual NTSTATUS qdma_enqueue_mm_request(UINT16 qid, WDF_DMA_DIRECTION direction, PSCATTER_GATHER_LIST sg_list, LONGLONG device_offset, dma_completion_cb compl_cb, VOID *priv, size_t &xfered_len) = 0;
+    virtual NTSTATUS qdma_enqueue_mm_request(UINT16 qid, WDF_DMA_DIRECTION direction, PSCATTER_GATHER_LIST sg_list, LONGLONG device_offset, dma_completion_cb compl_cb, VOID *priv) = 0;
 
     /*****************************************************************************/
     /**
@@ -612,12 +721,10 @@ public:
      *                              to indicate write operation is completed
      * @param[in,out]   priv:       private data that gets passed to
      *                              compl_cb function
-     * @param[out]      xfered_len: If status is NT_SUCCESS, then number
-     *                              of bytes for a request successfully enqueued.
      *
      * @return  STATUS_SUCCESS for success else error
      *****************************************************************************/
-    virtual NTSTATUS qdma_enqueue_st_tx_request(UINT16 qid, PSCATTER_GATHER_LIST sg_list, dma_completion_cb compl_cb, VOID *priv, size_t &xfered_len) = 0;
+    virtual NTSTATUS qdma_enqueue_st_tx_request(UINT16 qid, PSCATTER_GATHER_LIST sg_list, dma_completion_cb compl_cb, VOID *priv) = 0;
 
     /*****************************************************************************/
     /**
@@ -767,6 +874,16 @@ public:
      * @return  STATUS_SUCCESS for success else error
      *****************************************************************************/
     virtual NTSTATUS qdma_get_qstats_info(qdma_qstat_info &qstats) = 0;
+
+    /*****************************************************************************/
+    /**
+     * qdma_get_reg_info() - Retrieves the requested QDMA registers information
+     *
+     * @param[out]  reg_info:  Register information (Address, Len, etc.,)
+     *
+     * @return  STATUS_SUCCESS for success else error
+     *****************************************************************************/
+    virtual NTSTATUS qdma_get_reg_info(qdma_reg_info* reg_info) = 0;
 
     /*****************************************************************************/
     /**

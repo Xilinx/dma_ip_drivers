@@ -69,6 +69,7 @@ public:
     NTSTATUS write_bar(qdma_bar_type bar_type, size_t offset, void* data, size_t size) const;
     ULONG conf_reg_read(size_t offset) const;
     void conf_reg_write(size_t offset, ULONG data) const;
+    NTSTATUS get_bar_info(qdma_bar_type bar_type, PVOID &bar_base, size_t &bar_length) const;
 };
 } /* namespace xlnx */
 

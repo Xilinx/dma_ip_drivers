@@ -23,6 +23,8 @@ EXTERN_C_START
 
 using namespace xlnx;
 
+static constexpr ULONG IO_QUEUE_TAG = 'UQOI';
+
 NTSTATUS qdma_io_queue_initialize(WDFDEVICE wdf_device);
 
 struct DMA_TXN_CONTEXT {
@@ -31,6 +33,12 @@ struct DMA_TXN_CONTEXT {
 };
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DMA_TXN_CONTEXT, get_dma_txn_context)
+
+
+struct ST_DMA_ZERO_TX_PRIV {
+    WDFREQUEST request;
+    PVOID sg_list;
+};
 
 EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL qdma_evt_ioctl;
 EVT_WDF_IO_QUEUE_IO_STOP qdma_evt_io_stop;

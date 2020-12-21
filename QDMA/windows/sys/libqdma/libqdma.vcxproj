@@ -212,10 +212,12 @@
     <ClCompile Include="source\interrupts.cpp" />
     <ClCompile Include="source\qdma.cpp" />
     <ClCompile Include="source\qdma_access\eqdma_soft_access\eqdma_soft_access.c" />
+    <ClCompile Include="source\qdma_access\eqdma_soft_access\eqdma_soft_reg_dump.c" />
     <ClCompile Include="source\qdma_access\qdma_access_common.c" />
     <ClCompile Include="source\qdma_access\qdma_list.c" />
     <ClCompile Include="source\qdma_access\qdma_resource_mgmt.c" />
     <ClCompile Include="source\qdma_access\qdma_s80_hard_access\qdma_s80_hard_access.c" />
+    <ClCompile Include="source\qdma_access\qdma_s80_hard_access\qdma_s80_hard_reg_dump.c" />
     <ClCompile Include="source\qdma_access\qdma_soft_access\qdma_soft_access.c" />
     <ClCompile Include="source\qdma_platform.cpp" />
     <ClCompile Include="source\thread.cpp" />

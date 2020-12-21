@@ -30,10 +30,16 @@ static LIST_ENTRY qdma_dev_list_head;
 static WDFWAITLOCK qdma_list_lock;
 static volatile LONG qdma_active_pf_count = 0;
 
+static struct drv_mode_name mode_name_list[] = {
+    { POLL_MODE,		"poll"},
+    { INTR_MODE,		"direct interrupt"},
+    { INTR_COAL_MODE,	"indirect interrupt"},
+};
+
 NTSTATUS qdma_device::list_add_qdma_device_and_set_gbl_csr(void)
 {
     if ((LONG)1 == InterlockedIncrement(&qdma_active_pf_count)) {
-        TraceVerbose(TRACE_QDMA, "** Initializing global device list and wait lock **");
+        TraceVerbose(TRACE_QDMA, "%s: ** Initializing global device list and wait lock **", dev_conf.name);
 
         /* First device in the list, Initialize the list head */
         INIT_LIST_HEAD(&qdma_dev_list_head);
@@ -44,7 +50,7 @@ NTSTATUS qdma_device::list_add_qdma_device_and_set_gbl_csr(void)
 
         NTSTATUS status = WdfWaitLockCreate(&attr, &qdma_list_lock);
         if (!(NT_SUCCESS(status))) {
-            TraceError(TRACE_QDMA, "Failed to create qdma list wait lock %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: Failed to create qdma list wait lock %!STATUS!", dev_conf.name, status);
             qdma_list_lock = nullptr;
             return status;
         }
@@ -58,23 +64,26 @@ NTSTATUS qdma_device::list_add_qdma_device_and_set_gbl_csr(void)
         KeDelayExecutionThread(KernelMode, FALSE, &wait_time);
 
         if (nullptr == qdma_list_lock) {
-            TraceError(TRACE_QDMA, "qdma list wait lock not initialized");
+            TraceError(TRACE_QDMA, "%s: qdma list wait lock not initialized", dev_conf.name);
             return STATUS_UNSUCCESSFUL;
         }
     }
 
-    TraceVerbose(TRACE_QDMA, "++ Active pf count : %u ++", qdma_active_pf_count);
+    TraceVerbose(TRACE_QDMA, "%s: ++ Active pf count : %u ++", dev_conf.name, qdma_active_pf_count);
 
     WdfWaitLockAcquire(qdma_list_lock, NULL);
 
     dev_conf.is_master_pf = is_first_qdma_pf_device();
     if (true == dev_conf.is_master_pf) {
-        TraceInfo(TRACE_QDMA, "BDF : 0x%05X is master PF\n", dev_conf.dev_sbdf.val);
-        TraceVerbose(TRACE_QDMA, "Setting Global CSR");
+        TraceInfo(TRACE_QDMA, "Configuring '%04X:%02X:%02X.%x' as master pf\n", 
+            dev_conf.dev_sbdf.sbdf.seg_no, dev_conf.dev_sbdf.sbdf.bus_no, 
+            dev_conf.dev_sbdf.sbdf.dev_no, dev_conf.dev_sbdf.sbdf.fun_no);
+
+        TraceVerbose(TRACE_QDMA, "%s: Setting Global CSR", dev_conf.name);
 
         int ret = hw.qdma_set_default_global_csr(this);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to set global CSR Configuration, ret : %d", ret);
+            TraceError(TRACE_QDMA, "%s: Failed to set global CSR Configuration, ret : %d", dev_conf.name, ret);
             WdfWaitLockRelease(qdma_list_lock);
             return hw.qdma_get_error_code(ret);
         }
@@ -110,7 +119,7 @@ void qdma_device::list_remove_qdma_device(void)
     LIST_DEL_NODE(&list_entry);
     WdfWaitLockRelease(qdma_list_lock);
     auto cnt = InterlockedDecrement(&qdma_active_pf_count);
-    TraceVerbose(TRACE_QDMA, "-- Active pf count : %u --", cnt);
+    TraceVerbose(TRACE_QDMA, "%s: -- Active pf count : %u --", dev_conf.name, cnt);
 }
 
 /* --------------------------- debug prints of structs --------------------------- */
@@ -304,7 +313,7 @@ qdma_interface* qdma_interface::create_qdma_device(void)
     if (dev_interface == nullptr)
         TraceError(TRACE_QDMA, "qdma_interface allocation Failed");
     else
-        TraceInfo(TRACE_QDMA, "qdma_interface allocation Success : %d", sizeof(xlnx::qdma_device));
+        TraceVerbose(TRACE_QDMA, "qdma_interface allocation Success : %d", sizeof(xlnx::qdma_device));
 
     return dev_interface;
 }
@@ -321,29 +330,14 @@ NTSTATUS qdma_device::init_qdma_global()
 
     status = qdma_read_csr_conf(&csr_conf);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to read CSR Configuration");
+        TraceError(TRACE_QDMA, "%s: Failed to read CSR Configuration", dev_conf.name);
         return status;
     }
 
-    ret = hw.qdma_hw_error_enable((void *)this, QDMA_ERRS_ALL);
+    ret = hw.qdma_hw_error_enable((void *)this, hw.qdma_max_errors);
     if (ret < 0) {
-        TraceInfo(TRACE_QDMA, "Failed to enable qdma errors, ret : %d", ret);
+        TraceInfo(TRACE_QDMA, "%s: Failed to enable qdma errors, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
-    }
-
-    UINT8 h2c = 0, c2h = 1;
-    for (UINT8 i = 0; i < dev_conf.dev_info.mm_channel_max; i++) {
-        ret = hw.qdma_mm_channel_conf((void *)this, i, h2c, TRUE);
-        if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to configure H2C MM channel %d, ret : %d", i, ret);
-            return hw.qdma_get_error_code(ret);
-        }
-
-        ret = hw.qdma_mm_channel_conf((void *)this, i, c2h, TRUE);
-        if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to configure C2H MM channel %d, ret : %d", i, ret);
-            return hw.qdma_get_error_code(ret);
-        }
     }
 
     return STATUS_SUCCESS;
@@ -352,18 +346,35 @@ NTSTATUS qdma_device::init_qdma_global()
 NTSTATUS qdma_device::init_func()
 {
     int ret;
-
     struct qdma_fmap_cfg config = { 0 };
+
+    UINT8 h2c = 0, c2h = 1;
+    for (UINT8 i = 0; i < dev_conf.dev_info.mm_channel_max; i++) {
+        ret = hw.qdma_mm_channel_conf((void *)this, i, h2c, TRUE);
+        if (ret < 0) {
+            TraceError(TRACE_QDMA, "%s: Failed to configure H2C MM channel %d, ret : %d",
+                dev_conf.name, i, ret);
+            return hw.qdma_get_error_code(ret);
+        }
+
+        ret = hw.qdma_mm_channel_conf((void *)this, i, c2h, TRUE);
+        if (ret < 0) {
+            TraceError(TRACE_QDMA, "%s: Failed to configure C2H MM channel %d, ret : %d",
+                dev_conf.name, i, ret);
+            return hw.qdma_get_error_code(ret);
+        }
+    }
+
     config.qbase = static_cast<UINT16>(qbase);
-    config.qmax  = static_cast<UINT16>(qmax);
+    config.qmax  = static_cast<UINT16>(drv_conf.qsets_max);
 
     ret = hw.qdma_fmap_conf((void *)this,
                             dev_conf.dev_sbdf.sbdf.fun_no,
                             &config,
                             QDMA_HW_ACCESS_WRITE);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "Failed FMAP Programming for PF %d, ret: %d",
-            dev_conf.dev_sbdf.sbdf.fun_no, ret);
+        TraceError(TRACE_QDMA, "%s: Failed FMAP Programming for PF %d, ret: %d",
+            dev_conf.name, dev_conf.dev_sbdf.sbdf.fun_no, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -382,14 +393,6 @@ void qdma_device::destroy_func(void)
                            &config,
                            QDMA_HW_ACCESS_WRITE);
     }
-
-    UINT8 h2c = 0, c2h = 1;
-    if (hw.qdma_mm_channel_conf) {
-        for (UINT8 i = 0; i < dev_conf.dev_info.mm_channel_max; i++) {
-            hw.qdma_mm_channel_conf((void *)this, i, h2c, FALSE);
-            hw.qdma_mm_channel_conf((void *)this, i, c2h, FALSE);
-        }
-    }
 }
 
 
@@ -401,14 +404,14 @@ NTSTATUS qdma_device::assign_bar_types()
                                    dev_conf.dev_sbdf.sbdf.fun_no,
                                    &user_bar_id);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "Failed to get user bar, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: Failed to get AXI Master Lite BAR, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
     user_bar_id = user_bar_id / 2;
 
     NTSTATUS status = pcie.assign_bar_types(user_bar_id);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, " pcie assign_bar_types() failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: pcie assign_bar_types() failed: %!STATUS!", dev_conf.name, status);
         return status;
     }
 
@@ -419,23 +422,23 @@ NTSTATUS qdma_device::init_dma_queues()
 {
     NTSTATUS status = STATUS_SUCCESS;
 
-    if (qmax == 0)
+    if (drv_conf.qsets_max == 0)
         return STATUS_SUCCESS;
 
-    queue_pairs = (queue_pair *)qdma_calloc(qmax, sizeof(queue_pair));
+    queue_pairs = (queue_pair *)qdma_calloc(drv_conf.qsets_max, sizeof(queue_pair));
     if (nullptr == queue_pairs) {
-        TraceError(TRACE_INTR, "Failed to allocate queue_pair memory");
-        return STATUS_NO_MEMORY;
+        TraceError(TRACE_QDMA, "%s: Failed to allocate queue_pair memory", dev_conf.name);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    for (UINT16 qid = 0; qid < qmax; qid++) {
+    for (UINT16 qid = 0; qid < drv_conf.qsets_max; qid++) {
         auto& q = queue_pairs[qid];
         q.idx = qid;
         q.idx_abs = qid + static_cast<UINT16>(qbase);
         q.qdma = this;
         q.state = queue_state::QUEUE_AVAILABLE;
 
-        if (op_mode != queue_op_mode::POLL_MODE)
+        if (drv_conf.operation_mode != queue_op_mode::POLL_MODE)
             q.h2c_q.lib_config.irq_en = q.c2h_q.lib_config.irq_en = true;
         else
             q.h2c_q.lib_config.irq_en = q.c2h_q.lib_config.irq_en = false;
@@ -443,13 +446,13 @@ NTSTATUS qdma_device::init_dma_queues()
         /* clear all context fields for this queue */
         status = clear_contexts(q);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "queue_pair::clear_contexts() failed! %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: queue_pair::clear_contexts() failed for queue %d! %!STATUS!", dev_conf.name, q.idx_abs, status);
             destroy_dma_queues();
             return status;
         }
     }
 
-    TraceVerbose(TRACE_QDMA, "All queue contexts for device %s are cleared", this->dev_conf.name);
+    TraceVerbose(TRACE_QDMA, "%s: All queue contexts are cleared", dev_conf.name);
 
     return STATUS_SUCCESS;
 }
@@ -469,7 +472,7 @@ NTSTATUS qdma_device::init_interrupt_queues()
     qdma_indirect_intr_ctxt intr_ctx = { 0 };
 
     /* Initialize interrupt queues */
-    for (auto vec = irq_mgr.data_vector_id_start; vec < irq_mgr.data_vector_id_end; ++vec) {
+    for (auto vec = irq_mgr.data_vector_id_start; vec <= irq_mgr.data_vector_id_end; ++vec) {
         auto& intr_q = irq_mgr.intr_q[vec];
         intr_q.idx = (UINT16)vec;
         intr_q.idx_abs = (UINT16)(vec + (dev_conf.dev_sbdf.sbdf.fun_no * qdma_max_msix_vectors_per_pf));
@@ -477,7 +480,7 @@ NTSTATUS qdma_device::init_interrupt_queues()
 
         status = intr_q.create(dma_enabler);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "intr_queue::create_resources() failed! %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: intr_queue::create_resources() failed! %!STATUS!", dev_conf.name, status);
             return status;
         }
 
@@ -491,8 +494,8 @@ NTSTATUS qdma_device::init_interrupt_queues()
                                              NULL,
                                              QDMA_HW_ACCESS_CLEAR);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to clear interrupt context \
-                for intr queue %d, ret : %d", intr_q.idx_abs, ret);
+            TraceError(TRACE_QDMA, "%s: Failed to clear interrupt context \
+                for intr queue %d, ret : %d", dev_conf.name, intr_q.idx_abs, ret);
             return hw.qdma_get_error_code(ret);
         }
 
@@ -504,17 +507,17 @@ NTSTATUS qdma_device::init_interrupt_queues()
         intr_ctx.page_size = (UINT8)(intr_q.npages - 1);
         intr_ctx.baddr_4k = WdfCommonBufferGetAlignedLogicalAddress(intr_q.buffer).QuadPart;
 
-        TraceVerbose(TRACE_DBG, "SETTING intr_ctxt={ \
+        TraceVerbose(TRACE_DBG, "%s: SETTING intr_ctxt={ \
             BaseAddr=%llX, color=%u, page_sz=%u, vector=%u }",
-            intr_ctx.baddr_4k, intr_ctx.color, intr_ctx.page_size, intr_ctx.vec);
+            dev_conf.name, intr_ctx.baddr_4k, intr_ctx.color, intr_ctx.page_size, intr_ctx.vec);
 
         ret = hw.qdma_indirect_intr_ctx_conf((void *)this,
                                              intr_q.idx_abs,
                                              &intr_ctx,
                                              QDMA_HW_ACCESS_WRITE);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to program interrupt \
-                ring for intr queue %d, ret: %d", intr_q.idx_abs, ret);
+            TraceError(TRACE_QDMA, "%s: Failed to program interrupt \
+                ring for intr queue %d, ret: %d", dev_conf.name, intr_q.idx_abs, ret);
             return hw.qdma_get_error_code(ret);
         }
     }
@@ -540,44 +543,44 @@ NTSTATUS qdma_device::init_os_resources(
                                           &attr,
                                           &dma_enabler);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, " WdfDmaEnablerCreate() failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: WdfDmaEnablerCreate() failed: %!STATUS!", dev_conf.name, status);
         return status;
     }
 
     if ((dev_conf.is_master_pf) &&
-        (op_mode == queue_op_mode::POLL_MODE)) {
-        int ret = hw.qdma_hw_error_enable(this, QDMA_ERRS_ALL);
+        (drv_conf.operation_mode == queue_op_mode::POLL_MODE)) {
+        int ret = hw.qdma_hw_error_enable(this, hw.qdma_max_errors);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "qdma_error_enable() failed, ret : %d", ret);
+            TraceError(TRACE_QDMA, "%s: qdma_error_enable() failed, ret : %d", dev_conf.name, ret);
             return hw.qdma_get_error_code(ret);
         }
 
         /* Create a thread for polling errors */
         status = th_mgr.create_err_poll_thread(this);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "create_err_poll_thread() failed: %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: create_err_poll_thread() failed: %!STATUS!", dev_conf.name, status);
             return status;
         }
     }
 
-    status = th_mgr.create_sys_threads(op_mode);
+    status = th_mgr.create_sys_threads(drv_conf.operation_mode);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, " create_sys_threads() failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: create_sys_threads() failed: %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
     /* INTERRUPT HANDLING */
-    if (op_mode != queue_op_mode::POLL_MODE) {
+    if (drv_conf.operation_mode != queue_op_mode::POLL_MODE) {
         /* Get MSIx vector count */
         status = pcie.find_num_msix_vectors(wdf_dev);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "pcie.get_num_msix_vectors() failed! %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: pcie.get_num_msix_vectors() failed! %!STATUS!", dev_conf.name, status);
             goto ErrExit;
         }
 
         status = intr_setup(resources, resources_translated);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, " intr_setup() failed: %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: intr_setup() failed: %!STATUS!", dev_conf.name, status);
             goto ErrExit;
         }
     }
@@ -593,7 +596,7 @@ void qdma_device::destroy_os_resources(void)
 {
     /* dma_enabler will be free by wdf_dev cleanup */
 
-    if (op_mode == queue_op_mode::POLL_MODE) {
+    if (drv_conf.operation_mode == queue_op_mode::POLL_MODE) {
         if (dev_conf.is_master_pf)
             th_mgr.terminate_err_poll_thread();
     }
@@ -609,7 +612,7 @@ NTSTATUS qdma_device::init_resource_manager()
     NTSTATUS status = STATUS_SUCCESS;
 
     if (qdma_resource_lock_init()) {
-        TraceError(TRACE_QDMA, "Resource lock creation failed!");
+        TraceError(TRACE_QDMA, "%s: Resource lock creation failed!", dev_conf.name);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -619,30 +622,31 @@ NTSTATUS qdma_device::init_resource_manager()
                                           QDMA_TOTAL_Q,
                                           &dma_dev_index);
     if (ret < 0 && ret != -QDMA_ERR_RM_RES_EXISTS) {
-        TraceError(TRACE_QDMA, "qdma_master_resource_create() failed!, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: qdma_master_resource_create() failed!, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
-    TraceVerbose(TRACE_QDMA, "Device Index : %u Bus start : %u Bus End : %u",
-        dma_dev_index, dev_conf.dev_sbdf.sbdf.bus_no, dev_conf.dev_sbdf.sbdf.bus_no);
+    TraceVerbose(TRACE_QDMA, "%s: Device Index : %u Bus start : %u Bus End : %u",
+        dev_conf.name, dma_dev_index, dev_conf.dev_sbdf.sbdf.bus_no, dev_conf.dev_sbdf.sbdf.bus_no);
 
     ret = qdma_dev_entry_create(dma_dev_index, dev_conf.dev_sbdf.sbdf.fun_no);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "qdma_dev_entry_create() failed for function : %u, ret : %d",
-            dev_conf.dev_sbdf.sbdf.fun_no, ret);
+        TraceError(TRACE_QDMA, "%s: qdma_dev_entry_create() failed for function : %u, ret : %d",
+            dev_conf.name, dev_conf.dev_sbdf.sbdf.fun_no, ret);
         status = hw.qdma_get_error_code(ret);
         goto ErrExit;
     }
 
-    ret = qdma_dev_update(dma_dev_index, dev_conf.dev_sbdf.sbdf.fun_no, qmax, &qbase);
+    ret = qdma_dev_update(dma_dev_index, dev_conf.dev_sbdf.sbdf.fun_no, drv_conf.qsets_max, &qbase);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "qdma_dev_update() failed for function : %u, ret : %d", dev_conf.dev_sbdf.sbdf.fun_no, ret);
+        TraceError(TRACE_QDMA, "%s: qdma_dev_update() failed for function : %u, ret : %d", 
+            dev_conf.name, dev_conf.dev_sbdf.sbdf.fun_no, ret);
         status = hw.qdma_get_error_code(ret);
         goto ErrExit;
     }
 
-    TraceVerbose(TRACE_QDMA, "QDMA Function : %u, qbase : %u, qmax : %u",
-        dev_conf.dev_sbdf.sbdf.fun_no, qbase, qmax);
+    TraceVerbose(TRACE_QDMA, "%s: QDMA Function : %u, qbase : %u, qmax : %u",
+        dev_conf.name, dev_conf.dev_sbdf.sbdf.fun_no, qbase, drv_conf.qsets_max);
 
     return status;
 
@@ -702,7 +706,7 @@ NTSTATUS st_c2h_pkt_frag_queue::create(UINT32 entries)
                                               sizeof(st_c2h_pkt_fragment)));
     if (nullptr == frags) {
         TraceError(TRACE_QDMA, "Failed to allocate memory for rcvd pkts");
-        return STATUS_MEMORY_NOT_ALLOCATED;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     pidx = cidx = 0;
@@ -822,7 +826,7 @@ NTSTATUS ring_buffer::create(
       */
     capacity = num_entries - 1;
     hw_index = sw_index = 0u;
-    stats.tot_desc_accepted = stats.tot_desc_dropped = stats.tot_desc_processed = 0;
+    stats.tot_desc_accepted = stats.tot_desc_processed = 0;
 
     TraceVerbose(TRACE_QDMA, "Allocate DMA buffer size : %llu ring depth : %llu, capacity : %llu",
         buffer_sz, num_entries, capacity);
@@ -857,7 +861,6 @@ void ring_buffer::destroy(void)
     hw_index = 0;
     stats.tot_desc_accepted = 0;
     stats.tot_desc_processed = 0;
-    stats.tot_desc_dropped = 0;
     if (buffer) {
         TraceVerbose(TRACE_QDMA, "Deleting buffer object");
         WdfObjectDelete(buffer);
@@ -906,6 +909,8 @@ NTSTATUS h2c_queue::create(
 {
     user_conf = q_conf;
 
+    INIT_LIST_HEAD(&req_list_head);
+
     if ((user_conf.desc_bypass_en) &&
         (user_conf.sw_desc_sz == static_cast<UINT8>(qdma_desc_sz::QDMA_DESC_SZ_64B))) {
         lib_config.desc_sz = qdma_desc_sz::QDMA_DESC_SZ_64B;
@@ -921,7 +926,8 @@ NTSTATUS h2c_queue::create(
                                    lib_config.ring_sz,
                                    desc_sz_bytes);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "desc_ring.create failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: desc_ring.create failed: %!STATUS!", 
+            qdma->dev_conf.name, status);
         return status;
     }
 
@@ -933,20 +939,22 @@ NTSTATUS h2c_queue::create(
       */
     status = req_tracker.create(lib_config.ring_sz);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_dma_req_tracker() failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_dma_req_tracker() failed: %!STATUS!", 
+            qdma->dev_conf.name, status);
         goto ErrExit;
     }
 
     status = WdfSpinLockCreate(WDF_NO_OBJECT_ATTRIBUTES, &lock);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "WdfSpinLockCreate() failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: WdfSpinLockCreate() failed: %!STATUS!", 
+            qdma->dev_conf.name, status);
         goto ErrExit;
     }
 
 #ifdef TEST_64B_DESC_BYPASS_FEATURE
     if (user_conf.is_st && user_conf.desc_bypass_en && user_conf.sw_desc_sz == 3) {
-        TraceVerbose(TRACE_QDMA, "Initializing the descriptors with "
-            "preloaded data to test TEST_64B_DESC_BYPASS_FEATURE");
+        TraceVerbose(TRACE_QDMA, "%s: Initializing the descriptors with "
+            "preloaded data to test TEST_64B_DESC_BYPASS_FEATURE", qdma->dev_conf.name);
 
         for (UINT32 desc_idx = 0; desc_idx < lib_config.ring_sz; desc_idx++) {
             UINT8 *desc =
@@ -986,6 +994,8 @@ NTSTATUS c2h_queue::create(
 {
     user_conf = q_conf;
 
+    INIT_LIST_HEAD(&req_list_head);
+
     if ((user_conf.desc_bypass_en) &&
         (user_conf.sw_desc_sz == static_cast<UINT8>(qdma_desc_sz::QDMA_DESC_SZ_64B))) {
         lib_config.desc_sz = qdma_desc_sz::QDMA_DESC_SZ_64B;
@@ -1012,13 +1022,13 @@ NTSTATUS c2h_queue::create(
 
     NTSTATUS status = desc_ring.create(qdma->dma_enabler, lib_config.ring_sz, desc_sz_bytes);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "desc_ring.create failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: desc_ring.create failed: %!STATUS!", qdma->dev_conf.name, status);
         return status;
     }
 
     status = WdfSpinLockCreate(WDF_NO_OBJECT_ATTRIBUTES, &lock);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_INTR, "WdfSpinLockCreate failed: %!STATUS!", status);
+        TraceError(TRACE_INTR, "%s: WdfSpinLockCreate failed: %!STATUS!", qdma->dev_conf.name, status);
         goto ErrExit;
     }
 
@@ -1029,7 +1039,8 @@ NTSTATUS c2h_queue::create(
           */
         status = st_c2h_req_tracker.create(lib_config.ring_sz);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "Failed to init() ST C2H req tracker failed: %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: Failed to init() ST C2H req tracker failed: %!STATUS!", 
+                qdma->dev_conf.name, status);
             goto ErrExit;
         }
     }
@@ -1040,7 +1051,8 @@ NTSTATUS c2h_queue::create(
           */
         status = req_tracker.create(lib_config.ring_sz);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "Failed to init() MM C2H req tracker failed: %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: Failed to init() MM C2H req tracker failed: %!STATUS!", 
+                qdma->dev_conf.name, status);
             goto ErrExit;
         }
     }
@@ -1055,7 +1067,8 @@ NTSTATUS c2h_queue::create(
 
         status = cmpt_ring.create(qdma->dma_enabler, lib_config.cmpt_ring_sz, cmpt_sz_bytes);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "desc_ring.create failed: %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: desc_ring.create failed: %!STATUS!", 
+                qdma->dev_conf.name, status);
             goto ErrExit;
         }
 
@@ -1084,8 +1097,9 @@ NTSTATUS c2h_queue::create(
                                                               sizeof(st_c2h_pkt_buffer)));
 
     if (nullptr == pkt_buffer) {
-        TraceError(TRACE_QDMA, "rx_buffers qdma_calloc failed: %!STATUS!", status);
-        status = STATUS_MEMORY_NOT_ALLOCATED;
+        TraceError(TRACE_QDMA, "%s: rx_buffers qdma_calloc failed: %!STATUS!", 
+            qdma->dev_conf.name, status);
+        status = STATUS_INSUFFICIENT_RESOURCES;
         goto ErrExit;
     }
 
@@ -1131,15 +1145,15 @@ NTSTATUS c2h_queue::create(
 
     status = pkt_frag_queue.create(lib_config.cmpt_ring_sz);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "received pkts init failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: received pkts init failed: %!STATUS!", qdma->dev_conf.name, status);
         goto ErrExit;
     }
 
     pkt_frag_list = static_cast<st_c2h_pkt_fragment*>(qdma_calloc(desc_ring_capacity,
                                                       sizeof(st_c2h_pkt_fragment)));
     if (nullptr == pkt_frag_list) {
-        TraceError(TRACE_QDMA, "rx_buffers qdma_calloc failed: %!STATUS!", status);
-        status = STATUS_MEMORY_NOT_ALLOCATED;
+        TraceError(TRACE_QDMA, "%s: rx_buffers qdma_calloc failed: %!STATUS!", qdma->dev_conf.name, status);
+        status = STATUS_INSUFFICIENT_RESOURCES;
         goto ErrExit;
     }
 
@@ -1233,7 +1247,7 @@ NTSTATUS dma_req_tracker::create(UINT32 entries)
 {
     requests = static_cast<req_ctx *>(qdma_calloc(entries, sizeof(req_ctx)));
     if (nullptr == requests) {
-        return STATUS_MEMORY_NOT_ALLOCATED;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     return STATUS_SUCCESS;
@@ -1251,7 +1265,7 @@ NTSTATUS st_c2h_dma_req_tracker::create(UINT32 entries)
 {
     requests = static_cast<st_c2h_req*>(qdma_calloc(entries, sizeof(st_c2h_req)));
     if (nullptr == requests) {
-        return STATUS_MEMORY_NOT_ALLOCATED;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     NTSTATUS status = WdfSpinLockCreate(WDF_NO_OBJECT_ATTRIBUTES, &lock);
@@ -1395,17 +1409,20 @@ NTSTATUS queue_pair::create(
 
     type = conf.is_st ? queue_type::STREAMING : queue_type::MEMORY_MAPPED;
 
+    RtlStringCchPrintfA(name, ARRAYSIZE(name), "%s-%s-%d",
+        qdma->dev_conf.name, ((conf.is_st) ? "ST" : "MM"), idx);
+
     /* h2c common buffer */
     status = h2c_q.create(qdma, conf);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "h2c_q.create failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s h2c_q.create failed: %!STATUS!", this->name, status);
         return status;
     }
 
     /* c2h common buffer */
     status = c2h_q.create(qdma, conf);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "c2h_q.create failed: %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s c2h_q.create failed: %!STATUS!", this->name, status);
         h2c_q.destroy();
         return status;
     }
@@ -1434,7 +1451,7 @@ void queue_pair::init_csr(void)
 
 PFORCEINLINE void queue_pair::update_sw_index_with_csr_h2c_pidx(UINT32 new_pidx)
 {
-    TraceVerbose(TRACE_QDMA, "queue_%u updating h2c pidx to %u", idx_abs, new_pidx);
+    TraceVerbose(TRACE_QDMA, "%s-H2C updating h2c pidx to %u", this->name, new_pidx);
 
     MemoryBarrier();
     h2c_q.desc_ring.sw_index = new_pidx;
@@ -1446,7 +1463,7 @@ PFORCEINLINE void queue_pair::update_sw_index_with_csr_h2c_pidx(UINT32 new_pidx)
 
 PFORCEINLINE void queue_pair::update_sw_index_with_csr_c2h_pidx(UINT32 new_pidx)
 {
-    TraceVerbose(TRACE_QDMA, "queue_%u updating c2h pidx to %u", idx_abs, new_pidx);
+    TraceVerbose(TRACE_QDMA, "%s-C2H updating c2h pidx to %u", this->name, new_pidx);
 
     MemoryBarrier();
     c2h_q.desc_ring.sw_index = new_pidx;
@@ -1458,7 +1475,7 @@ PFORCEINLINE void queue_pair::update_sw_index_with_csr_c2h_pidx(UINT32 new_pidx)
 
 PFORCEINLINE void queue_pair::update_sw_index_with_csr_wb(UINT32 new_cidx)
 {
-    TraceVerbose(TRACE_QDMA, "queue_%u updating wb cidx to %u", idx_abs, new_cidx);
+    TraceVerbose(TRACE_QDMA, "%s-C2H updating wb cidx to %u", this->name, new_cidx);
 
     c2h_q.cmpt_ring.sw_index = new_cidx;
     c2h_q.csr_cmpt_cidx_info.wrb_cidx = (UINT16)new_cidx;
@@ -1466,7 +1483,313 @@ PFORCEINLINE void queue_pair::update_sw_index_with_csr_wb(UINT32 new_cidx)
                                          &c2h_q.csr_cmpt_cidx_info);
 }
 
-service_status queue_pair::service_mm_st_h2c_completions(ring_buffer *desc_ring, dma_req_tracker *tracker, UINT32 budget)
+service_status queue_pair::process_mm_request(dma_request* request, size_t* xfer_len)
+{
+    bool                    poll;
+    ring_buffer             *desc_ring;
+    dma_req_tracker         *tracker;
+    ULONG                   no_of_sub_elem = 0;
+    UINT32                  credits = 0;
+    ULONG                   sg_index;
+    WDF_DMA_DIRECTION       direction;
+    PSCATTER_GATHER_LIST    sg_list;
+    LONGLONG                device_offset;
+    dma_completion_cb       compl_cb;
+    VOID                    *priv;
+    poll_operation_entry    *poll_entry;
+    char                    *dir_name;
+    service_status          status = service_status::SERVICE_CONTINUE;
+
+    /** Validate the parameters */
+    if ((request == nullptr) || (xfer_len == NULL))
+        return service_status::SERVICE_ERROR;
+
+    /** Read the request parameters */
+    direction       = request->direction;
+    sg_list         = request->sg_list;
+    device_offset   = (request->device_offset + request->offset_idx);
+    compl_cb        = request->compl_cb;
+    priv            = request->priv;
+
+    if (direction == WdfDmaDirectionWriteToDevice) {
+        desc_ring = &h2c_q.desc_ring;
+        tracker = &h2c_q.req_tracker;
+        poll = !h2c_q.lib_config.irq_en;
+        poll_entry = h2c_q.poll_entry;
+        dir_name = (char *)"H2C";
+    }
+    else {
+        desc_ring = &c2h_q.desc_ring;
+        tracker = &c2h_q.req_tracker;
+        poll = !c2h_q.lib_config.irq_en;
+        poll_entry = c2h_q.poll_entry;
+        dir_name = (char *)"C2H";
+    }
+
+    credits = desc_ring->get_num_free_entries();
+    if (credits == 0) {
+        TraceError(TRACE_QDMA, "%s-%s: No space [%u] in sg dma list", 
+            this->name, dir_name, credits);
+        return status;
+    }
+
+    UINT32 ring_idx = desc_ring->sw_index;
+    bool is_credit_avail = true;
+    size_t dmaed_len = 0;
+
+    TraceVerbose(TRACE_QDMA, "%s-%s enqueueing %u sg list at ring_index=%u FreeDesc : %u",
+        this->name, dir_name, (sg_list->NumberOfElements - request->sg_index), ring_idx, credits);
+
+    const auto desc = static_cast<mm_descriptor*>(desc_ring->get_va());
+
+    for (sg_index = request->sg_index;
+        ((sg_index < sg_list->NumberOfElements) && (is_credit_avail)); sg_index++) {
+
+        size_t len = 0;
+        size_t remain_len = sg_list->Elements[sg_index].Length;
+        size_t frag_len = mm_max_desc_data_len;
+
+        if (sg_list->Elements[sg_index].Length > mm_max_desc_data_len) {
+            UINT32 frag_cnt = (UINT32)(sg_list->Elements[sg_index].Length / sg_frag_len);
+            if (sg_list->Elements[sg_index].Length % sg_frag_len)
+                frag_cnt++;
+
+            if (frag_cnt > credits) {
+                TraceInfo(TRACE_QDMA, "%s-%s Sufficient credts are not available to fit sg element, "
+                    "frag_cnt : %d, credits : %d\n", this->name, dir_name, frag_cnt, credits);
+
+                break;
+            }
+
+            frag_len = sg_frag_len;
+            TraceInfo(TRACE_QDMA, "%s-%s sg_list len > mm_max_desc_data_len(%lld > %lld), "
+                "splitting at idx: %d", this->name, dir_name, sg_list->Elements[sg_index].Length, 
+                mm_max_desc_data_len, sg_index);
+        }
+
+        while (remain_len != 0) {
+            size_t part_len = min(remain_len, frag_len);
+
+            desc[ring_idx].length = part_len;
+            desc[ring_idx].valid = true;
+            desc[ring_idx].sop = (sg_index == 0);
+            desc[ring_idx].eop = (sg_index == (sg_list->NumberOfElements - 1)) && (remain_len == part_len);
+
+            if (direction == WdfDmaDirectionWriteToDevice) {
+                desc[ring_idx].addr = sg_list->Elements[sg_index].Address.QuadPart + len;
+                desc[ring_idx].dest_addr = device_offset;
+            }
+            else {
+                desc[ring_idx].addr = device_offset;
+                desc[ring_idx].dest_addr = sg_list->Elements[sg_index].Address.QuadPart + len;
+            }
+
+            len = len + part_len;
+            remain_len = remain_len - part_len;
+
+            device_offset += part_len;
+            dump(desc[ring_idx]);
+
+            tracker->requests[ring_idx].compl_cb = nullptr;
+            /** Set Call back function if EOP is SET */
+            if (desc[ring_idx].eop == true) {
+                tracker->requests[ring_idx].compl_cb = (dma_completion_cb)compl_cb;
+                tracker->requests[ring_idx].priv = priv;
+                desc[ring_idx].eop = true;
+            }
+
+            desc_ring->advance_idx(ring_idx);
+
+            no_of_sub_elem++;
+            /** Descriptor ring boundary checking */
+            credits--;
+            if (credits == 0) {
+                is_credit_avail = false;
+                break;
+            }
+        }
+        /** Discard the main element count in sg_list->NumberOfElements */
+        no_of_sub_elem--;
+        dmaed_len += len;
+    }
+
+    if (sg_index != request->sg_index) {
+        request->sg_index = sg_index;
+        request->offset_idx = device_offset - request->device_offset;
+
+        /** When sg_index reaches the end, request forward done */
+        if (request->sg_index >= sg_list->NumberOfElements)
+            status = service_status::SERVICE_FINISHED;
+
+        UINT32 accepted_desc = desc_ring->idx_delta(desc_ring->sw_index, ring_idx);
+        desc_ring->stats.tot_desc_accepted += accepted_desc;
+
+        *xfer_len = dmaed_len;
+
+        TraceVerbose(TRACE_QDMA, "%s-%s +++ Request added at : %u +++", 
+            this->name, dir_name, (ring_idx - 1));
+        TraceVerbose(TRACE_QDMA, "%s-%s MM Accepted Desc : %d", 
+            this->name, dir_name, accepted_desc);
+
+#ifdef STRESS_TEST
+        KeStallExecutionProcessor(2);
+#endif
+
+        if (direction == WdfDmaDirectionWriteToDevice) {
+            update_sw_index_with_csr_h2c_pidx(ring_idx);
+            TraceVerbose(TRACE_QDMA, "%s-%s csr[%u].h2c_dsc_pidx=%u", 
+                this->name, dir_name, idx_abs, ring_idx);
+        }
+        else {
+            update_sw_index_with_csr_c2h_pidx(ring_idx);
+            TraceVerbose(TRACE_QDMA, "%s-%s csr[%u].c2h_dsc_pidx=%u", 
+                this->name, dir_name, idx_abs, ring_idx);
+        }
+
+        if (poll)
+            wakeup_thread(poll_entry->thread);
+    }
+
+    return status;
+}
+
+service_status queue_pair::process_st_h2c_request(dma_request* request, size_t* xfer_len)
+{
+    bool                    poll;
+    ring_buffer             *desc_ring;
+    dma_req_tracker         *tracker;
+    poll_operation_entry    *poll_entry;
+    ULONG                   NumberOfElements;
+    ULONG                   no_of_sub_elem = 0;
+    UINT32                  credits;
+    PSCATTER_GATHER_LIST    sg_list;
+    dma_completion_cb       compl_cb;
+    VOID                    *priv;
+    ULONG                   sg_index;
+    service_status          status = service_status::SERVICE_CONTINUE;
+
+    /** Validate the parameters */
+    if ((request == nullptr) || (xfer_len == NULL))
+        return service_status::SERVICE_ERROR;
+
+    /** ST C2H has different execution flow */
+    if (request->direction != WdfDmaDirectionWriteToDevice)
+        return service_status::SERVICE_ERROR;
+
+    /** Read the request parameters */
+    sg_list     = request->sg_list;
+    compl_cb    = request->compl_cb;
+    priv        = request->priv;
+
+    desc_ring           = &h2c_q.desc_ring;
+    tracker             = &h2c_q.req_tracker;
+    poll                = !h2c_q.lib_config.irq_en;
+    poll_entry          = h2c_q.poll_entry;
+    NumberOfElements    = sg_list->NumberOfElements;
+
+    credits = desc_ring->get_num_free_entries();
+    if (credits == 0) {
+        TraceError(TRACE_QDMA, "%s-H2C: No space [%u] in sg dma list", this->name, credits);
+        return status;
+    }
+
+    UINT32 pidx = desc_ring->sw_index;
+    const auto desc = static_cast<h2c_descriptor *>(desc_ring->get_va());
+    bool is_credit_avail = true;
+    size_t dmaed_len = 0;
+    
+    TraceVerbose(TRACE_QDMA, "%s-H2C enqueueing %u sg list at ring_index=%u FreeDesc : %u",
+        this->name, (NumberOfElements - request->sg_index), pidx, credits);
+
+    for (sg_index = request->sg_index; ((sg_index < NumberOfElements) && (is_credit_avail)); sg_index++) {
+        size_t len = 0;
+        size_t remain_len = sg_list->Elements[sg_index].Length;
+        size_t frag_len = st_max_desc_data_len;
+
+        /* If the SG element length is more than ST supported len,
+            * then Fragment the SG element into sub SG elements */
+        if (sg_list->Elements[sg_index].Length > st_max_desc_data_len) {
+            UINT32 frag_cnt = (UINT32)(sg_list->Elements[sg_index].Length / sg_frag_len);
+            if (sg_list->Elements[sg_index].Length % sg_frag_len)
+                frag_cnt++;
+
+            if (frag_cnt > credits) {
+                TraceInfo(TRACE_QDMA, "%s-H2C: Sufficient credits are not available to fit sg element, "
+                    "frag_cnt : %d, credits : %d\n", this->name, frag_cnt, credits);
+
+                break;
+            }
+
+            frag_len = sg_frag_len;
+            TraceInfo(TRACE_QDMA, "%s-H2C sg_list len > st_max_desc_data_len(%lld > %lld), "
+                "splitting at idx: %d", this->name, sg_list->Elements[sg_index].Length, 
+                st_max_desc_data_len, sg_index);
+        }
+
+        /** do while loop is to support ST Zero length packet transfers */
+        do {
+            size_t part_len = min(remain_len, frag_len);
+
+            desc[pidx].addr     = sg_list->Elements[sg_index].Address.QuadPart + len;
+            desc[pidx].length   = (UINT16)part_len;
+            desc[pidx].pld_len  = (UINT16)part_len;
+            desc[pidx].sop      = (sg_index == 0);
+            desc[pidx].eop      = (sg_index == (NumberOfElements - 1) && (remain_len == part_len));
+
+            len = len + part_len;
+            remain_len = remain_len - part_len;
+
+            dump(desc[pidx]);
+
+            tracker->requests[pidx].compl_cb = nullptr;
+            /** Set Call back function if EOP is SET */
+            if (desc[pidx].eop == true) {
+                tracker->requests[pidx].compl_cb = (dma_completion_cb)compl_cb;
+                tracker->requests[pidx].priv = priv;
+            }
+
+            desc_ring->advance_idx(pidx);
+
+            no_of_sub_elem++;
+            /** Descriptor ring boundary checking */
+            credits--;
+            if (credits == 0) {
+                is_credit_avail = false;
+                break;
+            }
+        } while (remain_len != 0);
+        /** Discard the main element count in sg_list->NumberOfElements */
+        no_of_sub_elem--;
+        dmaed_len += len;
+    }
+
+    if (sg_index != request->sg_index) {
+        request->sg_index = sg_index;
+
+        /** When sg_index reaches the end, request forward done */
+        if (request->sg_index >= sg_list->NumberOfElements)
+            status = service_status::SERVICE_FINISHED;
+
+        UINT32 accepted_desc = desc_ring->idx_delta(desc_ring->sw_index, pidx);
+        desc_ring->stats.tot_desc_accepted += accepted_desc;
+
+        *xfer_len = dmaed_len;
+
+        TraceVerbose(TRACE_QDMA, "%s-H2C +++ Request added at : %u +++", this->name, (pidx - 1));
+        TraceVerbose(TRACE_QDMA, "%s-H2C ST Accepted Desc : %d", this->name, accepted_desc);
+
+        update_sw_index_with_csr_h2c_pidx(pidx);
+        TraceVerbose(TRACE_QDMA, "%s-H2C csr[%u].h2c_dsc_pidx=%u", this->name, idx_abs, pidx);
+
+        if (poll)
+            wakeup_thread(poll_entry->thread);
+
+    }
+    return status;
+}
+
+service_status queue_pair::service_mm_st_h2c_completions(ring_buffer *desc_ring, 
+    dma_req_tracker *tracker, UINT32 budget, UINT32 &proc_desc_cnt)
 {
     UINT32 old_cidx = desc_ring->hw_index;
     UINT32 new_cidx = desc_ring->wb_status->cidx;
@@ -1480,15 +1803,15 @@ service_status queue_pair::service_mm_st_h2c_completions(ring_buffer *desc_ring,
         req_ctx &completed_req = tracker->requests[index];
 
         if (completed_req.compl_cb != nullptr) {
-            TraceVerbose(TRACE_QDMA, "--- COMPLETING REQ AT : %u ---", index);
+            TraceVerbose(TRACE_QDMA, "%s: --- COMPLETING REQ AT : %u ---", this->name, index);
             completed_req.compl_cb(completed_req.priv, STATUS_SUCCESS);
             completed_req.compl_cb = nullptr;
             completed_req.priv = nullptr;
         }
     }
 
-    desc_ring->stats.tot_desc_processed +=
-        desc_ring->idx_delta(index, old_cidx);
+    proc_desc_cnt = desc_ring->idx_delta(old_cidx, index);
+    desc_ring->stats.tot_desc_processed += proc_desc_cnt;
 
     /* Update stored copy of the ring's consumer index */
     desc_ring->hw_index = index;
@@ -1530,7 +1853,8 @@ NTSTATUS queue_pair::check_cmpt_error(c2h_wb_header_8B *cmpt_data)
 
 PFORCEINLINE void queue_pair::update_c2h_pidx_in_batch(UINT32 processed_desc_cnt)
 {
-    TraceVerbose(TRACE_QDMA, "Completed desc count qid[%u] : %ld", processed_desc_cnt, idx_abs);
+    TraceVerbose(TRACE_QDMA, "%s: Completed desc count qid[%u] : %ld", 
+        this->name, idx_abs, processed_desc_cnt);
     if (processed_desc_cnt) {
         UINT32 new_pidx = c2h_q.desc_ring.sw_index;
         c2h_q.desc_ring.advance_idx(new_pidx, processed_desc_cnt);
@@ -1549,7 +1873,7 @@ service_status queue_pair::st_service_c2h_queue(UINT32 budget)
 
     /* Process WB ring */
     if (prev_pidx != current_pidx) {
-        TraceVerbose(TRACE_QDMA, "Completion ring sw index : %u hw pidx : %u", prev_pidx, current_pidx);
+        TraceVerbose(TRACE_QDMA, "%s: Completion ring sw index : %u hw pidx : %u", this->name, prev_pidx, current_pidx);
         dump(*const_cast<c2h_wb_status*>(wb_status));
 
         c2h_wb_header_8B *c2h_cmpt_ring_va;
@@ -1564,7 +1888,7 @@ service_status queue_pair::st_service_c2h_queue(UINT32 budget)
             /** Check completion descriptor for any errors */
             status = check_cmpt_error(c2h_cmpt_ring_va);
             if (!NT_SUCCESS(status)) {
-                TraceError(TRACE_QDMA, "check_cmpt_error returned error\n");
+                TraceError(TRACE_QDMA, "%s: check_cmpt_error returned error", this->name);
                 return service_status::SERVICE_ERROR;
             }
 
@@ -1572,7 +1896,7 @@ service_status queue_pair::st_service_c2h_queue(UINT32 budget)
                 /* Consume the used packet */
                 status = process_st_c2h_data_pkt((void *)c2h_cmpt_ring_va, c2h_cmpt_ring_va->length);
                 if (!NT_SUCCESS(status)) {
-                    TraceError(TRACE_QDMA, "process_st_c2h_data_pkt() failed: %!STATUS!", status);
+                    TraceError(TRACE_QDMA, "%s: process_st_c2h_data_pkt() failed: %!STATUS!", this->name, status);
                     break;
                 }
             }
@@ -1607,7 +1931,7 @@ service_status queue_pair::st_service_c2h_queue(UINT32 budget)
             update_c2h_pidx_in_batch(processed_desc_cnt);
             LONG pkt_cnt = c2h_q.pkt_frag_queue.get_avail_frag_cnt();
             if (pkt_cnt) {
-                TraceVerbose(TRACE_QDMA, "No pending requests. Available Packets : %Iu", pkt_cnt);
+                TraceVerbose(TRACE_QDMA, "%s: No pending requests. Available Packets : %Iu", this->name, pkt_cnt);
                 ret = service_status::SERVICE_CONTINUE;
             }
             break;
@@ -1652,34 +1976,136 @@ service_status queue_pair::st_service_c2h_queue(UINT32 budget)
             }
         }
         else {
+            TraceInfo(TRACE_QDMA, "%s: req_len : %lld, rxd_len:%lld", 
+                this->name, req.len, c2h_q.pkt_frag_queue.get_avail_byte_cnt());
             update_c2h_pidx_in_batch(processed_desc_cnt);
             ret = service_status::SERVICE_CONTINUE;
             break;
         }
     }
 
-    TraceVerbose(TRACE_QDMA, "Completed Request count : %ld", processed_dma_requests);
+    TraceVerbose(TRACE_QDMA, "%s: Completed Request count : %ld", 
+        this->name, processed_dma_requests);
     return ret;
 }
 
-void service_h2c_mm_queue(void *arg)
+void process_queue_req(queue_pair* queue, WDFSPINLOCK lock, PLIST_ENTRY req_list_head)
+{
+    PLIST_ENTRY entry;
+    PLIST_ENTRY temp;
+    service_status status;
+    UINT32 req_service_cnt = 0;
+    size_t xfer_len = 0;
+
+    if ((queue == nullptr) || (lock == nullptr) || (req_list_head == nullptr)) {
+        TraceError(TRACE_QDMA, "Invalid Parameters : queue : %p, "
+            "lock : %p, req_list_head : %p", queue, lock, req_list_head);
+        return;
+    }
+
+    if (queue->state != queue_state::QUEUE_STARTED) {
+        TraceError(TRACE_QDMA, "%s invalid state, q_state: %d", 
+            queue->name, queue->state);
+        return;
+    }
+
+    /** Come out of the loop only
+      * "when the list is empty" or
+      * "when there is no room in descriptor ring (!SERVICE_FINISHED)" or
+      * "when max request service reached"
+      */
+    LIST_FOR_EACH_ENTRY_SAFE(req_list_head, temp, entry) {
+        dma_request* request = LIST_GET_ENTRY(entry, dma_request, list_entry);
+        if (queue->type == queue_type::STREAMING) {
+            status = queue->process_st_h2c_request(request, &xfer_len);
+        }
+        else {
+            status = queue->process_mm_request(request, &xfer_len);
+        }
+        switch (status) {
+        case service_status::SERVICE_CONTINUE:
+            /** Exit the loop as there is no room in descriptor ring */
+            req_service_cnt = max_req_service_cnt;
+            TraceVerbose(TRACE_QDMA, "%s-%s: Request Split", queue->name, 
+                ((request->direction == WdfDmaDirectionReadFromDevice) ? "C2H" : "H2C"));
+            break;
+
+        case service_status::SERVICE_FINISHED:
+            req_service_cnt++;
+            WdfSpinLockAcquire(lock);
+            LIST_DEL_NODE(entry);
+            WdfSpinLockRelease(lock);
+            qdma_memfree(request);
+            break;
+
+        case service_status::SERVICE_ERROR:
+            /** Remove the request from the list,
+              * Can be NULL pointer or ST C2H packet */
+            WdfSpinLockAcquire(lock);
+            LIST_DEL_NODE(entry);
+            WdfSpinLockRelease(lock);
+
+            if (request) {
+                TraceError(TRACE_QDMA, "%s-%s: queue->process_XXX_request() SERVICE_ERROR", 
+                    ((request->direction == WdfDmaDirectionReadFromDevice) ? "C2H" : "H2C"), 
+                    queue->name);
+                qdma_memfree(request);
+            }
+            break;
+        default:
+            TraceError(TRACE_QDMA, "%s-%s: queue->process_XXX_request() "
+                "invalid return value (0x%X)", queue->name, 
+                ((request->direction == WdfDmaDirectionReadFromDevice)? "C2H" : "H2C"), 
+                static_cast<UINT32>(status));
+            break;
+        }
+
+        if (req_service_cnt >= max_req_service_cnt) {
+            TraceInfo(TRACE_QDMA, "%s: Max Requests serviced (%d)", queue->name, req_service_cnt);
+            break;
+        }
+    }
+}
+
+void process_mm_h2c_req(void* arg)
+{
+    queue_pair* queue = static_cast<queue_pair*>(arg);
+
+    process_queue_req(queue, queue->h2c_q.lock, &queue->h2c_q.req_list_head);
+}
+
+void process_mm_c2h_req(void* arg)
+{
+    queue_pair* queue = static_cast<queue_pair*>(arg);
+
+    process_queue_req(queue, queue->c2h_q.lock, &queue->c2h_q.req_list_head);
+}
+
+void service_h2c_mm_queue(void* arg)
 {
     queue_pair *queue = static_cast<queue_pair *>(arg);
     UINT32 budget = mm_h2c_completion_weight;
     ring_buffer *desc_ring = &queue->h2c_q.desc_ring;
     dma_req_tracker *tracker = &queue->h2c_q.req_tracker;
+    UINT32 proc_desc_cnt = 0;
 
     service_status status =
-        queue->service_mm_st_h2c_completions(desc_ring, tracker, budget);
+        queue->service_mm_st_h2c_completions(desc_ring, tracker, budget, proc_desc_cnt);
     switch (status) {
     case service_status::SERVICE_CONTINUE:
+        if (proc_desc_cnt != 0) {
+            TraceVerbose(TRACE_QDMA, "%s: MM H2C [%u] Flag request, "
+                "proc_desc_cnt:%d", queue->name, queue->idx_abs, proc_desc_cnt);
+            wakeup_thread(queue->h2c_q.req_proc_entry->thread);
+        }
         wakeup_thread(queue->h2c_q.poll_entry->thread);
         break;
     case service_status::SERVICE_ERROR:
-        TraceError(TRACE_QDMA, "MM H2C [%u] service error", queue->idx_abs);
+        TraceError(TRACE_QDMA, "%s: MM H2C [%u] service error", queue->name, queue->idx_abs);
         break;
     case service_status::SERVICE_FINISHED:
-        TraceVerbose(TRACE_QDMA, "service_h2c_mm_queue [%u] Completed", queue->idx_abs);
+        wakeup_thread(queue->h2c_q.req_proc_entry->thread);
+        TraceVerbose(TRACE_QDMA, "%s: ervice_h2c_mm_queue [%u] Completed", queue->name, queue->idx_abs);
     default:
         break;
     }
@@ -1691,21 +2117,35 @@ void service_c2h_mm_queue(void *arg)
     UINT32 budget = mm_c2h_completion_weight;
     ring_buffer* desc_ring = &queue->c2h_q.desc_ring;
     dma_req_tracker* tracker = &queue->c2h_q.req_tracker;
+    UINT32 proc_desc_cnt = 0;
 
     service_status status =
-        queue->service_mm_st_h2c_completions(desc_ring, tracker, budget);
+        queue->service_mm_st_h2c_completions(desc_ring, tracker, budget, proc_desc_cnt);
     switch (status) {
     case service_status::SERVICE_CONTINUE:
+        if (proc_desc_cnt != 0) {
+            TraceVerbose(TRACE_QDMA, "%s: MM C2H [%u] Flag request, "
+                "proc_desc_cnt:%d", queue->name, queue->idx_abs, proc_desc_cnt);
+            wakeup_thread(queue->c2h_q.req_proc_entry->thread);
+        }
         wakeup_thread(queue->c2h_q.poll_entry->thread);
         break;
     case service_status::SERVICE_ERROR:
-        TraceError(TRACE_QDMA, "MM C2H [%u] service error", queue->idx_abs);
+        TraceError(TRACE_QDMA, "%s: MM C2H [%u] service error", queue->name, queue->idx_abs);
         break;
     case service_status::SERVICE_FINISHED:
-        TraceVerbose(TRACE_QDMA, "service_c2h_mm_queue [%u] Completed", queue->idx_abs);
+        wakeup_thread(queue->c2h_q.req_proc_entry->thread);
+        TraceVerbose(TRACE_QDMA, "%s: service_c2h_mm_queue [%u] Completed", queue->name, queue->idx_abs);
     default:
         break;
     }
+}
+
+void process_st_h2c_req(void* arg)
+{
+    queue_pair* queue = static_cast<queue_pair*>(arg);
+
+    process_queue_req(queue, queue->h2c_q.lock, &queue->h2c_q.req_list_head);
 }
 
 void service_h2c_st_queue(void *arg)
@@ -1714,18 +2154,25 @@ void service_h2c_st_queue(void *arg)
     UINT32 budget = st_h2c_completion_weight;
     ring_buffer* desc_ring = &queue->h2c_q.desc_ring;
     dma_req_tracker* tracker = &queue->h2c_q.req_tracker;
+    UINT32 proc_desc_cnt = 0;
 
     service_status status =
-        queue->service_mm_st_h2c_completions(desc_ring, tracker, budget);
+        queue->service_mm_st_h2c_completions(desc_ring, tracker, budget, proc_desc_cnt);
     switch (status) {
     case service_status::SERVICE_CONTINUE:
+        if (proc_desc_cnt != 0) {
+            TraceVerbose(TRACE_QDMA, "%s: ST H2C [%u] Flag request, "
+                "proc_desc_cnt:%d", queue->name, queue->idx_abs, proc_desc_cnt);
+            wakeup_thread(queue->h2c_q.req_proc_entry->thread);
+        }
         wakeup_thread(queue->h2c_q.poll_entry->thread);
         break;
     case service_status::SERVICE_ERROR:
-        TraceError(TRACE_QDMA, "ST H2C [%u] service error", queue->idx_abs);
+        TraceError(TRACE_QDMA, "%s: ST H2C [%u] service error", queue->name, queue->idx_abs);
         break;
     case service_status::SERVICE_FINISHED:
-        TraceVerbose(TRACE_QDMA, "service_h2c_st_queue [%u] Completed", queue->idx_abs);
+        wakeup_thread(queue->h2c_q.req_proc_entry->thread);
+        TraceVerbose(TRACE_QDMA, "%s: service_h2c_st_queue [%u] Completed", queue->name, queue->idx_abs);
     default:
         break;
     }
@@ -1742,253 +2189,72 @@ void service_c2h_st_queue(void *arg)
         wakeup_thread(queue->c2h_q.poll_entry->thread);
         break;
     case service_status::SERVICE_ERROR:
-        TraceError(TRACE_QDMA, "ST C2H [%u] service error", queue->idx_abs);
+        TraceError(TRACE_QDMA, "%s: ST C2H [%u] service error", queue->name, queue->idx_abs);
         break;
     case service_status::SERVICE_FINISHED:
-        TraceVerbose(TRACE_QDMA, "service_c2h_st_queue [%u] Completed", queue->idx_abs);
+        TraceVerbose(TRACE_QDMA, "%s: service_c2h_st_queue [%u] Completed", queue->name, queue->idx_abs);
     default:
         break;
     }
 }
 
-NTSTATUS queue_pair::enqueue_mm_request(
-    const WDF_DMA_DIRECTION direction,
-    PSCATTER_GATHER_LIST sg_list,
-    LONGLONG device_offset,
-    dma_completion_cb compl_cb,
-    VOID *priv,
-    size_t &xfered_len)
+NTSTATUS queue_pair::enqueue_dma_request(dma_request *request)
 {
-    bool poll;
-    ring_buffer *desc_ring;
-    dma_req_tracker *tracker;
     WDFSPINLOCK lock;
-    ULONG no_of_sub_elem = 0;
-    UINT32 credits = 0;
+    PLIST_ENTRY req_list_head;
+    dma_request* req_entry;
+    poll_operation_entry* req_proc_entry;
+    char *dir_name;
 
-    if (direction == WdfDmaDirectionWriteToDevice) {
-        desc_ring = &h2c_q.desc_ring;
-        tracker = &h2c_q.req_tracker;
-        poll = !h2c_q.lib_config.irq_en;
+    if (request == nullptr)
+        return STATUS_INVALID_PARAMETER;
+
+    /** This function Only Support MM H2C, MM C2H and ST C2H.
+      * Rule out the unsupported case
+      */
+    if ((request->is_st == true) && 
+        (request->direction != WdfDmaDirectionWriteToDevice)) {
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    if (request->direction == WdfDmaDirectionWriteToDevice) {
         lock = h2c_q.lock;
+        req_list_head = &h2c_q.req_list_head;
+        req_proc_entry = h2c_q.req_proc_entry;
+        dir_name = (char *)"H2C";
     }
     else {
-        desc_ring = &c2h_q.desc_ring;
-        tracker = &c2h_q.req_tracker;
         lock = c2h_q.lock;
-        poll = !c2h_q.lib_config.irq_en;
+        req_list_head = &c2h_q.req_list_head;
+        req_proc_entry = c2h_q.req_proc_entry;
+        dir_name = (char*)"C2H";
     }
 
+    req_entry = static_cast<dma_request*>(qdma_calloc(1, sizeof(dma_request)));
+    if (req_entry == nullptr) {
+        TraceError(TRACE_QDMA, "%s: req_entry allocation failed", this->name);
+        return STATUS_NO_MEMORY;
+    }
+
+    /** Copy the request details */
+    RtlCopyMemory(req_entry, request, sizeof(dma_request));
+
+    TraceVerbose(TRACE_QDMA, "%s-%s Req Added, Abs Queue: %d, Entry : %p",
+        this->name, dir_name, idx_abs, 
+        static_cast<void*>(&req_entry->list_entry));
+
+    /** Add to the request linked list head */
     WdfSpinLockAcquire(lock);
-
-    credits = desc_ring->get_num_free_entries();
-    if (credits == 0) {
-        TraceError(TRACE_QDMA, "No space [%u] in sg dma list", credits);
-        WdfSpinLockRelease(lock);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    UINT32 ring_idx = desc_ring->sw_index;
-    bool is_credit_avail = true;
-    size_t dmaed_len = 0;
-
-    TraceVerbose(TRACE_QDMA, "queue_%u_mm enqueueing %u sg list at ring_index=%u FreeDesc : %u",
-        idx_abs, sg_list->NumberOfElements, ring_idx, credits);
-
-    const auto desc = static_cast<mm_descriptor*>(desc_ring->get_va());
-
-    for (ULONG i = 0;
-        ((i < sg_list->NumberOfElements) && (is_credit_avail)); i++) {
-
-        size_t len = 0;
-        size_t remain_len = sg_list->Elements[i].Length;
-        size_t frag_len = mm_max_desc_data_len;
-
-        if (sg_list->Elements[i].Length > mm_max_desc_data_len) {
-            frag_len = sg_frag_len;
-            TraceInfo(TRACE_QDMA, "sg_list len > mm_max_desc_data_len(%lld > %lld), "
-                "splitting at idx: %d", sg_list->Elements[i].Length, mm_max_desc_data_len, i);
-        }
-
-        while (remain_len != 0) {
-            size_t part_len = min(remain_len, frag_len);
-
-            desc[ring_idx].length = part_len;
-            desc[ring_idx].valid = true;
-            desc[ring_idx].sop = (i == 0);
-            desc[ring_idx].eop = (i == (sg_list->NumberOfElements - 1)) && (remain_len == part_len);
-
-            if (direction == WdfDmaDirectionWriteToDevice) {
-                desc[ring_idx].addr = sg_list->Elements[i].Address.QuadPart + len;
-                desc[ring_idx].dest_addr = device_offset;
-            }
-            else {
-                desc[ring_idx].addr = device_offset;
-                desc[ring_idx].dest_addr = sg_list->Elements[i].Address.QuadPart + len;
-            }
-
-            len = len + part_len;
-            remain_len = remain_len - part_len;
-
-            device_offset += part_len;
-            dump(desc[ring_idx]);
-
-            tracker->requests[ring_idx].compl_cb = nullptr;
-            /** Set Call back function if EOP is SET or if it is last free descriptor in ring */
-            if ((desc[ring_idx].eop == true) || (credits == 1)) {
-                tracker->requests[ring_idx].compl_cb = (dma_completion_cb)compl_cb;
-                tracker->requests[ring_idx].priv = priv;
-                desc[ring_idx].eop = true;
-            }
-
-            desc_ring->advance_idx(ring_idx);
-
-            no_of_sub_elem++;
-            /** Descriptor ring boundary checking */
-            credits--;
-            if (credits == 0) {
-                is_credit_avail = false;
-                break;
-            }
-        }
-        /** Discard the main element count in sg_list->NumberOfElements */
-        no_of_sub_elem--;
-        dmaed_len += len;
-    }
-
-    UINT32 accepted_desc = desc_ring->idx_delta(desc_ring->sw_index, ring_idx);
-    UINT32 dropped_desc = (sg_list->NumberOfElements + no_of_sub_elem - accepted_desc);
-    desc_ring->stats.tot_desc_accepted += accepted_desc;
-    desc_ring->stats.tot_desc_dropped += dropped_desc;
-    xfered_len = dmaed_len;
-
-    TraceVerbose(TRACE_QDMA, "+++ Request added at : %u +++", (ring_idx - 1));
-    TraceVerbose(TRACE_QDMA, "MM Accepted Desc : %d, Dropped Desc : %d", accepted_desc, dropped_desc);
-
-#ifdef STRESS_TEST
-    for (unsigned long i = 0; i < (1024 * 1024); i++);
-#endif
-    if (direction == WdfDmaDirectionWriteToDevice) {
-        update_sw_index_with_csr_h2c_pidx(ring_idx);
-        TraceVerbose(TRACE_QDMA, "csr[%u].h2c_dsc_pidx=%u", idx_abs, ring_idx);
-    }
-    else {
-        update_sw_index_with_csr_c2h_pidx(ring_idx);
-        TraceVerbose(TRACE_QDMA, "csr[%u].c2h_dsc_pidx=%u", idx_abs, ring_idx);
-    }
-
+    LIST_ADD_TAIL(req_list_head, &req_entry->list_entry);
     WdfSpinLockRelease(lock);
 
-    if (poll) {
-        wakeup_thread((direction == WdfDmaDirectionWriteToDevice) ? h2c_q.poll_entry->thread : c2h_q.poll_entry->thread);
-    }
+    /** Wake up the thread to forward the request to DMA engine */
+    wakeup_thread(req_proc_entry->thread);
 
     return STATUS_SUCCESS;
 }
 
-NTSTATUS queue_pair::enqueue_st_tx_request(
-    PSCATTER_GATHER_LIST sg_list,
-    dma_completion_cb compl_cb,
-    VOID *priv,
-    size_t &xfered_len)
-{
-    auto desc_ring = &h2c_q.desc_ring;
-    bool poll = !h2c_q.lib_config.irq_en;
-    dma_req_tracker *tracker = &h2c_q.req_tracker;
-    ULONG NumberOfElements;
-    ULONG no_of_sub_elem = 0;
-    UINT32 credits;
-
-    NumberOfElements = sg_list->NumberOfElements;
-
-    WdfSpinLockAcquire(h2c_q.lock);
-
-    credits = desc_ring->get_num_free_entries();
-    if (credits == 0) {
-        TraceError(TRACE_QDMA, "No space [%u] in sg dma list", credits);
-        WdfSpinLockRelease(h2c_q.lock);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    auto pidx = desc_ring->sw_index;
-    const auto desc = static_cast<h2c_descriptor *>(desc_ring->get_va());
-    bool is_credit_avail = true;
-    size_t dmaed_len = 0;
-
-    TraceVerbose(TRACE_QDMA, "queue_st_%u enqueueing %u sg list at ring_index=%u FreeDesc : %u",
-        idx_abs, NumberOfElements, pidx, credits);
-
-    for (ULONG i = 0; ((i < NumberOfElements) && (is_credit_avail)); i++) {
-        size_t len = 0;
-        size_t remain_len = sg_list->Elements[i].Length;
-        size_t frag_len = st_max_desc_data_len;
-        /* If the SG element length is more than ST supported len,
-            * then Fragment the SG element into sub SG elements */
-        if (sg_list->Elements[i].Length > st_max_desc_data_len) {
-            frag_len = sg_frag_len;
-            TraceInfo(TRACE_QDMA, "sg_list len > st_max_desc_data_len(%lld > %lld), "
-                "splitting at idx: %d", sg_list->Elements[i].Length, st_max_desc_data_len, i);
-        }
-
-        /** do while loop is to support ST Zero length packet transfers */
-        do {
-            size_t part_len = min(remain_len, frag_len);
-
-            desc[pidx].addr = sg_list->Elements[i].Address.QuadPart + len;
-            desc[pidx].length = (UINT16)part_len;
-            desc[pidx].pld_len = (UINT16)part_len;
-            desc[pidx].sop = (i == 0);
-            desc[pidx].eop = (i == (NumberOfElements - 1) && (remain_len == part_len));
-
-            len = len + part_len;
-            remain_len = remain_len - part_len;
-
-            dump(desc[pidx]);
-
-            tracker->requests[pidx].compl_cb = nullptr;
-            /** Set Call back function if EOP is SET or if it is last free descriptor in ring */
-            if ((desc[pidx].eop == true) || (credits == 1)) {
-                tracker->requests[pidx].compl_cb = (dma_completion_cb)compl_cb;
-                tracker->requests[pidx].priv = priv;
-                desc[pidx].eop = true;
-            }
-
-            desc_ring->advance_idx(pidx);
-
-            no_of_sub_elem++;
-            /** Descriptor ring boundary checking */
-            credits--;
-            if (credits == 0) {
-                is_credit_avail = false;
-                break;
-            }
-        } while (remain_len != 0);
-        /** Discard the main element count in sg_list->NumberOfElements */
-        no_of_sub_elem--;
-        dmaed_len += len;
-    }
-
-    UINT32 accepted_desc = desc_ring->idx_delta(desc_ring->sw_index, pidx);
-    UINT32 dropped_desc = (NumberOfElements + no_of_sub_elem - accepted_desc);
-    desc_ring->stats.tot_desc_accepted += accepted_desc;
-    desc_ring->stats.tot_desc_dropped += dropped_desc;
-    xfered_len = dmaed_len;
-
-    TraceVerbose(TRACE_QDMA, "+++ Request added at : %u +++", (pidx - 1));
-    TraceVerbose(TRACE_QDMA, "ST Accepted Desc : %d, Dropped Desc : %d", accepted_desc, dropped_desc);
-
-    update_sw_index_with_csr_h2c_pidx(pidx);
-    TraceVerbose(TRACE_QDMA, "csr[%u].h2c_dsc_pidx=%u", idx_abs, pidx);
-
-    WdfSpinLockRelease(h2c_q.lock);
-
-    if (poll)
-        wakeup_thread(h2c_q.poll_entry->thread);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS queue_pair::enqueue_st_rx_request(
+NTSTATUS queue_pair::enqueue_dma_request(
     size_t length,
     st_rx_completion_cb compl_cb,
     void *priv)
@@ -2001,7 +2267,7 @@ NTSTATUS queue_pair::enqueue_st_rx_request(
 
     NTSTATUS status = c2h_q.st_c2h_req_tracker.st_push_dma_req(req);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to add ST C2H request  %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: Failed to add ST C2H request  %!STATUS!", this->name, status);
         return status;
     }
 
@@ -2048,7 +2314,7 @@ NTSTATUS queue_pair::process_st_c2h_data_pkt(
 
         status = c2h_q.pkt_frag_queue.add(elem);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "add fragment failed: %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: add fragment failed: %!STATUS!", this->name, status);
             return status;
         }
 
@@ -2121,7 +2387,7 @@ NTSTATUS queue_pair::read_st_udd_data(void *addr, UINT8 *buf, UINT32 *len)
 
     *len = loc;
 
-    TraceVerbose(TRACE_QDMA, "UDD Len : %u", loc);
+    TraceVerbose(TRACE_QDMA, "%s: UDD Len : %u", this->name, loc);
 
     return STATUS_SUCCESS;
 }
@@ -2165,8 +2431,8 @@ NTSTATUS queue_pair::desc_dump(qdma_desc_info *desc_info)
             lock = c2h_q.lock;
         }
         else {
-            TraceError(TRACE_QDMA, "MM CMPT is not valid, HW MM CMPT EN : %d, SW MM CMPT EN : %d\n",
-                qdma->dev_conf.dev_info.mm_cmpt_en, c2h_q.user_conf.en_mm_cmpl);
+            TraceError(TRACE_QDMA, "%s: MM CMPT is not valid, HW MM CMPT EN : %d, SW MM CMPT EN : %d\n",
+                this->name, qdma->dev_conf.dev_info.mm_cmpt_en, c2h_q.user_conf.en_mm_cmpl);
             return STATUS_NOT_SUPPORTED;
         }
     }
@@ -2185,8 +2451,8 @@ NTSTATUS queue_pair::desc_dump(qdma_desc_info *desc_info)
 
     if ((desc_info->desc_start > desc_ring->get_capacity()) ||
         (desc_info->desc_end > desc_ring->get_capacity())) {
-        TraceError(TRACE_QDMA, "Descriptor Range is incorrect : start : %d, end : %d, RING SIZE : %d",
-            desc_info->desc_start, desc_info->desc_end, desc_ring->get_capacity());
+        TraceError(TRACE_QDMA, "%s: Descriptor Range is incorrect : start : %d, end : %d, RING SIZE : %d",
+            this->name, desc_info->desc_start, desc_info->desc_end, desc_ring->get_capacity());
         return STATUS_ACCESS_VIOLATION;
     }
 
@@ -2243,13 +2509,13 @@ NTSTATUS queue_pair::desc_dump(qdma_desc_info *desc_info)
 NTSTATUS queue_pair::read_mm_cmpt_data(qdma_cmpt_info *cmpt_info)
 {
     if (type != queue_type::MEMORY_MAPPED) {
-        TraceError(TRACE_QDMA, "read_mm_cmpt_data supported only for MM queues");
+        TraceError(TRACE_QDMA, "%s: read_mm_cmpt_data supported only for MM queues", this->name);
         return STATUS_NOT_SUPPORTED;
     }
 
     if (!c2h_q.is_cmpt_valid) {
-        TraceError(TRACE_QDMA, "MM Completion is not enabled for the queue : %d, "
-            "HW En Status : %d, SW En Status : %d", cmpt_info->qid,
+        TraceError(TRACE_QDMA, "%s: MM Completion is not enabled, "
+            "HW En Status : %d, SW En Status : %d", this->name,
             qdma->dev_conf.dev_info.mm_cmpt_en, c2h_q.user_conf.en_mm_cmpl);
 
         return STATUS_NOT_CAPABLE;
@@ -2261,8 +2527,8 @@ NTSTATUS queue_pair::read_mm_cmpt_data(qdma_cmpt_info *cmpt_info)
     auto current_pidx = wb_status->pidx;
 
     if (prev_pidx == current_pidx) {
-        TraceError(TRACE_QDMA, "No Completion data available : "
-            "Prev PIDX : %d, Pres PIDX : %d", prev_pidx, current_pidx);
+        TraceError(TRACE_QDMA, "%s: No Completion data available : "
+            "Prev PIDX : %d, Pres PIDX : %d", this->name, prev_pidx, current_pidx);
         WdfSpinLockRelease(c2h_q.lock);
         return STATUS_SOURCE_ELEMENT_EMPTY;
     }
@@ -2303,7 +2569,7 @@ NTSTATUS queue_pair::read_mm_cmpt_data(qdma_cmpt_info *cmpt_info)
 
 NTSTATUS qdma_device::clear_queue_contexts(bool is_c2h, UINT16 qid, qdma_hw_access_type context_op) const
 {
-    const bool irq_enable = (op_mode == queue_op_mode::POLL_MODE) ? false : true;
+    const bool irq_enable = (drv_conf.operation_mode == queue_op_mode::POLL_MODE) ? false : true;
     int ret = hw.qdma_sw_ctx_conf((void *)this, is_c2h, qid, nullptr, context_op);
     if (ret < 0)
         return hw.qdma_get_error_code(ret);
@@ -2393,12 +2659,12 @@ NTSTATUS qdma_device::set_h2c_ctx(
 {
     int ret;
 
-    TraceVerbose(TRACE_QDMA, "queue_%u setting h2c contexts...", q.idx_abs);
+    TraceVerbose(TRACE_QDMA, "%s setting h2c contexts...", q.name);
 
-    const bool irq_enable = (op_mode == queue_op_mode::POLL_MODE) ? false : true;
+    const bool irq_enable = (drv_conf.operation_mode == queue_op_mode::POLL_MODE) ? false : true;
 
     if (irq_enable)
-        TraceVerbose(TRACE_QDMA, "Programming with IRQ");
+        TraceVerbose(TRACE_QDMA, "%s Programming with IRQ", q.name);
 
     qdma_descq_sw_ctxt sw_ctx = {};
 
@@ -2420,12 +2686,12 @@ NTSTATUS qdma_device::set_h2c_ctx(
 
     if (irq_enable) {
         sw_ctx.vec = (UINT16)q.h2c_q.lib_config.vector_id;
-        sw_ctx.intr_aggr = (op_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
+        sw_ctx.intr_aggr = (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
     }
 
     ret = hw.qdma_sw_ctx_conf((void *)this, false, q.idx_abs, &sw_ctx, QDMA_HW_ACCESS_WRITE);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "Failed to program H2C Software context! for queue %d, ret : %d", q.idx_abs, ret);
+        TraceError(TRACE_QDMA, "%s Failed to program H2C Software context! ret : %d", q.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -2435,11 +2701,11 @@ NTSTATUS qdma_device::set_h2c_ctx(
           */
         qdma_qid2vec intr_ctx = {};
         intr_ctx.h2c_vector = (UINT8)q.h2c_q.lib_config.vector_id;
-        intr_ctx.h2c_en_coal = (op_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
+        intr_ctx.h2c_en_coal = (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
 
         ret = hw.qdma_qid2vec_conf((void *)this, false, q.idx_abs, &intr_ctx, QDMA_HW_ACCESS_WRITE);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to program qid2vec context! for queue %d, ret : %d", q.idx_abs, ret);
+            TraceError(TRACE_QDMA, "%s Failed to program qid2vec context! ret : %d", q.name, ret);
             clear_queue_contexts(false, q.idx_abs, QDMA_HW_ACCESS_CLEAR);
             return hw.qdma_get_error_code(ret);
         }
@@ -2454,12 +2720,12 @@ NTSTATUS qdma_device::set_c2h_ctx(
     int ret;
     NTSTATUS status = STATUS_SUCCESS;
 
-    TraceVerbose(TRACE_QDMA, "queue_%u setting c2h contexts...", q.idx_abs);
+    TraceVerbose(TRACE_QDMA, "%s setting c2h contexts...", q.name);
 
-    const bool irq_enable = (op_mode == queue_op_mode::POLL_MODE) ? false : true;
+    const bool irq_enable = (drv_conf.operation_mode == queue_op_mode::POLL_MODE) ? false : true;
 
     if (irq_enable)
-        TraceVerbose(TRACE_QDMA, "Programming with IRQ");
+        TraceVerbose(TRACE_QDMA, "%s Programming with IRQ", q.name);
 
     qdma_descq_sw_ctxt sw_ctx = {};
 
@@ -2484,12 +2750,12 @@ NTSTATUS qdma_device::set_c2h_ctx(
 
     if (irq_enable) {
         sw_ctx.vec = (UINT16)q.c2h_q.lib_config.vector_id;
-        sw_ctx.intr_aggr = (op_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
+        sw_ctx.intr_aggr = (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
     }
 
     ret = hw.qdma_sw_ctx_conf((void *)this, true, q.idx_abs, &sw_ctx, QDMA_HW_ACCESS_WRITE);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "Failed to program C2H Software context! for queue %d, ret : %d", q.idx_abs, ret);
+        TraceError(TRACE_QDMA, "%s Failed to program C2H Software context! ret : %d", q.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -2499,11 +2765,11 @@ NTSTATUS qdma_device::set_c2h_ctx(
           */
         qdma_qid2vec intr_ctx = {};
         intr_ctx.c2h_vector = (UINT8)q.c2h_q.lib_config.vector_id;
-        intr_ctx.c2h_en_coal = (op_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
+        intr_ctx.c2h_en_coal = (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
 
         ret = hw.qdma_qid2vec_conf((void *)this, true, q.idx_abs, &intr_ctx, QDMA_HW_ACCESS_WRITE);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to program qid2vec context! for queue id %d, ret : %d", q.idx_abs, ret);
+            TraceError(TRACE_QDMA, "%s Failed to program qid2vec context!, ret : %d", q.name, ret);
             status = hw.qdma_get_error_code(ret);
             goto ErrExit;
         }
@@ -2529,12 +2795,12 @@ NTSTATUS qdma_device::set_c2h_ctx(
 
         if (irq_enable) {
             cmp_ctx.vec = (UINT16)q.c2h_q.lib_config.vector_id;
-            cmp_ctx.int_aggr = (op_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
+            cmp_ctx.int_aggr = (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) ? true : false;
         }
 
         ret = hw.qdma_cmpt_ctx_conf((void *)this, q.idx_abs, &cmp_ctx, QDMA_HW_ACCESS_WRITE);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to program completion context! for queue id %d, ret : %d", q.idx_abs, ret);
+            TraceError(TRACE_QDMA, "%s Failed to program completion context! ret : %d", q.name, ret);
             status = hw.qdma_get_error_code(ret);
             goto ErrExit;
         }
@@ -2550,7 +2816,7 @@ NTSTATUS qdma_device::set_c2h_ctx(
 
         ret = hw.qdma_pfetch_ctx_conf((void *)this, q.idx_abs, &pf_ctx, QDMA_HW_ACCESS_WRITE);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed to program prefetch context! for queue id %d, ret : %d", q.idx_abs, ret);
+            TraceError(TRACE_QDMA, "%s Failed to program prefetch context!, ret : %d", q.name, ret);
             status = hw.qdma_get_error_code(ret);
             goto ErrExit;
         }
@@ -2575,7 +2841,7 @@ ErrExit:
 NTSTATUS qdma_device::queue_program(
     queue_pair& q)
 {
-    TraceVerbose(TRACE_QDMA, "queue_%u programming...", q.idx_abs);
+    TraceVerbose(TRACE_QDMA, "%s programming...", q.name);
 
     auto status = set_h2c_ctx(q);
     if (!NT_SUCCESS(status)) {
@@ -2594,18 +2860,16 @@ NTSTATUS qdma_device::queue_program(
 
 /* ---------- public qdma member function implemenations ---------- */
 
-NTSTATUS qdma_device::init(queue_op_mode operation_mode, UINT8 cfg_bar, UINT16 qsets_max)
+NTSTATUS qdma_device::init(qdma_drv_config conf)
 {
     NTSTATUS status;
 
-    TraceInfo(TRACE_QDMA, "Lib-QDMA v%u.%u.%u",
+    TraceInfo(TRACE_QDMA, "Xilinx QDMA PF Reference Driver v%u.%u.%u",
         qdma_version.major, qdma_version.minor, qdma_version.patch);
 
-    InterlockedExchange(&qdma_device_state, device_state::DEVICE_OFFLINE);
-    op_mode = operation_mode;
-    config_bar = cfg_bar;
-    qmax = qsets_max;
+    InterlockedExchange(&qdma_device_state, device_state::DEVICE_INIT);
 
+    drv_conf = conf;
     status = WdfSpinLockCreate(WDF_NO_OBJECT_ATTRIBUTES, &register_access_lock);
     if (!NT_SUCCESS(status)) {
         TraceError(TRACE_QDMA, "Register access lock creation failed!");
@@ -2643,10 +2907,18 @@ NTSTATUS qdma_device::write_bar(
     return pcie.write_bar(bar_type, offset, data, size);
 }
 
+NTSTATUS qdma_device::get_bar_info(
+    qdma_bar_type bar_type,
+    PVOID &bar_base,
+    size_t &bar_length)
+{
+    return pcie.get_bar_info(bar_type, bar_base, bar_length);
+}
+
 NTSTATUS qdma_device::qdma_is_queue_in_range(UINT16 qid)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Provided qid : %u is more than allocated : %u", qid, qmax);
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Provided qid : %u is more than allocated : %u", dev_conf.name, qid, drv_conf.qsets_max);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2656,32 +2928,47 @@ NTSTATUS qdma_device::qdma_is_queue_in_range(UINT16 qid)
 _IRQL_requires_(PASSIVE_LEVEL)
 NTSTATUS qdma_device::qdma_get_queues_state(
     _In_  UINT16 qid,
+    _Out_ enum queue_state *qstate,
     _Out_writes_(str_maxlen) CHAR *str,
     _In_  size_t str_maxlen)
 {
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SUCCESS;
 
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
+        return STATUS_INVALID_PARAMETER;
+    }
+    if (qstate == NULL) {
+        TraceError(TRACE_QDMA, "%s: qstate is NULL", dev_conf.name);
         return STATUS_INVALID_PARAMETER;
     }
 
     switch (queue_pairs[qid].state) {
     case queue_state::QUEUE_ADDED:
-        status = RtlStringCchCopyA(str, str_maxlen, "QUEUE ADDED");
+        *qstate = queue_state::QUEUE_ADDED;
+        if (str != NULL)
+            status = RtlStringCchCopyA(str, str_maxlen, "QUEUE ADDED");
         break;
     case queue_state::QUEUE_STARTED:
-        status = RtlStringCchCopyA(str, str_maxlen, "QUEUE ACTIVE");
+        *qstate = queue_state::QUEUE_STARTED;
+        if (str != NULL)
+            status = RtlStringCchCopyA(str, str_maxlen, "QUEUE ACTIVE");
         break;
     case queue_state::QUEUE_AVAILABLE:
-        status = RtlStringCchCopyA(str, str_maxlen, "QUEUE IS AVAILABLE");
+        *qstate = queue_state::QUEUE_AVAILABLE;
+        if (str != NULL)
+            status = RtlStringCchCopyA(str, str_maxlen, "QUEUE IS AVAILABLE");
         break;
     case queue_state::QUEUE_BUSY:
-        status = RtlStringCchCopyA(str, str_maxlen, "QUEUE BUSY IN CRITICAL OPERATION");
+        *qstate = queue_state::QUEUE_BUSY;
+        if (str != NULL)
+            status = RtlStringCchCopyA(str, str_maxlen, "QUEUE BUSY");
         break;
     default:
         NT_ASSERT(FALSE);
-        status = RtlStringCchCopyA(str, str_maxlen, "<INVALID>");
+        *qstate = queue_state::QUEUE_INVALID_STATE;
+        if (str != NULL)
+            status = RtlStringCchCopyA(str, str_maxlen, "<INVALID>");
         break;
     }
 
@@ -2697,36 +2984,37 @@ NTSTATUS qdma_device::qdma_set_qmax(UINT32 queue_max)
                                             device_state::DEVICE_OFFLINE,
                                             device_state::DEVICE_ONLINE);
     if (state == device_state::DEVICE_OFFLINE) {
-        TraceError(TRACE_QDMA, "Device in OFFLINE state. Can not proceed further.");
+        TraceError(TRACE_QDMA, "%s: Device OFFLINE, Can't proceed.", dev_conf.name);
         return STATUS_UNSUCCESSFUL;
     }
 
     UINT32 active_queues = qdma_get_active_queue_count(dma_dev_index);
     if (active_queues) {
-        TraceError(TRACE_QDMA, "Can not update qmax... %u queues are active", active_queues);
+        TraceError(TRACE_QDMA, "%s: Not possible to update qmax, %u queues are active", 
+            dev_conf.name, active_queues);
         status = STATUS_INVALID_PARAMETER;
         goto ErrExit;
     }
 
     int rv = qdma_dev_update(dma_dev_index, dev_conf.dev_sbdf.sbdf.fun_no, queue_max, &queue_base);
     if (rv < 0) {
-        TraceError(TRACE_QDMA, "qdma_dev_update() Failed! %d", rv);
+        TraceError(TRACE_QDMA, "%s: qdma_dev_update() Failed! %d", dev_conf.name, rv);
         status = hw.qdma_get_error_code(rv);
         goto ErrExit;
     }
 
     rv = qdma_dev_qinfo_get(dma_dev_index, dev_conf.dev_sbdf.sbdf.fun_no, &queue_base, &queue_max);
     if (rv < 0) {
-        TraceError(TRACE_QDMA, "qdma_dev_qinfo_get() Failed! %d", rv);
+        TraceError(TRACE_QDMA, "%s: qdma_dev_qinfo_get() Failed! %d", dev_conf.name, rv);
         status = hw.qdma_get_error_code(rv);
         goto ErrExit;
     }
 
-    TraceInfo(TRACE_QDMA, "qmax updated. Old qmax : %u, New qmax : %u, "
-                          "Old qbase : %d, New qbase : %d",
-                          qmax, queue_max, qbase, queue_base);
+    TraceInfo(TRACE_QDMA, "%s: qmax updated. Old qmax : %u, New qmax : %u, "
+        "Old qbase : %d, New qbase : %d",
+        dev_conf.name, drv_conf.qsets_max, queue_max, qbase, queue_base);
 
-    qmax  = queue_max;
+    drv_conf.qsets_max = queue_max;
     qbase = queue_base;
 
     if (queue_pairs) {
@@ -2736,14 +3024,14 @@ NTSTATUS qdma_device::qdma_set_qmax(UINT32 queue_max)
 
     status = init_dma_queues();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_dma_queues() failed! %!STATUS!", status);
-        qmax = 0u;
+        TraceError(TRACE_QDMA, "%s: init_dma_queues() failed! %!STATUS!", dev_conf.name, status);
+        drv_conf.qsets_max = 0u;
         qbase = -1;
     }
 
     status = init_func();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_func() failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_func() failed! %!STATUS!", dev_conf.name, status);
         return status;
     }
 
@@ -2762,36 +3050,56 @@ NTSTATUS qdma_device::validate_qconfig(queue_config& conf)
 
     if ((conf.is_st && !dev_conf.dev_info.st_en) ||
         (!conf.is_st && !dev_conf.dev_info.mm_en)) {
-        TraceError(TRACE_QDMA, "%s mode is not enabled in device", conf.is_st ? "ST" : "MM");
+        TraceError(TRACE_QDMA, "%s: %s mode is not enabled in device", 
+            dev_conf.name, (conf.is_st ? "ST" : "MM"));
         return STATUS_INVALID_PARAMETER;
     }
+
+
+    if ((hw_version_info.ip_type == EQDMA_SOFT_IP) &&
+        (hw_version_info.vivado_release >= QDMA_VIVADO_2020_2)) {
+
+        if (dev_conf.dev_info.desc_eng_mode == QDMA_DESC_ENG_BYPASS_ONLY) {
+            TraceError(TRACE_QDMA, "Bypass only mode design is not supported");
+            return STATUS_NOT_SUPPORTED;
+        }
+
+        if ((conf.desc_bypass_en == true) && 
+            (dev_conf.dev_info.desc_eng_mode == QDMA_DESC_ENG_INTERNAL_ONLY)) {
+            TraceError(TRACE_QDMA,
+                "Queue config in bypass "
+                "mode not supported on internal only mode design");
+            return STATUS_NOT_SUPPORTED;
+        }
+    }
+
 
     if ((conf.h2c_ring_sz_index >= QDMA_GLBL_CSR_REG_CNT) ||
         (conf.c2h_ring_sz_index >= QDMA_GLBL_CSR_REG_CNT) ||
         (conf.c2h_buff_sz_index >= QDMA_GLBL_CSR_REG_CNT) ||
         (conf.c2h_th_cnt_index >= QDMA_GLBL_CSR_REG_CNT)  ||
         (conf.c2h_timer_cnt_index >= QDMA_GLBL_CSR_REG_CNT)) {
-        TraceError(TRACE_QDMA, "One or more invalid global CSR indexes provided");
+        TraceError(TRACE_QDMA, "%s: One or more invalid global CSR indexes provided", dev_conf.name);
         return STATUS_INVALID_PARAMETER;
     }
 
     if (conf.cmpt_sz >= qdma_desc_sz::QDMA_DESC_SZ_MAX) {
-        TraceError(TRACE_QDMA, "Invalid completion descriptor size provided");
+        TraceError(TRACE_QDMA, "%s: Invalid completion descriptor size provided", dev_conf.name);
         return STATUS_INVALID_PARAMETER;
     }
 
     if (conf.trig_mode >= qdma_trig_mode::QDMA_TRIG_MODE_MAX) {
-        TraceError(TRACE_QDMA, "Invalid Trigger mode provided");
+        TraceError(TRACE_QDMA, "%s: Invalid Trigger mode provided", dev_conf.name);
         return STATUS_INVALID_PARAMETER;
     }
 
     if ((conf.en_mm_cmpl) && (!dev_conf.dev_info.mm_cmpt_en)) {
-        TraceError(TRACE_QDMA, "MM Completion not supported in HW");
+        TraceError(TRACE_QDMA, "%s: MM Completion not supported in HW", dev_conf.name);
         return STATUS_NOT_SUPPORTED;
     }
 
     if ((conf.cmpl_ovf_dis) && (!dev_conf.dev_info.cmpt_ovf_chk_dis)) {
-        TraceError(TRACE_QDMA, "Completion overflow disable option not supported in HW");
+        TraceError(TRACE_QDMA, "%s: Completion overflow disable option not supported in HW", dev_conf.name);
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -2799,13 +3107,13 @@ NTSTATUS qdma_device::validate_qconfig(queue_config& conf)
         /** 64B Descriptors not supportd for the versal hard IP (i.e., s80 device) */
         if ((conf.sw_desc_sz == static_cast<UINT8>(qdma_desc_sz::QDMA_DESC_SZ_64B)) ||
             (conf.cmpt_sz == qdma_desc_sz::QDMA_DESC_SZ_64B)) {
-            TraceError(TRACE_QDMA, "64B Descriptor not supported for Versal Hard IP(S80)");
+            TraceError(TRACE_QDMA, "%s: 64B Descriptor not supported for Versal Hard IP(S80)", dev_conf.name);
             return STATUS_NOT_SUPPORTED;
         }
 
         if ((conf.trig_mode == qdma_trig_mode::QDMA_TRIG_MODE_USER_TIMER_COUNT) ||
             (conf.trig_mode == qdma_trig_mode::QDMA_TRIG_MODE_USER_COUNT)) {
-            TraceError(TRACE_QDMA, "Counter, Timer+Counter modes are not supported for Versal Hard IP(S80)");
+            TraceError(TRACE_QDMA, "%s: Counter, Timer+Counter modes are not supported for Versal Hard IP(S80)", dev_conf.name);
             return STATUS_NOT_SUPPORTED;
         }
     }
@@ -2815,8 +3123,8 @@ NTSTATUS qdma_device::validate_qconfig(queue_config& conf)
 
 NTSTATUS qdma_device::qdma_add_queue(UINT16 qid, queue_config& conf)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2830,17 +3138,16 @@ NTSTATUS qdma_device::qdma_add_queue(UINT16 qid, queue_config& conf)
                                                 queue_state::QUEUE_BUSY,
                                                 queue_state::QUEUE_AVAILABLE);
     if (old_state != queue_state::QUEUE_AVAILABLE) {
-        TraceError(TRACE_QDMA, "Queue %d is not available!", qid);
+        TraceError(TRACE_QDMA, "%s : Queue %u is not available, q_state %d!", dev_conf.name, qid, q.state);
         return STATUS_UNSUCCESSFUL;
     }
 
-    TraceVerbose(TRACE_QDMA, "Adding the queue : %u", qid);
+    TraceVerbose(TRACE_QDMA, "%s: Adding the queue : %u", dev_conf.name, qid);
 
     status = q.create(conf);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to allocate resource %!STATUS!", status);
-        InterlockedExchange(&q.state, queue_state::QUEUE_AVAILABLE);
-        return status;
+        TraceError(TRACE_QDMA, "%s: Failed to allocate resource for queue %u, status: %!STATUS!", dev_conf.name, qid, status);
+        goto ErrExit;
     }
 
     /* Increament resource manager active queue count */
@@ -2848,15 +3155,19 @@ NTSTATUS qdma_device::qdma_add_queue(UINT16 qid, queue_config& conf)
 
     InterlockedExchange(&q.state, queue_state::QUEUE_ADDED);
 
-    TraceInfo(TRACE_QDMA, "PF : %u, queue : %u added", dev_conf.dev_sbdf.sbdf.fun_no, qid);
+    TraceInfo(TRACE_QDMA, "%s: queue added : %s", dev_conf.name, q.name);
 
+    return status;
+
+ErrExit:
+    InterlockedExchange(&q.state, queue_state::QUEUE_AVAILABLE);
     return status;
 }
 
 NTSTATUS qdma_device::qdma_start_queue(UINT16 qid)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -2866,19 +3177,19 @@ NTSTATUS qdma_device::qdma_start_queue(UINT16 qid)
                                                 queue_state::QUEUE_BUSY,
                                                 queue_state::QUEUE_ADDED);
     if (old_state != queue_state::QUEUE_ADDED) {
-        TraceError(TRACE_QDMA, "Queue %d is not added!", qid);
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_UNSUCCESSFUL;
     }
 
-    TraceVerbose(TRACE_QDMA, "Starting the queue : %u", qid);
+    TraceVerbose(TRACE_QDMA, "%s: Starting the queue : %u", dev_conf.name, qid);
 
     bool is_intr_vec_allocated = false;
     NTSTATUS status = STATUS_SUCCESS;
 
-    if (op_mode != queue_op_mode::POLL_MODE) {
+    if (drv_conf.operation_mode != queue_op_mode::POLL_MODE) {
         auto vec = assign_interrupt_vector(q);
         if (vec < 0) {
-            TraceError(TRACE_QDMA, "Failed to retrieve interrupt vector");
+            TraceError(TRACE_QDMA, "%s Failed to assign interrupt vector", q.name);
             status = STATUS_UNSUCCESSFUL;
             goto ErrExit;
         }
@@ -2886,51 +3197,88 @@ NTSTATUS qdma_device::qdma_start_queue(UINT16 qid)
         q.h2c_q.lib_config.vector_id = q.c2h_q.lib_config.vector_id = vec;
         is_intr_vec_allocated = true;
 
-        TraceInfo(TRACE_QDMA, "Allocated vector Id : %u", q.c2h_q.lib_config.vector_id);
+        TraceInfo(TRACE_QDMA, "%s Allocated vector Id : %u", q.name, q.c2h_q.lib_config.vector_id);
+    }
+
+    /* H2C request process function registration */
+    poll_op req_op;
+    bool is_st = q.h2c_q.user_conf.is_st;
+    req_op.fn = is_st ? process_st_h2c_req : process_mm_h2c_req;
+    req_op.arg = &queue_pairs[qid];
+
+    q.h2c_q.req_proc_entry = th_mgr.register_poll_function(req_op);
+    if (nullptr == q.h2c_q.req_proc_entry) {
+        TraceError(TRACE_QDMA, "%s Failed to register H2C request process method", q.name);
+        status = STATUS_UNSUCCESSFUL;
+        goto ErrExit;
+    }
+
+    /* C2H request process function registration */
+    is_st = q.c2h_q.user_conf.is_st;
+    if (is_st == false) {
+        req_op.fn = process_mm_c2h_req;
+
+        q.c2h_q.req_proc_entry = th_mgr.register_poll_function(req_op);
+        if (nullptr == q.c2h_q.req_proc_entry) {
+            TraceError(TRACE_QDMA, "%s Failed to register C2H request process method", q.name);
+            status = STATUS_UNSUCCESSFUL;
+            goto ErrExit;
+        }
     }
 
     /* H2C Poll function registration */
-    poll_op op;
-    bool is_st = q.h2c_q.user_conf.is_st;
-    op.fn = is_st ? service_h2c_st_queue : service_h2c_mm_queue;
-    op.arg = &queue_pairs[qid];
+    poll_op compl_op;
+    is_st = q.h2c_q.user_conf.is_st;
+    compl_op.fn = is_st ? service_h2c_st_queue : service_h2c_mm_queue;
+    compl_op.arg = &queue_pairs[qid];
 
-    q.h2c_q.poll_entry = th_mgr.register_poll_function(op);
+    q.h2c_q.poll_entry = th_mgr.register_poll_function(compl_op);
     if (nullptr == q.h2c_q.poll_entry) {
-        TraceError(TRACE_QDMA, "Failed to register poll function for H2C");
+        TraceError(TRACE_QDMA, "%s Failed to register H2C Completion poll method", q.name);
         status = STATUS_UNSUCCESSFUL;
         goto ErrExit;
     }
 
     /* C2H Poll function registration */
     is_st = q.c2h_q.user_conf.is_st;
-    op.fn = is_st ? service_c2h_st_queue : service_c2h_mm_queue;
+    compl_op.fn = is_st ? service_c2h_st_queue : service_c2h_mm_queue;
 
-    q.c2h_q.poll_entry = th_mgr.register_poll_function(op);
+    q.c2h_q.poll_entry = th_mgr.register_poll_function(compl_op);
     if (nullptr == q.c2h_q.poll_entry) {
-        TraceError(TRACE_QDMA, "Failed to register poll function for C2H");
+        TraceError(TRACE_QDMA, "%s Failed to register C2H Completion poll method", q.name);
         status = STATUS_UNSUCCESSFUL;
         goto ErrExit;
     }
 
     status = queue_program(q);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to program the queue %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s failed to program contexts, status : %!STATUS!", q.name, status);
         goto ErrExit;
     }
 
     dump(this, q.type, q.idx_abs);
-    dump(this, q.type, 0);
 
     q.init_csr();
 
     InterlockedExchange(&q.state, queue_state::QUEUE_STARTED);
 
-    TraceInfo(TRACE_QDMA, "PF : %u, queue : %u Started", dev_conf.dev_sbdf.sbdf.fun_no, qid);
+    TraceInfo(TRACE_QDMA, "%s: queue started : %s", dev_conf.name, q.name);
 
     return status;
 
 ErrExit:
+    if (nullptr != q.h2c_q.poll_entry) {
+        th_mgr.unregister_poll_function(q.h2c_q.req_proc_entry);
+        q.h2c_q.req_proc_entry = nullptr;
+    }
+
+    if (q.c2h_q.req_proc_entry) {
+        if (q.type == queue_type::MEMORY_MAPPED) {
+            th_mgr.unregister_poll_function(q.c2h_q.req_proc_entry);
+            q.c2h_q.req_proc_entry = nullptr;
+        }
+    }
+
     if (nullptr != q.h2c_q.poll_entry) {
         th_mgr.unregister_poll_function(q.h2c_q.poll_entry);
         q.h2c_q.poll_entry = nullptr;
@@ -2950,37 +3298,52 @@ ErrExit:
 
 NTSTATUS qdma_device::qdma_stop_queue(UINT16 qid)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid %d provided", qid);
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
         return STATUS_INVALID_PARAMETER;
     }
 
-    TraceVerbose(TRACE_QDMA, "Stopping the queue : %u", qid);
     NTSTATUS status = STATUS_SUCCESS;
 
     auto& q = queue_pairs[qid];
+
+    TraceVerbose(TRACE_QDMA, "%s: Stopping the queue : %u", dev_conf.name, qid);
 
     /* Stop further traffic on the queue */
     auto old_state = InterlockedCompareExchange(&q.state,
                                                  queue_state::QUEUE_BUSY,
                                                  queue_state::QUEUE_STARTED);
     if (old_state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue %d is not started to stop!", qid);
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_UNSUCCESSFUL;
     }
 
     /* Wait till incoming traffic stops & let HW finish any pending jobs */
     LARGE_INTEGER wait_time;
     wait_time.QuadPart = WDF_REL_TIMEOUT_IN_MS(2);
+    /** Re-adjust the system tick for better resolution 
+      * 
+      * As the system tick in windows can go up to 15.625 msec
+      * the delay is varying between 1 msec to 15 msec
+      */
+    ExSetTimerResolution((ULONG)(2 * WDF_TIMEOUT_TO_MS), TRUE);
+
     KeDelayExecutionThread(KernelMode, FALSE, &wait_time);
+    
+    /** Revert back the system tick to default */
+    ExSetTimerResolution(0, FALSE);
 
     th_mgr.unregister_poll_function(q.h2c_q.poll_entry);
     th_mgr.unregister_poll_function(q.c2h_q.poll_entry);
 
+    th_mgr.unregister_poll_function(q.h2c_q.req_proc_entry);
+    if (q.type == queue_type::MEMORY_MAPPED)
+        th_mgr.unregister_poll_function(q.c2h_q.req_proc_entry);
+
     q.h2c_q.poll_entry = nullptr;
     q.c2h_q.poll_entry = nullptr;
 
-    if (op_mode != queue_op_mode::POLL_MODE)
+    if (drv_conf.operation_mode != queue_op_mode::POLL_MODE)
         free_interrupt_vector(q, q.c2h_q.lib_config.vector_id);
 
     /* Drain any pending requests */
@@ -2989,40 +3352,40 @@ NTSTATUS qdma_device::qdma_stop_queue(UINT16 qid)
     /* Invalidate the contexts */
     status = clear_contexts(q, true);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Context Invalidation for qid %d failed", qid);
+        TraceError(TRACE_QDMA, "%s Failed to invalidate the context", q.name);
         /* Continue further even in error scenario */
     }
 
     InterlockedExchange(&q.state, queue_state::QUEUE_ADDED);
 
-    TraceInfo(TRACE_QDMA, "PF : %u, Queue : %u stopped", dev_conf.dev_sbdf.sbdf.fun_no, qid);
+    TraceInfo(TRACE_QDMA, "%s: queue stopped : %s", dev_conf.name, q.name);
 
     return STATUS_SUCCESS;
 }
 
 NTSTATUS qdma_device::qdma_remove_queue(UINT16 qid)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid %d provided", qid);
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
         return STATUS_INVALID_PARAMETER;
     }
 
-    TraceVerbose(TRACE_QDMA, "Removing the queue : %u", qid);
-
     auto& q = queue_pairs[qid];
+
+    TraceVerbose(TRACE_QDMA, "%s: Removing the queue : %u", dev_conf.name, qid);
 
     auto old_state = InterlockedCompareExchange(&q.state,
                                                 queue_state::QUEUE_BUSY,
                                                 queue_state::QUEUE_ADDED);
     if (old_state != queue_state::QUEUE_ADDED) {
-        TraceError(TRACE_QDMA, "Queue %u is not added to remove", qid);
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_UNSUCCESSFUL;
     }
 
     /* Clear queue context */
     NTSTATUS status = clear_contexts(q);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Context Clearing for qid %d failed", qid);
+        TraceError(TRACE_QDMA, "%s Failed to clear the context", q.name);
         /* Continue further even in error scenario */
     }
 
@@ -3035,7 +3398,7 @@ NTSTATUS qdma_device::qdma_remove_queue(UINT16 qid)
 
     InterlockedExchange(&q.state, queue_state::QUEUE_AVAILABLE);
 
-    TraceVerbose(TRACE_QDMA, "PF : %u, Queue : %u removed", dev_conf.dev_sbdf.sbdf.fun_no, qid);
+    TraceInfo(TRACE_QDMA, "%s: queue removed : %s", dev_conf.name, q.name);
 
     return STATUS_SUCCESS;
 }
@@ -3046,33 +3409,43 @@ NTSTATUS qdma_device::qdma_enqueue_mm_request(
     PSCATTER_GATHER_LIST sg_list,
     LONGLONG device_offset,
     dma_completion_cb compl_cb,
-    VOID *priv,
-    size_t &xfered_len)
+    VOID *priv)
 {
-    if ((qid >= qmax) || (compl_cb == nullptr) ||
+    if ((qid >= drv_conf.qsets_max) || (compl_cb == nullptr) ||
         (sg_list == nullptr)) {
-        TraceError(TRACE_QDMA, "Incorrect Parameters, qid : %d, "
-            "compl_cb : %p, sg_list : %p", qid, compl_cb, sg_list);
+        TraceError(TRACE_QDMA, "%s : Incorrect Parameters, qid : %d, "
+            "compl_cb : %p, sg_list : %p", dev_conf.name, qid, compl_cb, sg_list);
         return STATUS_INVALID_PARAMETER;
     }
-
-    TraceVerbose(TRACE_QDMA, "MM enqueue request for queue : %u", qid);
 
     auto& q = queue_pairs[qid];
 
     if (q.state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue %d is not started!", qid);
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
     if (q.type != queue_type::MEMORY_MAPPED) {
-        TraceError(TRACE_QDMA, "Queue %d is not configured in MM mode!", qid);
+        TraceError(TRACE_QDMA, "%s is not configured in MM mode!", q.name);
         return STATUS_ACCESS_VIOLATION;
     }
 
-    NTSTATUS status = q.enqueue_mm_request(direction, sg_list, device_offset, compl_cb, priv, xfered_len);
+    TraceVerbose(TRACE_QDMA, "%s enqueue request", q.name);
+
+    dma_request request;
+
+    request.is_st = false;
+    request.direction = direction;
+    request.sg_list = sg_list;
+    request.device_offset = device_offset;
+    request.compl_cb = compl_cb;
+    request.priv = priv;
+    request.sg_index = 0;
+    request.offset_idx = 0;
+
+    NTSTATUS status = q.enqueue_dma_request(&request);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to enqueue the MM request in queue %d, err : %d", qid, status);
+        TraceError(TRACE_QDMA, "%s Failed to enqueue the MM request, Status : %!STATUS!", q.name, status);
         return status;
     }
 
@@ -3083,22 +3456,19 @@ NTSTATUS qdma_device::qdma_enqueue_st_tx_request(
     UINT16 qid,
     PSCATTER_GATHER_LIST sg_list,
     dma_completion_cb compl_cb,
-    VOID *priv,
-    size_t &xfered_len)
+    VOID *priv)
 {
-    if ((qid >= qmax) || (compl_cb == nullptr) ||
+    if ((qid >= drv_conf.qsets_max) || (compl_cb == nullptr) ||
         (sg_list == nullptr)) {
-        TraceError(TRACE_QDMA, "Incorrect Parameters, qid : %d, "
-            "compl_cb : %p, sg_list : %p", qid, compl_cb, sg_list);
+        TraceError(TRACE_QDMA, "%s : Incorrect Parameters, qid : %d, "
+            "compl_cb : %p, sg_list : %p", dev_conf.name, qid, compl_cb, sg_list);
         return STATUS_INVALID_PARAMETER;
     }
-
-    TraceVerbose(TRACE_QDMA, "ST enqueue request for queue : %u", qid);
 
     auto& q = queue_pairs[qid];
 
     if (q.state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue %d is not started!", qid);
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3107,9 +3477,21 @@ NTSTATUS qdma_device::qdma_enqueue_st_tx_request(
         return STATUS_ACCESS_VIOLATION;
     }
 
-    NTSTATUS status = q.enqueue_st_tx_request(sg_list, compl_cb, priv, xfered_len);
+    TraceVerbose(TRACE_QDMA, "%s TX enqueue request", q.name);
+
+    dma_request request;
+
+    request.is_st = true;
+    request.direction = WdfDmaDirectionWriteToDevice;
+    request.sg_list = sg_list;
+    request.compl_cb = compl_cb;
+    request.priv = priv;
+    request.sg_index = 0;
+    request.offset_idx = 0;
+
+    NTSTATUS status = q.enqueue_dma_request(&request);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to enqueue the ST request in queue %d, err : %d", qid, status);
+        TraceError(TRACE_QDMA, "%s Failed to enqueue the ST TX request, Status : %!STATUS!", q.name, status);
         return status;
     }
 
@@ -3122,18 +3504,16 @@ NTSTATUS qdma_device::qdma_enqueue_st_rx_request(
     st_rx_completion_cb compl_cb,
     VOID *priv)
 {
-    if ((qid >= qmax) || (compl_cb == nullptr)) {
-        TraceError(TRACE_QDMA, "Incorrect Parameters, qid : %d, compl_cb : %p len : %Iu",
-            qid, compl_cb, length);
+    if ((qid >= drv_conf.qsets_max) || (compl_cb == nullptr)) {
+        TraceError(TRACE_QDMA, "%s: Incorrect Parameters, qid : %d, compl_cb : %p len : %Iu",
+            dev_conf.name, qid, compl_cb, length);
         return STATUS_INVALID_PARAMETER;
     }
-
-    TraceVerbose(TRACE_QDMA, "ST read request for qid : %u", qid);
 
     auto& q = queue_pairs[qid];
 
     if (q.state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue %d is not started!", qid);
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3142,9 +3522,11 @@ NTSTATUS qdma_device::qdma_enqueue_st_rx_request(
         return STATUS_ACCESS_VIOLATION;
     }
 
-    NTSTATUS status = q.enqueue_st_rx_request(length, compl_cb, priv);
+    TraceVerbose(TRACE_QDMA, "%s RX enqueue request", q.name);
+
+    NTSTATUS status = q.enqueue_dma_request(length, compl_cb, priv);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to receive st pkts! %!STATUS! on queue %d", status, qid);
+        TraceError(TRACE_QDMA, "%s Failed to enqueue the ST RX request, Status : %!STATUS!", q.name, status);
     }
 
     return status;
@@ -3152,20 +3534,18 @@ NTSTATUS qdma_device::qdma_enqueue_st_rx_request(
 
 NTSTATUS qdma_device::qdma_retrieve_st_udd_data(UINT16 qid, void *addr, UINT8 *buf, UINT32 *len)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
         return STATUS_INVALID_PARAMETER;
     }
 
     if ((addr == nullptr) || (buf == nullptr) || (len == nullptr))
         return STATUS_INVALID_PARAMETER;
 
-    TraceVerbose(TRACE_QDMA, "Retrieving UDD data for queue : %u", qid);
-
     auto& q = queue_pairs[qid];
 
     if (q.state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue is not started!");
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3173,26 +3553,26 @@ NTSTATUS qdma_device::qdma_retrieve_st_udd_data(UINT16 qid, void *addr, UINT8 *b
         TraceError(TRACE_QDMA, "Queue %d is not configured in ST mode!", qid);
         return STATUS_ACCESS_VIOLATION;
     }
+
+    TraceVerbose(TRACE_QDMA, "%s Retrieving UDD data", q.name);
 
     return q.read_st_udd_data(addr, buf, len);
 }
 
 NTSTATUS qdma_device::qdma_retrieve_last_st_udd_data(UINT16 qid, UINT8 *buf, UINT32 *len)
 {
-    if (qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid);
         return STATUS_INVALID_PARAMETER;
     }
 
     if ((buf == nullptr) || (len == nullptr))
         return STATUS_INVALID_PARAMETER;
 
-    TraceVerbose(TRACE_QDMA, "Reading latest UDD data for queue : %u", qid);
-
     auto& q = queue_pairs[qid];
 
     if (q.state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue is not started!");
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3200,6 +3580,8 @@ NTSTATUS qdma_device::qdma_retrieve_last_st_udd_data(UINT16 qid, UINT8 *buf, UIN
         TraceError(TRACE_QDMA, "Queue %d is not configured in ST mode!", qid);
         return STATUS_ACCESS_VIOLATION;
     }
+
+    TraceVerbose(TRACE_QDMA, "%s Reading latest UDD data", q.name);
 
     void *udd_addr = q.get_last_udd_addr();
 
@@ -3208,8 +3590,8 @@ NTSTATUS qdma_device::qdma_retrieve_last_st_udd_data(UINT16 qid, UINT8 *buf, UIN
 
 NTSTATUS qdma_device::qdma_queue_desc_dump(qdma_desc_info *desc_info)
 {
-    if (desc_info->qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (desc_info->qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, desc_info->qid);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -3226,6 +3608,8 @@ NTSTATUS qdma_device::qdma_queue_desc_dump(qdma_desc_info *desc_info)
         return STATUS_UNSUCCESSFUL;
     }
 
+    TraceVerbose(TRACE_QDMA, "%s descripor data dump", q.name);
+
     NTSTATUS status = q.desc_dump(desc_info);
 
     InterlockedExchange(&q.state, old_state);
@@ -3235,8 +3619,8 @@ NTSTATUS qdma_device::qdma_queue_desc_dump(qdma_desc_info *desc_info)
 
 NTSTATUS qdma_device::qdma_read_mm_cmpt_data(qdma_cmpt_info *cmpt_info)
 {
-    if (cmpt_info->qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (cmpt_info->qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, cmpt_info->qid);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -3246,7 +3630,7 @@ NTSTATUS qdma_device::qdma_read_mm_cmpt_data(qdma_cmpt_info *cmpt_info)
     auto& q = queue_pairs[cmpt_info->qid];
 
     if (q.state != queue_state::QUEUE_STARTED) {
-        TraceError(TRACE_QDMA, "Queue is not started!");
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3255,21 +3639,25 @@ NTSTATUS qdma_device::qdma_read_mm_cmpt_data(qdma_cmpt_info *cmpt_info)
         return STATUS_ACCESS_VIOLATION;
     }
 
+    TraceVerbose(TRACE_QDMA, "%s Read MM completion data", q.name);
+
     return q.read_mm_cmpt_data(cmpt_info);
 }
 
 NTSTATUS qdma_device::qdma_queue_context_read(UINT16 qid, enum qdma_dev_q_type ctx_type, struct qdma_descq_context *ctxt)
 {
-    if ((qid >= qmax) ||
+    if ((qid >= drv_conf.qsets_max) ||
         (ctx_type >= qdma_dev_q_type::QDMA_DEV_Q_TYPE_MAX) ||
         (ctxt == nullptr)) {
+        TraceError(TRACE_QDMA, "%s: Incorrect Parameters, qid : %d, ctx_type : %d, ctxt : %p",
+            dev_conf.name, qid, ctx_type, ctxt);
         return STATUS_INVALID_PARAMETER;
     }
 
     auto& q = queue_pairs[qid];
 
-    if (q.state != queue_state::QUEUE_ADDED) {
-        TraceError(TRACE_QDMA, "Queue %d is not configured!", qid);
+    if (q.state != queue_state::QUEUE_STARTED) {
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3281,26 +3669,26 @@ NTSTATUS qdma_device::qdma_queue_context_read(UINT16 qid, enum qdma_dev_q_type c
     if (ctx_type != qdma_dev_q_type::QDMA_DEV_Q_TYPE_CMPT) {
         ret = hw.qdma_sw_ctx_conf(this, is_c2h, hw_qid, &ctxt->sw_ctxt, QDMA_HW_ACCESS_READ);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed while reading SW Context for queue %d!, ret : %d", hw_qid, ret);
+            TraceError(TRACE_QDMA, "%s Failed to read SW context, ret : %d", q.name, ret);
             return hw.qdma_get_error_code(ret);
         }
 
         ret = hw.qdma_hw_ctx_conf(this, is_c2h, hw_qid, &ctxt->hw_ctxt, QDMA_HW_ACCESS_READ);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed while reading HW Context for queue %d!, ret : %d", hw_qid, ret);
+            TraceError(TRACE_QDMA, "%s Failed to read HW context, ret : %d", q.name, ret);
             return hw.qdma_get_error_code(ret);
         }
 
         ret = hw.qdma_credit_ctx_conf(this, is_c2h, hw_qid, &ctxt->cr_ctxt, QDMA_HW_ACCESS_READ);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed while reading Credit Context for queue %d!, ret : %d", hw_qid, ret);
+            TraceError(TRACE_QDMA, "%s Failed to read credit context, ret : %d", q.name, ret);
             return hw.qdma_get_error_code(ret);
         }
 
         if ((q.type == queue_type::STREAMING) && (is_c2h)) {
             ret = hw.qdma_pfetch_ctx_conf(this, hw_qid, &ctxt->pfetch_ctxt, QDMA_HW_ACCESS_READ);
             if (ret < 0) {
-                TraceError(TRACE_QDMA, "Failed while reading pre-fetch Context for queue %d!, ret : %d", hw_qid, ret);
+                TraceError(TRACE_QDMA, "%s Failed to read pre-fetch context, ret : %d", q.name, ret);
                 return hw.qdma_get_error_code(ret);
             }
         }
@@ -3314,8 +3702,8 @@ NTSTATUS qdma_device::qdma_queue_context_read(UINT16 qid, enum qdma_dev_q_type c
 
         ret = hw.qdma_cmpt_ctx_conf(this, hw_qid, &ctxt->cmpt_ctxt, QDMA_HW_ACCESS_READ);
         if (ret < 0) {
-            TraceError(TRACE_QDMA, "Failed while reading completion "
-                "Context for queue %d!, ret : %d", hw_qid, ret);
+            TraceError(TRACE_QDMA, "%s Failed to read completion "
+                "context, ret : %d", q.name, ret);
             return hw.qdma_get_error_code(ret);
         }
         dump = true;
@@ -3331,13 +3719,13 @@ NTSTATUS qdma_device::qdma_intr_context_read(UINT8 ring_idx_abs, struct qdma_ind
 {
     int ret;
 
-    if (op_mode != queue_op_mode::INTR_COAL_MODE)
+    if (drv_conf.operation_mode != queue_op_mode::INTR_COAL_MODE)
         return STATUS_ACCESS_VIOLATION;
 
     ret = hw.qdma_indirect_intr_ctx_conf(this, ring_idx_abs, ctxt, QDMA_HW_ACCESS_READ);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "Failed while reading interrupt Context for ring index %d!, ret : %d",
-            ring_idx_abs, ret);
+        TraceError(TRACE_QDMA, "%s : Failed to read interrupt context for ring index %d!, ret : %d",
+            dev_conf.name, ring_idx_abs, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -3346,8 +3734,8 @@ NTSTATUS qdma_device::qdma_intr_context_read(UINT8 ring_idx_abs, struct qdma_ind
 
 NTSTATUS qdma_device::qdma_queue_dump_context(qdma_ctx_info *ctx_info)
 {
-    if (ctx_info->qid >= qmax) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (ctx_info->qid >= drv_conf.qsets_max) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, ctx_info->qid);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -3358,8 +3746,8 @@ NTSTATUS qdma_device::qdma_queue_dump_context(qdma_ctx_info *ctx_info)
 
     queue_pair &q = queue_pairs[ctx_info->qid];
 
-    if (q.state == queue_state::QUEUE_AVAILABLE) {
-        TraceError(TRACE_QDMA, "Queue is not configured!");
+    if (q.state != queue_state::QUEUE_STARTED) {
+        TraceError(TRACE_QDMA, "%s invalid state, q_state %d", q.name, q.state);
         return STATUS_INVALID_DEVICE_STATE;
     }
 
@@ -3384,15 +3772,16 @@ NTSTATUS qdma_device::qdma_queue_dump_context(qdma_ctx_info *ctx_info)
         st, (qdma_dev_q_type)ctx_info->ring_type,
         ctx_info->pbuffer, (uint32_t)ctx_info->buffer_sz);
     if (ctx_len < 0) {
-        TraceError(TRACE_QDMA, "hw.qdma_dump_queue_context returned error : %d", ctx_len);
+        TraceError(TRACE_QDMA, "%s hw.qdma_dump_queue_context failed : %d", q.name, ctx_len);
         return hw.qdma_get_error_code(ctx_len);
     }
 
     len = len + ctx_len;
 
-    if (op_mode == queue_op_mode::INTR_COAL_MODE) {
+    if (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) {
         if (ctx_info->buffer_sz < len) {
-            TraceError(TRACE_QDMA, "Insufficient Buffer Length");
+            TraceError(TRACE_QDMA, "%s Insufficient Buffer Length, "
+                "buffer has %lld bytes, needs %lld bytes", q.name, ctx_info->buffer_sz, len);
             return STATUS_BUFFER_TOO_SMALL;
         }
 
@@ -3410,7 +3799,7 @@ NTSTATUS qdma_device::qdma_queue_dump_context(qdma_ctx_info *ctx_info)
         int intr_len = hw.qdma_dump_intr_context(this, &intr_ctxt, ring_index,
             &ctx_info->pbuffer[len], (uint32_t)(ctx_info->buffer_sz - len));
         if (intr_len < 0) {
-            TraceError(TRACE_QDMA, "hw.qdma_dump_intr_context returned error : %d", intr_len);
+            TraceError(TRACE_QDMA, "%s : hw.qdma_dump_intr_context returned error : %d", dev_conf.name, intr_len);
             return hw.qdma_get_error_code(intr_len);
         }
 
@@ -3424,7 +3813,7 @@ NTSTATUS qdma_device::qdma_queue_dump_context(qdma_ctx_info *ctx_info)
 
 NTSTATUS qdma_device::qdma_intring_dump(qdma_intr_ring_info *intring_info)
 {
-    if (op_mode != queue_op_mode::INTR_COAL_MODE) {
+    if (drv_conf.operation_mode != queue_op_mode::INTR_COAL_MODE) {
         TraceError(TRACE_QDMA, "Interrupt ring is valid only in Aggregation Mode");
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -3442,8 +3831,8 @@ NTSTATUS qdma_device::qdma_intring_dump(qdma_intr_ring_info *intring_info)
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (op_mode != queue_op_mode::INTR_COAL_MODE) {
-        TraceError(TRACE_QDMA, "Device in not configured in Interrupt Aggregation mode");
+    if (drv_conf.operation_mode != queue_op_mode::INTR_COAL_MODE) {
+        TraceError(TRACE_QDMA, "%s is not configured in Interrupt Aggregation mode", dev_conf.name);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
@@ -3461,7 +3850,7 @@ NTSTATUS qdma_device::qdma_regdump(qdma_reg_dump_info *regdump_info)
 
     int len = hw.qdma_dump_config_regs(this, is_vf, regdump_info->pbuffer, (uint32_t)regdump_info->buffer_len);
     if (len < 0) {
-        TraceError(TRACE_QDMA, "hw.qdma_dump_config_regs failed with err : %d", len);
+        TraceError(TRACE_QDMA, " %s : hw.qdma_dump_config_regs failed with err : %d", dev_conf.name, len);
         return hw.qdma_get_error_code(len);
     }
 
@@ -3485,121 +3874,183 @@ NTSTATUS qdma_device::qdma_get_qstats_info(qdma_qstat_info &qstats)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS qdma_device::qdma_get_reg_info(qdma_reg_info* reg_info)
+{
+    int len = 0;
+
+    if (reg_info == nullptr)
+        return STATUS_INVALID_PARAMETER;
+
+    if (!hw.qdma_dump_reg_info)
+        return STATUS_NOT_SUPPORTED;
+
+    len = hw.qdma_dump_reg_info(this,
+        reg_info->address, reg_info->reg_cnt, 
+        reg_info->pbuffer, (int)reg_info->buf_len);
+
+    if (len < 0) {
+        TraceError(TRACE_QDMA, "hw.qdma_dump_reg_info Failed with error : %d", len);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (len == 0) {
+        TraceError(TRACE_QDMA, "Register %d is not present in the design", reg_info->address);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    reg_info->ret_len = len;
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS qdma_device::open(const WDFDEVICE device, WDFCMRESLIST resources,
                            const WDFCMRESLIST resources_translated)
 {
     NTSTATUS status = STATUS_SUCCESS;
+    int ret = 0;
 
     wdf_dev = device;
 
     status = pcie.get_bdf(wdf_dev, dev_conf.dev_sbdf.val);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "get_bdf failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "pcie.get_bdf failed! %!STATUS!", status);
         return status;
     }
 
-    TraceVerbose(TRACE_QDMA, "pcie.bdf = %X", dev_conf.dev_sbdf.val);
-
     RtlStringCchPrintfA(dev_conf.name,
-        ARRAYSIZE(dev_conf.name), "qdma%05x", dev_conf.dev_sbdf.val);
+        ARRAYSIZE(dev_conf.name), "qdma%02X%02X%x",
+        dev_conf.dev_sbdf.sbdf.bus_no,
+        dev_conf.dev_sbdf.sbdf.dev_no,
+        dev_conf.dev_sbdf.sbdf.fun_no);
 
-    TraceVerbose(TRACE_QDMA, "qdma_open : name : %s, BDF :0x%05X pf_no : %d",
-        dev_conf.name, dev_conf.dev_sbdf.val, dev_conf.dev_sbdf.sbdf.fun_no);
+    TraceInfo(TRACE_QDMA, "%04X:%02X:%02X.%X: func : %X, p/v 1/0", 
+        dev_conf.dev_sbdf.sbdf.seg_no, dev_conf.dev_sbdf.sbdf.bus_no, 
+        dev_conf.dev_sbdf.sbdf.dev_no, dev_conf.dev_sbdf.sbdf.fun_no, 
+        dev_conf.dev_sbdf.sbdf.fun_no);
 
     status = pcie.map(resources_translated);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "pcie.map failed! %!STATUS!", status);
-        goto ErrExit;
+        TraceError(TRACE_QDMA, "%s : pcie.map failed! %!STATUS!", dev_conf.name, status);
+        return status;
     }
 
-    status = pcie.assign_config_bar(config_bar);
+    status = pcie.assign_config_bar(drv_conf.cfg_bar);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "Failed to assign config BAR");
-        goto ErrExit;
+        TraceError(TRACE_QDMA, "%s: Failed to assign config BAR", dev_conf.name);
+        return status;
     }
 
-    int ret = qdma_hw_access_init(this, 0, &hw);
-    if (status != QDMA_SUCCESS) {
-        TraceError(TRACE_QDMA, "Failed to initialize hw access");
-        status = hw.qdma_get_error_code(ret);
-        goto ErrExit;
+    ret = qdma_hw_access_init((void*)this, 0, &hw);
+    if (ret < 0) {
+        TraceError(TRACE_QDMA, "%s: Failed to initialize hw access", dev_conf.name);
+        return STATUS_UNSUCCESSFUL;
     }
+
+    /** Change device state to offline after acquiring the HW callbacks */
+    InterlockedExchange(&qdma_device_state, device_state::DEVICE_OFFLINE);
 
     ret = hw.qdma_get_version((void *)this, QDMA_DEV_PF, &hw_version_info);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "qdma_get_version failed!, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: qdma_get_version failed!, ret : %d", dev_conf.name, ret);
         status = hw.qdma_get_error_code(ret);
         goto ErrExit;
     }
 
     status = assign_bar_types();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "assign_bar_types failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s : assign_bar_types failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
     ret = hw.qdma_get_device_attributes((void *)this, &dev_conf.dev_info);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "qdma_get_device_attributes failed!, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: qdma_get_device_attributes failed!, ret : %d", dev_conf.name, ret);
         status = hw.qdma_get_error_code(ret);
         goto ErrExit;
     }
 
-    TraceVerbose(TRACE_QDMA, "qdma_get_device_attributes Success : num_pfs : %d, mm_en:%d, st_en:%d\n",
-        dev_conf.dev_info.num_pfs, dev_conf.dev_info.mm_en, dev_conf.dev_info.st_en);
+    TraceInfo(TRACE_QDMA, "qdma_get_device_attributes: %s: num_pfs:%d, num_qs:%d, flr_present:%d, st_en:%d, "
+        "mm_en:%d, mm_cmpt_en:%d, mailbox_en:%d, mm_channel_max:%d, qid2vec_ctx:%d, ",
+        dev_conf.name,
+        dev_conf.dev_info.num_pfs,
+        dev_conf.dev_info.num_qs,
+        dev_conf.dev_info.flr_present,
+        dev_conf.dev_info.st_en,
+        dev_conf.dev_info.mm_en,
+        dev_conf.dev_info.mm_cmpt_en,
+        dev_conf.dev_info.mailbox_en,
+        dev_conf.dev_info.mm_channel_max,
+        dev_conf.dev_info.qid2vec_ctx);
+
+    TraceInfo(TRACE_QDMA, "cmpt_ovf_chk_dis:%d, mailbox_intr:%d, sw_desc_64b:%d, cmpt_desc_64b:%d, "
+        "dynamic_bar:%d, legacy_intr:%d, cmpt_trig_count_timer:%d",
+        dev_conf.dev_info.cmpt_ovf_chk_dis,
+        dev_conf.dev_info.mailbox_intr,
+        dev_conf.dev_info.sw_desc_64b,
+        dev_conf.dev_info.cmpt_desc_64b,
+        dev_conf.dev_info.dynamic_bar,
+        dev_conf.dev_info.legacy_intr,
+        dev_conf.dev_info.cmpt_trig_count_timer);
 
     if ((dev_conf.dev_info.st_en == 0) &&
         (dev_conf.dev_info.mm_en == 0)) {
-        TraceError(TRACE_QDMA, "None of the modes ( ST or MM) are enabled");
+        TraceError(TRACE_QDMA, "%s: None of the modes ( ST or MM) are enabled", dev_conf.name);
         status = STATUS_INVALID_HW_PROFILE;
         goto ErrExit;
     }
 
     status = list_add_qdma_device_and_set_gbl_csr();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "list_add_qdma_device_and_set_gbl_csr failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: list_add_qdma_device_and_set_gbl_csr failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
+    TraceInfo(TRACE_QDMA, "Driver is loaded in %s(%d) mode",
+        mode_name_list[drv_conf.operation_mode].name, drv_conf.operation_mode);
+
     status = init_resource_manager();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_resource_manager failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_resource_manager failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
     status = init_os_resources(resources, resources_translated);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_os_resources() failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_os_resources() failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
     status = init_qdma_global();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_qdma_global() failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_qdma_global() failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
     status = init_func();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_func() failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_func() failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
     status = init_dma_queues();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_QDMA, "init_dma_queues() failed! %!STATUS!", status);
+        TraceError(TRACE_QDMA, "%s: init_dma_queues() failed! %!STATUS!", dev_conf.name, status);
         goto ErrExit;
     }
 
-    if (op_mode == queue_op_mode::INTR_COAL_MODE) {
+    if (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) {
         status = init_interrupt_queues();
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_QDMA, "init_interrupt_queues() failed! %!STATUS!", status);
+            TraceError(TRACE_QDMA, "%s: init_interrupt_queues() failed! %!STATUS!", dev_conf.name, status);
             goto ErrExit;
         }
     }
 
     InterlockedExchange(&qdma_device_state, device_state::DEVICE_ONLINE);
+
+    TraceInfo(TRACE_QDMA, "%s, %05x, qdma_device %p, ch %u, q %u.",
+        dev_conf.name, dev_conf.dev_sbdf.val, this,
+        dev_conf.dev_info.mm_channel_max, drv_conf.qsets_max);
 
     return status;
 
@@ -3610,23 +4061,31 @@ ErrExit:
 
 void qdma_device::close()
 {
-    TraceVerbose(TRACE_QDMA, "qdma_close()");
+    /** Make sure to not perform multiple cleanups on same device */
+    if (qdma_device_state != device_state::DEVICE_INIT) {
 
-    destroy_dma_queues();
+        TraceInfo(TRACE_QDMA, "%04X:%02X:%02X.%X qdma_device 0x%p, %s.\n",
+            dev_conf.dev_sbdf.sbdf.seg_no, dev_conf.dev_sbdf.sbdf.bus_no, 
+            dev_conf.dev_sbdf.sbdf.dev_no, dev_conf.dev_sbdf.sbdf.fun_no, 
+            this, dev_conf.name);
 
-    destroy_func();
+        destroy_dma_queues();
 
-    destroy_os_resources();
+        destroy_func();
 
-    destroy_resource_manager();
+        destroy_os_resources();
 
-    list_remove_qdma_device();
+        destroy_resource_manager();
 
-    pcie.unmap();
+        list_remove_qdma_device();
 
-    if (nullptr != register_access_lock) {
-        WdfObjectDelete(register_access_lock);
-        register_access_lock = nullptr;
+        pcie.unmap();
+
+        if (nullptr != register_access_lock) {
+            WdfObjectDelete(register_access_lock);
+            register_access_lock = nullptr;
+        }
+        InterlockedExchange(&qdma_device_state, device_state::DEVICE_INIT);
     }
 }
 
@@ -3645,35 +4104,35 @@ NTSTATUS qdma_device::qdma_read_csr_conf(qdma_glbl_csr_conf *conf)
     ret = hw.qdma_global_csr_conf((void *)this, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
             conf->ring_sz, QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "Failed in reading global ring size, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: Failed to read CSR global ring size, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
     ret = hw.qdma_global_csr_conf((void *)this, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
             conf->c2h_timer_cnt, QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_READ);
     if ((ret < 0) && (ret != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED)) {
-        TraceError(TRACE_QDMA, "Failed in reading global timer count, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: Failed to read CSR global timer count, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
     ret = hw.qdma_global_csr_conf((void *)this, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
             conf->c2h_th_cnt, QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_READ);
     if ((ret < 0) && (ret != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED)) {
-        TraceError(TRACE_QDMA, "Failed in reading global counter threshold, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: Failed to read CSR global counter threshold, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
     ret = hw.qdma_global_csr_conf((void *)this, 0, QDMA_GLOBAL_CSR_ARRAY_SZ,
             conf->c2h_buff_sz, QDMA_CSR_BUF_SZ, QDMA_HW_ACCESS_READ);
     if ((ret < 0) && (ret != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED)) {
-        TraceError(TRACE_QDMA, "Failed in reading global buffer size, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: Failed to read CSR global buffer size, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
     ret = hw.qdma_global_writeback_interval_conf((void *)this,
             (qdma_wrb_interval *)&conf->wb_interval, QDMA_HW_ACCESS_READ);
     if ((ret < 0) && (ret != -QDMA_ERR_HWACC_FEATURE_NOT_SUPPORTED)) {
-        TraceError(TRACE_QDMA, "Failed in reading global write back interval, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: Failed to read CSR global write back interval, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -3687,7 +4146,7 @@ NTSTATUS qdma_device::qdma_get_dev_capabilities_info(qdma_device_attributes_info
 
     ret = hw.qdma_get_device_attributes((void *)this, &dev_info);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "qdma_get_device_attributes Failed, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: qdma_get_device_attributes Failed, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -3699,6 +4158,8 @@ NTSTATUS qdma_device::qdma_get_dev_capabilities_info(qdma_device_attributes_info
     dev_attr.mm_cmpl_en         = dev_info.mm_cmpt_en;
     dev_attr.mailbox_en         = dev_info.mailbox_en;
     dev_attr.num_mm_channels    = dev_info.mm_channel_max;
+    dev_attr.debug_mode         = dev_info.debug_mode;
+    dev_attr.desc_eng_mode      = dev_info.desc_eng_mode;
 
     return STATUS_SUCCESS;
 }
@@ -3717,7 +4178,7 @@ NTSTATUS qdma_device::qdma_device_version_info(
 
     int ret = hw.qdma_get_version((void *)this, QDMA_DEV_PF, &info);
     if (ret < 0) {
-        TraceError(TRACE_QDMA, "qdma_get_version failed!, ret : %d", ret);
+        TraceError(TRACE_QDMA, "%s: qdma_get_version failed!, ret : %d", dev_conf.name, ret);
         return hw.qdma_get_error_code(ret);
     }
 
@@ -3763,12 +4224,12 @@ NTSTATUS qdma_device::qdma_device_version_info(
 
 queue_pair *qdma_device::qdma_get_queue_pair_by_hwid(UINT16 qid_abs)
 {
-    if (qid_abs >= (qbase + qmax)) {
-        TraceError(TRACE_QDMA, "Invalid Qid provided");
+    if (qid_abs >= (qbase + drv_conf.qsets_max)) {
+        TraceError(TRACE_QDMA, "%s: Invalid Qid %d provided", dev_conf.name, qid_abs);
         return nullptr;
     }
 
     UINT16 qid_rel = qid_abs - static_cast<UINT16>(qbase);
-    TraceVerbose(TRACE_QDMA, "Absolute qid : %u Relative qid : %u", qid_abs, qid_rel);
+    TraceVerbose(TRACE_QDMA, "%s: Absolute qid : %u Relative qid : %u", dev_conf.name, qid_abs, qid_rel);
     return &queue_pairs[qid_rel];
 }

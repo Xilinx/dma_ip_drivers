@@ -14,20 +14,64 @@
  * under the License.
  */
 
-#ifndef QDMA_ACCESS_COMMON_H_
-#define QDMA_ACCESS_COMMON_H_
-
-#include "qdma_access_export.h"
-#include "qdma_access_errors.h"
+#ifndef __QDMA_ACCESS_COMMON_H_
+#define __QDMA_ACCESS_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "qdma_access_export.h"
+#include "qdma_access_errors.h"
+
 /* QDMA HW version string array length */
 #define QDMA_HW_VERSION_STRING_LEN			32
 
 #define ENABLE_INIT_CTXT_MEMORY			1
+
+#ifdef GCC_COMPILER
+static inline uint32_t get_trailing_zeros(uint64_t x)
+{
+	uint32_t rv =
+		__builtin_ffsll(x) - 1;
+	return rv;
+}
+#else
+static inline uint32_t get_trailing_zeros(uint64_t value)
+{
+	uint32_t pos = 0;
+
+	if ((value & 0xffffffff) == 0) {
+		pos += 32;
+		value >>= 32;
+	}
+	if ((value & 0xffff) == 0) {
+		pos += 16;
+		value >>= 16;
+	}
+	if ((value & 0xff) == 0) {
+		pos += 8;
+		value >>= 8;
+	}
+	if ((value & 0xf) == 0) {
+		pos += 4;
+		value >>= 4;
+	}
+	if ((value & 0x3) == 0) {
+		pos += 2;
+		value >>= 2;
+	}
+	if ((value & 0x1) == 0)
+		pos += 1;
+
+	return pos;
+}
+#endif
+
+#define FIELD_SHIFT(mask)       get_trailing_zeros(mask)
+#define FIELD_SET(mask, val)    ((val << FIELD_SHIFT(mask)) & mask)
+#define FIELD_GET(mask, reg)    ((reg & mask) >> FIELD_SHIFT(mask))
+
 
 /* CSR Default values */
 #define DEFAULT_MAX_DSC_FETCH               6
@@ -49,6 +93,66 @@ extern "C" {
  * and currently different number of vectors per PF is not supported
  */
 #define QDMA_NUM_DATA_VEC_FOR_INTR_CXT  1
+
+enum ind_ctxt_cmd_op {
+	QDMA_CTXT_CMD_CLR,
+	QDMA_CTXT_CMD_WR,
+	QDMA_CTXT_CMD_RD,
+	QDMA_CTXT_CMD_INV
+};
+
+enum ind_ctxt_cmd_sel {
+	QDMA_CTXT_SEL_SW_C2H,
+	QDMA_CTXT_SEL_SW_H2C,
+	QDMA_CTXT_SEL_HW_C2H,
+	QDMA_CTXT_SEL_HW_H2C,
+	QDMA_CTXT_SEL_CR_C2H,
+	QDMA_CTXT_SEL_CR_H2C,
+	QDMA_CTXT_SEL_CMPT,
+	QDMA_CTXT_SEL_PFTCH,
+	QDMA_CTXT_SEL_INT_COAL,
+	QDMA_CTXT_SEL_PASID_RAM_LOW,
+	QDMA_CTXT_SEL_PASID_RAM_HIGH,
+	QDMA_CTXT_SEL_TIMER,
+	QDMA_CTXT_SEL_FMAP,
+};
+
+/* polling a register */
+#define	QDMA_REG_POLL_DFLT_INTERVAL_US	10		    /* 10us per poll */
+#define	QDMA_REG_POLL_DFLT_TIMEOUT_US	(500*1000)	/* 500ms */
+
+/** Constants */
+#define QDMA_NUM_RING_SIZES                                 16
+#define QDMA_NUM_C2H_TIMERS                                 16
+#define QDMA_NUM_C2H_BUFFER_SIZES                           16
+#define QDMA_NUM_C2H_COUNTERS                               16
+#define QDMA_MM_CONTROL_RUN                                 0x1
+#define QDMA_MM_CONTROL_STEP                                0x100
+#define QDMA_MAGIC_NUMBER                                   0x1fd3
+#define QDMA_PIDX_STEP                                      0x10
+#define QDMA_CMPT_CIDX_STEP                                 0x10
+#define QDMA_INT_CIDX_STEP                                  0x10
+
+
+/** QDMA_IND_REG_SEL_PFTCH */
+#define QDMA_PFTCH_CTXT_SW_CRDT_GET_H_MASK                  GENMASK(15, 3)
+#define QDMA_PFTCH_CTXT_SW_CRDT_GET_L_MASK                  GENMASK(2, 0)
+
+/** QDMA_IND_REG_SEL_CMPT */
+#define QDMA_COMPL_CTXT_BADDR_GET_H_MASK                    GENMASK_ULL(63, 38)
+#define QDMA_COMPL_CTXT_BADDR_GET_L_MASK                    GENMASK_ULL(37, 12)
+#define QDMA_COMPL_CTXT_PIDX_GET_H_MASK                     GENMASK(15, 4)
+#define QDMA_COMPL_CTXT_PIDX_GET_L_MASK                     GENMASK(3, 0)
+
+#define QDMA_INTR_CTXT_BADDR_GET_H_MASK                     GENMASK_ULL(63, 61)
+#define QDMA_INTR_CTXT_BADDR_GET_M_MASK                     GENMASK_ULL(60, 29)
+#define QDMA_INTR_CTXT_BADDR_GET_L_MASK                     GENMASK_ULL(28, 12)
+
+#define     QDMA_GLBL2_MM_CMPT_EN_MASK                      BIT(2)
+#define     QDMA_GLBL2_FLR_PRESENT_MASK                     BIT(1)
+#define     QDMA_GLBL2_MAILBOX_EN_MASK                      BIT(0)
+
+#define QDMA_REG_IND_CTXT_REG_COUNT                         8
 
 /* ------------------------ indirect register context fields -----------*/
 union qdma_ind_ctxt_cmd {
@@ -294,8 +398,6 @@ struct qdma_descq_cmpt_ctxt {
 	uint32_t pasid;
 	/** @pasid_en - PASID Enable */
 	uint8_t pasid_en;
-	/** @virtio_dsc_base - Virtio Desc Base Address */
-	uint8_t base_addr;
 	/** @vio_eop - Virtio End-of-packet */
 	uint8_t vio_eop;
 	/** @sh_cmpt - Shared Completion Queue */
@@ -518,10 +620,15 @@ void qdma_memset(void *to, uint8_t val, uint32_t size);
 int qdma_acc_reg_dump_buf_len(void *dev_hndl,
 		enum qdma_ip_type ip_type, int *buflen);
 
+int qdma_acc_reg_info_len(void *dev_hndl,
+		enum qdma_ip_type ip_type, int *buflen, int *num_regs);
 
 int qdma_acc_context_buf_len(void *dev_hndl,
 		enum qdma_ip_type ip_type, uint8_t st,
 		enum qdma_dev_q_type q_type, uint32_t *buflen);
+
+int qdma_acc_get_num_config_regs(void *dev_hndl,
+		enum qdma_ip_type ip_type, uint32_t *num_regs);
 
 /*
  * struct qdma_hw_access - Structure to hold HW access function pointers
@@ -587,11 +694,15 @@ struct qdma_hw_access {
 					uint8_t err_intr_index);
 	int (*qdma_hw_error_intr_rearm)(void *dev_hndl);
 	int (*qdma_hw_error_enable)(void *dev_hndl,
-					enum qdma_error_idx err_idx);
-	const char *(*qdma_hw_get_error_name)(enum qdma_error_idx err_idx);
+			uint32_t err_idx);
+	const char *(*qdma_hw_get_error_name)(uint32_t err_idx);
 	int (*qdma_hw_error_process)(void *dev_hndl);
 	int (*qdma_dump_config_regs)(void *dev_hndl, uint8_t is_vf, char *buf,
 					uint32_t buflen);
+	int (*qdma_dump_reg_info)(void *dev_hndl, uint32_t reg_addr,
+				  uint32_t num_regs,
+				  char *buf,
+				  uint32_t buflen);
 	int (*qdma_dump_queue_context)(void *dev_hndl,
 			uint8_t st,
 			enum qdma_dev_q_type q_type,
@@ -622,6 +733,7 @@ struct qdma_hw_access {
 			char *buf, uint32_t buflen);
 	uint32_t mbox_base_pf;
 	uint32_t mbox_base_vf;
+	uint32_t qdma_max_errors;
 };
 
 /*****************************************************************************/
@@ -645,6 +757,21 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 
 /*****************************************************************************/
 /**
+ * qdma_acc_dump_config_regs() - Function to get qdma config registers
+ *
+ * @dev_hndl:   device handle
+ * @is_vf:      Whether PF or VF
+ * @ip_type:	QDMA IP Type
+ * @reg_data:  pointer to register data to be filled
+ *
+ * Return:	Length up-till the buffer is filled -success and < 0 - failure
+ *****************************************************************************/
+int qdma_acc_get_config_regs(void *dev_hndl, uint8_t is_vf,
+		enum qdma_ip_type ip_type,
+		uint32_t *reg_data);
+
+/*****************************************************************************/
+/**
  * qdma_acc_dump_config_regs() - Function to get qdma config register dump in a
  * buffer
  *
@@ -659,6 +786,23 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 int qdma_acc_dump_config_regs(void *dev_hndl, uint8_t is_vf,
 		enum qdma_ip_type ip_type,
 		char *buf, uint32_t buflen);
+
+/*****************************************************************************/
+/**
+ * qdma_acc_dump_reg_info() - Function to get qdma reg info in a buffer
+ *
+ * @dev_hndl:   device handle
+ * @ip_type:	QDMA IP Type
+ * @reg_addr:   Register Address
+ * @num_regs:   Number of Registers
+ * @buf :       pointer to buffer to be filled
+ * @buflen :    Length of the buffer
+ *
+ * Return:	Length up-till the buffer is filled -success and < 0 - failure
+ *****************************************************************************/
+int qdma_acc_dump_reg_info(void *dev_hndl,
+		enum qdma_ip_type ip_type, uint32_t reg_addr,
+		uint32_t num_regs, char *buf, uint32_t buflen);
 
 /*****************************************************************************/
 /**

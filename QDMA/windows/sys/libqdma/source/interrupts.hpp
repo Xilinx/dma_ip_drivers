@@ -63,11 +63,14 @@ struct intr_queue {
     NTSTATUS intring_dump(qdma_intr_ring_info *intring_info);
 };
 
-typedef struct IRQ_CONTEXT {
+typedef struct QDMA_IRQ_CONTEXT {
     bool is_coal;
     interrupt_type intr_type = interrupt_type::NONE;
     ULONG vector_id;
     UINT32 weight;
+
+    /* For user interrupt handling */
+    void *user_data;
 
     /* For Error interrupt handling */
     qdma_device *qdma_dev = nullptr;
@@ -79,21 +82,21 @@ typedef struct IRQ_CONTEXT {
     intr_queue *intr_q = nullptr;
 
     /* Interrupt handler function */
-    void (*interrupt_handler)(IRQ_CONTEXT *);
-}*PIRQ_CONTEXT;
+    void (*interrupt_handler)(QDMA_IRQ_CONTEXT *);
 
-WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(IRQ_CONTEXT, get_irq_context);
+}*PQDMA_IRQ_CONTEXT;
+
+WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(QDMA_IRQ_CONTEXT, get_qdma_irq_context);
 
 struct interrupt_manager {
     interrupt_type intr_type = interrupt_type::NONE;
     ULONG err_vector_id = 0;
-    ULONG user_vector_id = 0;
-
+    ULONG user_vector_id_start = 0;
+    ULONG user_vector_id_end = 0;
     ULONG data_vector_id_end = 0;
     ULONG data_vector_id_start = 0;
 
     WDFSPINLOCK lock = nullptr;
-
     UINT32 irq_weight[qdma_max_msix_vectors_per_pf];
     WDFINTERRUPT irq[qdma_max_msix_vectors_per_pf];
     intr_queue intr_q[qdma_max_msix_vectors_per_pf];

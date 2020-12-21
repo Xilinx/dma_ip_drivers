@@ -105,6 +105,7 @@ enum commands {
     CMD_QUEUE_NO_COPY,
     CMD_SET_QMAX,
     CMD_GET_QSTATS,
+    CMD_REG_INFO,
     CMD_OP_MAX
 };
 
@@ -180,6 +181,8 @@ struct device_info_out {
     BOOL	mm_en;
     BOOL	mm_cmpl_en;
     BOOL	mailbox_en;
+    BOOL	debug_mode;
+    UINT8	desc_eng_mode;
     UINT32	num_mm_channels;
 };
 
@@ -307,6 +310,25 @@ struct qstat_out {
     UINT32 active_cmpt_queues;
 };
 
+/** Structure to be passed as input parameter for
+ *  IOCTL Command :
+ *          IOCTL_QDMA_REG_INFO
+ */
+struct reg_info_in {
+    UINT32  bar_no;
+    UINT32  address;
+    UINT32  reg_cnt;
+};
+
+/** Structure to be passed as output parameter for
+ *  IOCTL Command :
+ *          IOCTL_QDMA_REG_INFO
+ */
+struct reg_info_out {
+    size_t  ret_len;
+    char    pbuffer[1];
+};
+
 struct csr_conf_data {
     struct csr_conf_out *out;
 };
@@ -361,6 +383,11 @@ struct qstats_info {
     struct qstat_out            *out;
 };
 
+struct reg_info {
+    struct reg_info_in      in;
+    struct reg_info_out* out;
+};
+
 /** Union that consolidates parameters for all ioctl commands */
 union ioctl_cmd {
     struct csr_conf_data        csr;
@@ -372,9 +399,10 @@ union ioctl_cmd {
     struct ctx_dump_info        ctx_info;
     struct cmpt_data_info       cmpt_info;
     struct intring_info         int_ring_info;
-    struct regdump_info         reg_info;
+    struct regdump_info         reg_dump_info;
     struct qmax_info            qmax_info;
     struct qstats_info          qstats_info;
+    struct reg_info             reg_info;
 };
 
 #define QDMA_IOCTL(index) CTL_CODE(FILE_DEVICE_UNKNOWN, index, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -395,6 +423,7 @@ union ioctl_cmd {
 #define IOCTL_QDMA_QUEUE_NO_COPY        QDMA_IOCTL(CMD_QUEUE_NO_COPY)
 #define IOCTL_QDMA_SET_QMAX             QDMA_IOCTL(CMD_SET_QMAX)
 #define IOCTL_QDMA_GET_QSTATS           QDMA_IOCTL(CMD_GET_QSTATS)
+#define IOCTL_QDMA_REG_INFO             QDMA_IOCTL(CMD_REG_INFO)
 
 #include <poppack.h>
 

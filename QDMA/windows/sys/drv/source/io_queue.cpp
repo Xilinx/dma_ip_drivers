@@ -174,19 +174,16 @@ static BOOLEAN program_mm_dma_cb(
         params.Parameters.Write.DeviceOffset :
         params.Parameters.Read.DeviceOffset;
 
-    size_t xfered_len = 0;
-    auto status = dev_ctx->qdma->qdma_enqueue_mm_request(dma_ctx->qid, direction, sg_list, device_offset, drv_mm_cmp_cb, transaction, xfered_len);
+    auto status = dev_ctx->qdma->qdma_enqueue_mm_request(dma_ctx->qid, direction, sg_list, device_offset, drv_mm_cmp_cb, transaction);
     if (!NT_SUCCESS(status)) {
         dma_ctx->txn_len = 0;
         /** Complete the DMA transaction */
         drv_mm_cmp_cb(transaction, status);
-        TraceError(TRACE_IO, "enqueue_transfer_mm() failed! %!STATUS!", status);;
+        TraceError(TRACE_IO, "qdma_enqueue_mm_request() failed! %!STATUS!", status);;
         return false;
     }
 
-    TraceVerbose(TRACE_IO, "enqueue_transfer_mm(): txd len : %lld", xfered_len);
-    /** Update the real dmaed length into dma context */
-    dma_ctx->txn_len = xfered_len;
+    TraceVerbose(TRACE_IO, "qdma_enqueue_mm_request(): txd len : %lld", dma_ctx->txn_len);
 
     return true;
 }
@@ -203,17 +200,14 @@ static BOOLEAN program_st_tx_dma_cb(
     auto dev_ctx = get_device_context(device);
     DMA_TXN_CONTEXT *dma_ctx = (DMA_TXN_CONTEXT *)context;
 
-    size_t xfered_len = 0;
-    auto status = dev_ctx->qdma->qdma_enqueue_st_tx_request(dma_ctx->qid, sg_list, drv_st_tx_cmp_cb, transaction, xfered_len);
+    auto status = dev_ctx->qdma->qdma_enqueue_st_tx_request(dma_ctx->qid, sg_list, drv_st_tx_cmp_cb, transaction);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_IO, "enqueue_transfer_st() failed! %!STATUS!", status);
+        TraceError(TRACE_IO, "qdma_enqueue_st_tx_request() failed! %!STATUS!", status);
         drv_st_tx_cmp_cb(transaction, status);
         return false;
     }
 
-    TraceVerbose(TRACE_IO, "qdma_enqueue_st_tx(): txd len : %lld", xfered_len);
-    /** Update the real dmaed length into dma context */
-    dma_ctx->txn_len = xfered_len;
+    TraceVerbose(TRACE_IO, "qdma_enqueue_st_tx_request(): txd len : %lld", dma_ctx->txn_len);
 
     return true;
 }
@@ -256,13 +250,13 @@ static void io_mm_dma(
         goto ErrExit;
     }
 
-    TraceVerbose(TRACE_IO, "queue transfer complete");
+    TraceVerbose(TRACE_IO, "DMA transfer triggered on queue %d, direction : %d", qid, direction);
     return;
 
 ErrExit:
     WdfObjectDelete(dma_transaction);
     WdfRequestComplete(request, status);
-    TraceError(TRACE_IO, "Error Request 0x%p: %!STATUS!", request, status);
+    TraceError(TRACE_IO, "DMA transfer initiation failed, Request 0x%p: %!STATUS!", request, status);
 
 }
 
@@ -282,11 +276,11 @@ static void io_st_read_dma(
 
     status = qdma_dev->qdma_enqueue_st_rx_request(qid, length, drv_st_rx_cmp_cb, (void *)request);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_IO, "WdfDmaTransactionExecute failed: %!STATUS!", status);
-
         WdfRequestComplete(request, status);
-        TraceError(TRACE_IO, "ST Request completed 0x%p: %!STATUS!", request, status);
+        TraceError(TRACE_IO, "DMA transfer initiation failed: %!STATUS!", status);
     }
+
+    TraceVerbose(TRACE_IO, "DMA transfer triggered on queue %d", qid);
 }
 
 static void io_st_zero_write_dma(
@@ -296,31 +290,47 @@ static void io_st_zero_write_dma(
     const size_t length,
     const WDF_DMA_DIRECTION direction)
 {
-    PVOID req = request;
-
     UNREFERENCED_PARAMETER(length);
     UNREFERENCED_PARAMETER(direction);
 
+    ST_DMA_ZERO_TX_PRIV *priv;
     /** construct one element sg_list */
     constexpr size_t sg_list_len = sizeof(SCATTER_GATHER_LIST) + sizeof(SCATTER_GATHER_ELEMENT);
-    UINT8 sg_buffer[sg_list_len] = { };
-    PSCATTER_GATHER_LIST sg_list = (PSCATTER_GATHER_LIST)sg_buffer;
-    size_t xfered_len = 0;
+    PSCATTER_GATHER_LIST sg_list;
+
+    sg_list = (PSCATTER_GATHER_LIST)ExAllocatePoolWithTag(NonPagedPoolNx, sg_list_len, IO_QUEUE_TAG);
+    if (sg_list == NULL) {
+        TraceVerbose(TRACE_IO, "sg_list: Mem alloc failed\n");
+        return;
+    }
+
+    RtlZeroMemory(sg_list, sg_list_len);
 
     sg_list->NumberOfElements = 1;
     sg_list->Elements[0].Address.QuadPart = NULL;
     sg_list->Elements[0].Length = 0x0;
 
-    /* For Zero byte transfer, pass the WDFREQUEST in WDFDMATRANSACTION parameter,
-       locally constructed single element sglist parameter for the function qdma_enqueue_st_request */
-    auto status = qdma_dev->qdma_enqueue_st_tx_request(qid, sg_list, drv_st_tx_zcmp_cb, static_cast<WDFDMATRANSACTION>(req), xfered_len);
-    if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_IO, "enqueue_transfer_st() failed! %!STATUS!", status);
-        drv_st_tx_zcmp_cb(request, status);
+    priv = (ST_DMA_ZERO_TX_PRIV*)ExAllocatePoolWithTag(NonPagedPoolNx, sizeof(ST_DMA_ZERO_TX_PRIV), IO_QUEUE_TAG);
+    if (priv == NULL) {
+        ExFreePoolWithTag(sg_list, IO_QUEUE_TAG);
+        TraceVerbose(TRACE_IO, "priv: Mem alloc failed\n");
         return;
     }
 
-    TraceVerbose(TRACE_IO, "queue transfer complete for zero length request");
+    /** Store the context info in priv data */
+    priv->request = request;
+    priv->sg_list = sg_list;
+
+    /* For Zero byte transfer, pass the ST_DMA_ZERO_TX_PRIV in WDFDMATRANSACTION parameter that contains,
+       locally constructed single element sglist parameter & WDFREQUEST for the function qdma_enqueue_st_request */
+    auto status = qdma_dev->qdma_enqueue_st_tx_request(qid, sg_list, drv_st_tx_zcmp_cb, static_cast<PVOID>(priv));
+    if (!NT_SUCCESS(status)) {
+        TraceError(TRACE_IO, "DMA transfer initiation failed! %!STATUS!", status);
+        drv_st_tx_zcmp_cb(priv, status);
+        return;
+    }
+
+    TraceVerbose(TRACE_IO, "DMA transfer triggered on queue %d for zero length", qid);
     return;
 }
 
@@ -366,13 +376,13 @@ static void io_st_write_dma(
         goto ErrExit;
     }
 
-    TraceVerbose(TRACE_IO, "queue transfer complete");
+    TraceVerbose(TRACE_IO, "DMA transfer triggered on queue %d", qid);
     return;
 
 ErrExit:
     WdfObjectDelete(dma_transaction);
     WdfRequestComplete(request, status);
-    TraceError(TRACE_IO, "Error Request 0x%p: %!STATUS!", request, status);
+    TraceError(TRACE_IO, "DMA transfer initiation failed! for Request : %p,  %!STATUS!", request, status);
 }
 
 /* ----- CB Processing Functions ----- */
@@ -403,7 +413,7 @@ void drv_st_rx_cmp_cb(const st_c2h_pkt_fragment *rx_pkts, size_t num_pkts, void 
 
 #ifdef DBG
                 if (packet.udd_data != nullptr) {
-                    int len = 0;
+                   UINT8 len = 0;
                     constexpr unsigned short MAX_UDD_STR_LEN = (QDMA_MAX_UDD_DATA_LEN * 3) + 1;
                     char imm_data_str[MAX_UDD_STR_LEN];
                     UINT32 udd_len;
@@ -417,7 +427,7 @@ void drv_st_rx_cmp_cb(const st_c2h_pkt_fragment *rx_pkts, size_t num_pkts, void 
                             RtlStringCchPrintfA((imm_data_str + len), (MAX_UDD_STR_LEN - len), "%02X ", udd_buffer[iter]);
                             len = len + 3; /* 3 characters are getting utilized for each byte */
                         }
-                        TraceInfo(TRACE_IO, "Immediate data Len : %d, Data: %s", udd_len, imm_data_str);
+                        TraceVerbose(TRACE_IO, "Immediate data Len : %d, Data: %s", udd_len, imm_data_str);
                     }
                 }
 #endif
@@ -456,11 +466,12 @@ static void dma_complete_transaction(WDFDMATRANSACTION dma_transaction, NTSTATUS
     BOOLEAN transaction_complete = false;
     auto dma_ctx = get_dma_txn_context(dma_transaction);
     size_t length = dma_ctx->txn_len;
+    UINT16 qid = dma_ctx->qid;
 
     request = WdfDmaTransactionGetRequest(dma_transaction);
     if (!request)
         /** Dont return from here, Need to delete the dma_transaction object */
-        TraceError(TRACE_IO, "Callback but No request pending");
+        TraceError(TRACE_IO, "Callback triggered, No request pending on queue %d", qid);
 
     if ((NT_SUCCESS(status)))
         transaction_complete = WdfDmaTransactionDmaCompleted(dma_transaction, &ret);
@@ -472,12 +483,12 @@ static void dma_complete_transaction(WDFDMATRANSACTION dma_transaction, NTSTATUS
         WdfObjectDelete(dma_transaction);
     }
     else {
-        TraceError(TRACE_IO, "Err: DMA transaction not completed, ret : %X", ret);
+        TraceError(TRACE_IO, "Err: DMA transaction not completed on queue %d, ret : %X", qid, ret);
     }
 
     if (request) {
         WdfRequestCompleteWithInformation(request, status, length);
-        TraceVerbose(TRACE_IO, "Request completed, Len : %lld", length);
+        TraceVerbose(TRACE_IO, "DMA transfer completed on queue %d, Len : %lld", qid, length);
     }
 }
 
@@ -508,8 +519,14 @@ void drv_st_tx_zcmp_cb(void *priv, NTSTATUS status)
         return;
     }
 
-    WdfRequestCompleteWithInformation(static_cast<WDFREQUEST>(priv), status, 0);
-    TraceInfo(TRACE_IO, "Zero Byte Transfer ended");
+    ST_DMA_ZERO_TX_PRIV *priv_ctx = (ST_DMA_ZERO_TX_PRIV *)priv;
+
+    WdfRequestCompleteWithInformation(static_cast<WDFREQUEST>(priv_ctx->request), status, 0);
+
+    ExFreePoolWithTag(priv_ctx->sg_list, IO_QUEUE_TAG);
+    ExFreePoolWithTag(priv_ctx, IO_QUEUE_TAG);
+    
+    TraceInfo(TRACE_IO, "DMA Transfer completed for Zero length");
 }
 
 void drv_st_process_udd_only_pkts(UINT16 qid, void *udd_addr, void *priv)
@@ -521,7 +538,7 @@ void drv_st_process_udd_only_pkts(UINT16 qid, void *udd_addr, void *priv)
     if ((udd_addr == nullptr) || (priv == nullptr))
         return;
 
-    int len = 0;
+    UINT8 len = 0;
     constexpr unsigned short MAX_UDD_STR_LEN = (QDMA_MAX_UDD_DATA_LEN * 3) + 1;
     char imm_data_str[MAX_UDD_STR_LEN];
     UINT32 udd_len;
@@ -546,7 +563,7 @@ NTSTATUS qdma_io_queue_initialize(
 {
     PAGED_CODE();
 
-    TraceInfo(TRACE_IO, "Initializing main entry IO queue");
+    TraceVerbose(TRACE_IO, "Initializing main entry IO queue");
 
     /* Configure a default queue so that requests that are not configure-fowarded using
      * WdfDeviceConfigureRequestDispatching to goto other queues get dispatched here.
@@ -690,8 +707,9 @@ void qdma_evt_ioctl(
     auto file_ctx = get_file_context(WdfRequestGetFileObject(request));
     auto qdma_dev = dev_ctx->qdma;
     union ioctl_cmd cmd;
+    enum queue_state qstate;
 
-    TraceInfo(TRACE_IO, "Queue 0x%p, Request 0x%p OutputBufferLength %llu InputBufferLength %llu IoControlCode 0x%X",
+    TraceVerbose(TRACE_IO, "Queue 0x%p, Request 0x%p OutputBufferLength %llu InputBufferLength %llu IoControlCode 0x%X",
         queue, request, output_buffer_length, input_buffer_length, io_control_code);
 
     if (file_target::MGMT != file_ctx->target && file_target::ST_QUEUE != file_ctx->target) {
@@ -781,6 +799,8 @@ void qdma_evt_ioctl(
             cmd.dev_info.out->mm_cmpl_en        = dev_attr.mm_cmpl_en;
             cmd.dev_info.out->mailbox_en        = dev_attr.mailbox_en;
             cmd.dev_info.out->num_mm_channels   = dev_attr.num_mm_channels;
+            cmd.dev_info.out->debug_mode        = dev_attr.debug_mode;
+            cmd.dev_info.out->desc_eng_mode     = dev_attr.desc_eng_mode;
 
             WdfRequestCompleteWithInformation(request, status, sizeof(device_info_out));
 
@@ -902,7 +922,7 @@ void qdma_evt_ioctl(
             }
 
             TraceVerbose(TRACE_IO, "IOCTL_QDMA_QUEUE_DUMP_STATE : %d", cmd.q_state.in.qid);
-            status = qdma_dev->qdma_get_queues_state(cmd.q_state.in.qid,
+            status = qdma_dev->qdma_get_queues_state(cmd.q_state.in.qid, &qstate,
                 cmd.q_state.out->state, sizeof(cmd.q_state.out->state));
 
             if (!NT_SUCCESS(status))
@@ -1113,11 +1133,11 @@ void qdma_evt_ioctl(
         case IOCTL_QDMA_REG_DUMP :
         {
             status = retrive_ioctl(request, nullptr, 0,
-                (PVOID *)&cmd.reg_info.out, output_buffer_length);
+                (PVOID *)&cmd.reg_dump_info.out, output_buffer_length);
             if (!NT_SUCCESS(status))
                 goto Exit;
 
-            if (cmd.reg_info.out == nullptr) {
+            if (cmd.reg_dump_info.out == nullptr) {
                 TraceError(TRACE_IO, "NULL Buffer for CMD_REG_DUMP");
                 status = STATUS_INVALID_PARAMETER;
                 goto Exit;
@@ -1128,7 +1148,7 @@ void qdma_evt_ioctl(
             regdump_info.buffer_len = output_buffer_length - sizeof(struct regdump_info_out);
 
             regdump_info.ret_len = 0;
-            regdump_info.pbuffer = &cmd.reg_info.out->pbuffer[0];
+            regdump_info.pbuffer = &cmd.reg_dump_info.out->pbuffer[0];
 
             TraceVerbose(TRACE_IO, "IOCTL_QDMA_REG_DUMP");
             status = qdma_dev->qdma_regdump(&regdump_info);
@@ -1137,7 +1157,7 @@ void qdma_evt_ioctl(
                 goto Exit;
             }
 
-            cmd.reg_info.out->ret_len = regdump_info.ret_len;
+            cmd.reg_dump_info.out->ret_len = regdump_info.ret_len;
 
             WdfRequestCompleteWithInformation(request, status,
                 sizeof(regdump_info_out) + regdump_info.ret_len);
@@ -1188,6 +1208,39 @@ void qdma_evt_ioctl(
             WdfRequestCompleteWithInformation(request, status, sizeof(struct qstat_out));
             break;
         }
+        case IOCTL_QDMA_REG_INFO:
+        {
+            status = retrive_ioctl(request, &cmd.reg_info.in, sizeof(cmd.reg_info.in),
+                (PVOID*)&cmd.reg_info.out, output_buffer_length);
+            if (!NT_SUCCESS(status))
+                goto Exit;
+
+            if (cmd.reg_info.out == nullptr) {
+                TraceError(TRACE_IO, "nullptr Buffer for IOCTL_QDMA_REG_INFO");
+                status = STATUS_INVALID_PARAMETER;
+                goto Exit;
+            }
+
+            struct qdma_reg_info reg_info = { 0 };
+            reg_info.bar_no = cmd.reg_info.in.bar_no;
+            reg_info.address = cmd.reg_info.in.address;
+            reg_info.reg_cnt = cmd.reg_info.in.reg_cnt;
+            reg_info.buf_len = output_buffer_length - sizeof(struct reg_info_out);;
+            reg_info.ret_len = 0;
+            reg_info.pbuffer = cmd.reg_info.out->pbuffer;
+
+            status = qdma_dev->qdma_get_reg_info(&reg_info);
+            if (!NT_SUCCESS(status)) {
+                TraceError(TRACE_IO, "qdma_dev->qdma_get_reg_info() failed : Err : %X", status);
+                goto Exit;
+            }
+
+            cmd.reg_info.out->ret_len = reg_info.ret_len;
+
+            WdfRequestCompleteWithInformation(request, status,
+                sizeof(reg_info_out) + reg_info.ret_len);
+            break;
+        }
         default:
             TraceInfo(TRACE_IO, "UNKNOWN IOCTL CALLED");
             WdfRequestComplete(request, STATUS_UNSUCCESSFUL);
@@ -1230,24 +1283,24 @@ void qdma_evt_io_read(
 
     switch (file_ctx->target) {
     case file_target::USER:
-        TraceInfo(TRACE_IO, "user BAR reading %llu bytes", length);
+        TraceVerbose(TRACE_IO, "AXI Master Lite BAR reading %llu bytes", length);
         io_read_bar(dev_ctx->qdma, qdma_bar_type::USER_BAR, request, length);
         break;
     case file_target::CONTROL:
-        TraceInfo(TRACE_IO, "control BAR reading %llu bytes", length);
+        TraceVerbose(TRACE_IO, "control BAR reading %llu bytes", length);
         io_read_bar(dev_ctx->qdma, qdma_bar_type::CONFIG_BAR, request, length);
         break;
     case file_target::BYPASS:
-        TraceInfo(TRACE_IO, "bypass BAR reading %llu bytes", length);
+        TraceVerbose(TRACE_IO, "AXI Bridge Master BAR reading %llu bytes", length);
         io_read_bar(dev_ctx->qdma, qdma_bar_type::BYPASS_BAR, request, length);
         break;
     case file_target::DMA_QUEUE:
-        TraceInfo(TRACE_IO, "queue_%u reading %llu bytes", file_ctx->qid, length);
+        TraceVerbose(TRACE_IO, "queue_%u reading %llu bytes", file_ctx->qid, length);
         io_mm_dma(dev_ctx->qdma, file_ctx->qid, request, length,
                   WdfDmaDirectionReadFromDevice);
         break;
     case file_target::ST_QUEUE:
-        TraceInfo(TRACE_IO, "queue_%u reading %llu bytes", file_ctx->qid, length);
+        TraceVerbose(TRACE_IO, "queue_%u reading %llu bytes", file_ctx->qid, length);
         io_st_read_dma(dev_ctx->qdma, file_ctx->qid, request, length);
         break;
     default:
@@ -1282,23 +1335,23 @@ void qdma_evt_io_write(
 
     switch (file_ctx->target) {
     case file_target::USER:
-        TraceInfo(TRACE_IO, "user BAR writing %llu bytes", length);
+        TraceVerbose(TRACE_IO, "AXI Master Lite BAR writing %llu bytes", length);
         io_write_bar(dev_ctx->qdma, qdma_bar_type::USER_BAR, request, length);
         break;
     case file_target::CONTROL:
-        TraceInfo(TRACE_IO, "control BAR writing %llu bytes", length);
+        TraceVerbose(TRACE_IO, "control BAR writing %llu bytes", length);
         io_write_bar(dev_ctx->qdma, qdma_bar_type::CONFIG_BAR, request, length);
         break;
     case file_target::BYPASS:
-        TraceInfo(TRACE_IO, "bypass BAR writing %llu bytes", length);
+        TraceVerbose(TRACE_IO, "AXI Bridge Master BAR writing %llu bytes", length);
         io_write_bar(dev_ctx->qdma, qdma_bar_type::BYPASS_BAR, request, length);
         break;
     case file_target::DMA_QUEUE:
-        TraceInfo(TRACE_IO, "queue_%u writing %llu bytes", file_ctx->qid, length);
+        TraceVerbose(TRACE_IO, "queue_%u writing %llu bytes", file_ctx->qid, length);
         io_mm_dma(dev_ctx->qdma, file_ctx->qid, request, length, WdfDmaDirectionWriteToDevice);
         break;
     case file_target::ST_QUEUE:
-        TraceInfo(TRACE_IO, "queue_%u writing %llu bytes", file_ctx->qid, length);
+        TraceVerbose(TRACE_IO, "queue_%u writing %llu bytes", file_ctx->qid, length);
         if (length == 0) {
             io_st_zero_write_dma(dev_ctx->qdma, file_ctx->qid, request, length, WdfDmaDirectionWriteToDevice);
         }

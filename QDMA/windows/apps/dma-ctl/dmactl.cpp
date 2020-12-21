@@ -26,9 +26,11 @@
 #define MAX_VALID_GLBL_IDX      15
 #define MAX_VALID_CMPT_SZ       3
 #define MAX_VALID_INTR_RING_VEC 8
+#define MAX_VALID_BAR_NUM       5
 #define MAX_CMPT_DESC_SZ        64
 #define MAX_INTR_RING_ENTRY_SZ  32
 #define MAX_DUMP_BUFF_SZ        64 * 1024
+#define MAX_REG_INFO_SZ         1024
 
 #pragma comment(lib, "setupapi.lib")
 
@@ -37,6 +39,13 @@ using std::string;
 using std::runtime_error;
 using std::cout;
 using namespace std;
+
+const char *desc_engine_mode[] = {
+    "Internal and Bypass mode",
+    "Bypass only mode"
+    "Inernal only mode",
+};
+
 
 static void help(void);
 
@@ -231,6 +240,14 @@ static int handle_devinfo(const char *dev_name)
         printf("%-35s : %s\n", "MM enabled", cmd.dev_info.out->mm_en ? "yes" : "no");
         printf("%-35s : %s\n", "Mailbox enabled", cmd.dev_info.out->mailbox_en ? "yes" : "no");
         printf("%-35s : %s\n", "MM completion enabled", cmd.dev_info.out->mm_cmpl_en ? "yes" : "no");
+        printf("%-35s : %s\n", "Debug Mode enabled", cmd.dev_info.out->debug_mode ? "yes" : "no");
+        if (cmd.dev_info.out->desc_eng_mode < sizeof(desc_engine_mode) / sizeof(desc_engine_mode[0])) {
+            printf("%-35s : %s\n", "Desc Engine Mode", desc_engine_mode[cmd.dev_info.out->desc_eng_mode]);
+        }
+        else {
+            printf("%-35s : %s\n", "Desc Engine Mode", "Invalid");
+        }
+
         printf("\n");
 
         delete cmd.dev_info.out;
@@ -1107,27 +1124,120 @@ static int handle_reg_dump(const char *dev_name, const int argc, char* argv[])
         unsigned int size = MAX_DUMP_BUFF_SZ;
 
         unsigned int out_size = sizeof(struct regdump_info_out) + size;
-        cmd.reg_info.out = (struct regdump_info_out *)new char[out_size];
-        cmd.reg_info.out->ret_len = 0;
+        cmd.reg_dump_info.out = (struct regdump_info_out *)new char[out_size];
+        cmd.reg_dump_info.out->ret_len = 0;
 
         ioctl_code = IOCTL_QDMA_REG_DUMP;
 
-        device.ioctl(ioctl_code, NULL, 0, cmd.reg_info.out, out_size);
+        device.ioctl(ioctl_code, NULL, 0, cmd.reg_dump_info.out, out_size);
+
+        if (!cmd.reg_dump_info.out->ret_len) {
+            printf("Failed to dump the registers\n");
+        }
+        else {
+            char *addr = (char *)&cmd.reg_dump_info.out->pbuffer[0];
+            for (auto i = 0; ((i < (int)cmd.reg_dump_info.out->ret_len) && (addr[i] != '\0')); i++) {
+                printf("%c", addr[i]);
+            }
+        }
+        delete[] cmd.reg_dump_info.out;
+    }
+    catch (const std::exception& e) {
+        delete[] cmd.reg_dump_info.out;
+        cout << "Failed to execute reg dump command.\n" << e.what() << '\n';
+    }
+
+    return 0;
+}
+
+
+static int handle_reg_info(const char* dev_name, const int argc, char* argv[])
+{
+    UNREFERENCED_PARAMETER(dev_name);
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+    auto i = 0;
+    bool bar_valid = false;
+    ioctl_cmd cmd = {};
+    DWORD ioctl_code = 0x0;
+
+    if (i == argc) {
+        cout << "insufficient arguments\n";
+        return 1;
+    }
+
+    while (i < argc) {
+        if (strcmp(argv[i], "bar") == 0) {
+            if ((argv[i + 1] == NULL) || (argv[i + 2] == NULL)) {
+                cout << "Insufficient options provided\n";
+                cout << "bar option needs atleast two arguments : <bar_num> <address> [num_regs <M>]\n";
+                return 1;
+            }
+
+            ++i;
+            cmd.reg_info.in.bar_no = strtoul(argv[i], NULL, 0);
+            if ((MAX_VALID_BAR_NUM < cmd.reg_info.in.bar_no) && 
+                ((cmd.reg_info.in.bar_no % 2) != 0)) {
+                cout << "Invalid BAR number provided : " << argv[i] << endl;
+                break;
+            }
+            cmd.reg_info.in.bar_no = cmd.reg_info.in.bar_no / 2;
+            bar_valid = true;
+
+            ++i;
+            cmd.reg_info.in.address = strtoul(argv[i], NULL, 0);
+
+            ++i;
+            if ((argv[i] != NULL) && (strcmp(argv[i], "num_regs")) == 0) {
+                cmd.reg_info.in.reg_cnt = strtoul(argv[i + 1], NULL, 0);
+                ++i;
+            }
+            else {
+                cmd.reg_info.in.reg_cnt = 1;
+            }
+        }
+        else {
+            cout << "Unknown command " << argv[i] << endl;
+            return 1;
+        }
+        ++i;
+    }
+
+    if (!bar_valid) {
+        return 1;
+    }
+
+    try {
+        device_file device;
+        auto ret = open_device(dev_name, device);
+        if (ret == false)
+            return 0;
+
+        unsigned int size = (cmd.reg_info.in.reg_cnt * MAX_REG_INFO_SZ);
+        unsigned int out_size = sizeof(struct reg_info_out) + size;
+        cmd.reg_info.out = (struct reg_info_out *)new char[out_size];
+        cmd.reg_info.out->ret_len = 0;
+
+        ioctl_code = IOCTL_QDMA_REG_INFO;
+
+        device.ioctl(ioctl_code, &cmd.reg_info.in, sizeof(cmd.reg_info.in),
+            cmd.reg_info.out, out_size);
 
         if (!cmd.reg_info.out->ret_len) {
             printf("Failed to dump the registers\n");
         }
         else {
-            char *addr = (char *)&cmd.reg_info.out->pbuffer[0];
-            for (auto i = 0; ((i < (int)cmd.reg_info.out->ret_len) && (addr[i] != '\0')); i++) {
-                printf("%c", addr[i]);
+            char* data = (char*)&cmd.reg_info.out->pbuffer[0];
+            for (i = 0; ((i < (int)cmd.reg_info.out->ret_len) &&
+                (data[i] != '\0')); i++) {
+                printf("%c", data[i]);
             }
         }
         delete[] cmd.reg_info.out;
     }
     catch (const std::exception& e) {
         delete[] cmd.reg_info.out;
-        cout << "Failed to execute reg dump command.\n" << e.what() << '\n';
+        cout << "Failed to execute reg info command.\n" << e.what() << '\n';
     }
 
     return 0;
@@ -1204,6 +1314,10 @@ static int handle_reg_cmds(const char *dev_name, const int argc, char* argv[])
         if (strcmp(argv[i], "dump") == 0) {
             ++i;
             return handle_reg_dump(dev_name, argc - i, argv + i);
+        }
+        else if (strcmp(argv[i], "info") == 0) {
+            ++i;
+            return handle_reg_info(dev_name, argc - i, argv + i);
         }
         else {
             cout << "Unknown command " << argv[i] << endl;
@@ -1304,6 +1418,7 @@ static void help(void)
     cout << "    intring dump vector <N> <start_idx> <end_idx> - interrupt ring dump for vector number <N>\n";
     cout << "                                                    for intrrupt entries :<start_idx> --- <end_idx>\n";
     cout << "    reg dump - register dump\n";
+    cout << "    reg info bar <N> addr [num_regs <M>] - dump detailed fields information of a register\n";
 }
 
 int __cdecl main(const int argc, char* argv[])

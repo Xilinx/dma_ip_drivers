@@ -14,14 +14,14 @@
  * under the License.
  */
 
-#ifndef EQDMA_ACCESS_H_
-#define EQDMA_ACCESS_H_
-
-#include "qdma_access_common.h"
+#ifndef __EQDMA_SOFT_ACCESS_H_
+#define __EQDMA_SOFT_ACCESS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "qdma_platform.h"
 
 /**
  * enum qdma_error_idx - qdma errors
@@ -191,8 +191,18 @@ struct eqdma_hw_err_info {
 	uint32_t stat_reg_addr;
 	uint32_t leaf_err_mask;
 	uint32_t global_err_mask;
+	void (*eqdma_hw_err_process)(void *dev_hndl);
 };
 
+#define EQDMA_OFFSET_VF_VERSION           0x5014
+#define EQDMA_OFFSET_VF_USER_BAR		  0x5018
+
+#define EQDMA_OFFSET_MBOX_BASE_PF         0x22400
+#define EQDMA_OFFSET_MBOX_BASE_VF         0x5000
+
+#define EQDMA_COMPL_CTXT_BADDR_HIGH_H_MASK             GENMASK_ULL(63, 38)
+#define EQDMA_COMPL_CTXT_BADDR_HIGH_L_MASK             GENMASK_ULL(37, 6)
+#define EQDMA_COMPL_CTXT_BADDR_LOW_MASK                GENMASK_ULL(5, 2)
 
 int eqdma_init_ctxt_memory(void *dev_hndl);
 
@@ -243,7 +253,8 @@ int eqdma_context_buf_len(uint8_t st,
 		enum qdma_dev_q_type q_type, uint32_t *buflen);
 
 int eqdma_hw_error_process(void *dev_hndl);
-const char *eqdma_hw_get_error_name(enum qdma_error_idx err_idx);
+const char *eqdma_hw_get_error_name(uint32_t err_idx);
+int eqdma_hw_error_enable(void *dev_hndl, uint32_t err_idx);
 
 int eqdma_read_dump_queue_context(void *dev_hndl,
 		uint16_t qid_hw,
@@ -258,19 +269,38 @@ int eqdma_get_user_bar(void *dev_hndl, uint8_t is_vf,
 		uint8_t func_id, uint8_t *user_bar);
 
 int eqdma_dump_config_reg_list(void *dev_hndl,
-		uint32_t num_regs,
+		uint32_t total_regs,
 		struct qdma_reg_data *reg_list,
 		char *buf, uint32_t buflen);
 
 int eqdma_read_reg_list(void *dev_hndl, uint8_t is_vf,
-		uint16_t reg_rd_slot,
+		uint16_t reg_rd_group,
 		uint16_t *total_regs,
 		struct qdma_reg_data *reg_list);
 
 int eqdma_set_default_global_csr(void *dev_hndl);
 
+int eqdma_global_csr_conf(void *dev_hndl, uint8_t index, uint8_t count,
+				uint32_t *csr_val,
+				enum qdma_global_csr_type csr_type,
+				enum qdma_hw_access_type access_type);
+
+int eqdma_global_writeback_interval_conf(void *dev_hndl,
+				enum qdma_wrb_interval *wb_int,
+				enum qdma_hw_access_type access_type);
+
+int eqdma_mm_channel_conf(void *dev_hndl, uint8_t channel, uint8_t is_c2h,
+				uint8_t enable);
+
+int eqdma_dump_reg_info(void *dev_hndl, uint32_t reg_addr,
+			uint32_t num_regs, char *buf, uint32_t buflen);
+
+uint32_t eqdma_get_config_num_regs(void);
+
+struct xreg_info *eqdma_get_config_regs(void);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* EQDMA_ACCESS_H_ */
+#endif /* __EQDMA_SOFT_ACCESS_H_ */

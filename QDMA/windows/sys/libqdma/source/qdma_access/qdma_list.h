@@ -14,8 +14,12 @@
  * under the License.
  */
 
-#ifndef QDMA_LIST_H_
-#define QDMA_LIST_H_
+#ifndef __QDMA_LIST_H_
+#define __QDMA_LIST_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * DOC: QDMA common library provided list implementation definitions
@@ -114,4 +118,8 @@ void qdma_list_insert_after(struct qdma_list_head *new_node,
  *****************************************************************************/
 void qdma_list_del(struct qdma_list_head *node);
 
-#endif /* QDMA_LIST_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __QDMA_LIST_H_ */

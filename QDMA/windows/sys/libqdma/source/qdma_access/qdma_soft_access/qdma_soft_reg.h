@@ -14,8 +14,8 @@
  * under the License.
  */
 
-#ifndef QDMA_SOFT_REG_H__
-#define QDMA_SOFT_REG_H__
+#ifndef __QDMA_SOFT_REG_H__
+#define __QDMA_SOFT_REG_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,56 +65,7 @@ extern "C" {
 			(0xFFFFFFFFFFFFFFFF >> (BITS_PER_LONG_LONG - 1 - (h))))
 
 
-/*
- * Returns the number of trailing 0s in x, starting at LSB.
- * Same as gcc __builtin_ffsll function
- */
-#ifdef GCC_COMPILER
-static inline uint32_t get_trailing_zeros(uint64_t x)
-{
-	uint32_t rv =
-		__builtin_ffsll(x) - 1;
-	return rv;
-}
-#else
-static inline uint32_t get_trailing_zeros(uint64_t value)
-{
-	uint32_t pos = 0;
-
-	if ((value & 0xffffffff) == 0) {
-		pos += 32;
-		value >>= 32;
-	}
-	if ((value & 0xffff) == 0) {
-		pos += 16;
-		value >>= 16;
-	}
-	if ((value & 0xff) == 0) {
-		pos += 8;
-		value >>= 8;
-	}
-	if ((value & 0xf) == 0) {
-		pos += 4;
-		value >>= 4;
-	}
-	if ((value & 0x3) == 0) {
-		pos += 2;
-		value >>= 2;
-	}
-	if ((value & 0x1) == 0)
-		pos += 1;
-
-	return pos;
-}
-#endif
-
-#define FIELD_SHIFT(mask)       get_trailing_zeros(mask)
-#define FIELD_SET(mask, val)    ((val << FIELD_SHIFT(mask)) & mask)
-#define FIELD_GET(mask, reg)    ((reg & mask) >> FIELD_SHIFT(mask))
-
-/* polling a register */
-#define	QDMA_REG_POLL_DFLT_INTERVAL_US	10		    /* 10us per poll */
-#define	QDMA_REG_POLL_DFLT_TIMEOUT_US	(500*1000)	/* 500ms */
+#define DEBGFS_LINE_SZ			(81)
 
 
 #define QDMA_H2C_THROT_DATA_THRESH       0x4000
@@ -125,28 +76,6 @@ static inline uint32_t get_trailing_zeros(uint64_t value)
 /*
  * Q Context programming (indirect)
  */
-enum ind_ctxt_cmd_op {
-	QDMA_CTXT_CMD_CLR,
-	QDMA_CTXT_CMD_WR,
-	QDMA_CTXT_CMD_RD,
-	QDMA_CTXT_CMD_INV
-};
-
-enum ind_ctxt_cmd_sel {
-	QDMA_CTXT_SEL_SW_C2H,
-	QDMA_CTXT_SEL_SW_H2C,
-	QDMA_CTXT_SEL_HW_C2H,
-	QDMA_CTXT_SEL_HW_H2C,
-	QDMA_CTXT_SEL_CR_C2H,
-	QDMA_CTXT_SEL_CR_H2C,
-	QDMA_CTXT_SEL_CMPT,
-	QDMA_CTXT_SEL_PFTCH,
-	QDMA_CTXT_SEL_INT_COAL,
-	QDMA_CTXT_SEL_PASID_RAM_LOW,
-	QDMA_CTXT_SEL_PASID_RAM_HIGH,
-	QDMA_CTXT_SEL_TIMER,
-	QDMA_CTXT_SEL_FMAP,
-};
 
 #define QDMA_REG_IND_CTXT_REG_COUNT                         8
 #define QDMA_REG_IND_CTXT_WCNT_1                            1
@@ -197,9 +126,7 @@ enum ind_ctxt_cmd_sel {
 #define QDMA_SW_CTXT_W0_IRQ_ARM_MASK                        BIT(16)
 #define QDMA_SW_CTXT_W0_PIDX                                GENMASK(15, 0)
 
-/** QDMA_IND_REG_SEL_PFTCH */
-#define QDMA_PFTCH_CTXT_SW_CRDT_GET_H_MASK                  GENMASK(15, 3)
-#define QDMA_PFTCH_CTXT_SW_CRDT_GET_L_MASK                  GENMASK(2, 0)
+
 
 #define QDMA_PFTCH_CTXT_W1_VALID_MASK                       BIT(13)
 #define QDMA_PFTCH_CTXT_W1_SW_CRDT_H_MASK                   GENMASK(12, 0)
@@ -211,11 +138,8 @@ enum ind_ctxt_cmd_sel {
 #define QDMA_PFTCH_CTXT_W0_BUF_SIZE_IDX_MASK                GENMASK(4, 1)
 #define QDMA_PFTCH_CTXT_W0_BYPASS_MASK                      BIT(0)
 
-/** QDMA_IND_REG_SEL_CMPT */
-#define QDMA_COMPL_CTXT_BADDR_GET_H_MASK                    GENMASK_ULL(63, 38)
-#define QDMA_COMPL_CTXT_BADDR_GET_L_MASK                    GENMASK_ULL(37, 12)
-#define QDMA_COMPL_CTXT_PIDX_GET_H_MASK                     GENMASK(15, 4)
-#define QDMA_COMPL_CTXT_PIDX_GET_L_MASK                     GENMASK(3, 0)
+
+
 
 #define QDMA_COMPL_CTXT_W4_INTR_AGGR_MASK                   BIT(15)
 #define QDMA_COMPL_CTXT_W4_INTR_VEC_MASK                    GENMASK(14, 4)
@@ -256,9 +180,7 @@ enum ind_ctxt_cmd_sel {
 #define QDMA_CR_CTXT_W0_CREDT_MASK                          GENMASK(15, 0)
 
 /** QDMA_IND_REG_SEL_INTR */
-#define QDMA_INTR_CTXT_BADDR_GET_H_MASK                     GENMASK_ULL(63, 61)
-#define QDMA_INTR_CTXT_BADDR_GET_M_MASK                     GENMASK_ULL(60, 29)
-#define QDMA_INTR_CTXT_BADDR_GET_L_MASK                     GENMASK_ULL(28, 12)
+
 
 #define QDMA_INTR_CTXT_W2_AT_MASK                           BIT(18)
 #define QDMA_INTR_CTXT_W2_PIDX_MASK                         GENMASK(17, 6)
@@ -271,17 +193,9 @@ enum ind_ctxt_cmd_sel {
 #define QDMA_INTR_CTXT_W0_VEC_ID_MASK                       GENMASK(11, 1)
 #define QDMA_INTR_CTXT_W0_VALID_MASK                        BIT(0)
 
-/** Constants */
-#define QDMA_NUM_RING_SIZES                                 16
-#define QDMA_NUM_C2H_TIMERS                                 16
-#define QDMA_NUM_C2H_BUFFER_SIZES                           16
-#define QDMA_NUM_C2H_COUNTERS                               16
-#define QDMA_MM_CONTROL_RUN                                 0x1
-#define QDMA_MM_CONTROL_STEP                                0x100
-#define QDMA_MAGIC_NUMBER                                   0x1fd3
-#define QDMA_PIDX_STEP                                      0x10
-#define QDMA_CMPT_CIDX_STEP                                 0x10
-#define QDMA_INT_CIDX_STEP                                  0x10
+
+
+
 
 /* ------------------------ QDMA_TRQ_SEL_GLBL (0x00200)-------------------*/
 #define QDMA_OFFSET_GLBL_RNG_SZ                             0x204
@@ -459,9 +373,7 @@ enum ind_ctxt_cmd_sel {
 #define QDMA_OFFSET_GLBL2_CHANNEL_FUNC_RET                  0x12C
 #define QDMA_OFFSET_GLBL2_SYSTEM_ID                         0x130
 #define QDMA_OFFSET_GLBL2_MISC_CAP                          0x134
-#define     QDMA_GLBL2_MM_CMPT_EN_MASK                      BIT(2)
-#define     QDMA_GLBL2_FLR_PRESENT_MASK                     BIT(1)
-#define     QDMA_GLBL2_MAILBOX_EN_MASK                      BIT(0)
+
 #define     QDMA_GLBL2_DEVICE_ID_MASK                       GENMASK(31, 28)
 #define     QDMA_GLBL2_VIVADO_RELEASE_MASK                  GENMASK(27, 24)
 #define     QDMA_GLBL2_VERSAL_IP_MASK                       GENMASK(23, 20)
@@ -667,4 +579,4 @@ enum ind_ctxt_cmd_sel {
 }
 #endif
 
-#endif /* ifndef QDMA_SOFT_REG_H__ */
+#endif /* __QDMA_SOFT_REG_H__ */

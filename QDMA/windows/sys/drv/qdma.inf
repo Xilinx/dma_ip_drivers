@@ -23,7 +23,7 @@ Class				= %ClassName%
 ClassGuid			= {a3a4c1ce-5a80-452c-9b51-a98edd3378d1}
 Provider			= %ManufacturerName%
 CatalogFile			= QDMA.cat
-DriverVer			= 08/01/2019, 2019.2.5.9 ;Format : year.quarter_no.drv_ver.libqdma_ver
+DriverVer			= 10/15/2020, 2020.2.0.0 ;Format : year.quarter_no.drv_ver.libqdma_ver
 DriverPackageType	= PlugAndPlay
 
 [DestinationDirs]

@@ -35,22 +35,23 @@ NTSTATUS intr_queue::create(
         buffer_size = ((buffer_size / PAGE_SIZE) + 1) * PAGE_SIZE;
     }
 
-    TraceVerbose(TRACE_INTR, "Buffer size : %llu, Ring size : %llu",
-        buffer_size, size);
+    TraceVerbose(TRACE_INTR, "%s: Intr Queue : %d, Buffer size : %llu, Ring size : %llu",
+        qdma->dev_conf.name, idx_abs, buffer_size, size);
 
     capacity = buffer_size / sizeof(intr_entry);
     npages = buffer_size / PAGE_SIZE;
     color = 1;
 
-    TraceVerbose(TRACE_INTR, "Page size : %llu, Capacity : %llu",
-        npages, capacity);
+    TraceVerbose(TRACE_INTR, "Intr Queue : %d, Page size : %llu, Capacity : %llu",
+        idx_abs, npages, capacity);
 
     auto status = WdfCommonBufferCreate(dma_enabler,
                                         buffer_size,
                                         WDF_NO_OBJECT_ATTRIBUTES,
                                         &buffer);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_INTR, "Interrupt WdfCommonBufferCreate failed: %!STATUS!", status);
+        TraceError(TRACE_INTR, "%s: Interrupt WdfCommonBufferCreate failed for "
+            "intr queue : %d, : %!STATUS!", qdma->dev_conf.name, idx_abs, status);
         return status;
     }
 
@@ -85,7 +86,7 @@ PFORCEINLINE void intr_queue::update_csr_cidx(
     queue_pair *q,
     UINT32 new_cidx)
 {
-    TraceVerbose(TRACE_INTR, "Intr queue_%u updating c2h pidx to %u", idx, new_cidx);
+    TraceVerbose(TRACE_INTR, "%s: Intr queue_%u updating c2h pidx to %u", qdma->dev_conf.name, idx, new_cidx);
     intr_cidx_info.rng_idx = (UINT8)idx_abs;
     intr_cidx_info.sw_cidx = (UINT16)new_cidx;
 
@@ -103,8 +104,8 @@ NTSTATUS intr_queue::intring_dump(qdma_intr_ring_info *intring_info)
 
     if ((intring_info->start_idx >= size) ||
         (intring_info->end_idx >= size)) {
-        TraceError(TRACE_INTR, "Intr Ring index Range is incorrect : start : %d, end : %d, RING SIZE : %d",
-            intring_info->start_idx, intring_info->end_idx, size);
+        TraceError(TRACE_INTR, "%s: Intr Ring index Range is incorrect : start : %d, end : %d, RING SIZE : %d",
+            qdma->dev_conf.name, intring_info->start_idx, intring_info->end_idx, size);
         return STATUS_ACCESS_VIOLATION;
     }
 
@@ -183,9 +184,9 @@ VOID EvtErrorInterruptDpc(
     UNREFERENCED_PARAMETER(device);
     UNREFERENCED_PARAMETER(interrupt);
 
-    TraceVerbose(TRACE_INTR, "Error IRQ Fired on Master PF");
+    TraceError(TRACE_INTR, "Error IRQ Fired on Master PF");
 
-    auto irq_ctx = get_irq_context(interrupt);
+    auto irq_ctx = get_qdma_irq_context(interrupt);
     if (nullptr == irq_ctx) {
         TraceError(TRACE_INTR, "Err: null irq_ctx in EvtErrorInterruptDpc");
         return;
@@ -196,6 +197,36 @@ VOID EvtErrorInterruptDpc(
     qdma_dev->hw.qdma_hw_error_intr_rearm(qdma_dev);
 
     return;
+}
+
+NTSTATUS EvtUserInterruptEnable(
+    WDFINTERRUPT interrupt,
+    WDFDEVICE device)
+{
+    UNREFERENCED_PARAMETER(device);
+    auto irq_ctx = get_qdma_irq_context(interrupt);
+    if (irq_ctx->qdma_dev->drv_conf.user_interrupt_enable_handler) {
+        irq_ctx->qdma_dev->drv_conf.user_interrupt_enable_handler(irq_ctx->vector_id,
+            irq_ctx->qdma_dev->drv_conf.user_data);
+    }
+
+    TraceVerbose(TRACE_INTR, "%s: --> %s", irq_ctx->qdma_dev->dev_conf.name, __func__);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS EvtUserInterruptDisable(
+    WDFINTERRUPT interrupt,
+    WDFDEVICE device)
+{
+    UNREFERENCED_PARAMETER(device);
+    auto irq_ctx = get_qdma_irq_context(interrupt);
+    if (irq_ctx->qdma_dev->drv_conf.user_interrupt_disable_handler) {
+        irq_ctx->qdma_dev->drv_conf.user_interrupt_disable_handler(irq_ctx->vector_id,
+            irq_ctx->qdma_dev->drv_conf.user_data);
+    }
+
+    TraceVerbose(TRACE_INTR, "%s: %s <--", irq_ctx->qdma_dev->dev_conf.name, __func__);
+    return STATUS_SUCCESS;
 }
 
 BOOLEAN EvtUserInterruptIsr(
@@ -215,9 +246,14 @@ VOID EvtUserInterruptDpc(
     WDFOBJECT device)
 {
     UNREFERENCED_PARAMETER(device);
-    UNREFERENCED_PARAMETER(interrupt);
+    auto irq_ctx = get_qdma_irq_context(interrupt);
 
-    TraceVerbose(TRACE_INTR, "User Interrupt DPC SUCCESSFull");
+    TraceVerbose(TRACE_INTR, "%s: User Interrupt DPC for vector : %u", irq_ctx->qdma_dev->dev_conf.name, irq_ctx->vector_id);
+
+    if (irq_ctx->qdma_dev->drv_conf.user_isr_handler) {
+        irq_ctx->qdma_dev->drv_conf.user_isr_handler(irq_ctx->vector_id,
+            irq_ctx->qdma_dev->drv_conf.user_data);
+    }
 
     return;
 }
@@ -227,7 +263,7 @@ BOOLEAN EvtDataInterruptIsr(
     ULONG MessageID)
 {
     UNREFERENCED_PARAMETER(MessageID);
-    auto irq_ctx = get_irq_context(interrupt);
+    auto irq_ctx = get_qdma_irq_context(interrupt);
     auto qdma_dev = irq_ctx->qdma_dev;
 
     if ((irq_ctx->intr_type == interrupt_type::LEGACY) &&
@@ -273,7 +309,7 @@ BOOLEAN schedule_dpc(queue_pair* q, UINT8 is_c2h, CCHAR active_processors)
 }
 
 void cpm_handle_indirect_interrupt(
-    PIRQ_CONTEXT irq_ctx)
+    PQDMA_IRQ_CONTEXT irq_ctx)
 {
     queue_pair *q = nullptr;
     UINT8 is_c2h = 0;
@@ -281,20 +317,26 @@ void cpm_handle_indirect_interrupt(
 
     auto intr_queue = irq_ctx->intr_q;
     if (nullptr == intr_queue) {
-        TraceError(TRACE_INTR, "Invalid vector %lu was called in coal mode", irq_ctx->vector_id);
+        TraceError(TRACE_INTR, "%s: Invalid vector %lu was called in coal mode", 
+            irq_ctx->qdma_dev->dev_conf.name, irq_ctx->vector_id);
         return;
     }
 
     const auto ring_va = static_cast<cpm_intr_entry *>(intr_queue->buffer_va);
 
-    TraceVerbose(TRACE_INTR, "CPM Coal queue SW Index : %u", intr_queue->sw_index);
-    TraceVerbose(TRACE_INTR, "CPM Intr PIDX : %u, Intr CIDX : %u", ring_va[intr_queue->sw_index].desc_pidx, ring_va[intr_queue->sw_index].desc_cidx);
+    TraceVerbose(TRACE_INTR, "%s: CPM Coal queue SW Index : %u", 
+        irq_ctx->qdma_dev->dev_conf.name, intr_queue->sw_index);
+    TraceVerbose(TRACE_INTR, "%s: CPM Intr PIDX : %u, Intr CIDX : %u", 
+        irq_ctx->qdma_dev->dev_conf.name, ring_va[intr_queue->sw_index].desc_pidx, 
+        ring_va[intr_queue->sw_index].desc_cidx);
 
     while (ring_va[intr_queue->sw_index].color == intr_queue->color) {
         q = irq_ctx->qdma_dev->qdma_get_queue_pair_by_hwid(ring_va[intr_queue->sw_index].qid);
         if (nullptr == q) {
-            TraceError(TRACE_INTR, "Queue not found hw qid : %u Intr qid : %u",
-                ring_va[intr_queue->sw_index].qid, intr_queue->idx);
+            TraceError(TRACE_INTR, "%s: Queue not found hw qid : %u Intr qid : %u",
+                irq_ctx->qdma_dev->dev_conf.name, 
+                ring_va[intr_queue->sw_index].qid, 
+                intr_queue->idx);
             intr_queue->advance_sw_index();
             continue;
         }
@@ -305,7 +347,9 @@ void cpm_handle_indirect_interrupt(
 
         intr_queue->advance_sw_index();
 
-        TraceVerbose(TRACE_INTR, "CPM QUEUE ID : %u, is_c2h : %d", ring_va[intr_queue->sw_index].qid, is_c2h);
+        TraceVerbose(TRACE_INTR, "%s: CPM QUEUE ID : %u, is_c2h : %d", 
+            irq_ctx->qdma_dev->dev_conf.name, 
+            ring_va[intr_queue->sw_index].qid, is_c2h);
     }
 
     if (q) {
@@ -314,7 +358,7 @@ void cpm_handle_indirect_interrupt(
 }
 
 void handle_indirect_interrupt(
-    PIRQ_CONTEXT irq_ctx)
+    PQDMA_IRQ_CONTEXT irq_ctx)
 {
     queue_pair *q = nullptr;
     UINT8 is_c2h = 0;
@@ -322,19 +366,25 @@ void handle_indirect_interrupt(
 
     auto intr_queue = irq_ctx->intr_q;
     if (nullptr == intr_queue) {
-        TraceError(TRACE_INTR, "Invalid vector %lu was called in coal mode", irq_ctx->vector_id);
+        TraceError(TRACE_INTR, "%s: Invalid vector %lu was called in coal mode", 
+            irq_ctx->qdma_dev->dev_conf.name, irq_ctx->vector_id);
         return;
     }
 
     const auto ring_va = static_cast<intr_entry *>(intr_queue->buffer_va);
 
-    TraceVerbose(TRACE_INTR, "Coal queue SW Index : %u", intr_queue->sw_index);
-    TraceVerbose(TRACE_INTR, "Intr PIDX : %u, Intr CIDX : %u", ring_va[intr_queue->sw_index].desc_pidx, ring_va[intr_queue->sw_index].desc_cidx);
+    TraceVerbose(TRACE_INTR, "%s: Coal queue SW Index : %u", 
+        irq_ctx->qdma_dev->dev_conf.name, intr_queue->sw_index);
+    TraceVerbose(TRACE_INTR, "%s: Intr PIDX : %u, Intr CIDX : %u", 
+        irq_ctx->qdma_dev->dev_conf.name, 
+        ring_va[intr_queue->sw_index].desc_pidx, 
+        ring_va[intr_queue->sw_index].desc_cidx);
 
     while (ring_va[intr_queue->sw_index].color == intr_queue->color) {
         q = irq_ctx->qdma_dev->qdma_get_queue_pair_by_hwid(ring_va[intr_queue->sw_index].qid);
         if (nullptr == q) {
-            TraceError(TRACE_INTR, "Queue not found hw qid : %u Intr qid : %u",
+            TraceError(TRACE_INTR, "%s: Queue not found hw qid : %u Intr qid : %u",
+                irq_ctx->qdma_dev->dev_conf.name, 
                 ring_va[intr_queue->sw_index].qid, intr_queue->idx);
             intr_queue->advance_sw_index();
             continue;
@@ -346,7 +396,8 @@ void handle_indirect_interrupt(
 
         intr_queue->advance_sw_index();
 
-        TraceVerbose(TRACE_INTR, "QUEUE ID : %u, is_c2h : %d", ring_va[intr_queue->sw_index].qid, is_c2h);
+        TraceVerbose(TRACE_INTR, "%s: QUEUE ID : %u, is_c2h : %d", 
+            irq_ctx->qdma_dev->dev_conf.name, ring_va[intr_queue->sw_index].qid, is_c2h);
     }
 
     if (q) {
@@ -355,7 +406,7 @@ void handle_indirect_interrupt(
 }
 
 void handle_direct_interrupt(
-    PIRQ_CONTEXT irq_ctx)
+    PQDMA_IRQ_CONTEXT irq_ctx)
 {
     CCHAR active_processors = (CCHAR)KeQueryActiveProcessorCount(NULL);
     PLIST_ENTRY entry;
@@ -364,7 +415,8 @@ void handle_direct_interrupt(
     LIST_FOR_EACH_ENTRY_SAFE(&irq_ctx->queue_list_head, temp, entry) {
         queue_pair *queue = CONTAINING_RECORD(entry, queue_pair, list_entry);
 
-        TraceVerbose(TRACE_INTR, "SERVICING QUEUE : %u IN DIRECT INTERRUPT", queue->idx);
+        TraceVerbose(TRACE_INTR, "%s: SERVICING QUEUE : %u IN DIRECT INTERRUPT", 
+            irq_ctx->qdma_dev->dev_conf.name, queue->idx);
         schedule_dpc(queue, 0 /* H2C */, active_processors);
         schedule_dpc(queue, 1 /* C2H */, active_processors);
 
@@ -379,22 +431,25 @@ int qdma_device::setup_legacy_vector(queue_pair& q)
 
     WdfInterruptAcquireLock(irq_mgr.irq[legacy_vec]);
 
-    auto irq_ctx = get_irq_context(irq_mgr.irq[legacy_vec]);
+    auto irq_ctx = get_qdma_irq_context(irq_mgr.irq[legacy_vec]);
     if (false == IS_LIST_EMPTY(&irq_ctx->queue_list_head)) {
-        TraceError(TRACE_INTR, "Only One queue is supported in legacy interrupt mode");
+        TraceError(TRACE_INTR, "%s: Only One queue is supported "
+            "in legacy interrupt mode", dev_conf.name);
         status = -(STATUS_UNSUCCESSFUL);
         goto ErrExit;
     }
 
     if (hw.qdma_legacy_intr_conf == nullptr) {
-        TraceError(TRACE_INTR, "legacy interrupt mode not supported");
+        TraceError(TRACE_INTR, "%s: legacy interrupt mode "
+            "not supported", dev_conf.name);
         status = -(STATUS_UNSUCCESSFUL);
         goto ErrExit;
     }
 
     ret = hw.qdma_legacy_intr_conf(this, DISABLE);
     if (ret < 0) {
-        TraceError(TRACE_INTR, "qdma_disable_legacy_interrupt failed, ret : %d", ret);
+        TraceError(TRACE_INTR, "%s: qdma_disable_legacy_interrupt "
+            "failed, ret : %d", dev_conf.name, ret);
         status = hw.qdma_get_error_code(ret);
         goto ErrExit;
     }
@@ -403,12 +458,14 @@ int qdma_device::setup_legacy_vector(queue_pair& q)
 
     ret = hw.qdma_legacy_intr_conf(this, ENABLE);
     if (ret < 0) {
-        TraceError(TRACE_INTR, "qdma_enable_legacy_interrupt failed, ret : %d", ret);
+        TraceError(TRACE_INTR, "%s: qdma_enable_legacy_interrupt "
+            "failed, ret : %d", dev_conf.name, ret);
         status = hw.qdma_get_error_code(ret);
         goto ErrExit;
     }
 
-    TraceVerbose(TRACE_INTR, "Vector Allocated [0] for legacy interrupt mode");
+    TraceVerbose(TRACE_INTR, "%s: Vector Allocated [0] for legacy interrupt mode", 
+        dev_conf.name);
 
     WdfInterruptReleaseLock(irq_mgr.irq[legacy_vec]);
 
@@ -430,7 +487,7 @@ UINT32 qdma_device::alloc_msix_vector_position(queue_pair& q)
     vector = irq_mgr.data_vector_id_start;
     weight = irq_mgr.irq_weight[vector];
 
-    for (UINT32 i = irq_mgr.data_vector_id_start + 1; i < irq_mgr.data_vector_id_end; ++i) {
+    for (UINT32 i = irq_mgr.data_vector_id_start + 1; i <= irq_mgr.data_vector_id_end; ++i) {
         if (irq_mgr.irq_weight[i] < weight) {
             weight = irq_mgr.irq_weight[i];
             vector = i;
@@ -441,22 +498,22 @@ UINT32 qdma_device::alloc_msix_vector_position(queue_pair& q)
 
     WdfSpinLockRelease(irq_mgr.lock);
 
-    if (op_mode == queue_op_mode::INTR_MODE) {
+    if (drv_conf.operation_mode == queue_op_mode::INTR_MODE) {
         WdfInterruptAcquireLock(irq_mgr.irq[vector]);
 
-        auto irq_ctx = get_irq_context(irq_mgr.irq[vector]);
+        auto irq_ctx = get_qdma_irq_context(irq_mgr.irq[vector]);
         LIST_ADD_TAIL(&irq_ctx->queue_list_head, &queue_pairs[q.idx].list_entry);
 
         WdfInterruptReleaseLock(irq_mgr.irq[vector]);
     }
-    else if (op_mode == queue_op_mode::INTR_COAL_MODE) {
+    else if (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) {
         /* For indirect interrupt, return absolute interrupt queue index */
-        auto irq_ctx = get_irq_context(irq_mgr.irq[vector]);
+        auto irq_ctx = get_qdma_irq_context(irq_mgr.irq[vector]);
         vector = irq_ctx->intr_q->idx_abs;
     }
 
-    TraceVerbose(TRACE_INTR, "Vector Allocated [%u]. Weight : %u",
-        vector, irq_mgr.irq_weight[vector]);
+    TraceVerbose(TRACE_INTR, "%s: Vector Allocated [%u]. Weight : %u",
+        dev_conf.name, vector, irq_mgr.irq_weight[vector]);
 
     return vector;
 }
@@ -467,11 +524,11 @@ void qdma_device::free_msix_vector_position(
     UINT32 vector)
 {
     auto RELATIVE_INTR_QID = [](auto q) { return q % (UINT32)qdma_max_msix_vectors_per_pf; };
-    if (op_mode == queue_op_mode::INTR_COAL_MODE)
+    if (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE)
         vector = RELATIVE_INTR_QID(vector);
-    else if (op_mode == queue_op_mode::INTR_MODE) {
+    else if (drv_conf.operation_mode == queue_op_mode::INTR_MODE) {
         WdfInterruptAcquireLock(irq_mgr.irq[vector]);
-        auto irq_ctx = get_irq_context(irq_mgr.irq[vector]);
+        auto irq_ctx = get_qdma_irq_context(irq_mgr.irq[vector]);
         PLIST_ENTRY entry;
         LIST_FOR_EACH_ENTRY(&irq_ctx->queue_list_head, entry) {
             queue_pair *queue = CONTAINING_RECORD(entry, queue_pair, list_entry);
@@ -487,7 +544,8 @@ void qdma_device::free_msix_vector_position(
 
     --irq_mgr.irq_weight[vector];
 
-    TraceVerbose(TRACE_INTR, "Vector Released. New weight : %u", irq_mgr.irq_weight[vector]);
+    TraceVerbose(TRACE_INTR, "%s: Vector Released. New weight : %u", 
+        dev_conf.name, irq_mgr.irq_weight[vector]);
     WdfSpinLockRelease(irq_mgr.lock);
 }
 
@@ -520,7 +578,7 @@ void qdma_device::clear_legacy_vector(
 
     WdfInterruptAcquireLock(irq_mgr.irq[vector]);
 
-    auto irq_ctx = get_irq_context(irq_mgr.irq[vector]);
+    auto irq_ctx = get_qdma_irq_context(irq_mgr.irq[vector]);
     auto queue_item = irq_ctx->queue_list_head;
 
     if (hw.qdma_legacy_intr_conf != nullptr) {
@@ -532,32 +590,35 @@ void qdma_device::clear_legacy_vector(
 }
 
 NTSTATUS qdma_device::configure_irq(
-    PIRQ_CONTEXT irq_context,
+    PQDMA_IRQ_CONTEXT irq_context,
     ULONG vec)
 {
     irq_context->vector_id = vec;
     irq_context->qdma_dev = this;
 
-    irq_mgr.irq_weight[vec] = 0u;
+    if ((vec >= irq_mgr.data_vector_id_start) && (vec <= irq_mgr.data_vector_id_end)) {
+        /* Data interrupts */
+        irq_mgr.irq_weight[vec] = 0u;
 
-    if (op_mode == queue_op_mode::INTR_COAL_MODE) { /* Indirect interrupt */
-        irq_context->intr_q = &irq_mgr.intr_q[vec];
-        irq_mgr.intr_q[vec].vector = vec;
-        irq_context->is_coal = true;
-        if (hw_version_info.ip_type == QDMA_VERSAL_HARD_IP) {
-            irq_context->interrupt_handler = &cpm_handle_indirect_interrupt;
+        if (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE) { /* Indirect interrupt */
+            irq_context->intr_q = &irq_mgr.intr_q[vec];
+            irq_mgr.intr_q[vec].vector = vec;
+            irq_context->is_coal = true;
+            if (hw_version_info.ip_type == QDMA_VERSAL_HARD_IP) {
+                irq_context->interrupt_handler = &cpm_handle_indirect_interrupt;
+            }
+            else {
+                irq_context->interrupt_handler = &handle_indirect_interrupt;
+            }
         }
-        else {
-            irq_context->interrupt_handler = &handle_indirect_interrupt;
-        }
-    }
-    else { /* Direct interrupt */
-        INIT_LIST_HEAD(&irq_context->queue_list_head);
+        else { /* Direct interrupt */
+            INIT_LIST_HEAD(&irq_context->queue_list_head);
 
-        irq_context->is_coal = false;
-        irq_context->interrupt_handler = &handle_direct_interrupt;
+            irq_context->is_coal = false;
+            irq_context->interrupt_handler = &handle_direct_interrupt;
+        }
+        irq_context->intr_type = irq_mgr.intr_type;
     }
-    irq_context->intr_type = irq_mgr.intr_type;
 
     return STATUS_SUCCESS;
 }
@@ -565,31 +626,53 @@ NTSTATUS qdma_device::configure_irq(
 NTSTATUS qdma_device::arrange_msix_vector_types(void)
 {
     ULONG vector = 0;
+    ULONG req_vec;
+    ULONG num_msix_vectors = pcie.get_num_msix_vectors();
 
-    if (dev_conf.is_master_pf) { /* Master PF */
-        TraceInfo(TRACE_INTR, "Setting Error Interrupt by Master PF\n");
-        irq_mgr.err_vector_id = vector;
-        ++vector;
-    }
-
-    irq_mgr.user_vector_id = vector;
-    ++vector;
-
-    if (pcie.get_num_msix_vectors() <= vector) {
+    if (num_msix_vectors == 0ul) {
+        TraceError(TRACE_INTR, "%s: Not enough MSIx vectors : [%u]", 
+            dev_conf.name, num_msix_vectors);
         return STATUS_UNSUCCESSFUL;
     }
 
+    /** Reserve one vector for Error Interrupt which reports out 
+      * the QDMA internal HW errors to the user 
+      * 
+      * Master PF will own this option and hence other PFs dont need
+      * to reserve vector for error interrupt
+      */
+    if (dev_conf.is_master_pf) { /* Master PF */
+        TraceInfo(TRACE_INTR, "%s: Setting Error Interrupt by Master PF", 
+            dev_conf.name);
+        irq_mgr.err_vector_id = vector;
+        ++vector;
+        /** Error interrupt consumes 1 vector from data interrupt vectors */
+        drv_conf.data_msix_max = drv_conf.data_msix_max - 1;
+    }
+
+    req_vec = vector + drv_conf.data_msix_max + drv_conf.user_msix_max;
+
+    if (num_msix_vectors < req_vec) {
+        TraceError(TRACE_INTR, "%s: Not enough MSIx vectors : [%u]. Requested : [%u]\n",
+            dev_conf.name, num_msix_vectors, req_vec);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    irq_mgr.user_vector_id_start = vector;
+    irq_mgr.user_vector_id_end = vector + drv_conf.user_msix_max - 1 ;
+    vector += drv_conf.user_msix_max;
+
     irq_mgr.data_vector_id_start = vector;
 
-    if (op_mode == queue_op_mode::INTR_COAL_MODE)
-        irq_mgr.data_vector_id_end = irq_mgr.data_vector_id_start + IND_INTR_MAX_DATA_VECTORS;
+    if (drv_conf.operation_mode == queue_op_mode::INTR_COAL_MODE)
+        irq_mgr.data_vector_id_end = irq_mgr.data_vector_id_start + IND_INTR_MAX_DATA_VECTORS - 1;
     else
-        irq_mgr.data_vector_id_end = pcie.get_num_msix_vectors();
+        irq_mgr.data_vector_id_end = vector + drv_conf.data_msix_max - 1;
 
-    TraceVerbose(TRACE_INTR, "Function: %0X, Err vec : %lu, User vec : %lu Data vec : %u, Tot : %lu",
-        dev_conf.dev_sbdf.sbdf.fun_no, irq_mgr.err_vector_id,
-        irq_mgr.user_vector_id, irq_mgr.data_vector_id_start,
-        irq_mgr.data_vector_id_end);
+    TraceVerbose(TRACE_INTR, "%s: Function: %0X, Err vec : %lu, User vec : [%u : %u] Data vec : [%u : %u]",
+        dev_conf.name, dev_conf.dev_sbdf.sbdf.fun_no, irq_mgr.err_vector_id,
+        irq_mgr.user_vector_id_start, irq_mgr.user_vector_id_end,
+        irq_mgr.data_vector_id_start, irq_mgr.data_vector_id_end);
 
     return STATUS_SUCCESS;
 }
@@ -605,11 +688,12 @@ NTSTATUS qdma_device::setup_msix_interrupt(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR resource_translated;
 
     ULONG numResources = WdfCmResourceListGetCount(resources_translated);
-    TraceInfo(TRACE_INTR, "Total number of resource : %lu", numResources);
+    TraceVerbose(TRACE_INTR, "%s: Total number of resource : %lu", 
+        dev_conf.name, numResources);
 
     status = arrange_msix_vector_types();
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_INTR, "Failed to arrange MSIx vectors");
+        TraceError(TRACE_INTR, "%s: Failed to arrange MSIx vectors", dev_conf.name);
         return status;
     }
 
@@ -623,25 +707,38 @@ NTSTATUS qdma_device::setup_msix_interrupt(
 
         WDF_INTERRUPT_CONFIG config;
 
-        if (irq_mgr.user_vector_id == vec) {
-            WDF_INTERRUPT_CONFIG_INIT(&config, EvtUserInterruptIsr, EvtUserInterruptDpc);
-        }
-        else if ((irq_mgr.err_vector_id == vec) && (dev_conf.is_master_pf)) {
+        if ((irq_mgr.err_vector_id == vec) && (dev_conf.is_master_pf)) {
             WDF_INTERRUPT_CONFIG_INIT(&config, EvtErrorInterruptIsr, EvtErrorInterruptDpc);
+            config.EvtInterruptEnable = nullptr;
+            config.EvtInterruptDisable = nullptr;
+            TraceVerbose(TRACE_INTR, "%s: [%u] - Error interrupt configuration", 
+                dev_conf.name, vec);
         }
-        else { /* Data interrupts */
+        else if ((vec >= irq_mgr.user_vector_id_start) && (vec <= irq_mgr.user_vector_id_end)) {
+            WDF_INTERRUPT_CONFIG_INIT(&config, EvtUserInterruptIsr, EvtUserInterruptDpc);
+            config.EvtInterruptEnable = EvtUserInterruptEnable;
+            config.EvtInterruptDisable = EvtUserInterruptDisable;
+            TraceVerbose(TRACE_INTR, "%s: [%u] - User interrupt configuration", 
+                dev_conf.name, vec);
+        }
+        else if ((vec >= irq_mgr.data_vector_id_start) && (vec <= irq_mgr.data_vector_id_end)) { /* Data interrupts */
             WDF_INTERRUPT_CONFIG_INIT(&config, EvtDataInterruptIsr, nullptr);
+            config.EvtInterruptEnable = nullptr;
+            config.EvtInterruptDisable = nullptr;
+            TraceVerbose(TRACE_INTR, "%s: [%u] - Data interrupt configuration", dev_conf.name, vec);
+        }
+        else {
+            TraceVerbose(TRACE_INTR, "%s: [%u] - No configuration", dev_conf.name, vec);
+            continue;
         }
 
         config.InterruptRaw = resource;
         config.InterruptTranslated = resource_translated;
-        config.EvtInterruptEnable = nullptr;
-        config.EvtInterruptDisable = nullptr;
         config.AutomaticSerialization = TRUE;
 
         WDF_OBJECT_ATTRIBUTES attribs;
         WDF_OBJECT_ATTRIBUTES_INIT(&attribs);
-        WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attribs, IRQ_CONTEXT);
+        WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attribs, QDMA_IRQ_CONTEXT);
 
         status = WdfInterruptCreate(wdf_dev, &config, &attribs, &irq_mgr.irq[vec]);
         if (!NT_SUCCESS(status)) {
@@ -654,37 +751,42 @@ NTSTATUS qdma_device::setup_msix_interrupt(
             unmask_msi_entry(vec);
         }
 
-        PIRQ_CONTEXT irq_context =  get_irq_context(irq_mgr.irq[vec]);
+        auto irq_context = get_qdma_irq_context(irq_mgr.irq[vec]);
         status = configure_irq(irq_context, vec);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_INTR, "WdfInterruptCreate failed: %!STATUS!", status);
+            TraceError(TRACE_INTR, "%s: WdfInterruptCreate failed: %!STATUS!", 
+                dev_conf.name, status);
             return status;
         }
 
         if ((irq_mgr.err_vector_id == vec) && (dev_conf.is_master_pf)) {
-            int ret = hw.qdma_hw_error_intr_setup((void *)this, (uint16_t)dev_conf.dev_sbdf.sbdf.fun_no, (uint8_t)irq_mgr.err_vector_id);
+            int ret = hw.qdma_hw_error_intr_setup((void *)this, 
+                (uint16_t)dev_conf.dev_sbdf.sbdf.fun_no, (uint8_t)irq_mgr.err_vector_id);
             if (ret < 0) {
-                TraceError(TRACE_INTR, "qdma_error_interrupt_setup() failed with error %d", ret);
+                TraceError(TRACE_INTR, "%s: qdma_error_interrupt_setup() failed with error %d", 
+                    dev_conf.name, ret);
                 return hw.qdma_get_error_code(ret);
             }
 
-            ret = hw.qdma_hw_error_enable((void *)this, QDMA_ERRS_ALL);
+            ret = hw.qdma_hw_error_enable((void *)this, hw.qdma_max_errors);
             if (ret < 0) {
-                TraceError(TRACE_INTR, "qdma_error_enable() failed with error %d", ret);
+                TraceError(TRACE_INTR, "%s: qdma_error_enable() failed with error %d", 
+                    dev_conf.name, ret);
                 return hw.qdma_get_error_code(ret);
             }
 
             ret = hw.qdma_hw_error_intr_rearm((void *)this);
             if (ret < 0) {
-                TraceError(TRACE_INTR, "qdma_error_interrupt_rearm() failed with error %d", ret);
+                TraceError(TRACE_INTR, "%s: qdma_error_interrupt_rearm() failed with error %d", 
+                    dev_conf.name, ret);
                 return hw.qdma_get_error_code(ret);
             }
         }
 
         ++vec;
 
-        TraceInfo(TRACE_INTR, "INTERRUPT REGISTERED FOR VECTOR ID: : %d WEIGHT : %d",
-            irq_context->vector_id, irq_context->weight);
+        TraceInfo(TRACE_INTR, "%s: INTERRUPT REGISTERED FOR VECTOR ID: : %d WEIGHT : %d",
+            dev_conf.name, irq_context->vector_id, irq_context->weight);
     }
 
     return STATUS_SUCCESS;
@@ -701,7 +803,8 @@ NTSTATUS qdma_device::setup_legacy_interrupt(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR resource_translated;
 
     ULONG numResources = WdfCmResourceListGetCount(resources_translated);
-    TraceInfo(TRACE_INTR, "Total number of resource : %lu", numResources);
+    TraceVerbose(TRACE_INTR, "%s: Total number of resource : %lu", 
+        dev_conf.name, numResources);
 
 
     for (UINT i = 0, vec = 0; i < numResources; i++) {
@@ -725,25 +828,27 @@ NTSTATUS qdma_device::setup_legacy_interrupt(
 
         WDF_OBJECT_ATTRIBUTES attribs;
         WDF_OBJECT_ATTRIBUTES_INIT(&attribs);
-        WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attribs, IRQ_CONTEXT);
+        WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attribs, QDMA_IRQ_CONTEXT);
 
         status = WdfInterruptCreate(wdf_dev, &config, &attribs, &irq_mgr.irq[vec]);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_INTR, "WdfInterruptCreate failed: %!STATUS!", status);
+            TraceError(TRACE_INTR, "%s: WdfInterruptCreate failed: %!STATUS!", 
+                dev_conf.name, status);
             return status;
         }
 
-        PIRQ_CONTEXT irq_context = get_irq_context(irq_mgr.irq[vec]);
+        auto irq_context = get_qdma_irq_context(irq_mgr.irq[vec]);
         status = configure_irq(irq_context, vec);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_INTR, "WdfInterruptCreate failed: %!STATUS!", status);
+            TraceError(TRACE_INTR, "%s: WdfInterruptCreate failed: %!STATUS!", 
+                dev_conf.name, status);
             return status;
         }
 
         ++vec;
 
-        TraceInfo(TRACE_INTR, "LEGACY INTERRUPT REGISTERED FOR VECTOR ID: : %d WEIGHT : %d",
-            irq_context->vector_id, irq_context->weight);
+        TraceInfo(TRACE_INTR, "%s: LEGACY INTERRUPT REGISTERED FOR VECTOR ID: : %d WEIGHT : %d",
+            dev_conf.name, irq_context->vector_id, irq_context->weight);
 
         /* Only One Vector for Legacy interrupt */
         break;
@@ -768,7 +873,8 @@ NTSTATUS qdma_device::intr_setup(
 
     status = WdfSpinLockCreate(&attr, &irq_mgr.lock);
     if (!NT_SUCCESS(status)) {
-        TraceError(TRACE_INTR, "WdfSpinLockCreate failed: %!STATUS!", status);
+        TraceError(TRACE_INTR, "%s: WdfSpinLockCreate failed: %!STATUS!", 
+            dev_conf.name, status);
         return status;
     }
 
@@ -805,17 +911,20 @@ NTSTATUS qdma_device::intr_setup(
     if (irq_mgr.intr_type == interrupt_type::LEGACY) {
         status = setup_legacy_interrupt(resources, resources_translated);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_INTR, " setup_legacy_interrupt() failed: %!STATUS!", status);
+            TraceError(TRACE_INTR, "%s: setup_legacy_interrupt() failed: %!STATUS!", 
+                dev_conf.name, status);
         }
     }
     else if (irq_mgr.intr_type == interrupt_type::MSIX) {
         status = setup_msix_interrupt(resources, resources_translated);
         if (!NT_SUCCESS(status)) {
-            TraceError(TRACE_INTR, " setup_msix_interrupt() failed: %!STATUS!", status);
+            TraceError(TRACE_INTR, "%s: setup_msix_interrupt() failed: %!STATUS!", 
+                dev_conf.name, status);
         }
     }
     else {
-        TraceError(TRACE_INTR, "Invalid Interrupt Type : %d (valid are legacy and msix)", (int)irq_mgr.intr_type);
+        TraceError(TRACE_INTR, "%s: Invalid Interrupt Type : %d "
+            "(valid are legacy and msix)", dev_conf.name, (int)irq_mgr.intr_type);
         return STATUS_UNSUCCESSFUL;
     }
 

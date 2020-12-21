@@ -22,6 +22,8 @@
 EXTERN_C_START
 
 #define QDMA_MAX_QUEUES_PER_PF  512
+#define QDMA_MAX_USER_INTR      1
+#define QDMA_MAX_DATA_INTR      7
 
 struct device_context {
     struct {

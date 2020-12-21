@@ -46,22 +46,6 @@ struct err_code_map error_code_map_list[] = {
     {QDMA_ERR_RM_QMAX_CONF_REJECTED,        STATUS_UNSUCCESSFUL}
 };
 
-void qdma_get_device_attr(
-    void *dev_hndl,
-    struct qdma_dev_attributes **dev_cap)
-{
-    qdma_device *qdma_dev = static_cast<qdma_device *>(dev_hndl);
-
-    *dev_cap = &qdma_dev->dev_conf.dev_info;
-}
-
-void qdma_hw_error_handler(
-    void *dev_hndl,
-    enum qdma_error_idx err_idx)
-{
-    qdma_device *qdma_dev = static_cast<qdma_device *>(dev_hndl);
-    TraceError(TRACE_QDMA, "%s detected", qdma_dev->hw.qdma_hw_get_error_name(err_idx));
-}
 
 void qdma_udelay(
     UINT32 delay_us)
