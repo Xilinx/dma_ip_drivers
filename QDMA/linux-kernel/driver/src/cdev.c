@@ -616,7 +616,8 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 		pr_err("%s failed to allocate cdev %lu.\n",
 		       qconf->name, sizeof(struct qdma_cdev));
 		if (ebuf && ebuflen) {
-			rv = sprintf(ebuf, "%s failed to allocate cdev %lu.\n",
+			rv = snprintf(ebuf, ebuflen,
+				"%s failed to allocate cdev %lu.\n",
 				qconf->name, sizeof(struct qdma_cdev));
 			ebuf[rv] = '\0';
 
@@ -636,7 +637,7 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 	if (xcdev->minor >= xcb->cdev_minor_cnt) {
 		pr_err("%s: no char dev. left.\n", qconf->name);
 		if (ebuf && ebuflen) {
-			rv = sprintf(ebuf, "%s cdev no cdev left.\n",
+			rv = snprintf(ebuf, ebuflen, "%s cdev no cdev left.\n",
 					qconf->name);
 			ebuf[rv] = '\0';
 		}
@@ -652,7 +653,8 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 	if (rv < 0) {
 		pr_err("cdev_add failed %d, %s.\n", rv, xcdev->name);
 		if (ebuf && ebuflen) {
-			int l = sprintf(ebuf, "%s cdev add failed %d.\n",
+			int l = snprintf(ebuf, ebuflen,
+					"%s cdev add failed %d.\n",
 					qconf->name, rv);
 			ebuf[l] = '\0';
 		}
@@ -668,7 +670,7 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 			pr_err("%s device_create failed %d.\n",
 				xcdev->name, rv);
 			if (ebuf && ebuflen) {
-				int l = sprintf(ebuf,
+				int l = snprintf(ebuf, ebuflen,
 						"%s device_create failed %d.\n",
 						qconf->name, rv);
 				ebuf[l] = '\0';

@@ -90,8 +90,8 @@ struct xlnx_pci_dev {
 	spinlock_t cdev_lock;		/**< character device lock*/
 	unsigned int qmax;		/**< max number of queues for device*/
 	unsigned int idx;		/**< device index*/
-	void __iomem *user_bar_regs;	/**< PCIe user bar */
-	void __iomem *bypass_bar_regs;  /**< PCIe bypass bar */
+	void __iomem *user_bar_regs;	/**< PCIe AXI Master Lite bar */
+	void __iomem *bypass_bar_regs;  /**< PCIe AXI Bridge Master bar*/
 	struct xlnx_qdata *qdata;	/**< queue data*/
 };
 
@@ -114,15 +114,15 @@ int xpdev_list_dump(char *buf, int buflen);
  *						find the qdma device by index
  *
  * @param[in]	idx:		qdma device index
- * @param[in]	ebuflen:	buffer length
- * @param[out]	ebuf:
+ * @param[in]	buflen:		buffer length
+ * @param[out]	buf:
  *			error message buffer, can be NULL/0 (i.e., optional)
  *
  * @return	0: pointer to xlnx_pci_dev
  * @return	NULL: failure
  *****************************************************************************/
-struct xlnx_pci_dev *xpdev_find_by_idx(unsigned int idx, char *ebuf,
-			int ebuflen);
+struct xlnx_pci_dev *xpdev_find_by_idx(unsigned int idx, char *buf,
+			int buflen);
 
 /*****************************************************************************/
 /**
@@ -177,11 +177,11 @@ int xpdev_queue_delete(struct xlnx_pci_dev *xpdev, unsigned int qidx,
 		u8 q_type, char *ebuf, int ebuflen);
 
 int xpdev_nl_queue_start(struct xlnx_pci_dev *xpdev, void *nl_info, u8 is_qp,
-			u8 is_c2h, unsigned short qidx, unsigned short qcnt);
+			u8 q_type, unsigned short qidx, unsigned short qcnt);
 
 /*****************************************************************************/
 /**
- * qdma_device_read_user_register() - read user bar register
+ * qdma_device_read_user_register() - read AXI Master Lite bar register
  *
  * @param[in]	xpdev:		pointer to xlnx_pci_dev
  * @param[in]	reg_addr:	register address
@@ -195,7 +195,7 @@ int qdma_device_read_user_register(struct xlnx_pci_dev *xpdev,
 
 /*****************************************************************************/
 /**
- * qdma_device_write_user_register() - write user bar register
+ * qdma_device_write_user_register() - write AXI Master Lite bar register
  *
  * @param[in]	xpdev:		pointer to xlnx_pci_dev
  * @param[in]	reg_addr:	register address
@@ -209,7 +209,7 @@ int qdma_device_write_user_register(struct xlnx_pci_dev *xpdev,
 
 /*****************************************************************************/
 /**
- * qdma_device_read_bypass_register() - read bypass bar register
+ * qdma_device_read_bypass_register() - read AXI Bridge Master bar register
  *
  * @param[in]	xpdev:		pointer to xlnx_pci_dev
  * @param[in]	reg_addr:	register address
@@ -223,7 +223,7 @@ int qdma_device_read_bypass_register(struct xlnx_pci_dev *xpdev,
 
 /*****************************************************************************/
 /**
- * qdma_device_write_bypass_register() - write bypass bar register
+ * qdma_device_write_bypass_register() - write AXI Bridge Master bar register
  *
  * @param[in]	xpdev:		pointer to xlnx_pci_dev
  * @param[in]	reg_addr:	register address

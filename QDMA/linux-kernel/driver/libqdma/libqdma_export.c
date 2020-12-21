@@ -460,7 +460,6 @@ int qdma_device_capabilities_info(unsigned long dev_hndl,
 		struct qdma_dev_attributes *dev_attr)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	struct qdma_dev_attributes *dev_cap;
 
 	if (!xdev) {
 		pr_err("dev_hndl is NULL");
@@ -477,11 +476,59 @@ int qdma_device_capabilities_info(unsigned long dev_hndl,
 		return -EINVAL;
 	}
 
-	qdma_get_device_attr(xdev, &dev_cap);
-
-	memcpy(dev_attr, dev_cap, sizeof(struct qdma_dev_attributes));
+	memcpy(dev_attr, &(xdev->dev_cap), sizeof(struct qdma_dev_attributes));
 
 	return 0;
+}
+
+/*****************************************************************************/
+/**
+ * qdma_config_reg_info_dump() - dump the detailed field information of register
+ *
+ * @param[in] dev_hndl:	handle returned from qdma_device_open()
+ * @param[in] reg_addr: register address info tobe dumped
+ * @param[in] num_regs: number of registers to be dumped
+ * @param[in] buf:	    buffer containing the o/p
+ * @param[in] buflen:   length of the buffer
+ *
+ * @return:		    length of o/p buffer
+ *
+ *****************************************************************************/
+int qdma_config_reg_info_dump(unsigned long dev_hndl, uint32_t reg_addr,
+				uint32_t num_regs, char *buf, int buflen)
+{
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	int rv;
+
+	/** make sure that input buffer is not empty, else return error */
+	if (!buf || !buflen) {
+		pr_err("invalid argument: buf=%p, buflen=%d\n", buf, buflen);
+		return -EINVAL;
+	}
+
+	/** make sure that the dev_hndl passed is Valid */
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
+		snprintf(buf, buflen, "dev_hndl is NULL");
+		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		snprintf(buf, buflen, "Invalid dev_hndl passed\n");
+		return -EINVAL;
+	}
+
+	if (xdev->hw.qdma_dump_reg_info == NULL) {
+		pr_err("Err: Feature not supported\n");
+		snprintf(buf, buflen, "Err: Feature not supported\n");
+		return -EPERM;
+	}
+
+	rv = xdev->hw.qdma_dump_reg_info((void *)dev_hndl, reg_addr,
+			num_regs, buf, buflen);
+	return rv;
+
 }
 
 #ifndef __QDMA_VF__
@@ -1691,6 +1738,45 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 		unlock_descq(descq);
 		return -EINVAL;
 	}
+
+	if ((xdev->version_info.ip_type == EQDMA_SOFT_IP) &&
+		(xdev->version_info.vivado_release >= QDMA_VIVADO_2020_2)) {
+
+		if (xdev->dev_cap.desc_eng_mode
+			== QDMA_DESC_ENG_BYPASS_ONLY) {
+			pr_err("Err: Bypass Only Design is not supported\n");
+			snprintf(buf, buflen,
+				"%s Bypass Only Design is not supported\n",
+				descq->conf.name);
+			unlock_descq(descq);
+			return -EINVAL;
+		}
+
+		if (descq->conf.desc_bypass) {
+			if (xdev->dev_cap.desc_eng_mode
+				== QDMA_DESC_ENG_INTERNAL_ONLY) {
+				pr_err("Err: Bypass mode not supported in Internal Mode only design\n");
+				snprintf(buf, buflen,
+					"%s  Bypass mode not supported in Internal Mode only design\n",
+					descq->conf.name);
+				unlock_descq(descq);
+				return -EINVAL;
+			}
+		}
+	}
+
+
+	if ((descq->conf.aperture_size != 0) &&
+			((descq->conf.aperture_size &
+			  (descq->conf.aperture_size - 1)))) {
+		pr_err("Err: %s Power of 2 aperture size supported\n",
+			descq->conf.name);
+		snprintf(buf, buflen,
+			"Err:%s Power of 2 aperture size supported\n",
+			descq->conf.name);
+		unlock_descq(descq);
+		return -ERANGE;
+	}
 	unlock_descq(descq);
 	/** complete the queue configuration*/
 	rv = qdma_descq_config_complete(descq);
@@ -1904,7 +1990,7 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
 		cb->done = 1;
 		cb->status = -ENXIO;
 		if (req->fp_done) {
-			list_del(&cb->list);
+			qdma_work_queue_del(descq, cb);
 			req->fp_done(req, 0, -ENXIO);
 		} else
 			qdma_waitq_wakeup(&cb->wq);
@@ -2138,14 +2224,14 @@ handle_truncation:
   * @return  0: success
   * @return  <0: error
   *****************************************************************************/
-int qdma_software_version_info(char *software_version)
+int qdma_software_version_info(char *software_version, int length)
 {
 	if (!software_version) {
 		pr_err("Invalid input software_version:%p", software_version);
 		return -EINVAL;
 	}
 
-	sprintf(software_version, "%s", LIBQDMA_VERSION_STR);
+	snprintf(software_version, length, "%s", LIBQDMA_VERSION_STR);
 
 	return 0;
 }
@@ -2368,8 +2454,7 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 		rv = -EINVAL;
 		goto unmap_sgl;
 	}
-	list_add_tail(&cb->list, &descq->work_list);
-	descq->pend_req_desc += ((req->count + PAGE_SIZE - 1) >> PAGE_SHIFT);
+	qdma_work_queue_add(descq, cb);
 	unlock_descq(descq);
 
 	pr_debug("%s: cb 0x%p submitted.\n", descq->conf.name, cb);

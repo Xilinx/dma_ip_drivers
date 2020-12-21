@@ -511,6 +511,7 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 #endif
 	struct mbox_msg m;
 	char name[80];
+	int rv;
 
 	mbox->xdev = xdev;
 
@@ -533,9 +534,9 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 	/* read & discard whatever in the incoming message buffer */
 #ifndef __QDMA_VF__
 	for (i = 0; i < 256; i++)
-		mbox_hw_rcv(mbox, &m);
+		rv = mbox_hw_rcv(mbox, &m);
 #else
-	mbox_hw_rcv(mbox, &m);
+	rv = mbox_hw_rcv(mbox, &m);
 #endif
 	/* ack any received messages in the Q */
 	qdma_mbox_hw_init(xdev, QDMA_DEV);

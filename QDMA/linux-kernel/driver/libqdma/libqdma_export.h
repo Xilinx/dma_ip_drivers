@@ -457,11 +457,11 @@ struct qdma_dev_conf {
 
 	/** dma config bar #, < 0 not present */
 	char bar_num_config;
-	/** user bar */
+	/** AXI Master Lite(user bar) */
 	char bar_num_user;
-	/** bypass bar */
+	/** AXI Bridge Master(bypass bar) */
 	char bar_num_bypass;
-	/** queue base for this funciton */
+	/** queue base for this function */
 	int qsets_base;
 	/** device index */
 	u32 bdf;
@@ -653,7 +653,8 @@ struct qdma_queue_conf {
 
 	/**  user provided per-Q irq handler */
 	unsigned long quld;		/* set by user for per Q data */
-
+	/**  acummulate PIDX to batch packets */
+	u32 pidx_acc:8;
 	/**
 	 *  @brief  Q interrupt top, per-queue additional handling
 	 *  code for example, network rx napi_schedule(&Q->napi)
@@ -738,6 +739,8 @@ struct qdma_queue_conf {
 	unsigned int c2h_bufsz;
 	/**  Ping Pong measurement */
 	u8 ping_pong_en:1;
+	/**  Keyhole Aperture Size */
+	u32 aperture_size;
 };
 
 /**
@@ -789,9 +792,12 @@ struct qdma_request {
 	u8 write:1;
 	/**  if sgt is already dma mapped */
 	u8 dma_mapped:1;
-	/**  user defined data present */
+	/** indicates end of transfer towards user kernel */
 	u8 h2c_eot:1;
-	/**  indicates end of transfer towards user kernel */
+	/** state check disbaled in queue pkt API */
+	u8 check_qstate_disabled:1;
+	u8 _pad:3;
+	/** user defined data present */
 	u8 udd_len;
 	/**  number of scatter-gather entries < 64K */
 	unsigned int sgcnt;
@@ -950,14 +956,14 @@ int qdma_device_flr_quirk_check(struct pci_dev *pdev, unsigned long dev_hndl);
  *
  * @param dev_hndl	dev_hndl retunred from qdma_device_open()
  * @param conf		device configuration
- * @param ebuflen	input buffer length
- * @param ebuf		error message buffer, can be NULL/0 (i.e., optional)
+ * @param buflen	input buffer length
+ * @param buf		error message buffer, can be NULL/0 (i.e., optional)
  *
  * @returns		0 for success and <0 for error
  *
  *****************************************************************************/
 int qdma_device_get_config(unsigned long dev_hndl, struct qdma_dev_conf *conf,
-				char *ebuf, int ebuflen);
+				char *buf, int buflen);
 
 /*****************************************************************************/
 /**
@@ -1143,7 +1149,7 @@ int qdma_device_read_config_register(unsigned long dev_hndl,
  *
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
  * @param reg_addr	register address
- * @param value		register value to be writen
+ * @param val		register value to be writen
  *
  * @returns		0 for success and <0 for error
  * writes dma config register
@@ -1151,7 +1157,7 @@ int qdma_device_read_config_register(unsigned long dev_hndl,
  *****************************************************************************/
 int qdma_device_write_config_register(unsigned long dev_hndl,
 					unsigned int reg_addr,
-					unsigned int value);
+					unsigned int val);
 
 /*****************************************************************************/
 /**
@@ -1186,13 +1192,14 @@ int qdma_device_version_info(unsigned long dev_hndl,
  * Retrieve the software version
  *
  * @param software_version	A pointer to a null-terminated string
+ * @param length			Length of the version name string
  *
  * @returns			0 for success and <0 for error
  *
  * retrieves the software version
  *
  *****************************************************************************/
-int qdma_software_version_info(char *software_version);
+int qdma_software_version_info(char *software_version, int length);
 
 /*****************************************************************************/
 /**
@@ -1277,7 +1284,7 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
  *
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
  * @param id		the opaque qhndl
- * @param qstate	state of the queue
+ * @param q_state	state of the queue
  * @param buflen	length of the input buffer
  * @param buf		message buffer
  *
@@ -1285,7 +1292,7 @@ int qdma_queue_stop(unsigned long dev_hndl, unsigned long id, char *buf,
  *
  *****************************************************************************/
 int qdma_get_queue_state(unsigned long dev_hndl, unsigned long id,
-		struct qdma_q_state *qstate, char *buf, int buflen);
+		struct qdma_q_state *q_state, char *buf, int buflen);
 
 /*****************************************************************************/
 /**
@@ -1459,7 +1466,7 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
  * Peek a receive (c2h) queue
  *
  * @param dev_hndl	hndl returned from qdma_device_open()
- * @param qhndl		hndl returned from qdma_queue_add()
+ * @param id		queue hndl returned from qdma_queue_add()
  *
  * filled in by libqdma:
  * @param udd_cnt	# of udd received
@@ -1468,7 +1475,7 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
  *
  * @returns		# of packets received in the Q or <0 for error
  *****************************************************************************/
-int qdma_queue_c2h_peek(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_queue_c2h_peek(unsigned long dev_hndl, unsigned long id,
 			unsigned int *udd_cnt, unsigned int *pkt_cnt,
 			unsigned int *data_len);
 
@@ -1478,11 +1485,11 @@ int qdma_queue_c2h_peek(unsigned long dev_hndl, unsigned long qhndl,
  * Query of # of free descriptor
  *
  * @param dev_hndl	hndl returned from qdma_device_open()
- * @param qhndl		hndl returned from qdma_queue_add()
+ * @param id		queue hndl returned from qdma_queue_add()
  *
  * @returns		# of available desc in the queue or <0 for error
  *****************************************************************************/
-int qdma_queue_avail_desc(unsigned long dev_hndl, unsigned long qhndl);
+int qdma_queue_avail_desc(unsigned long dev_hndl, unsigned long id);
 
 /** packet/streaming interfaces  */
 
@@ -1491,14 +1498,14 @@ int qdma_queue_avail_desc(unsigned long dev_hndl, unsigned long qhndl);
  * Read/set the c2h Q's completion control
  *
  * @param dev_hndl	hndl returned from qdma_device_open()
- * @param qhndl		hndl returned from qdma_queue_add()
+ * @param id		hndl returned from qdma_queue_add()
  * @param cctrl		completion control
  * @param set		read or set
  *
  * @returns		0 for success or <0 for error
  *
  *****************************************************************************/
-int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long id,
 				struct qdma_cmpl_ctrl *cctrl, bool set);
 
 /*****************************************************************************/
@@ -1506,7 +1513,7 @@ int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long qhndl,
  * Read rcv'ed data (ST C2H dma operation)
  *
  * @param dev_hndl	hndl returned from qdma_device_open()
- * @param qhndl		hndl returned from qdma_queue_add()
+ * @param id		queue hndl returned from qdma_queue_add()
  * @param req		pointer to the request data
  * @param cctrl		completion control, if no change is desired,
  *                      set it to NULL
@@ -1514,7 +1521,7 @@ int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long qhndl,
  * @returns		# of bytes transferred for success and  <0 for error
  *
  *****************************************************************************/
-int qdma_queue_packet_read(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_queue_packet_read(unsigned long dev_hndl, unsigned long id,
 		struct qdma_request *req, struct qdma_cmpl_ctrl *cctrl);
 
 /*****************************************************************************/
@@ -1522,13 +1529,13 @@ int qdma_queue_packet_read(unsigned long dev_hndl, unsigned long qhndl,
  * Submit data for ST H2C dma operation
  *
  * @param dev_hndl	hndl returned from qdma_device_open()
- * @param qhndl		hndl returned from qdma_queue_add()
+ * @param id		queue hndl returned from qdma_queue_add()
  * @param req		pointer to the list of packet data
  *
  * @returns		# of bytes transferred for success and  <0 for error
  *
  *****************************************************************************/
-int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long id,
 			struct qdma_request *req);
 
 /*****************************************************************************/
@@ -1538,12 +1545,14 @@ int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long qhndl,
  * service the queue
  *
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
- * @param qhndl		hndl returned from qdma_queue_add()
+ * @param id		queue hndl returned from qdma_queue_add()
  * @param budget	ST C2H only, max number of completions to be processed.
  * @param c2h_upd_cmpl	flag to update the completion
  *
+ * Return:	0 for success or <0 for error
+ *
  *****************************************************************************/
-void qdma_queue_service(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_queue_service(unsigned long dev_hndl, unsigned long id,
 			int budget, bool c2h_upd_cmpl);
 
 /*****************************************************************************/
@@ -1553,8 +1562,10 @@ void qdma_queue_service(unsigned long dev_hndl, unsigned long qhndl,
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
  * @param qhndl		hndl returned from qdma_queue_add()
  *
+ * Return:	0 for success or <0 for error
+ *
  *****************************************************************************/
-void qdma_queue_update_pointers(unsigned long dev_hndl, unsigned long qhndl);
+int qdma_queue_update_pointers(unsigned long dev_hndl, unsigned long qhndl);
 
 /*****************************************************************************/
 /**
@@ -1578,14 +1589,14 @@ int qdma_intr_ring_dump(unsigned long dev_hndl, unsigned int vector_idx,
  * Function to receive the user defined data
  *
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
- * @param qhndl		queue handle
+ * @param id		queue handle
  * @param buflen	length of the input buffer
  * @param buf		message bufferuffer
  *
  * @returns		0 for success or <0 for error
  *
  *****************************************************************************/
-int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long id,
 		char *buf, int buflen);
 
 /*****************************************************************************/
@@ -1593,7 +1604,7 @@ int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long qhndl,
  * Function to receive the completion data
  *
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
- * @param qhndl		queue handle
+ * @param id		queue handle
  * @param num_entries	I/O number of entries
  * @param cmpt_entries	List of completion entries
  * @param buflen	length of the input buffer
@@ -1602,7 +1613,7 @@ int qdma_descq_get_cmpt_udd(unsigned long dev_hndl, unsigned long qhndl,
  * @returns		0 for success or <0 for error
  *
  *****************************************************************************/
-int qdma_descq_read_cmpt_data(unsigned long dev_hndl, unsigned long qhndl,
+int qdma_descq_read_cmpt_data(unsigned long dev_hndl, unsigned long id,
 				u32 *num_entries,  u8 **cmpt_entries,
 				char *buf, int buflen);
 
@@ -1611,15 +1622,33 @@ int qdma_descq_read_cmpt_data(unsigned long dev_hndl, unsigned long qhndl,
  * Function to receive the queue count
  *
  * @param dev_hndl	dev_hndl returned from qdma_device_open()
- * @param q_cnt		queue count
+ * @param q_count	queue count
  * @param buflen	length of the input buffer
  * @param buf		message bufferuffer
  *
  * @returns		0 for success or <0 for error
  *
  *****************************************************************************/
-int qdma_get_queue_count(unsigned long dev_hndl, struct qdma_queue_count *q_cnt,
-				char *buf, int buflen);
+int qdma_get_queue_count(unsigned long dev_hndl,
+		struct qdma_queue_count *q_count,
+		char *buf, int buflen);
+
+/*****************************************************************************/
+/**
+ * Function to print out detailed information for register value
+ *
+ * @param dev_hndl	dev_hndl returned from qdma_device_open()
+ * @param reg_addr	register address
+ * @param num_regs  num of registerse to be dumped
+ * @param buf		message bufferuffer
+ * @param buflen	length of the input buffer
+ *
+ * @returns		0 for success or <0 for error
+ *
+ *****************************************************************************/
+int qdma_config_reg_info_dump(unsigned long dev_hndl, uint32_t reg_addr,
+				uint32_t num_regs, char *buf, int buflen);
+
 #ifdef __QDMA_VF__
 /*****************************************************************************/
 /**

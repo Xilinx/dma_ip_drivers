@@ -1061,7 +1061,7 @@ ssize_t dmaxfer_iosubmit(char *fname, unsigned char write,
 	int fd;
 	unsigned int base = 0;
 
-	if (!fname || !buffer || size < 0) {
+	if (!fname || !buffer || size == 0) {
 		printf("Invalid arguments\n");
 		return -EINVAL;
 	}

@@ -14,8 +14,12 @@
  * the file called "COPYING".
  */
 
-#ifndef QDMA_MBOX_PROTOCOL_H_
-#define QDMA_MBOX_PROTOCOL_H_
+#ifndef __QDMA_MBOX_PROTOCOL_H_
+#define __QDMA_MBOX_PROTOCOL_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * DOC: QDMA message box handling interface definitions
@@ -24,9 +28,9 @@
  * signatures exported for QDMA Mbox message handling.
  */
 
-#include "qdma_platform_env.h"
-#include "qdma_access_common.h"
+#include "qdma_platform.h"
 #include "qdma_resource_mgmt.h"
+
 
 #define QDMA_MBOX_VF_ONLINE			(1)
 #define QDMA_MBOX_VF_OFFLINE		(-1)
@@ -154,7 +158,7 @@ void qdma_mbox_hw_init(void *dev_hndl, uint8_t is_vf);
 /**
  * qdma_mbox_pf_rcv_msg_handler(): handles the raw message received in pf
  *
- * @pci_bus_num:  pci bus number
+ * @dma_device_index:  pci bus number
  * @dev_hndl:  device handle
  * @func_id:   own function id
  * @rcv_msg:   received raw message
@@ -162,7 +166,7 @@ void qdma_mbox_hw_init(void *dev_hndl, uint8_t is_vf);
  *
  * Return:	0  : success and < 0: failure
  *****************************************************************************/
-int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t pci_bus_num,
+int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t dma_device_index,
 				 uint16_t func_id, uint32_t *rcv_msg,
 				 uint32_t *resp_msg);
 
@@ -683,4 +687,8 @@ int qdma_mbox_vf_rcv_msg_handler(uint32_t *rcv_msg, uint32_t *resp_msg);
  *****************************************************************************/
 uint8_t qdma_mbox_out_status(void *dev_hndl, uint8_t is_vf);
 
-#endif /* QDMA_MBOX_PROTOCOL_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __QDMA_MBOX_PROTOCOL_H_ */

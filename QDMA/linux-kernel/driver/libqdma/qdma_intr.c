@@ -47,7 +47,7 @@ static int dump_qdma_regs(struct xlnx_dma_dev *xdev)
 {
 	int len = 0, dis_len = 0;
 	int rv;
-	char *buf = NULL, tbuff = NULL;
+	char *buf = NULL, *tbuff = NULL;
 	int buflen;
 	char temp_buf[512];
 
@@ -159,6 +159,7 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 	uint32_t qid = 0;
 	uint32_t num_entries_processed = 0;
 
+
 	if (!coal_entry) {
 		pr_err("Failed to locate the coalescing entry for vector = %d\n",
 			vidx);
@@ -191,8 +192,6 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 		return;
 	}
 
-
-
 	do {
 		if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) {
 			color = ring_entry->ring_cpm.coal_color;
@@ -218,6 +217,10 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 			return;
 		}
 		xdev->prev_descq = descq;
+		pr_debug("IRQ[%d]: IVE[%d], Qid = %d, e_color = %d, c_color = %d, intr_type = %d\n",
+				irq, vidx, qid, coal_entry->color,
+				color, intr_type);
+
 		if (descq->conf.ping_pong_en &&
 			descq->conf.q_type == Q_C2H && descq->conf.st)
 			descq->ping_pong_rx_time = timestamp;
@@ -247,7 +250,7 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 
 	if (descq) {
 		queue_intr_cidx_update(descq->xdev,
-				descq->conf.qidx, &coal_entry->intr_cidx_info);
+			descq->conf.qidx, &coal_entry->intr_cidx_info);
 	} else if (num_entries_processed == 0) {
 		pr_warn("No entries processed\n");
 		descq = xdev->prev_descq;
@@ -257,6 +260,7 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 				descq->conf.qidx, &coal_entry->intr_cidx_info);
 		}
 	}
+
 }
 
 static void data_intr_direct(struct xlnx_dma_dev *xdev, int vidx, int irq,
@@ -939,7 +943,7 @@ void intr_work(struct work_struct *work)
  * @dev_hndl: hndl retured from qdma_device_open()
  * @qhndl: hndl retured from qdma_queue_add()
  */
-void qdma_queue_service(unsigned long dev_hndl, unsigned long id, int budget,
+int qdma_queue_service(unsigned long dev_hndl, unsigned long id, int budget,
 			bool c2h_upd_cmpl)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
@@ -948,22 +952,25 @@ void qdma_queue_service(unsigned long dev_hndl, unsigned long id, int budget,
 	/** make sure that the dev_hndl passed is Valid */
 	if (!xdev) {
 		pr_err("dev_hndl is NULL");
-		return;
+		return -EINVAL;
 	}
 
 	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
 		pr_err("Invalid dev_hndl passed");
-		return;
+		return -EINVAL;
 	}
 
 	descq = qdma_device_get_descq_by_id(xdev, id, NULL, 0, 0);
 	if (descq)
-		qdma_descq_service_cmpl_update(descq, budget, c2h_upd_cmpl);
+		return qdma_descq_service_cmpl_update(descq,
+					budget, c2h_upd_cmpl);
+
+	return -EINVAL;
 }
 
 static u8 get_intr_vec_index(struct xlnx_dma_dev *xdev, u8 intr_type)
 {
-	u8 i = 0;
+	int i = 0;
 
 	for (i = 0; i < xdev->num_vecs; i++) {
 		if (xdev->dev_intr_info_list[i].intr_vec_map.intr_type ==

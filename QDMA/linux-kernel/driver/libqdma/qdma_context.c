@@ -207,7 +207,7 @@ static int make_cmpt_context(struct qdma_descq *descq,
 
 	cmpt_ctxt->bs_addr = descq->desc_cmpt_bus;
 	cmpt_ctxt->desc_sz = descq->conf.cmpl_desc_sz;
-	cmpt_ctxt->full_upd = descq->xdev->conf.intr_moderation;
+	cmpt_ctxt->full_upd = descq->conf.adaptive_rx;
 
 	cmpt_ctxt->valid = 1;
 

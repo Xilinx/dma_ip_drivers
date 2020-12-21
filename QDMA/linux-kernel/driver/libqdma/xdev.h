@@ -477,14 +477,15 @@ int xdev_list_dump(char *buf, int buflen);
 /**
  * xdev_check_hndl() - helper function to validate the device handle
  *
- * @param[in]	f:		device name
+ * @param[in]	fname:		device name
  * @param[in]	pdev:	pointer to struct pci_dev
  * @param[in]	hndl:	device handle
  *
  * @return	0: success
  * @return	EINVAL: on failure
  *****************************************************************************/
-int xdev_check_hndl(const char *f, struct pci_dev *pdev, unsigned long hndl);
+int xdev_check_hndl(const char *fname,
+			struct pci_dev *pdev, unsigned long hndl);
 
 
 #ifdef __QDMA_VF__

@@ -90,8 +90,12 @@ LIBQDMA_OBJS := libqdma/qdma_mbox.o libqdma/qdma_intr.o libqdma/qdma_st_c2h.o \
 QDMA_ACCESS_OBJS := libqdma/qdma_access/qdma_mbox_protocol.o libqdma/qdma_access/qdma_list.o \
 	libqdma/qdma_access/qdma_access_common.o libqdma/qdma_access/qdma_resource_mgmt.o \
 	libqdma/qdma_access/qdma_s80_hard_access/qdma_s80_hard_access.o \
+	libqdma/qdma_access/qdma_s80_hard_access/qdma_s80_hard_reg_dump.o \
 	libqdma/qdma_access/qdma_soft_access/qdma_soft_access.o \
-	libqdma/qdma_access/eqdma_soft_access/eqdma_soft_access.o
+	libqdma/qdma_access/eqdma_soft_access/eqdma_soft_access.o \
+	libqdma/qdma_access/eqdma_soft_access/eqdma_soft_reg_dump.o
+
+
 
 obj-m += $(MOD_NAME).o
 $(MOD_NAME)-objs += $(DRV_OBJS)

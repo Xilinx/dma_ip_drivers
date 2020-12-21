@@ -40,44 +40,181 @@
  * ST C2H descq (i.e., freelist) RX buffers
  */
 
-static inline void flq_unmap_one(struct qdma_sw_sg *sdesc,
-				struct qdma_c2h_desc *desc, struct device *dev,
-				unsigned char pg_order)
-{
-	if (sdesc->dma_addr) {
-		desc->dst_addr = 0UL;
-		dma_unmap_page(dev, sdesc->dma_addr, PAGE_SIZE << pg_order,
-				DMA_FROM_DEVICE);
-		sdesc->dma_addr = 0UL;
-	}
-}
-
 static inline void flq_free_one(struct qdma_sw_sg *sdesc,
-				struct qdma_c2h_desc *desc, struct device *dev,
+					struct qdma_c2h_desc *desc)
+{
+	if (sdesc) {
+		if (sdesc->dma_addr) {
+			desc->dst_addr = 0UL;
+			sdesc->dma_addr = 0UL;
+		}
+
+		if (sdesc->pg) {
+			sdesc->pg = NULL;
+			sdesc->offset = 0;
+		}
+	} else
+		pr_err("%s: sdesc is NULL", __func__);
+
+}
+
+static inline int flq_fill_one(struct qdma_descq *descq,
+				struct qdma_sw_sg *sdesc,
+				struct qdma_c2h_desc *desc)
+{
+	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
+	struct qdma_sw_pg_sg *pg_sdesc;
+	unsigned int pg_idx = 0;
+	unsigned int buf_sz;
+
+	if (!flq) {
+		pr_err("%s: flq is NULL", __func__);
+		return -EINVAL;
+	}
+
+	if (flq->num_pages == 0) {
+		pr_err("%s: flq->num_pages is NULL", __func__);
+		return -EINVAL;
+	}
+
+	buf_sz = flq->desc_buf_size;
+	pg_idx = (flq->alloc_idx & flq->num_pgs_mask);
+
+	if (pg_idx >= flq->num_pages) {
+		pr_err("%s: pg_idx %d is Invalid",
+				__func__,
+				pg_idx);
+		return -EINVAL;
+	}
+
+	pg_sdesc = flq->pg_sdesc + pg_idx;
+	if (!pg_sdesc || !pg_sdesc->pg_base) {
+		pr_err("%s: pg_sdesc is NULL", __func__);
+		return -EINVAL;
+	}
+
+	if (pg_sdesc->pg_offset + buf_sz > flq->max_pg_offset) {
+		pr_err("%s: memory full, alloc_idx %u, recycle_idx = %u offset = %u, pg_idx = %u",
+				__func__,
+				flq->alloc_idx,
+				flq->recycle_idx,
+				pg_sdesc->pg_offset,
+				pg_idx);
+		return -ENOMEM;
+	}
+
+
+	sdesc->pg = pg_sdesc->pg_base;
+	sdesc->offset = pg_sdesc->pg_offset;
+	sdesc->dma_addr = pg_sdesc->pg_dma_base_addr + pg_sdesc->pg_offset;
+	sdesc->len = descq->conf.c2h_bufsz;
+	desc->dst_addr = sdesc->dma_addr;
+#if KERNEL_VERSION(4, 6, 0) < LINUX_VERSION_CODE
+	page_ref_inc(pg_sdesc->pg_base);
+#else
+	atomic_inc(&(pg_sdesc->pg_base->_count));
+#endif
+	pg_sdesc->pg_offset += buf_sz;
+
+	if ((pg_sdesc->pg_offset + buf_sz) > flq->max_pg_offset)
+		flq->alloc_idx++;
+
+	return 0;
+}
+
+static inline void flq_unmap_page_one(struct qdma_sw_pg_sg *pg_sdesc,
+				struct device *dev,
 				unsigned char pg_order)
 {
-	if (sdesc && sdesc->pg) {
-		flq_unmap_one(sdesc, desc, dev, pg_order);
-		__free_pages(sdesc->pg, pg_order);
-		sdesc->pg = NULL;
+	if (pg_sdesc && pg_sdesc->pg_dma_base_addr) {
+		dma_unmap_page(dev, pg_sdesc->pg_dma_base_addr,
+				PAGE_SIZE << pg_order,
+				DMA_FROM_DEVICE);
+		pg_sdesc->pg_dma_base_addr = 0UL;
 	}
 }
 
-static inline int flq_fill_one(struct qdma_sw_sg *sdesc,
-				struct qdma_c2h_desc *desc, struct device *dev,
-				int node, unsigned int buf_sz,
-				unsigned char pg_order, gfp_t gfp)
+static inline void flq_free_page_one(struct qdma_sw_pg_sg *pg_sdesc,
+				struct device *dev,
+				unsigned char pg_order,
+				unsigned int pg_shift)
+{
+	unsigned int page_count = 0;
+	unsigned int i = 0;
+
+	if (pg_sdesc && pg_sdesc->pg_base) {
+		/* +1 for dma_unmap*/
+		page_count = (pg_sdesc->pg_offset >> pg_shift) + 1;
+
+		flq_unmap_page_one(pg_sdesc, dev, pg_order);
+
+		for (i = 0; i < page_count; i++)
+			put_page(pg_sdesc->pg_base);
+
+		pg_sdesc->pg_base = NULL;
+		pg_sdesc->pg_dma_base_addr = 0UL;
+	}
+}
+
+void descq_flq_free_page_resource(struct qdma_descq *descq)
+{
+	struct xlnx_dma_dev *xdev = descq->xdev;
+	struct device *dev = &xdev->conf.pdev->dev;
+	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
+	struct qdma_sw_pg_sg *pg_sdesc = flq->pg_sdesc;
+	unsigned char pg_order = flq->desc_pg_order;
+	int i;
+
+	for (i = 0; i < flq->num_pages; i++, pg_sdesc++)
+		flq_free_page_one(pg_sdesc, dev,
+				pg_order, flq->desc_pg_shift);
+
+	kfree(flq->pg_sdesc);
+	flq->pg_sdesc = NULL;
+
+	memset(flq, 0, sizeof(struct qdma_flq));
+}
+
+void descq_flq_free_resource(struct qdma_descq *descq)
+{
+	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
+	struct qdma_sw_sg *sdesc = flq->sdesc;
+	struct qdma_c2h_desc *desc = flq->desc;
+	int i;
+
+	/* It can never be null beyond this */
+	if (!sdesc) {
+		pr_err("%s: sdesc is Invalid",
+				__func__);
+		return;
+	}
+
+	for (i = 0; i < flq->size; i++, sdesc++, desc++)
+		flq_free_one(sdesc, desc);
+
+	kfree(flq->sdesc);
+	flq->sdesc = NULL;
+	flq->sdesc_info = NULL;
+
+}
+
+
+static inline int flq_fill_page_one(struct qdma_sw_pg_sg *pg_sdesc,
+				struct device *dev,
+				int node, unsigned char pg_order, gfp_t gfp)
 {
 	struct page *pg;
 	dma_addr_t mapping;
 
 	pg = alloc_pages_node(node, __GFP_COMP | gfp, pg_order);
 	if (unlikely(!pg)) {
-		pr_info("failed to allocate the pages, order %d.\n", pg_order);
+		pr_err("%s: failed to allocate the pages, order %d.\n",
+				__func__,
+				pg_order);
 		return -ENOMEM;
 	}
 
-	mapping = dma_map_page(dev, pg, 0, PAGE_SIZE << pg_order,
+	mapping = dma_map_page(dev, pg, 0, (PAGE_SIZE << pg_order),
 				PCI_DMA_FROMDEVICE);
 	if (unlikely(dma_mapping_error(dev, mapping))) {
 		dev_err(dev, "page 0x%p mapping error 0x%llx.\n",
@@ -86,38 +223,10 @@ static inline int flq_fill_one(struct qdma_sw_sg *sdesc,
 		return -EINVAL;
 	}
 
-	sdesc->pg = pg;
-	sdesc->dma_addr = mapping;
-	sdesc->len = buf_sz << pg_order;
-	sdesc->offset = 0;
-
-	desc->dst_addr = sdesc->dma_addr;
+	pg_sdesc->pg_base = pg;
+	pg_sdesc->pg_dma_base_addr = mapping;
+	pg_sdesc->pg_offset = 0;
 	return 0;
-}
-
-void descq_flq_free_resource(struct qdma_descq *descq)
-{
-	struct xlnx_dma_dev *xdev = descq->xdev;
-	struct device *dev = &xdev->conf.pdev->dev;
-	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
-
-	struct qdma_sw_sg *sdesc = flq->sdesc;
-	struct qdma_c2h_desc *desc = flq->desc;
-	unsigned char pg_order = flq->pg_order;
-	int i;
-
-	for (i = 0; i < flq->size; i++, sdesc++, desc++) {
-		if (sdesc)
-			flq_free_one(sdesc, desc, dev, pg_order);
-		else
-			break;
-	}
-
-	kfree(flq->sdesc);
-	flq->sdesc = NULL;
-	flq->sdesc_info = NULL;
-
-	memset(flq, 0, sizeof(struct qdma_flq));
 }
 
 int descq_flq_alloc_resource(struct qdma_descq *descq)
@@ -126,21 +235,88 @@ int descq_flq_alloc_resource(struct qdma_descq *descq)
 	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
 	struct device *dev = &xdev->conf.pdev->dev;
 	int node = dev_to_node(dev);
+	struct qdma_sw_pg_sg *pg_sdesc = NULL;
 	struct qdma_sw_sg *sdesc, *prev = NULL;
 	struct qdma_sdesc_info *sinfo, *sprev = NULL;
 	struct qdma_c2h_desc *desc = flq->desc;
 	int i;
 	int rv = 0;
+	/* find the most significant bit number */
+	unsigned int div_bits = 0;
+
+	div_bits = flq->desc_pg_shift;
+	flq->num_bufs_per_pg =
+			(flq->max_pg_offset >> div_bits);
+
+	if (flq->num_bufs_per_pg == 0) {
+		pr_err("%s: conf_c2h_bufsz = %d, flq_c2h_buf_size = %d, flq->max_pg_offset = %d, flq->num_bufs_per_pg = %d, flq->desc_pg_order = %d, div_bits = %d",
+				__func__,
+				descq->conf.c2h_bufsz,
+				flq->desc_buf_size,
+				flq->max_pg_offset,
+				flq->num_bufs_per_pg,
+				flq->desc_pg_order,
+				div_bits);
+		return -EINVAL;
+	}
+
+	flq->num_pages = (flq->size / flq->num_bufs_per_pg) +
+			((flq->size % flq->num_bufs_per_pg) == 0 ? 0 : 1);
+	flq->num_pages = get_next_powof2(flq->num_pages);
+	/* without this, alloc_idx and recycle_idx
+	 * will toeing each other creating a mess
+	 */
+	if (flq->num_pages < flq->size)
+		flq->num_pages = (flq->num_pages << 1);
+	flq->num_pgs_mask = (flq->num_pages - 1);
+
+	pr_debug("%s: conf_c2h_bufsz = %d, flq_c2h_buf_size = %d, num_bufs_per_pg = %d, num_pages = %d, flq->size = %d",
+			__func__,
+			descq->conf.c2h_bufsz,
+			flq->desc_buf_size,
+			flq->num_bufs_per_pg,
+			flq->num_pages,
+			flq->size);
+
+	pg_sdesc = kzalloc_node(flq->num_pages *
+				(sizeof(struct qdma_sw_pg_sg)),
+				GFP_KERNEL, node);
+
+	if (!pg_sdesc) {
+		pr_err("%s: OOM, sz %d * %ld.\n",
+				__func__,
+				flq->num_pages,
+				(sizeof(struct qdma_sw_pg_sg)));
+		return -ENOMEM;
+	}
+	flq->pg_sdesc = pg_sdesc;
+
+	for (pg_sdesc = flq->pg_sdesc, i = 0;
+			i < flq->num_pages; i++, pg_sdesc++) {
+		rv = flq_fill_page_one(pg_sdesc, dev, node,
+				flq->desc_pg_order, GFP_KERNEL);
+		if (rv < 0) {
+			descq_flq_free_page_resource(descq);
+			return rv;
+		}
+	}
 
 	sdesc = kzalloc_node(flq->size * (sizeof(struct qdma_sw_sg) +
 					  sizeof(struct qdma_sdesc_info)),
 				GFP_KERNEL, node);
 	if (!sdesc) {
-		pr_info("OOM, sz %u.\n", flq->size);
+		pr_err("%s: OOM, sz %d * %ld.\n",
+				__func__,
+				flq->size,
+				((sizeof(struct qdma_sw_sg) +
+				sizeof(struct qdma_sdesc_info))));
+		descq_flq_free_page_resource(descq);
 		return -ENOMEM;
 	}
+
 	flq->sdesc = sdesc;
 	flq->sdesc_info = sinfo = (struct qdma_sdesc_info *)(sdesc + flq->size);
+	flq->alloc_idx = 0;
 
 	/* make the flq to be a linked list ring */
 	for (i = 0; i < flq->size; i++, prev = sdesc, sdesc++,
@@ -150,15 +326,16 @@ int descq_flq_alloc_resource(struct qdma_descq *descq)
 		if (sprev)
 			sprev->next = sinfo;
 	}
+
 	/* last entry's next points to the first entry */
 	prev->next = flq->sdesc;
 	sprev->next = flq->sdesc_info;
 
 	for (sdesc = flq->sdesc, i = 0; i < flq->size; i++, sdesc++, desc++) {
-		rv = flq_fill_one(sdesc, desc, dev, node, descq->conf.c2h_bufsz,
-				  flq->pg_order, GFP_KERNEL);
+		rv = flq_fill_one(descq, sdesc, desc);
 		if (rv < 0) {
 			descq_flq_free_resource(descq);
+			descq_flq_free_page_resource(descq);
 			return rv;
 		}
 	}
@@ -166,21 +343,97 @@ int descq_flq_alloc_resource(struct qdma_descq *descq)
 	return 0;
 }
 
+static inline int flq_refill_pages(struct qdma_descq *descq,
+		int count, bool recycle, gfp_t gfp)
+{
+	struct xlnx_dma_dev *xdev = descq->xdev;
+	struct device *dev = &xdev->conf.pdev->dev;
+	int node = dev_to_node(dev);
+	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
+	unsigned int n_recycle_index = flq->recycle_idx;
+	/* find the most significant bit number */
+	unsigned int div_bits = flq->desc_pg_shift;
+	struct qdma_sw_pg_sg *pg_sdesc = flq->pg_sdesc;
+	unsigned int free_bufs_in_pg;
+	unsigned int i = 0, j = 0;
+	int rv;
 
+	for (i = 0; i < count; ) {
+		pg_sdesc = flq->pg_sdesc +
+			(n_recycle_index & flq->num_pgs_mask);
+
+		if (!pg_sdesc) {
+			pr_err("pg_sdesc is NULL");
+			return -EINVAL;
+		}
+
+		free_bufs_in_pg = (pg_sdesc->pg_offset >> div_bits);
+		free_bufs_in_pg =
+			min_t(unsigned int, free_bufs_in_pg, count - i);
+		for (j = 0; j < free_bufs_in_pg; j++) {
+			pg_sdesc->pg_offset -= flq->desc_buf_size;
+			if (!recycle && !descq->conf.fp_descq_c2h_packet)
+				put_page(pg_sdesc->pg_base);
+		}
+		i += free_bufs_in_pg;
+		BUG_ON(i > count);
+		if (!pg_sdesc->pg_offset)
+			n_recycle_index++;
+	}
+
+	if (recycle)
+		flq->recycle_idx = n_recycle_index;
+	else {
+		while (1) {
+			pg_sdesc = flq->pg_sdesc +
+				(flq->recycle_idx & flq->num_pgs_mask);
+
+			if (!pg_sdesc) {
+				pr_err("pg_sdesc is NULL");
+				return -EINVAL;
+			}
+
+			/** Stop the allocation when the pg_offset of
+			 * the page is not 0 and
+			 *  recycle index is less than the alloc index
+			 */
+			if (pg_sdesc->pg_offset ||
+				flq->recycle_idx == flq->alloc_idx)
+				break;
+
+			flq_unmap_page_one(pg_sdesc, dev, flq->desc_pg_order);
+			put_page(pg_sdesc->pg_base);
+			rv = flq_fill_page_one(pg_sdesc,
+					dev, node, flq->desc_pg_order, gfp);
+			if (rv < 0)
+				break;
+
+			flq->recycle_idx++;
+		}
+	}
+
+	return 0;
+}
 
 static int qdma_flq_refill(struct qdma_descq *descq, int idx, int count,
 			int recycle, gfp_t gfp)
 {
-	struct xlnx_dma_dev *xdev = descq->xdev;
 	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
 	struct qdma_sw_sg *sdesc = flq->sdesc + idx;
 	struct qdma_c2h_desc *desc = flq->desc + idx;
 	struct qdma_sdesc_info *sinfo = flq->sdesc_info + idx;
-	int order = flq->pg_order;
 	int i;
+	int rv;
+
+	if (!recycle) {
+		rv = flq_refill_pages(descq, count, recycle, gfp);
+		if (unlikely(rv < 0)) {
+			pr_err("%s: flq_refill_pages failed rv %d error",
+					descq->conf.name, rv);
+		}
+	}
 
 	for (i = 0; i < count; i++, idx++, sdesc++, desc++, sinfo++) {
-
 		if (idx == flq->size) {
 			idx = 0;
 			sdesc = flq->sdesc;
@@ -189,17 +442,13 @@ static int qdma_flq_refill(struct qdma_descq *descq, int idx, int count,
 		}
 
 		if (recycle) {
-			sdesc->len = (descq->conf.c2h_bufsz << order);
-			sdesc->offset = 0;
+			sdesc->len = descq->conf.c2h_bufsz;
 		} else {
-			struct device *dev = &xdev->conf.pdev->dev;
-			int node = dev_to_node(dev);
-			int rv;
-
-			flq_unmap_one(sdesc, desc, dev, order);
-			rv = flq_fill_one(sdesc, desc, dev, node,
-					  descq->conf.c2h_bufsz, order, gfp);
+			flq_free_one(sdesc, desc);
+			rv = flq_fill_one(descq, sdesc, desc);
 			if (unlikely(rv < 0)) {
+				pr_err("%s: rv %d error",
+						descq->conf.name, rv);
 				if (rv == -ENOMEM)
 					flq->alloc_fail++;
 				else
@@ -211,6 +460,7 @@ static int qdma_flq_refill(struct qdma_descq *descq, int idx, int count,
 		sinfo->fbits = 0;
 		descq->avail++;
 	}
+
 	if (list_empty(&descq->work_list) &&
 			list_empty(&descq->pend_list)) {
 		descq->pend_list_empty = 1;
@@ -364,7 +614,7 @@ int descq_st_c2h_read(struct qdma_descq *descq, struct qdma_request *req,
 
 static int qdma_c2h_packets_proc_dflt(struct qdma_descq *descq)
 {
-	struct qdma_sgt_req_cb *cb, *tmp;
+	struct qdma_sgt_req_cb *cb = NULL, *tmp = NULL;
 
 	list_for_each_entry_safe(cb, tmp, &descq->pend_list, list) {
 		int rv;
@@ -440,33 +690,74 @@ int parse_cmpl_entry(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl)
 	return 0;
 }
 
+static int get_fl_nr(unsigned int len,
+		unsigned int c2h_bufsz,
+		unsigned int pg_shift, unsigned int pg_mask,
+		unsigned int *last_len)
+{
+	unsigned int l_len = len;
+	int l_fl_nr = 1;
+
+	if ((len & (len-1)) == 0) {
+		/* pr_info("Len is ^2"); */
+		l_fl_nr = len ? ((len + pg_mask) >> pg_shift) : 1;
+		l_len = (len & pg_mask);
+		if (l_len == 0)
+			l_len = c2h_bufsz;
+	} else {
+		/* pr_info("Len is non ^2"); */
+		if (len) {
+			if (len <= c2h_bufsz)
+				l_fl_nr = 1;
+			else {
+				l_fl_nr = 0;
+				while (l_len >= c2h_bufsz) {
+					l_fl_nr++;
+					l_len -= c2h_bufsz;
+				}
+
+				if (l_len)
+					l_fl_nr++;
+				else
+					l_len = c2h_bufsz;
+			}
+		}
+
+	}
+
+	*last_len = l_len;
+	return l_fl_nr;
+}
+
 static int rcv_pkt(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl,
 			unsigned int len)
 {
 	unsigned int pidx = cmpl->pidx;
 	struct qdma_flq *flq = (struct qdma_flq *)descq->flq;
-	unsigned int pg_shift = flq->pg_shift;
+	unsigned int pg_shift = flq->desc_pg_shift;
 	unsigned int pg_mask = (1 << pg_shift) - 1;
 	unsigned int rngsz = descq->conf.rngsz;
 	/* zero length still uses one descriptor */
-	int fl_nr = len ? ((len + pg_mask) >> pg_shift) : 1;
+	unsigned int l_len = 0;
+	int fl_nr = get_fl_nr(len,
+				descq->conf.c2h_bufsz,
+				pg_shift, pg_mask, &l_len);
 	unsigned int last = ring_idx_incr(cmpl->pidx, fl_nr - 1, rngsz);
 	unsigned int next = ring_idx_incr(last, 1, rngsz);
 	struct qdma_sw_sg *sdesc = flq->sdesc + last;
 	unsigned int cidx_next = ring_idx_incr(descq->cidx_cmpt, 1,
 					descq->conf.rngsz_cmpt);
 
+	if (!len)
+		sdesc->len = 0;
+	else
+		sdesc->len = l_len;
+
 	if (descq->avail < fl_nr)
 		return -EBUSY;
+
 	descq->avail -= fl_nr;
 
-	if (len) {
-		unsigned int last_len = len & pg_mask;
-
-		if (last_len)
-			sdesc->len = last_len;
-	} else
-		sdesc->len = 0;
 
 	if (descq->conf.fp_descq_c2h_packet) {
 		int rv = descq->conf.fp_descq_c2h_packet(descq->q_hndl,
@@ -737,8 +1028,8 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 
 	/* once an error happens, stop processing of the Q */
 	if (descq->err) {
-		pr_info("%s: err.\n", descq->conf.name);
-		return 0;
+		pr_err("%s: err.\n", descq->conf.name);
+		return -EINVAL;
 	}
 
 	dma_rmb();
@@ -757,7 +1048,7 @@ int descq_process_completion_st_c2h(struct qdma_descq *descq, int budget,
 				return -EINVAL;
 			}
 		}
-		return 0;
+		return -ENODATA;
 	}
 
 #if 0

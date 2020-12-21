@@ -14,13 +14,13 @@
  * the file called "COPYING".
  */
 
-#ifndef QDMA_VERSION_H_
-#define QDMA_VERSION_H_
+#ifndef __QDMA_ACCESS_VERSION_H_
+#define __QDMA_ACCESS_VERSION_H_
 
 
 #define QDMA_VERSION_MAJOR	2020
-#define QDMA_VERSION_MINOR	1
-#define QDMA_VERSION_PATCH	1
+#define QDMA_VERSION_MINOR	2
+#define QDMA_VERSION_PATCH	0
 
 #define QDMA_VERSION_STR	\
 	__stringify(QDMA_VERSION_MAJOR) "." \
@@ -33,4 +33,4 @@
 	  QDMA_VERSION_PATCH)
 
 
-#endif /* COMMON_QDMA_VERSION_H_ */
+#endif /* __QDMA_ACCESS_VERSION_H_ */

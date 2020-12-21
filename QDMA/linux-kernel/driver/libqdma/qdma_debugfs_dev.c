@@ -17,6 +17,7 @@
  * the file called "COPYING".
  */
 
+
 #ifdef DEBUGFS
 #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
 
@@ -34,6 +35,7 @@
 enum dbgfs_dev_dbg_file_type {
 	DBGFS_DEV_DBGF_INFO = 0,
 	DBGFS_DEV_DBGF_REGS = 1,
+	DBGFS_DEV_DBGF_REG_INFO = 2,
 	DBGFS_DEV_DBGF_END,
 };
 
@@ -176,6 +178,71 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 
 /*****************************************************************************/
 /**
+ * dbgfs_dump_qdma_reg_info() - static function to dump qdma device registers
+ *
+ * @param[in]	xpdev:	pointer to qdma pci device structure
+ * @param[in]	buf:	buffer to dump the registers
+ * @param[in]	buf_len:size of the buffer passed
+ *
+ * @return	0: success
+ * @return	<0: error
+ *****************************************************************************/
+static int dbgfs_dump_qdma_reg_info(unsigned long dev_hndl, char *dev_name,
+		char **data, int *data_len)
+{
+	int len = 0;
+	int rv;
+	char *buf = NULL;
+	int buflen;
+	int num_regs;
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+
+	if (!xdev)
+		return -EINVAL;
+
+	rv = qdma_acc_reg_info_len((void *)dev_hndl,
+			xdev->version_info.ip_type, &buflen, &num_regs);
+
+	if (rv < 0) {
+		pr_err("Failed to get reg dump buffer length\n");
+		return rv;
+	}
+	buflen += BANNER_LEN;
+
+	/** allocate memory */
+	buf = (char *) kzalloc(buflen, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	/* print the banner with device info */
+	rv = dump_banner(dev_name, buf + len, buflen - len);
+	if (rv < 0) {
+		pr_warn("insufficient space to dump register banner, err =%d\n",
+				rv);
+		kfree(buf);
+		return len;
+	}
+	len += rv;
+
+	rv = qdma_config_reg_info_dump(dev_hndl, 0, num_regs, buf + len,
+							buflen - len);
+	if (rv < 0) {
+		pr_warn("Not able to dump Config Bar register values, err = %d\n",
+					rv);
+		*data = buf;
+		*data_len = buflen;
+		return len;
+	}
+	len += rv;
+
+	*data = buf;
+	*data_len = buflen;
+
+	return len;
+}
+
+/*****************************************************************************/
+/**
  * dbgfs_dump_qdma_info() - static function to dump qdma device registers
  *
  * @xpdev:	pointer to qdma pci device structure
@@ -271,7 +338,7 @@ static int dbgfs_dump_intr_cntx(unsigned long dev_hndl, char *dev_name,
 						ring_index,
 						&intr_ctxt);
 			if (rv < 0) {
-				len += sprintf(buf + len,
+				len += snprintf(buf + len, buflen - len,
 					"%s read intr context failed %d.\n",
 					xdev->conf.name, rv);
 				*data = buf;
@@ -329,7 +396,7 @@ static int dbgfs_dump_intr_ring(unsigned long dev_hndl, char *dev_name,
 	rv = qdma_intr_ring_dump(dev_hndl, vector_idx, 0,
 		 num_entries - 1, buf, buflen);
 	if (rv < 0) {
-		len += sprintf(buf + len,
+		len += snprintf(buf + len, buflen - len,
 					   "%s read intr context failed %d.\n",
 					   xdev->conf.name, rv);
 		kfree(buf);
@@ -355,7 +422,7 @@ static int dbgfs_dump_intr_ring(unsigned long dev_hndl, char *dev_name,
  *****************************************************************************/
 static int dev_dbg_file_open(struct inode *inode, struct file *fp)
 {
-	int dev_id = -1;
+	unsigned long dev_id = -1;
 	int rv = 0;
 	unsigned char dev_name[QDMA_DEV_NAME_SZ] = {0};
 	unsigned char *lptr = NULL, *rptr = NULL;
@@ -382,7 +449,7 @@ static int dev_dbg_file_open(struct inode *inode, struct file *fp)
 	}
 
 	/* convert this string as hex integer */
-	rv = kstrtoint((const char *)dev_name, 16, &dev_id);
+	rv = kstrtoul((const char *)dev_name, 16, &dev_id);
 	if (rv < 0) {
 		rv = -ENODEV;
 		return rv;
@@ -451,6 +518,9 @@ static ssize_t dev_dbg_file_read(struct file *fp, char __user *user_buffer,
 					dev_priv->dev_name, &buf, &buf_len);
 		} else if (type == DBGFS_DEV_DBGF_REGS) {
 			rv = dbgfs_dump_qdma_regs(dev_priv->dev_hndl,
+					dev_priv->dev_name, &buf, &buf_len);
+		} else if (type == DBGFS_DEV_DBGF_REG_INFO) {
+			rv = dbgfs_dump_qdma_reg_info(dev_priv->dev_hndl,
 					dev_priv->dev_name, &buf, &buf_len);
 		}
 
@@ -615,6 +685,21 @@ static int dev_regs_open(struct inode *inode, struct file *fp)
 
 /*****************************************************************************/
 /**
+ * dev_reg_info_open() - static function that opens regInfo debug file
+ *
+ * @param[in]	inode:	pointer to file inode
+ * @param[in]	fp:	pointer to file structure
+ *
+ * @return	0: success
+ * @return	<0: error
+ *****************************************************************************/
+static int dev_reg_info_open(struct inode *inode, struct file *fp)
+{
+	return dev_dbg_file_open(inode, fp);
+}
+
+/*****************************************************************************/
+/**
  * dev_regs_read() - static function that executes info read
  *
  * @param[in]	fp:	pointer to file structure
@@ -632,6 +717,24 @@ static ssize_t dev_regs_read(struct file *fp, char __user *user_buffer,
 			DBGFS_DEV_DBGF_REGS);
 }
 
+/*****************************************************************************/
+/**
+ * dev_reg_info_read() - static function that executes info read
+ *
+ * @param[in]	fp:	pointer to file structure
+ * @param[out]	user_buffer: pointer to user buffer
+ * @param[in]	count: size of data to read
+ * @param[in/out]	ppos: pointer to offset read
+ *
+ * @return	>0: size read
+ * @return	<0: error
+ *****************************************************************************/
+static ssize_t dev_reg_info_read(struct file *fp, char __user *user_buffer,
+		size_t count, loff_t *ppos)
+{
+	return dev_dbg_file_read(fp, user_buffer, count, ppos,
+			DBGFS_DEV_DBGF_REG_INFO);
+}
 /*****************************************************************************/
 /**
  * dev_intr_cntx_open() -static function to open interrupt context debug file
@@ -734,6 +837,12 @@ static int create_dev_dbg_files(struct xlnx_dma_dev *xdev,
 			fops->read = dev_regs_read;
 			fops->release = dev_dbg_file_release;
 			break;
+		case DBGFS_DEV_DBGF_REG_INFO:
+			snprintf(dbgf[i].name, 64, "%s", "qdma_reg_info");
+			fops->open = dev_reg_info_open;
+			fops->read = dev_reg_info_read;
+			fops->release = dev_dbg_file_release;
+			break;
 		}
 	}
 
@@ -821,7 +930,8 @@ int dbgfs_dev_init(struct xlnx_dma_dev *xdev)
 	int rv = 0;
 
 	if (!xdev->conf.debugfs_dev_root) {
-		snprintf(dname, QDMA_DEV_NAME_SZ, "%02x:%02x:%x",
+		snprintf(dname, QDMA_DEV_NAME_SZ, "%04x:%02x:%02x:%x",
+				pci_domain_nr(pdev->bus),
 				pdev->bus->number,
 				PCI_SLOT(pdev->devfn),
 				PCI_FUNC(pdev->devfn));

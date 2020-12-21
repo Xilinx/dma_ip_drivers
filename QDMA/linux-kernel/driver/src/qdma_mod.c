@@ -109,7 +109,7 @@ static ssize_t show_intr_rngsz(struct device *dev,
 		return -EINVAL;
 
 	rngsz = qdma_get_intr_rngsz(xpdev->dev_hndl);
-	len = sprintf(buf, "%u\n", rngsz);
+	len = scnprintf(buf, PAGE_SIZE, "%u\n", rngsz);
 	if (len <= 0)
 		pr_err("copying rngsz to buffer failed with err: %d\n", len);
 
@@ -181,7 +181,7 @@ static ssize_t show_qmax(struct device *dev,
 		return -EINVAL;
 
 	qmax = qdma_get_qmax(xpdev->dev_hndl);
-	len = sprintf(buf, "%u\n", qmax);
+	len = scnprintf(buf, PAGE_SIZE, "%u\n", qmax);
 	if (len <= 0)
 		pr_err("copying qmax to buf failed with err: %d\n", len);
 
@@ -239,7 +239,8 @@ static ssize_t show_cmpl_status_acc(struct device *dev,
 		return -EINVAL;
 
 	cmpl_status_acc = qdma_get_wb_intvl(xpdev->dev_hndl);
-	len = sprintf(buf, "%u\n", cmpl_status_acc);
+	len = scnprintf(buf, PAGE_SIZE,
+			"%u\n", cmpl_status_acc);
 	if (len <= 0)
 		pr_err("copying cmpl status acc value to buf failed with err: %d\n",
 				len);
@@ -324,10 +325,11 @@ static ssize_t show_c2h_buf_sz(struct device *dev,
 
 	qdma_get_buf_sz(xpdev->dev_hndl, c2h_buf_sz);
 
-	len += sprintf(buf + len, "%hu", c2h_buf_sz[0]);
+	len += scnprintf(buf + len, PAGE_SIZE - len, "%u", c2h_buf_sz[0]);
 	for (i = 1; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++)
-		len += sprintf(buf + len, " %hu", c2h_buf_sz[i]);
-	len += sprintf(buf + len, "%s", "\n\0");
+		len += scnprintf(buf + len,
+					PAGE_SIZE - len, " %u", c2h_buf_sz[i]);
+	len += scnprintf(buf + len, PAGE_SIZE - len, "%s", "\n\0");
 
 	return len;
 }
@@ -430,15 +432,17 @@ static ssize_t show_glbl_rng_sz(struct device *dev,
 	unsigned int glbl_ring_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = {0};
 
 	xpdev = (struct xlnx_pci_dev *)dev_get_drvdata(dev);
-	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 	if (!xpdev)
 		return -EINVAL;
 
+	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 	qdma_get_ring_sizes(xdev, 0, QDMA_GLOBAL_CSR_ARRAY_SZ, glbl_ring_sz);
-	len += sprintf(buf + len, "%hu", glbl_ring_sz[0]);
+	len += scnprintf(buf + len, PAGE_SIZE - len, "%u", glbl_ring_sz[0]);
 	for (i = 1; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++)
-		len += sprintf(buf + len, " %hu", glbl_ring_sz[i]);
-	len += sprintf(buf + len, "%s", "\n\0");
+		len += scnprintf(buf + len,
+					PAGE_SIZE - len,
+					" %u", glbl_ring_sz[i]);
+	len += scnprintf(buf + len, PAGE_SIZE - len, "%s", "\n\0");
 
 	return len;
 }
@@ -544,10 +548,12 @@ static ssize_t show_c2h_timer_cnt(struct device *dev,
 
 	qdma_get_timer_cnt(xpdev->dev_hndl, c2h_timer_cnt);
 
-	len += sprintf(buf + len, "%hhu", c2h_timer_cnt[0]);
+	len += scnprintf(buf + len, PAGE_SIZE - len, "%u", c2h_timer_cnt[0]);
 	for (i = 1; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++)
-		len += sprintf(buf + len, " %hhu", c2h_timer_cnt[i]);
-	len += sprintf(buf + len, "%s", "\n\0");
+		len += scnprintf(buf + len,
+					PAGE_SIZE - len,
+					" %u", c2h_timer_cnt[i]);
+	len += scnprintf(buf + len, PAGE_SIZE - len, "%s", "\n\0");
 
 	return len;
 }
@@ -602,7 +608,7 @@ static ssize_t set_c2h_timer_cnt(struct device *dev,
 		if (err < 0)
 			goto input_err;
 
-		if (c2h_timer_cnt[i] < 0 || c2h_timer_cnt[i] > 255) {
+		if (c2h_timer_cnt[i] > 255) {
 			pr_warn("timer cnt at index %d is %d - out of range [0-255]\n",
 				i, c2h_timer_cnt[i]);
 			err = -EINVAL;
@@ -657,10 +663,13 @@ static ssize_t show_c2h_cnt_th(struct device *dev,
 
 	qdma_get_cnt_thresh(xpdev->dev_hndl, c2h_cnt_th);
 
-	len += sprintf(buf + len, "%hhu", c2h_cnt_th[0]);
+	len += scnprintf(buf + len,
+				PAGE_SIZE - len, "%u", c2h_cnt_th[0]);
 	for (i = 1; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++)
-		len += sprintf(buf + len, " %hhu", c2h_cnt_th[i]);
-	len += sprintf(buf + len, "%s", "\n\0");
+		len += scnprintf(buf + len,
+				PAGE_SIZE - len, " %u", c2h_cnt_th[i]);
+	len += scnprintf(buf + len,
+				PAGE_SIZE - len, "%s", "\n\0");
 
 	return len;
 }
@@ -715,7 +724,7 @@ static ssize_t set_c2h_cnt_th(struct device *dev,
 		if (err < 0)
 			goto input_err;
 
-		if (c2h_cnt_th[i] < 0 || c2h_cnt_th[i] > 255) {
+		if (c2h_cnt_th[i] > 255) {
 			pr_warn("counter threshold at index %d is %d - out of range [0-255]\n",
 				i, c2h_cnt_th[i]);
 			err = -EINVAL;
@@ -1387,7 +1396,7 @@ static int xpdev_map_bar(struct xlnx_pci_dev *xpdev,
 {
 	int map_len;
 
-	/* map the user bar */
+	/* map the AXI Master Lite bar */
 	map_len = pci_resource_len(xpdev->pdev, (int)bar_num);
 	if (map_len > QDMA_MAX_BAR_LEN_MAPPED)
 		map_len = QDMA_MAX_BAR_LEN_MAPPED;
@@ -1423,11 +1432,11 @@ int qdma_device_read_user_register(struct xlnx_pci_dev *xpdev,
 	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 
 	if (xdev->conf.bar_num_user < 0) {
-		pr_err("User bar is not present\n");
+		pr_err("AXI Master Lite bar is not present\n");
 		return -EINVAL;
 	}
 
-	/* map the user bar */
+	/* map the AXI Master Lite bar */
 	rv = xpdev_map_bar(xpdev, &xpdev->user_bar_regs,
 			xdev->conf.bar_num_user);
 	if (rv < 0)
@@ -1435,7 +1444,7 @@ int qdma_device_read_user_register(struct xlnx_pci_dev *xpdev,
 
 	*value = readl(xpdev->user_bar_regs + reg_addr);
 
-	/* unmap the user bar after accessing it */
+	/* unmap the AXI Master Lite bar after accessing it */
 	xpdev_unmap_bar(xpdev, &xpdev->user_bar_regs);
 
 	return 0;
@@ -1453,11 +1462,11 @@ int qdma_device_write_user_register(struct xlnx_pci_dev *xpdev,
 	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 
 	if (xdev->conf.bar_num_user < 0) {
-		pr_err("User bar is not present\n");
+		pr_err("AXI Master Lite bar is not present\n");
 		return -EINVAL;
 	}
 
-	/* map the user bar */
+	/* map the AXI Master Lite bar */
 	rv = xpdev_map_bar(xpdev, &xpdev->user_bar_regs,
 			xdev->conf.bar_num_user);
 	if (rv < 0)
@@ -1466,7 +1475,7 @@ int qdma_device_write_user_register(struct xlnx_pci_dev *xpdev,
 
 	writel(value, xpdev->user_bar_regs + reg_addr);
 
-	/* unmap the user bar after accessing it */
+	/* unmap the AXI Master Lite bar after accessing it */
 	xpdev_unmap_bar(xpdev, &xpdev->user_bar_regs);
 
 	return 0;
@@ -1484,11 +1493,11 @@ int qdma_device_read_bypass_register(struct xlnx_pci_dev *xpdev,
 	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 
 	if (xdev->conf.bar_num_bypass < 0) {
-		pr_err("bypass bar is not present\n");
+		pr_err("AXI Bridge Master bar is not present\n");
 		return -EINVAL;
 	}
 
-	/* map the bypass bar */
+	/* map the AXI Bridge Master bar */
 	rv = xpdev_map_bar(xpdev, &xpdev->bypass_bar_regs,
 			xdev->conf.bar_num_bypass);
 	if (rv < 0)
@@ -1496,7 +1505,7 @@ int qdma_device_read_bypass_register(struct xlnx_pci_dev *xpdev,
 
 	*value = readl(xpdev->bypass_bar_regs + reg_addr);
 
-	/* unmap the bypass bar after accessing it */
+	/* unmap the AXI Bridge Master bar after accessing it */
 	xpdev_unmap_bar(xpdev, &xpdev->bypass_bar_regs);
 
 	return 0;
@@ -1514,11 +1523,11 @@ int qdma_device_write_bypass_register(struct xlnx_pci_dev *xpdev,
 	xdev = (struct xlnx_dma_dev *)(xpdev->dev_hndl);
 
 	if (xdev->conf.bar_num_bypass < 0) {
-		pr_err("bypass bar is not present\n");
+		pr_err("AXI Bridge Master bar is not present\n");
 		return -EINVAL;
 	}
 
-	/* map the bypass bar */
+	/* map the AXI Bridge Master bar */
 	rv = xpdev_map_bar(xpdev, &xpdev->bypass_bar_regs,
 			xdev->conf.bar_num_bypass);
 	if (rv < 0)
@@ -1526,7 +1535,7 @@ int qdma_device_write_bypass_register(struct xlnx_pci_dev *xpdev,
 
 	writel(value, xpdev->bypass_bar_regs + reg_addr);
 
-	/* unmap the bypass bar after accessing it */
+	/* unmap the AXI Bridge Master bar after accessing it */
 	xpdev_unmap_bar(xpdev, &xpdev->bypass_bar_regs);
 
 	return 0;
@@ -1760,7 +1769,11 @@ static void qdma_error_resume(struct pci_dev *pdev)
 	}
 
 	pr_info("dev 0x%p,0x%p.\n", pdev, xpdev);
+#if KERNEL_VERSION(5, 7, 0) <= LINUX_VERSION_CODE
+	pci_aer_clear_nonfatal_status(pdev);
+#else
 	pci_cleanup_aer_uncorrect_error_status(pdev);
+#endif
 }
 
 

@@ -17,7 +17,6 @@
  * the file called "COPYING".
  */
 
-
 #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
 
 #include "qdma_debugfs_queue.h"
@@ -373,7 +372,7 @@ static int create_cmpt_q_dbg_files(struct qdma_descq *descq,
  *****************************************************************************/
 static int q_dbg_file_open(struct inode *inode, struct file *fp)
 {
-	int dev_id = -1;
+	unsigned long dev_id = -1;
 	int qidx = -1;
 	struct dbgfs_q_priv *priv = NULL;
 	int rv = 0;
@@ -415,8 +414,10 @@ static int q_dbg_file_open(struct inode *inode, struct file *fp)
 	}
 
 	/* convert this string as hex integer */
-	rv = kstrtoint((const char *)dev_name, 16, &dev_id);
+	rv = kstrtoul((const char *)dev_name, 16, &dev_id);
 	if (rv < 0) {
+		pr_err("%s, kstrtoint failed for %s, Error:%d\n", __func__,
+			dev_dir->d_iname, rv);
 		rv = -ENODEV;
 		return rv;
 	}

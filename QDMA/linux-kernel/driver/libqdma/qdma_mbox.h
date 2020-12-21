@@ -151,12 +151,12 @@ struct mbox_msg *qdma_mbox_msg_alloc(void);
 /**
  * __qdma_mbox_msg_free() - free the mailbox message
  *
- * @param	fname:	function name
+ * @param	f:		function name
  * @param	m:		mailbox message
  *
  * @return	none
  *****************************************************************************/
-void __qdma_mbox_msg_free(const char *fname, struct mbox_msg *m);
+void __qdma_mbox_msg_free(const char *f, struct mbox_msg *m);
 #define qdma_mbox_msg_free(m)	__qdma_mbox_msg_free(__func__, m)
 
 #endif /* #ifndef __QDMA_MBOX_H__ */

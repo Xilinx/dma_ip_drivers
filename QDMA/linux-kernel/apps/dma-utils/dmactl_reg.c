@@ -205,7 +205,7 @@ static void print_repeated_reg(uint32_t *bar, struct xreg_info *xreg,
 	for (i = start; i < end; i++) {
 		uint32_t addr = xreg->addr + (i * step);
 		char name[40];
-		sprintf(name, "%s_%d",
+		snprintf(name, 40, "%s_%d",
 				xreg->name, i);
 
 		if (xcmd == NULL) {
@@ -293,7 +293,7 @@ static void read_regs(uint32_t *bar, struct xreg_info *reg_list,
 					((1 << xreg->len) - 1);
 
 			snprintf(reg_dump, 100,
-				 "    %*u:%u %-47s %#-10x %u\n",
+				 "    %*u:%d %-47s %#-10x %u\n",
 				 xreg->shift < 10 ? 3 : 2,
 				 xreg->shift + xreg->len - 1,
 				 xreg->shift, xreg->name, v, v);
@@ -384,6 +384,7 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 	unsigned char version[QDMA_VERSION_INFO_STR_LENGTH];
 	int32_t v;
 	unsigned char op;
+	uint32_t attrs[XNL_ATTR_MAX] = {0};
 
 	memcpy(&dev_xcmd, xcmd, sizeof(dev_xcmd));
 
@@ -434,7 +435,7 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 			xcmd->log_msg_dump(reg_dump);
 
 		print_seperator(xcmd);
-		snprintf(reg_dump, 100, "\nUSER BAR #%d\n",
+		snprintf(reg_dump, 100, "\nAXI Master Lite Bar #%d\n",
 			 xcmd->resp.dev_info.user_bar);
 		if (xcmd->log_msg_dump)
 			xcmd->log_msg_dump(reg_dump);
@@ -448,6 +449,9 @@ int proc_reg_cmd(struct xcmd_info *xcmd)
 			xcmd->log_msg_dump(reg_dump);
 		reg_dump_mmap(&xcmd->resp.dev_info, xcmd->resp.dev_info.config_bar, NULL,
 				QDMA_CFG_BAR_SIZE, xcmd);
+		break;
+	case XNL_CMD_REG_INFO_READ:
+		xnl_common_msg_send(xcmd, attrs);
 		break;
 	default:
 		break;

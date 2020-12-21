@@ -49,7 +49,7 @@ struct q_state_name {
 
 extern struct q_state_name q_state_list[];
 
-#define QDMA_FLQ_SIZE 80
+#define QDMA_FLQ_SIZE 124
 
 /**
  * @struct - qdma_descq
@@ -98,6 +98,10 @@ struct qdma_descq {
 	int intr_id;
 	/** work  list for the queue */
 	struct list_head work_list;
+	/** current req count */
+	unsigned int work_req_pend;
+	/* lock to synchonize  work queue access*/
+	spinlock_t work_list_lock;
 	/** write back therad list */
 	struct qdma_kthread *cmplthp;
 	/** completion status thread list for the queue */
@@ -158,6 +162,8 @@ struct qdma_descq {
 	dma_addr_t desc_cmpt_bus;
 	/** descriptor writeback dma bus address*/
 	u8 *desc_cmpt_cmpl_status;
+	/** @desc_pend: pending desc to be updated processed by hw */
+	unsigned char desc_pend;
 	/** pidx info to be written to PIDX regiser*/
 	struct qdma_q_pidx_reg_info pidx_info;
 	/** cmpt cidx info to be written to CMPT CIDX regiser*/
@@ -313,9 +319,9 @@ int qdma_descq_context_cleanup(struct qdma_descq *descq);
  * @param[in]	budget:		number of descriptors to process
  * @param[in]	c2h_upd_cmpl:	C2H only: if update completion needed
  *
- * @return	none
+ * @return	0 - success, < 0 for failure
  *****************************************************************************/
-void qdma_descq_service_cmpl_update(struct qdma_descq *descq, int budget,
+int qdma_descq_service_cmpl_update(struct qdma_descq *descq, int budget,
 			bool c2h_upd_cmpl);
 
 /*****************************************************************************/
@@ -445,13 +451,13 @@ void qdma_sgt_req_done(struct qdma_descq *descq, struct qdma_sgt_req_cb *cb,
  * sgl_map() - handler to map the scatter gather list to kernel pages
  *
  * @param[in]	pdev:	pointer to struct pci_dev
- * @param[in]	sg:		scatter gather list
+ * @param[in]	sgl:	scatter gather list
  * @param[in]	sgcnt:	number of entries in scatter gather list
  * @param[in]	dir:	direction of the request
  *
  * @return	none
  *****************************************************************************/
-int sgl_map(struct pci_dev *pdev, struct qdma_sw_sg *sg, unsigned int sgcnt,
+int sgl_map(struct pci_dev *pdev, struct qdma_sw_sg *sgl, unsigned int sgcnt,
 		enum dma_data_direction dir);
 
 /*****************************************************************************/
@@ -479,6 +485,15 @@ void sgl_unmap(struct pci_dev *pdev, struct qdma_sw_sg *sg, unsigned int sgcnt,
  *****************************************************************************/
 void descq_flq_free_resource(struct qdma_descq *descq);
 
+/*****************************************************************************/
+/**
+ * descq_flq_free_page_resource() - handler to free the pages for the request
+ *
+ * @param[in]	descq:		pointer to qdma_descq
+ *
+ * @return	none
+ *****************************************************************************/
+void descq_flq_free_page_resource(struct qdma_descq *descq);
 int rcv_udd_only(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl);
 int parse_cmpl_entry(struct qdma_descq *descq, struct qdma_ul_cmpt_info *cmpl);
 void cmpt_next(struct qdma_descq *descq);
@@ -525,5 +540,74 @@ void cmpt_next(struct qdma_descq *descq);
 #endif
 
 u64 rdtsc_gettime(void);
+static inline unsigned int get_next_powof2(unsigned int value)
+{
+	unsigned int num_bits, mask, f_value;
 
+	num_bits = fls(value) - 1;
+	mask = (1 << num_bits) - 1;
+	f_value = ((value + mask) >> num_bits) << num_bits;
+
+	return f_value;
+}
+
+//#define QDMA_SPIN_LOCK_GRANULAR
+
+static inline void qdma_work_queue_add(struct qdma_descq *descq,
+				struct qdma_sgt_req_cb *cb)
+{
+#ifdef QDMA_SPIN_LOCK_GRANULAR
+	spin_lock_bh(&descq->work_list_lock);
+	list_add_tail(&cb->list, &descq->work_list);
+	descq->work_req_pend++;
+	spin_unlock_bh(&descq->work_list_lock);
+#else
+	list_add_tail(&cb->list, &descq->work_list);
+	descq->work_req_pend++;
+#endif
+}
+
+static inline void qdma_work_queue_del(struct qdma_descq *descq,
+				struct qdma_sgt_req_cb *cb)
+{
+#ifdef QDMA_SPIN_LOCK_GRANULAR
+	spin_lock_bh(&descq->work_list_lock);
+	list_del(&cb->list);
+	descq->work_req_pend--;
+	spin_unlock_bh(&descq->work_list_lock);
+#else
+	list_del(&cb->list);
+	descq->work_req_pend--;
+#endif
+}
+
+static inline int qdma_work_queue_len(struct qdma_descq *descq)
+{
+	int count = 0;
+
+#ifdef QDMA_SPIN_LOCK_GRANULAR
+	spin_lock_bh(&descq->work_list_lock);
+	count = descq->work_req_pend;
+	spin_unlock_bh(&descq->work_list_lock);
+#else
+	count = descq->work_req_pend;
+#endif
+	return count;
+}
+
+static inline struct qdma_request *qdma_work_queue_first_entry(
+			struct qdma_descq *descq)
+{
+	struct qdma_request *req;
+#ifdef QDMA_SPIN_LOCK_GRANULAR
+	spin_lock_bh(&descq->work_list_lock);
+	req = (struct qdma_request *) list_first_entry(&descq->work_list,
+					struct qdma_sgt_req_cb, list);
+	spin_unlock_bh(&descq->work_list_lock);
+#else
+	req = (struct qdma_request *) list_first_entry(&descq->work_list,
+						struct qdma_sgt_req_cb, list);
+#endif
+	return req;
+}
 #endif /* ifndef __QDMA_DESCQ_H__ */

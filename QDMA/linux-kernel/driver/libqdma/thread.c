@@ -35,7 +35,7 @@ int qdma_kthread_dump(struct qdma_kthread *thp, char *buf, int buflen,
 		return 0;
 
 	lock_thread(thp);
-	len += sprintf(buf + len, "%s, cpu %u, work %u.\n",
+	len += snprintf(buf, buflen, "%s, cpu %u, work %u.\n",
 			thp->name, thp->cpu, thp->work_cnt);
 
 	if (detail)

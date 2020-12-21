@@ -58,7 +58,7 @@ static DEFINE_MUTEX(res_mutex);
 
 void *qdma_calloc(uint32_t num_blocks, uint32_t size)
 {
-	return kzalloc(num_blocks * size, GFP_KERNEL);
+	return kzalloc((num_blocks * (size_t)size), GFP_KERNEL);
 }
 
 void qdma_memfree(void *memptr)
@@ -111,20 +111,6 @@ void qdma_resource_lock_take(void)
 void qdma_resource_lock_give(void)
 {
 	mutex_unlock(&res_mutex);
-}
-
-void qdma_hw_error_handler(void *dev_hndl, enum qdma_error_idx err_idx)
-{
-	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-
-	pr_err("%s detected", xdev->hw.qdma_hw_get_error_name(err_idx));
-}
-
-void qdma_get_device_attr(void *dev_hndl, struct qdma_dev_attributes **dev_cap)
-{
-	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-
-	*dev_cap = &xdev->dev_cap;
 }
 
 void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw)

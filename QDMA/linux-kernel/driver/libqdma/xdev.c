@@ -295,7 +295,8 @@ int xdev_list_dump(char *buf, int buflen)
 
 	mutex_lock(&xdev_mutex);
 	list_for_each_entry_safe(xdev, tmp, &xdev_list, list_head) {
-		len += sprintf(buf + len, "qdma%05x\t%02x:%02x.%02x\n",
+		len += snprintf(buf + len, buflen - len,
+				"qdma%05x\t%02x:%02x.%02x\n",
 				xdev->conf.bdf, xdev->conf.pdev->bus->number,
 				PCI_SLOT(xdev->conf.pdev->devfn),
 				PCI_FUNC(xdev->conf.pdev->devfn));
@@ -514,7 +515,8 @@ static int xdev_map_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 
 /*****************************************************************************/
 /**
- * xdev_identify_bars() - identifies the user bar and bypass bar
+ * xdev_identify_bars() - identifies the AXI Master Lite bar
+ *			and AXI Bridge Master bar
  *
  * @param[in]	xdev:	pointer to current xdev
  * @param[in]	pdev:	pointer to struct pci_dev\
@@ -544,7 +546,7 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 	if (num_bars_present > 1) {
 		int rv = 0;
 
-		/* USER BAR IDENTIFICATION */
+		/* AXI Master Lite BAR IDENTIFICATION */
 		if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)
 			xdev->conf.bar_num_user = DEFAULT_USER_BAR;
 		else {
@@ -560,13 +562,15 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 		}
 
 		if (rv < 0) {
-			pr_err("get user bar failed with error = %d", rv);
+			pr_err("get AXI Master Lite bar failed with error = %d",
+					rv);
 			return xdev->hw.qdma_get_error_code(rv);
 		}
 
-		pr_info("User BAR %d.\n", xdev->conf.bar_num_user);
+		pr_info("AXI Master Lite BAR %d.\n",
+				xdev->conf.bar_num_user);
 
-		/* BYPASS BAR IDENTIFICATION */
+		/* AXI Bridge Master BAR IDENTIFICATION */
 		if (num_bars_present > 2) {
 			for (bar_idx = 0; bar_idx < num_bars_present;
 								bar_idx++) {
@@ -576,7 +580,7 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 						xdev->conf.bar_num_config)) {
 					xdev->conf.bar_num_bypass =
 						bar_id_list[bar_idx];
-					pr_info("Bypass BAR %d.\n",
+					pr_info("AXI Bridge Master BAR %d.\n",
 						xdev->conf.bar_num_bypass);
 					break;
 				}
@@ -880,7 +884,8 @@ int qdma_device_online(struct pci_dev *pdev, unsigned long dev_hndl, int reset)
 	if ((xdev->conf.master_pf) &&
 			(xdev->conf.qdma_drv_mode == POLL_MODE)) {
 
-		rv = xdev->hw.qdma_hw_error_enable(xdev, QDMA_ERRS_ALL);
+		rv = xdev->hw.qdma_hw_error_enable(xdev,
+				xdev->hw.qdma_max_errors);
 		if (rv < 0) {
 			pr_err("Failed to enable error interrupts");
 			return -EINVAL;
@@ -1018,7 +1023,8 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 		goto disable_device;
 	}
 
-	pcie_set_readrq(pdev, 512);
+	if (pcie_get_readrq(pdev) < 512)
+		pcie_set_readrq(pdev, 512);
 
 	/* allocate zeroed device book keeping structure */
 	xdev = xdev_alloc(conf);
@@ -1032,7 +1038,8 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 	xdev_flag_set(xdev, XDEV_FLAG_OFFLINE);
 	xdev_list_add(xdev);
 
-	rv = sprintf(xdev->conf.name, "qdma%05x-p%s",
+	rv = snprintf(xdev->conf.name, QDMA_DEV_NAME_MAXLEN,
+		"qdma%05x-p%s",
 		xdev->conf.bdf, dev_name(&xdev->conf.pdev->dev));
 	xdev->conf.name[rv] = '\0';
 

@@ -209,17 +209,17 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 		"\t\tq add idx <N> [mode <mm|st>] [dir <h2c|c2h|bi|cmpt>] - add a queue\n"
 		"\t\t                                                  *mode default to mm\n"
 		"\t\t                                                  *dir default to h2c\n"
-	        "\t\tq add list <start_idx> <num_Qs> [mode <mm|st>] [dir <h2c|c2h|bi|cmpt>] - add multiple queues at once\n"
+			"\t\tq add list <start_idx> <num_Qs> [mode <mm|st>] [dir <h2c|c2h|bi|cmpt>] - add multiple queues at once\n"
 	        "\t\tq start idx <N> [dir <h2c|c2h|bi|cmpt>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
-			"                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
+		   "                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
 	        "                                    [mm_chn <0|1>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
 	        "                                    [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en]\n"
-	        "                                    [cmpl_ovf_dis] [fetch_credit  <h2c|c2h|bi|none>] [dis_cmpl_status] [c2h_cmpl_intr_en] - start a single queue\n"
+			"                                    [cmpl_ovf_dis] [fetch_credit  <h2c|c2h|bi|none>] [dis_cmpl_status] [c2h_cmpl_intr_en] [aperture_sz <aperture size power of 2>]- start a single queue\n"
 	        "\t\tq start list <start_idx> <num_Qs> [dir <h2c|c2h|bi|cmpt>] [idx_bufsz <0:15>] [idx_tmr <0:15>]\n"
 			"                                    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [sw_desc_sz <3>]\n"
 	        "                                    [mm_chn <0|1>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en] [dis_cmpl_status]\n"
 	        "                                    [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [cmpl_ovf_dis]\n"
-	        "                                    [fetch_credit <h2c|c2h|bi|none>] [dis_cmpl_status] [c2h_cmpl_intr_en] - start multiple queues at once\n"
+			"                                    [fetch_credit <h2c|c2h|bi|none>] [dis_cmpl_status] [c2h_cmpl_intr_en] [aperture_sz <aperture size power of 2>]- start multiple queues at once\n"
 	        "\t\tq stop idx <N> dir [<h2c|c2h|bi|cmpt>] - stop a single queue\n"
 	        "\t\tq stop list <start_idx> <num_Qs> dir [<h2c|c2h|bi|cmpt>] - stop list of queues at once\n"
 	        "\t\tq del idx <N> dir [<h2c|c2h|bi|cmpt>] - delete a queue\n"
@@ -240,7 +240,8 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 		"\t\treg dump [dmap <Q> <N>]          - register dump. Only dump dmap registers if dmap is specified.\n"
 		"\t\t                                   specify dmap range to dump: Q=queue, N=num of queues\n"
 		"\t\treg read [bar <N>] <addr>        - read a register\n"
-		"\t\treg write [bar <N>] <addr> <val> - write a register\n");
+		"\t\treg write [bar <N>] <addr> <val> - write a register\n"
+		"\t\treg info bar <N> <addr> [num_regs <M>] - dump detailed fields information of a register\n");
 	fprintf(fp,
 		"\t\tintring dump vector <N> <start_idx> <end_idx> - interrupt ring dump for vector number <N>  \n"
 		"\t\t                                                for intrrupt entries :<start_idx> --- <end_idx>\n");
@@ -326,6 +327,7 @@ static int validate_regcmd(enum xnl_op_t qcmd, struct xcmd_reg	*regcmd)
 		case XNL_CMD_REG_DUMP:
 			break;
 		case XNL_CMD_REG_RD:
+		case XNL_CMD_REG_INFO_READ:
 		case XNL_CMD_REG_WRT:
 			if ((regcmd->bar != 0) && (regcmd->bar != 2)) {
 				printf("dmactl: bar %u number out of range\n",
@@ -409,6 +411,31 @@ static int parse_reg_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 			return rv;
 		regcmd->sflags |= XCMD_REG_F_VAL_SET;
 
+		i++;
+	} else if (!strcmp(argv[i], "info")) {
+		xcmd->op = XNL_CMD_REG_INFO_READ;
+		get_next_arg(argc, argv, &i);
+		if (!strcmp(argv[i], "bar")) {
+			rv = next_arg_read_int(argc, argv, &i, &regcmd->bar);
+			if (rv < 0)
+				return rv;
+			regcmd->sflags |= XCMD_REG_F_BAR_SET;
+			get_next_arg(argc, argv, &i);
+		}
+		rv = arg_read_int(argv[i], &xcmd->req.reg.reg);
+		if (rv < 0)
+			return rv;
+		regcmd->sflags |= XCMD_REG_F_REG_SET;
+		i++;
+
+		if (i < argc) {
+			if (!strcmp(argv[i], "num_regs")) {
+				rv = next_arg_read_int(argc, argv, &i, &regcmd->range_end);
+				if (rv < 0)
+					return rv;
+			}
+		} else
+			regcmd->range_end = 1;
 		i++;
 	}
 
@@ -855,6 +882,19 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 			i++;
 		} else if (!strcmp(argv[i], "ping_pong_en")) {
 			f_arg_set |= 1 << QPARM_PING_PONG_EN;
+			i++;
+		} else if (!strcmp(argv[i], "aperture_sz")) {
+			rv = next_arg_read_int(argc, argv, &i, &v1);
+			if (rv < 0)
+				return rv;
+
+			if(((v1 != 0) && ((v1 &(v1 - 1))))) {
+				warnx("Error: Keyhole aperture should be a size of 2\n");
+				return -EINVAL;
+			}
+
+			f_arg_set |= 1 << QPARM_KEYHOLE_EN;
+			qparm->aperture_sz = v1;
 			i++;
 		} else if (!strcmp(argv[i], "pfetch_bypass_en")) {
 			qparm->flags |= XNL_F_PFETCH_BYPASS_EN;

@@ -36,7 +36,7 @@
 #define QDMA_Q_DUMP_LINE_SZ	(24 * 1024)
 #define QDMA_Q_LIST_LINE_SZ	(200)
 
-static int xnl_dev_list(struct sk_buff *skb_2, struct genl_info *info);
+static int xnl_dev_list(struct sk_buff *skb2, struct genl_info *info);
 
 #ifdef RHEL_RELEASE_VERSION
 #if RHEL_RELEASE_VERSION(8, 3) > RHEL_RELEASE_CODE
@@ -161,6 +161,7 @@ static struct nla_policy xnl_policy[XNL_ATTR_MAX] = {
 	[XNL_ATTR_Q_STATE]   =		{ .type = NLA_U32 },
 	[XNL_ATTR_ERROR]   =		{ .type = NLA_U32 },
 	[XNL_ATTR_PING_PONG_EN]   =	{ .type = NLA_U32 },
+	[XNL_ATTR_APERTURE_SZ]   =	{ .type = NLA_U32 },
 	[XNL_ATTR_DEV]		=	{ .type = NLA_BINARY,
 					  .len = QDMA_DEV_ATTR_STRUCT_SIZE, },
 	[XNL_ATTR_GLOBAL_CSR]		=	{ .type = NLA_BINARY,
@@ -197,7 +198,7 @@ static int xnl_register_read(struct sk_buff *, struct genl_info *);
 static int xnl_register_write(struct sk_buff *, struct genl_info *);
 static int xnl_get_global_csr(struct sk_buff *skb2, struct genl_info *info);
 static int xnl_get_queue_state(struct sk_buff *, struct genl_info *);
-
+static int xnl_config_reg_info_dump(struct sk_buff *, struct genl_info *);
 #ifdef ERR_DEBUG
 static int xnl_err_induce(struct sk_buff *skb2, struct genl_info *info);
 #endif
@@ -371,6 +372,19 @@ static struct genl_ops xnl_ops[] = {
 #endif
 #endif
 		.doit = xnl_config_reg_dump,
+	},
+	{
+		.cmd = XNL_CMD_REG_INFO_READ,
+	#ifdef RHEL_RELEASE_VERSION
+	#if RHEL_RELEASE_VERSION(8, 3) > RHEL_RELEASE_CODE
+		.policy = xnl_policy,
+	#endif
+	#else
+	#if KERNEL_VERSION(5, 2, 0) > LINUX_VERSION_CODE
+		.policy = xnl_policy,
+	#endif
+	#endif
+		.doit = xnl_config_reg_info_dump,
 	},
 	{
 		.cmd = XNL_CMD_Q_CMPT,
@@ -879,13 +893,13 @@ static struct xlnx_qdata *xnl_rcv_check_qidx(struct genl_info *info,
 }
 
 static int xnl_chk_attr(enum xnl_attr_t xnl_attr, struct genl_info *info,
-				unsigned short qidx, char *buf)
+				unsigned short qidx, char *buf, int buflen)
 {
 	int rv = 0;
 
 	if (!info->attrs[xnl_attr]) {
 		if (buf) {
-			rv += sprintf(buf,
+			rv += snprintf(buf, buflen,
 				"Missing attribute %s for qidx = %u\n",
 				xnl_attr_str[xnl_attr],
 				qidx);
@@ -916,33 +930,41 @@ static void xnl_extract_extra_config_attr(struct genl_info *info,
 	if (qconf->q_type == Q_CMPT)
 		qconf->cmpl_udd_en = 1;
 
-	if (xnl_chk_attr(XNL_ATTR_QRNGSZ_IDX, info, qconf->qidx, NULL) == 0)
+	if (xnl_chk_attr(XNL_ATTR_QRNGSZ_IDX, info, qconf->qidx, NULL, 0) == 0)
 		qconf->desc_rng_sz_idx = qconf->cmpl_rng_sz_idx =
 				nla_get_u32(info->attrs[XNL_ATTR_QRNGSZ_IDX]);
-	if (xnl_chk_attr(XNL_ATTR_C2H_BUFSZ_IDX, info, qconf->qidx, NULL) == 0)
+	if (xnl_chk_attr(XNL_ATTR_C2H_BUFSZ_IDX, info,
+			qconf->qidx, NULL, 0) == 0)
 		qconf->c2h_buf_sz_idx =
 			nla_get_u32(info->attrs[XNL_ATTR_C2H_BUFSZ_IDX]);
-	if (xnl_chk_attr(XNL_ATTR_CMPT_TIMER_IDX, info, qconf->qidx, NULL) == 0)
+	if (xnl_chk_attr(XNL_ATTR_CMPT_TIMER_IDX, info,
+			qconf->qidx, NULL, 0) == 0)
 		qconf->cmpl_timer_idx =
 			nla_get_u32(info->attrs[XNL_ATTR_CMPT_TIMER_IDX]);
-	if (xnl_chk_attr(XNL_ATTR_CMPT_CNTR_IDX, info, qconf->qidx, NULL) == 0)
+	if (xnl_chk_attr(XNL_ATTR_CMPT_CNTR_IDX, info,
+			qconf->qidx, NULL, 0) == 0)
 		qconf->cmpl_cnt_th_idx =
 			nla_get_u32(info->attrs[XNL_ATTR_CMPT_CNTR_IDX]);
-	if (xnl_chk_attr(XNL_ATTR_MM_CHANNEL, info, qconf->qidx, NULL) == 0)
+	if (xnl_chk_attr(XNL_ATTR_MM_CHANNEL, info, qconf->qidx, NULL, 0) == 0)
 		qconf->mm_channel =
 			nla_get_u32(info->attrs[XNL_ATTR_MM_CHANNEL]);
 	if (xnl_chk_attr(XNL_ATTR_CMPT_DESC_SIZE,
-				info, qconf->qidx, NULL) == 0)
+				info, qconf->qidx, NULL, 0) == 0)
 		qconf->cmpl_desc_sz =
 			nla_get_u32(info->attrs[XNL_ATTR_CMPT_DESC_SIZE]);
 	if (xnl_chk_attr(XNL_ATTR_SW_DESC_SIZE,
-				info, qconf->qidx, NULL) == 0)
+				info, qconf->qidx, NULL, 0) == 0)
 		qconf->sw_desc_sz =
 			nla_get_u32(info->attrs[XNL_ATTR_SW_DESC_SIZE]);
 	if (xnl_chk_attr(XNL_ATTR_PING_PONG_EN,
-					 info, qconf->qidx, NULL) == 0)
+					 info, qconf->qidx, NULL, 0) == 0)
 		qconf->ping_pong_en = 1;
-	if (xnl_chk_attr(XNL_ATTR_CMPT_TRIG_MODE, info, qconf->qidx, NULL) == 0)
+	if (xnl_chk_attr(XNL_ATTR_APERTURE_SZ,
+					 info, qconf->qidx, NULL, 0) == 0)
+		qconf->aperture_size =
+			nla_get_u32(info->attrs[XNL_ATTR_APERTURE_SZ]);
+	if (xnl_chk_attr(XNL_ATTR_CMPT_TRIG_MODE, info,
+				qconf->qidx, NULL, 0) == 0)
 		qconf->cmpl_trig_mode =
 			nla_get_u32(info->attrs[XNL_ATTR_CMPT_TRIG_MODE]);
 	else
@@ -1184,6 +1206,20 @@ static int xnl_dev_version_capabilities(struct sk_buff *skb2,
 
 	rv = xnl_msg_add_attr_uint(skb, XNL_ATTR_DEV_FLR_PRESENT,
 			dev_attr.flr_present);
+	if (rv < 0) {
+		pr_err("xnl_msg_add_attr_uint() failed: %d", rv);
+		goto free_skb;
+	}
+
+	rv = xnl_msg_add_attr_uint(skb, XNL_ATTR_DEBUG_EN,
+			dev_attr.debug_mode);
+	if (rv < 0) {
+		pr_err("xnl_msg_add_attr_uint() failed: %d", rv);
+		goto free_skb;
+	}
+
+	rv = xnl_msg_add_attr_uint(skb, XNL_ATTR_DESC_ENGINE_MODE,
+			dev_attr.desc_eng_mode);
 	if (rv < 0) {
 		pr_err("xnl_msg_add_attr_uint() failed: %d", rv);
 		goto free_skb;
@@ -1584,7 +1620,7 @@ static int xnl_q_add(struct sk_buff *skb2, struct genl_info *info)
 
 	qidx = qconf.qidx;
 
-	rv = xnl_chk_attr(XNL_ATTR_NUM_Q, info, qidx, cur);
+	rv = xnl_chk_attr(XNL_ATTR_NUM_Q, info, qidx, cur, end - cur);
 	if (rv < 0)
 		goto send_resp;
 	num_q = nla_get_u32(info->attrs[XNL_ATTR_NUM_Q]);
@@ -1679,7 +1715,7 @@ static int xnl_q_start(struct sk_buff *skb2, struct genl_info *info)
 
 	qidx = qconf.qidx;
 
-	rv = xnl_chk_attr(XNL_ATTR_NUM_Q, info, qidx, buf);
+	rv = xnl_chk_attr(XNL_ATTR_NUM_Q, info, qidx, buf, XNL_RESP_BUFLEN_MIN);
 	if (rv < 0)
 		goto send_resp;
 	num_q = nla_get_u32(info->attrs[XNL_ATTR_NUM_Q]);
@@ -1819,7 +1855,8 @@ stop_q:
 			}
 		}
 	}
-	rv2 = sprintf(buf + rv, "Stopped Queues %u -> %u.\n", qidx, i - 1);
+	rv2 = snprintf(buf + rv, XNL_RESP_BUFLEN_MIN - rv,
+				  "Stopped Queues %u -> %u.\n", qidx, i - 1);
 send_resp:
 	rv = xnl_respond_buffer(info, buf, XNL_RESP_BUFLEN_MIN, rv);
 	return rv;
@@ -1887,7 +1924,8 @@ del_q:
 			}
 		}
 	}
-	rv2 = sprintf(buf + rv, "Deleted Queues %u -> %u.\n", qidx, i - 1);
+	rv2 = snprintf(buf + rv, XNL_RESP_BUFLEN_MIN - rv,
+				  "Deleted Queues %u -> %u.\n", qidx, i - 1);
 send_resp:
 	rv = xnl_respond_buffer(info, buf, XNL_RESP_BUFLEN_MIN, rv);
 	return rv;
@@ -1916,6 +1954,47 @@ static int xnl_config_reg_dump(struct sk_buff *skb2, struct genl_info *info)
 		return -ENOMEM;
 
 	qdma_config_reg_dump(xpdev->dev_hndl, buf, buf_len);
+
+	rv = xnl_respond_buffer(info, buf, buf_len, rv);
+
+	kfree(buf);
+	return rv;
+}
+
+static int xnl_config_reg_info_dump
+	(struct sk_buff *skb2, struct genl_info *info)
+{
+	struct xlnx_pci_dev *xpdev;
+	char *buf;
+	int buf_len = XNL_RESP_BUFLEN_MAX;
+	int rv = 0;
+	uint32_t reg_addr = 0;
+	uint32_t num_regs = 0;
+
+	if (info == NULL)
+		return 0;
+
+	xnl_dump_attrs(info);
+
+	xpdev = xnl_rcv_check_xpdev(info);
+	if (!xpdev)
+		return 0;
+
+	if (info->attrs[XNL_ATTR_RSP_BUF_LEN])
+		buf_len =  nla_get_u32(info->attrs[XNL_ATTR_RSP_BUF_LEN]);
+
+	if (info->attrs[XNL_ATTR_REG_ADDR])
+		reg_addr =  nla_get_u32(info->attrs[XNL_ATTR_REG_ADDR]);
+
+	if (info->attrs[XNL_ATTR_NUM_REGS])
+		num_regs =  nla_get_u32(info->attrs[XNL_ATTR_NUM_REGS]);
+
+	buf = xnl_mem_alloc(buf_len, info);
+	if (!buf)
+		return -ENOMEM;
+
+	qdma_config_reg_info_dump(xpdev->dev_hndl,
+				reg_addr, num_regs, buf, buf_len);
 
 	rv = xnl_respond_buffer(info, buf, buf_len, rv);
 
@@ -2085,7 +2164,8 @@ static int xnl_q_dump_desc(struct sk_buff *skb2, struct genl_info *info)
 
 	buf = xnl_mem_alloc(buf_len, info);
 	if (!buf) {
-		rv = sprintf(ebuf, "%s OOM %d.\n",
+		rv = snprintf(ebuf, XNL_RESP_BUFLEN_MIN,
+				"%s OOM %d.\n",
 				__func__, buf_len);
 		xnl_respond_buffer(info, ebuf, XNL_RESP_BUFLEN_MIN, rv);
 		return -ENOMEM;
@@ -2181,7 +2261,8 @@ static int xnl_q_dump_cmpt(struct sk_buff *skb2, struct genl_info *info)
 
 	buf = xnl_mem_alloc(buf_len, info);
 	if (!buf) {
-		rv = sprintf(ebuf, "%s OOM %d.\n",
+		rv = snprintf(ebuf, XNL_RESP_BUFLEN_MIN,
+				"%s OOM %d.\n",
 				__func__, buf_len);
 		xnl_respond_buffer(info, ebuf, XNL_RESP_BUFLEN_MIN, rv);
 		return -ENOMEM;
@@ -2348,7 +2429,9 @@ static int xnl_q_cmpt_read(struct sk_buff *skb2, struct genl_info *info)
 						buf_len - diff_len, 0);
 			diff_len = strlen(buf);
 			if (cmpt_entry_len > 32) {
-				diff_len += sprintf(buf + diff_len, " ");
+				diff_len += snprintf(buf + diff_len,
+						buf_len - diff_len,
+						" ");
 				hex_dump_to_buffer(cmpt_entry_list + 32,
 						cmpt_entry_len,
 						32, 4, buf + diff_len,
@@ -2397,7 +2480,7 @@ static int xnl_err_induce(struct sk_buff *skb2, struct genl_info *info)
 
 	buf = xnl_mem_alloc(XNL_RESP_BUFLEN_MAX, info);
 	if (!buf) {
-		rv = sprintf(ebuf, "%s OOM %d.\n",
+		rv = snprintf(ebuf, XNL_RESP_BUFLEN_MIN, "%s OOM %d.\n",
 				__func__, XNL_RESP_BUFLEN_MAX);
 		xnl_respond_buffer(info, ebuf, XNL_RESP_BUFLEN_MIN, rv);
 		return -ENOMEM;
@@ -2411,10 +2494,12 @@ static int xnl_err_induce(struct sk_buff *skb2, struct genl_info *info)
 
 	if (qdma_queue_set_err_induction(xpdev->dev_hndl, qdata->qhndl, err,
 					 buf, XNL_RESP_BUFLEN_MAX)) {
-		rv += sprintf(buf + rv, "Failed to set induce err\n");
+		rv += snprintf(buf + rv, XNL_RESP_BUFLEN_MAX,
+					 "Failed to set induce err\n");
 		goto send_resp;
 	}
-	rv += sprintf(buf + rv, "queue error induced\n");
+	rv += snprintf(buf + rv, XNL_RESP_BUFLEN_MAX,
+				  "queue error induced\n");
 
 send_resp:
 	rv = xnl_respond_buffer(info, buf, XNL_RESP_BUFLEN_MAX, rv);
@@ -2457,7 +2542,8 @@ static int xnl_q_read_pkt(struct sk_buff *skb2, struct genl_info *info)
 
 	buf = xnl_mem_alloc(buf_len, info);
 	if (!buf) {
-		rv = sprintf(ebuf, "%s OOM %d.\n",
+		rv = snprintf(ebuf, XNL_RESP_BUFLEN_MIN,
+				"%s OOM %d.\n",
 				__func__, buf_len);
 		xnl_respond_buffer(info, ebuf, XNL_RESP_BUFLEN_MIN, rv);
 		return -ENOMEM;
@@ -2529,19 +2615,19 @@ static int xnl_intr_ring_dump(struct sk_buff *skb2, struct genl_info *info)
 
 	if (xpdev->idx == 0) {
 		if (vector_idx == 0) {
-			rv += sprintf(buf + rv,
+			rv += snprintf(buf + rv, buf_len,
 				"vector_idx %u is for error interrupt\n",
 				vector_idx);
 			goto send_resp;
 		} else if (vector_idx == 1) {
-			rv += sprintf(buf + rv,
+			rv += snprintf(buf + rv, buf_len,
 				"vector_idx %u is for user interrupt\n",
 				vector_idx);
 			goto send_resp;
 		}
 	} else {
 		if (vector_idx == 0) {
-			rv += sprintf(buf + rv,
+			rv += snprintf(buf + rv, buf_len,
 				"vector_idx %u is for user interrupt\n",
 				vector_idx);
 			goto send_resp;
@@ -2615,7 +2701,7 @@ static int xnl_register_read(struct sk_buff *skb2, struct genl_info *info)
 	} else if (bar_num == conf.bar_num_user) {
 		rv = qdma_device_read_user_register(xpdev, reg_addr, &reg_val);
 		if (rv < 0) {
-			pr_err("User bar register read failed with error = %d\n",
+			pr_err("AXI Master Lite bar register read failed with error = %d\n",
 					rv);
 			return rv;
 		}
@@ -2623,12 +2709,13 @@ static int xnl_register_read(struct sk_buff *skb2, struct genl_info *info)
 		rv = qdma_device_read_bypass_register(xpdev,
 				reg_addr, &reg_val);
 		if (rv < 0) {
-			pr_err("Bypass bar register read failed with error = %d\n",
+			pr_err("AXI Bridge Master bar register read failed with error = %d\n",
 					rv);
 			return rv;
 		}
 	} else {
-		rv += sprintf(buf + rv, "Invalid bar number\n");
+		rv += snprintf(buf + rv, XNL_RESP_BUFLEN_MIN,
+				"Invalid bar number\n");
 		goto send_resp;
 	}
 
@@ -2699,7 +2786,7 @@ static int xnl_register_write(struct sk_buff *skb2, struct genl_info *info)
 	} else if (bar_num == conf.bar_num_user) {
 		rv = qdma_device_write_user_register(xpdev, reg_addr, reg_val);
 		if (rv < 0) {
-			pr_err("User bar register write failed with error = %d\n",
+			pr_err("AXI Master Lite bar register write failed with error = %d\n",
 					rv);
 			return rv;
 		}
@@ -2708,12 +2795,13 @@ static int xnl_register_write(struct sk_buff *skb2, struct genl_info *info)
 		rv = qdma_device_write_bypass_register(xpdev,
 				reg_addr, reg_val);
 		if (rv < 0) {
-			pr_err("Bypass bar register write failed with error = %d\n",
+			pr_err("AXI Bridge Master bar register write failed with error = %d\n",
 					rv);
 			return rv;
 		}
 	} else {
-		rv += sprintf(buf + rv, "Invalid bar number\n");
+		rv += snprintf(buf + rv, XNL_RESP_BUFLEN_MIN,
+					 "Invalid bar number\n");
 		goto send_resp;
 	}
 

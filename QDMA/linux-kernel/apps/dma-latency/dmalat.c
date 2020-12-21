@@ -41,7 +41,6 @@ static void usage(const char *name)
 
 	fprintf(stdout, "  -%c (--%s) config file that has configration for IO\n",
 		long_opts[i].val, long_opts[i].name);
-	i++;
 }
 
 static unsigned int num_trailing_blanks(char *word)

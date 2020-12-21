@@ -174,7 +174,8 @@ int qdma_device_interrupt_setup(struct xlnx_dma_dev *xdev)
 			return -EINVAL;
 		}
 
-		rv = xdev->hw.qdma_hw_error_enable(xdev, QDMA_ERRS_ALL);
+		rv = xdev->hw.qdma_hw_error_enable(xdev,
+				xdev->hw.qdma_max_errors);
 		if (rv < 0) {
 			pr_err("Failed to enable error interrupt, err = %d",
 					rv);
@@ -307,17 +308,6 @@ void qdma_device_cleanup(struct xlnx_dma_dev *xdev)
 			qdma_queue_stop((unsigned long int)xdev,
 					i + qdev->qmax, buf, QDMA_BUF_LEN);
 	}
-
-#ifndef __QDMA_VF__
-	if (xdev->func_id == 0) {
-		for (i = 0; i < xdev->dev_cap.mm_channel_max; i++) {
-			xdev->hw.qdma_mm_channel_conf(xdev, i,
-						      DMA_TO_DEVICE, 0);
-			xdev->hw.qdma_mm_channel_conf(xdev, i,
-						      DMA_FROM_DEVICE, 0);
-		}
-	}
-#endif
 
 	for (i = 0, descq = qdev->h2c_descq; i < qdev->qmax; i++, descq++) {
 		if (descq->q_state == Q_STATE_ENABLED)

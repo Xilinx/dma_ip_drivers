@@ -311,6 +311,7 @@ static int get_cmd_resp_buf_len(enum xnl_op_t op, struct xcmd_info *xcmd)
         	buf_len = XNL_RESP_BUFLEN_MAX * 10;
         	break;
         case XNL_CMD_REG_DUMP:
+		case XNL_CMD_REG_INFO_READ:
         	buf_len = XNL_RESP_BUFLEN_MAX * 6;
         break;
 		case XNL_CMD_DEV_STAT:
@@ -373,6 +374,10 @@ static void xnl_msg_add_extra_config_attrs(struct xnl_hdr *hdr,
 	if (xcmd->req.qparm.sflags & (1 << QPARM_PING_PONG_EN)) {
 		xnl_msg_add_int_attr(hdr,  XNL_ATTR_PING_PONG_EN,
 							 xcmd->req.qparm.ping_pong_en);
+	}
+	if (xcmd->req.qparm.sflags & (1 << QPARM_KEYHOLE_EN)) {
+		xnl_msg_add_int_attr(hdr,  XNL_ATTR_APERTURE_SZ,
+							 xcmd->req.qparm.aperture_sz);
 	}
 }
 
@@ -472,6 +477,16 @@ static int xnl_send_cmd(struct xnl_cb *cb, struct xnl_hdr *hdr,
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_REG_VAL,
 							 xcmd->req.reg.val);
 		break;
+		case XNL_CMD_REG_INFO_READ:
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_REG_BAR_NUM,
+								 xcmd->req.reg.bar);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_REG_ADDR,
+							 xcmd->req.reg.reg);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_REGS,
+							 xcmd->req.reg.range_end);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_RSP_BUF_LEN,
+				dlen);
+		break;
         case XNL_CMD_REG_DUMP:
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_RSP_BUF_LEN,
 				dlen);
@@ -566,6 +581,8 @@ void xnl_parse_dev_cap_attrs(struct xnl_hdr *hdr, uint32_t *attrs,
 	xcmd->resp.cap.num_qs = attrs[XNL_ATTR_DEV_NUMQS];
 	xcmd->resp.cap.flr_present = attrs[XNL_ATTR_DEV_FLR_PRESENT];
 	xcmd->resp.cap.mm_en = attrs[XNL_ATTR_DEV_MM_ENABLE];
+	xcmd->resp.cap.debug_mode = attrs[XNL_ATTR_DEBUG_EN];
+	xcmd->resp.cap.desc_eng_mode = attrs[XNL_ATTR_DESC_ENGINE_MODE];
 	xcmd->resp.cap.mm_cmpt_en =
 			attrs[XNL_ATTR_DEV_MM_CMPT_ENABLE];
 	xcmd->resp.cap.st_en = attrs[XNL_ATTR_DEV_ST_ENABLE];
@@ -841,6 +858,11 @@ int qdma_reg_read(struct xcmd_info *cmd)
 }
 
 int qdma_reg_write(struct xcmd_info *cmd)
+{
+	return proc_reg_cmd(cmd);
+}
+
+int qdma_reg_info_read(struct xcmd_info *cmd)
 {
 	return proc_reg_cmd(cmd);
 }

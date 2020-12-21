@@ -96,7 +96,7 @@ _____________________________________________________________________________
 	- mode: Mode in which the driver needs to be loaded
 	- config_bar: Config bar number
 	- master_pf: Master PF  
-
+	- num_threads: number of threads for monitoring the writeback of completions
 
    Sample qdma.conf can be found below:
 

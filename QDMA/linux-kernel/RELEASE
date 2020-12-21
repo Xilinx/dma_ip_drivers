@@ -1,7 +1,7 @@
 RELEASE: 2020.1 Patch 
 =====================
 
-This release is validated on QDMA4.0 2020.1 Patch based example design
+This release is validated on QDMA4.0 2020.2 based example design and QDMA3.1 2020.2 based example design.
 
 SUPPORTED FEATURES:
 ===================
@@ -82,10 +82,18 @@ SUPPORTED FEATURES:
 - Resolved HW errors observed with QDMA4.0 MM only design
 - Addressed VF performance issues.
 
+2020.2 Updates
+--------------
+- Added support for detailed register dump
+- Added support for post processing HW error messages
+- Added support for Debug mode and Internal only mode
+- Added support for Versal PDI programming through keyhole interface
+
 KNOWN ISSUES:
 =============
 - In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-- On QDMA4.0 2020.1 design, HW error observed during the probe of the VFs
+- On QDMA4.0 2020.1 design onwards, HW error observed during the probe of the VFs
+- With 2020.2 QDMA4.0 design, ST Performance design has performance drop for higher packet sizes
 
 DRIVER LIMITATIONS:
 ===================

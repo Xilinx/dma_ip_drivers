@@ -60,7 +60,6 @@ static void usage(const char *name)
 
 	fprintf(stdout, "  -%c (--%s) config file that has configration for IO\n",
 		long_opts[i].val, long_opts[i].name);
-	i++;
 }
 
 static unsigned int num_trailing_blanks(char *word)
@@ -1168,7 +1167,7 @@ static int thread_exit_check(struct io_info *_info) {
 			usleep(100);
 			return 1;
 		} else {
-		    printf("Exit Check: tid =%d, req_sbmitted=%u req_completed=%u dir=%s, intime=%u loop_count=%d, \n",
+		    printf("Exit Check: tid =%u, req_sbmitted=%u req_completed=%u dir=%s, intime=%u loop_count=%d, \n",
 			   _info->thread_id, _info->num_req_submitted,
 			   _info->num_req_completed,_info->dir == Q_DIR_H2C ? "H2C": "C2H",
 			   _info->num_req_completed_in_time,  _info->exit_check_count);
@@ -1355,6 +1354,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 		unsigned char is_vf, struct io_info *info)
 {
 	struct xcmd_q_parm *qparm;
+	unsigned int f_arg_set = 0;
 
 
 	if (!xcmd) {
@@ -1369,6 +1369,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 	xcmd->log_msg_dump = xnl_dump_response;
 	qparm->idx = info->qid;
 	qparm->num_q = 1;
+	f_arg_set |= 1 << QPARM_IDX;
 	qparm->fetch_credit = Q_ENABLE_C2H_FETCH_CREDIT;
 
 	if (info->mode == Q_MODE_MM)
@@ -1377,7 +1378,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QMODE_ST;
 	else
 		return -EINVAL;
-
+	f_arg_set |= 1 << QPARM_MODE;
 	if (info->dir == Q_DIR_H2C)
 		qparm->flags |= XNL_F_QDIR_H2C;
 	else if (info->dir == Q_DIR_C2H)
@@ -1385,15 +1386,19 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 	else
 		return -EINVAL;
 
+	f_arg_set |= 1 << QPARM_DIR;
 	qparm->qrngsz_idx = info->idx_rngsz;
-
+	f_arg_set |= 1 << QPARM_RNGSZ_IDX;
 	if ((info->dir == Q_DIR_C2H) && (info->mode == Q_MODE_ST)) {
 		if (cmptsz)
 			qparm->cmpt_entry_size = info->cmptsz;
 		else
 			qparm->cmpt_entry_size = XNL_ST_C2H_CMPT_DESC_SIZE_8B;
+		f_arg_set |= 1 << QPARM_CMPTSZ;
 		qparm->cmpt_tmr_idx = info->idx_tmr;
+		f_arg_set |= 1 << QPARM_CMPT_TMR_IDX;
 		qparm->cmpt_cntr_idx = info->idx_cnt;
+		f_arg_set |= 1 << QPARM_CMPT_CNTR_IDX;
 
 		if (!strcmp(info->trig_mode, "every"))
 			qparm->cmpt_trig_mode = 1;
@@ -1411,7 +1416,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 			printf("Error: unknown q trigmode %s.\n", info->trig_mode);
 			return -EINVAL;
 		}
-
+		f_arg_set |= 1 << QPARM_CMPT_TRIG_MODE;
 		if (pfetch_en)
 			qparm->flags |= XNL_F_PFETCH_EN;
 	}
@@ -1420,6 +1425,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 			XNL_F_CMPL_STATUS_PEND_CHK | XNL_F_CMPL_STATUS_DESC_EN |
 			XNL_F_FETCH_CREDIT);
 
+	qparm->sflags = f_arg_set;
 	return 0;
 }
 

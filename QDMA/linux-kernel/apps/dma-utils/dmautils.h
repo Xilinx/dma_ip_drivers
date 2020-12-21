@@ -95,6 +95,8 @@ enum qdma_q_parm_type {
 	QPARM_CMPT_TRIG_MODE,
 	/** @QPARM_PING_PONG_EN: ping pong param  */
 	QPARM_PING_PONG_EN,
+	/** @KEYHOLE_PARAM: keyhole feature aperture */
+	QPARM_KEYHOLE_EN,
 	/** @QPARM_MM_CHANNEL: q mm channel enable param */
 	QPARM_MM_CHANNEL,
 	/** @QPARM_MAX: max q param */
@@ -140,6 +142,8 @@ struct xcmd_q_parm {
 	unsigned char is_qp;
 	/** @ping_pong_en: ping pong en */
 	unsigned char ping_pong_en;
+	/** @aperture_sz: aperture_size for keyhole transfers*/
+	unsigned int aperture_sz;
 };
 
 /**
@@ -179,6 +183,10 @@ struct xcmd_dev_cap {
 	unsigned int mailbox_en;
 	/** @mm_channel_max: Max MM channel */
 	unsigned int mm_channel_max;
+	/** @debug_mode: Debug Mode*/
+	unsigned int debug_mode;
+	/** @desc_eng_mode: Descriptor Engine Mode*/
+	unsigned int desc_eng_mode;
 };
 
 /**
@@ -217,7 +225,7 @@ struct xnl_dev_info {
 	unsigned char dev_func;
 	/** @config_bar: config bar */
 	unsigned char config_bar;
-	/** @user_bar: user bar */
+	/** @user_bar: AXI Master Lite(user bar) */
 	unsigned char user_bar;
 	/** @qmax: SW qmax */
 	unsigned int qmax;
@@ -519,6 +527,17 @@ int qdma_q_cmpt_read(struct xcmd_info *cmd);
  *
  *****************************************************************************/
 int qdma_reg_read(struct xcmd_info *cmd);
+
+/*****************************************************************************/
+/**
+ * qdma_reg_info_read() - read register fields information
+ *
+ * @cmd:	command information
+ *
+ * Return:	>=0 for success and <0 for error
+ *
+ *****************************************************************************/
+int qdma_reg_info_read(struct xcmd_info *cmd);
 
 /*****************************************************************************/
 /**

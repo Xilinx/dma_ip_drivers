@@ -25,6 +25,7 @@ static int (*xnl_proc_fn[XNL_CMD_MAX])(struct xcmd_info *xcmd) = {
 	qdma_reg_dump,           /* XNL_CMD_REG_DUMP */
 	qdma_reg_read,           /* XNL_CMD_REG_RD */
 	qdma_reg_write,          /* XNL_CMD_REG_WRT */
+	qdma_reg_info_read,      /* XNL_CMD_REG_INFO_READ */
 	qdma_dev_q_list_dump,    /* XNL_CMD_Q_LIST */
 	qdma_q_add,              /* XNL_CMD_Q_ADD */
 	qdma_q_start,            /* XNL_CMD_Q_START */
@@ -45,6 +46,12 @@ static int (*xnl_proc_fn[XNL_CMD_MAX])(struct xcmd_info *xcmd) = {
 	NULL                     /* XNL_CMD_GET_Q_STATE */
 };
 
+static const char *desc_engine_mode[] = {
+	"Internal and Bypass mode",
+	"Bypass only mode",
+	"Inernal only mode"
+};
+
 static void dump_dev_cap(struct xcmd_info *xcmd)
 {
 	printf("%s", xcmd->resp.cap.version_str);
@@ -56,7 +63,15 @@ static void dump_dev_cap(struct xcmd_info *xcmd)
 	printf("ST enabled                             : %s\n",	xcmd->resp.cap.st_en ? "yes":"no");
 	printf("MM enabled                             : %s\n", xcmd->resp.cap.mm_en ? "yes":"no");
 	printf("Mailbox enabled                        : %s\n", xcmd->resp.cap.mailbox_en ? "yes":"no");
-	printf("MM completion enabled                  : %s\n\n", xcmd->resp.cap.mm_cmpt_en ? "yes":"no");
+	printf("MM completion enabled                  : %s\n", xcmd->resp.cap.mm_cmpt_en ? "yes":"no");
+	printf("Debug Mode enabled                     : %s\n", xcmd->resp.cap.debug_mode ? "yes":"no");
+
+	if (xcmd->resp.cap.desc_eng_mode < sizeof(desc_engine_mode) / sizeof(desc_engine_mode[0])) {
+		printf("Desc Engine Mode                       : %s\n",
+			   desc_engine_mode[xcmd->resp.cap.desc_eng_mode]);
+	}else {
+		printf("Desc Engine Mode                       : INVALID\n");
+	}
 }
 
 static void dump_dev_info(struct xcmd_info *xcmd)
@@ -69,7 +84,7 @@ static void dump_dev_info(struct xcmd_info *xcmd)
 	printf("HW q base                              : %u\n", xcmd->resp.dev_info.qbase);
 	printf("Max queues                             : %u\n",	xcmd->resp.dev_info.qmax);
 	printf("Config bar                             : %u\n", xcmd->resp.dev_info.config_bar);
-	printf("User bar                               : %u\n", xcmd->resp.dev_info.user_bar);
+	printf("AXI Master Lite bar                    : %u\n", xcmd->resp.dev_info.user_bar);
 }
 
 static void dump_dev_stat(struct xcmd_info *xcmd)
@@ -154,6 +169,8 @@ void xnl_dump_cmd_resp(struct xcmd_info *xcmd)
 		break;
 	case XNL_CMD_GLOBAL_CSR:
 			dump_dev_global_csr(xcmd);
+		break;
+	case XNL_CMD_REG_INFO_READ:
 		break;
 	default:
 		break;

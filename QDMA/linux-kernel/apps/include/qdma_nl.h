@@ -16,9 +16,7 @@
  * @file
  * @brief This file contains the declarations for qdma netlink interfaces
  *
- */
-
-/** physical function name (no more than 15 characters) */
+ ** physical function name (no more than 15 characters) */
 #define XNL_NAME_PF		"xnl_pf"
 /** virtual function name */
 #define XNL_NAME_VF		"xnl_vf"
@@ -102,7 +100,7 @@ enum xnl_attr_t {
 	XNL_ATTR_DEV_STAT_STC2H_PKTS2,	/**< number of ST C2H packets */
 
 	XNL_ATTR_DEV_CFG_BAR,		/**< device config bar number */
-	XNL_ATTR_DEV_USR_BAR,		/**< device user bar number */
+	XNL_ATTR_DEV_USR_BAR,		/**< device AXI Master Lite(user bar) number */
 	XNL_ATTR_DEV_QSET_MAX,		/**< max queue sets */
 	XNL_ATTR_DEV_QSET_QBASE,	/**< queue base start */
 
@@ -155,6 +153,7 @@ enum xnl_attr_t {
 	XNL_ATTR_Q_STATE,
 	XNL_ATTR_ERROR,
 	XNL_ATTR_PING_PONG_EN,
+	XNL_ATTR_APERTURE_SZ,
 	XNL_ATTR_DEV_STAT_PING_PONG_LATMIN1,
 	XNL_ATTR_DEV_STAT_PING_PONG_LATMIN2,
 	XNL_ATTR_DEV_STAT_PING_PONG_LATMAX1,
@@ -162,9 +161,12 @@ enum xnl_attr_t {
 	XNL_ATTR_DEV_STAT_PING_PONG_LATAVG1,
 	XNL_ATTR_DEV_STAT_PING_PONG_LATAVG2,
 	XNL_ATTR_DEV,
+	XNL_ATTR_DEBUG_EN,	/** Debug Regs Capability*/
+	XNL_ATTR_DESC_ENGINE_MODE, /** Descriptor Engine Capability */
 #ifdef ERR_DEBUG
 	XNL_ATTR_QPARAM_ERR_INFO,	/**< queue param info */
 #endif
+	XNL_ATTR_NUM_REGS,			/**< number of regs */
 	XNL_ATTR_MAX,
 };
 
@@ -262,6 +264,8 @@ static const char *xnl_attr_str[XNL_ATTR_MAX + 1] = {
 	"ERROR",			/**< XNL_ATTR_ERROR */
 	"PING_PONG_EN",		/**< XNL_PING_PONG_EN */
 	"DEV_ATTR",			/**< XNL_ATTR_DEV */
+	"XNL_ATTR_DEBUG_EN",	/** XNL_ATTR_DEBUG_EN */
+	"XNL_ATTR_DESC_ENGINE_MODE",	/** XNL_ATTR_DESC_ENGINE_MODE */
 #ifdef ERR_DEBUG
 	"QPARAM_ERR_INFO",		/**< queue param info */
 #endif
@@ -284,6 +288,7 @@ enum xnl_op_t {
 	XNL_CMD_REG_DUMP,	/**< dump the register information */
 	XNL_CMD_REG_RD,		/**< read a register value */
 	XNL_CMD_REG_WRT,	/**< write value to a register */
+	XNL_CMD_REG_INFO_READ,
 
 	XNL_CMD_Q_LIST,		/**< list all the queue present in the system */
 	XNL_CMD_Q_ADD,		/**< add a queue */

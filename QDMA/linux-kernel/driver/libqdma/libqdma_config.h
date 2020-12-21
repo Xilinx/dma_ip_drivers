@@ -107,12 +107,12 @@ unsigned int qdma_get_qmax(unsigned long dev_hndl);
  * qdma_set_intr_rngsz() - Handler function to set the intr_ring_size value
  *
  * @param[in]	dev_hndl:	qdma device handle
- * @param[in]	rngsz:		interrupt aggregation ring size
+ * @param[in]	intr_rngsz:	interrupt aggregation ring size
  *
  * @return	QDMA_OPERATION_SUCCESSFUL on success
  * @return	<0 on failure
  *****************************************************************************/
-int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 rngsz);
+int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz);
 
 /*****************************************************************************/
 /**
