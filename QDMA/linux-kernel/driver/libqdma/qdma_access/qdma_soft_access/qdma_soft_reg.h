@@ -442,7 +442,7 @@ extern "C" {
 #define     QDMA_GLBL_ERR_DSC_MASK                          BIT(2)
 #define     QDMA_GLBL_ERR_TRQ_MASK                          BIT(3)
 #define     QDMA_GLBL_ERR_ST_C2H_MASK                       BIT(8)
-#define     QDMA_GLBL_ERR_ST_H2C_MASK                       BIT(11)
+#define     QDMA_GLBL_ERR_ST_H2C_MASK                       BIT(16)
 
 #define QDMA_OFFSET_C2H_ERR_STAT                            0xAF0
 #define QDMA_OFFSET_C2H_ERR_MASK                            0xAF4
