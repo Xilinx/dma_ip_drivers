@@ -590,7 +590,7 @@ enum qdma_reg_read_type {
  * enum qdma_reg_read_groups - Indicates reg read groups
  */
 enum qdma_reg_read_groups {
-	/** @QDMA_REG_READ_GROUP_1: Read the register from  0x000 to 0x288 */
+	/** @QDMA_REG_READ_GROUP_1: Read the register from  0x000 to 0x2C4 */
 	QDMA_REG_READ_GROUP_1,
 	/** @QDMA_REG_READ_GROUP_2: Read the register from 0x400 to 0xAFC */
 	QDMA_REG_READ_GROUP_2,

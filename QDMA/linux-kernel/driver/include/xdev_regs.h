@@ -81,7 +81,7 @@ static struct xreg_info qdma_config_regs[] = {
 	{"GLBL_TRQ_ERR_LOG",				0x26C, 0,  0, 0, 0,},
 	{"GLBL_DSC_DBG_DAT",				0x270, 2,  0, 0, 0,},
 	{"GLBL_DSC_ERR_LOG2",				0x27C, 0,  0, 0, 0,},
-	{"GLBL_INTERRUPT_CFG",				0x288, 0,  0, 0, 0,},
+	{"GLBL_INTERRUPT_CFG",				0x2C4, 0,  0, 0, 0,},
 
 	/* QDMA_TRQ_SEL_FMAP (0x00400 - 0x7FC) */
 	/* TODO: max 256, display 4 for now */
