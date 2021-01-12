@@ -4152,7 +4152,7 @@ int qdma_get_device_attributes(void *dev_hndl,
 	dev_info->mm_cmpt_en  = FIELD_GET(QDMA_GLBL2_MM_CMPT_EN_MASK, reg_val);
 
 	/* ST/MM enabled? */
-	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL2_CHANNEL_MDMA);
+	reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL2_CHANNEL_STRM);
 	dev_info->mm_en = (FIELD_GET(QDMA_GLBL2_MM_C2H_MASK, reg_val)
 			&& FIELD_GET(QDMA_GLBL2_MM_H2C_MASK, reg_val)) ? 1 : 0;
 	dev_info->st_en = (FIELD_GET(QDMA_GLBL2_ST_C2H_MASK, reg_val)
