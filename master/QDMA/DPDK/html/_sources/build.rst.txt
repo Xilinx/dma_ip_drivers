@@ -43,27 +43,27 @@ Xilinx QDMA DPDK Software database structure
 Below Table describes the DPDK software database structure and its contents
 on the Xilinx GitHub https://github.com/Xilinx/dma_ip_drivers, subdirectory QDMA/DPDK.
 
-+--------------------------+-------------------------------------------------------------+
-| Directory                | Description                                                 |
-+==========================+=============================================================+
-| drivers/net/qdma         | Xilinx QDMA DPDK poll mode driver                           |
-+--------------------------+-------------------------------------------------------------+
-| examples/qdma_testapp    | Xilinx CLI based test application for QDMA                  |
-+--------------------------+-------------------------------------------------------------+
-| tools/0001-PKTGEN-3.6.1- | This is dpdk-pktgen patch based on dpdk-pktgen v3.6.1.      |
-| Patch-to-add-Jumbo-packet| This patch extends dpdk-pktgen application to handle packets|
-| -support.patch           | with packet sizes more than 1518 bytes and it disables the  |
-|                          | packet size classification logic to remove application      |
-|                          | overhead in performance measurement. This patch is used for |
-|                          | performance testing with dpdk-pktgen application.           |
-+--------------------------+-------------------------------------------------------------+
-| RELEASE.txt              | Release Notes                                               |
-+--------------------------+-------------------------------------------------------------+
++-----------------------------+------------------------------------------------------------------+
+| Directory                   | Description                                                      |
++=============================+==================================================================+
+| drivers/net/qdma            | Xilinx QDMA DPDK poll mode driver                                |
++-----------------------------+------------------------------------------------------------------+
+| examples/qdma_testapp       | Xilinx CLI based test application for QDMA                       |
++-----------------------------+------------------------------------------------------------------+
+| tools/0001-PKTGEN-20.12.0-  | This is dpdk-pktgen patch based on dpdk-pktgen v20.12.0.         |
+| Patch-to-add-Jumbo-packet   | This patch extends dpdk-pktgen application to handle packets     |
+| -support.patch              | with packet sizes more than 1518 bytes and it disables the       |
+|                             | packet size classification logic to remove application           |
+|                             | overhead in performance measurement. This patch is used for      |
+|                             | performance testing with dpdk-pktgen application.                |
++-----------------------------+------------------------------------------------------------------+
+| RELEASE.txt                 | Release Notes                                                    |
++-----------------------------+------------------------------------------------------------------+
 
 Setup: Download and modifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The reference driver code requires DPDK version 19.11.
+The reference driver code requires DPDK version 20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.
 
@@ -79,16 +79,17 @@ is installed and move to this directory.
 	cd <server_dir>/<dpdk_test_area>
 	git clone http://dpdk.org/git/dpdk-stable
 	cd dpdk-stable
-	git checkout v19.11
+	git checkout v20.11
+	git clone git://dpdk.org/dpdk-kmods
 	cp -r <dpdk_sw_database>/drivers/net/qdma ./drivers/net/
 	cp -r <dpdk_sw_database>/examples/qdma_testapp ./examples/
 
-Additionally, make below changes to the DPDK 19.11 tree to build QDMA driver,
+Additionally, make below changes to the DPDK 20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.
 
 	1. To build QDMA driver
 
-	a. Add below lines to ``./config/common_base`` in DPDK 19.11 tree
+	a. Add below lines to ``./config/common_base`` in DPDK 20.11 tree
 
 	::
 
@@ -182,28 +183,20 @@ Setup: Make Commands
 	::
 
 		cd <server_dir>/<dpdk_test_area>/dpdk-stable
-		make config T=x86_64-native-linuxapp-gcc install
+		meson build
+		cd build
+		ninja
+		ninja install
+		ldconfig
 
-	- In the make output, verify that the QDMA files are being built.
-	  Below figure shows the QDMA files that are built as part of make.
-
-	  .. image:: images/make_output.png
-
-	  The following should appear when make completes
+	- The following should appear when ninja completes
 
 	  ::
 
-		Build complete [x86_64-native-linuxapp-gcc]
+		Linking target app/test/dpdk-test.
 
-	- Verify that ``librte_pmd_qdma.a`` is installed in ``./x86_64-native-linuxapp-gcc/lib`` directory.
+	- Verify that ``librte_net_qdma.a`` is installed in ``./build/drivers`` directory.
 
-
-	Additionally, for memory mapped mode, BRAM size can be configured with ``make`` command.
-	Default BRAM size is set to 512KB in the driver makefile.
-
-	::
-
-		make config T=x86_64-native-linuxapp-gcc BRAM_SIZE=<BRAM size in bytes in decimal> install
 
 * Compile Test application
 
@@ -213,7 +206,7 @@ Setup: Make Commands
 
 		sudo su
 		cd examples/qdma_testapp
-		make RTE_SDK=`pwd`/../.. RTE_TARGET=x86_64-native-linuxapp-gcc
+		make RTE_SDK=`pwd`/../.. RTE_TARGET=build
 
 	The following should appear when make completes
 
@@ -226,11 +219,11 @@ Setup: Make Commands
 
 	::
 
-		make BRAM_SIZE=<BRAM size in bytes in decimal> RTE_SDK=`pwd`/../.. RTE_TARGET=x86_64-native-linuxapp-gcc
+		make BRAM_SIZE=<BRAM size in bytes in decimal> RTE_SDK=`pwd`/../.. RTE_TARGET=build
 
 
 If any of above steps are missed or require code modifications,
 perform ``make clean`` before required modifications and re-building.
 For driver related modifications, perform ``make clean``
-from inside ``x86_64-native-linuxapp-gcc`` directory.
+from inside ``build`` directory.
 

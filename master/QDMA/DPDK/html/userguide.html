@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.2',
+              VERSION:'2020.2.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.2
+                2020.2.1
               </div>
             
           
@@ -468,7 +468,7 @@ application and to interact with the QDMA PCIe device.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span># mkdir /mnt/huge
 # mount -t hugetlbfs nodev /mnt/huge
 # modprobe uio
-# insmod ../../x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+# insmod ../../dpdk-kmods/linux/igb_uio/igb_uio.ko
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
@@ -518,7 +518,7 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <ol class="arabic simple" start="8">
 <li>Run the qdma_testapp using the following command</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#./build/app/qdma_testapp -c 0xf -n 4
+<div class="highlight-none"><div class="highlight"><pre><span></span>#./build/qdma_testapp -c 0xf -n 4
 </pre></div>
 </div>
 <ul class="simple">
@@ -578,7 +578,7 @@ Xilinx supports following device arguments to configure PCIe device.</p>
 <div><p>This parameter specifies the PCIe BAR number where QDMA configuration register space is mapped.
 Valid values are 0 to 5. Default is set to 0 i.e. BAR 0 in the driver.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/app/qdma_testapp -c 0x1f -n 4 -w 81:00.0,config_bar=2 -w 81:00.1,config_bar=4
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,config_bar=2 -w 81:00.1,config_bar=4
 </pre></div>
 </div>
 <p>This example configures BAR 2 as QDMA configuration BAR for device “81:00.0”
@@ -590,7 +590,7 @@ and BAR 4 as QDMA configuration BAR for device “81:00.1”.</p>
 <div><p>This parameter enables or disables descriptor prefetch on C2H streaming queues.
 Default is prefetch disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/app/qdma_testapp -c 0x1f -n 4 -w 81:00.0,desc_prefetch=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,desc_prefetch=1
 </pre></div>
 </div>
 <p>This example enables descriptor prefetch on all the streaming C2H queues of
@@ -602,7 +602,7 @@ the device “81:00.0”.</p>
 <div><p>This parameter sets the completion entry length of the completion queue.
 Valid lengths are 8, 16 and 32 bytes. Default length is 8 bytes.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/app/qdma_testapp -c 0x1f -n 4 -w 81:00.0,cmpt_desc_len=32
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,cmpt_desc_len=32
 </pre></div>
 </div>
 <p>This example sets completion entry length to 32 bytes on all the completion queues
@@ -620,7 +620,7 @@ of the device “81:00.0”.</p>
 <p>5 - Trigger when either of USER_TIMER or COUNT is reached.</p>
 <p>Default value configured in the driver is 5.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/app/qdma_testapp -c 0x1f -n 4 -w 81:00.0,trigger_mode=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,trigger_mode=1
 </pre></div>
 </div>
 <p>This example sets the trigger mode to every event for all the
@@ -635,7 +635,7 @@ completion queues of the device “81:00.0”.</p>
 <p>2 - Simple bypass mode</p>
 <p>Default is internal mode i.e. bypass disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/app/qdma_testapp -c 0x1f -n 4 -w 81:00.0,c2h_byp_mode=2
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,c2h_byp_mode=2
 </pre></div>
 </div>
 <p>This example sets simple bypass mode on all the C2H queues belonging to the
@@ -649,7 +649,7 @@ PCIe device “81:00.0”.</p>
 <p>1 - Bypass enabled</p>
 <p>Default is Bypass disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/app/qdma_testapp -c 0x1f -n 4 -w 81:00.0,h2c_byp_mode=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,h2c_byp_mode=1
 </pre></div>
 </div>
 <p>This example sets bypass mode on all the H2C queues belonging to the
@@ -662,7 +662,7 @@ PCIe device “81:00.0”.</p>
 <h3>CLI support in qdma_testapp<a class="headerlink" href="#cli-support-in-qdma-testapp" title="Permalink to this headline">¶</a></h3>
 <p>Sample log of the qdma_testapp execution is given below.
 After running the qdma_testapp, command line prompt appears on the console as shown below.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#./build/app/qdma_testapp -c 0xf -n 4
+<div class="highlight-none"><div class="highlight"><pre><span></span>#./build/qdma_testapp -c 0xf -n 4
 QDMA testapp rte eal init...
 EAL: Detected 8 lcore(s)
 EAL: Probing VFIO support...
@@ -1037,7 +1037,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 18, 2020.
+        Last updated on February 02, 2021.
       </span>
 
     </p>
@@ -1115,7 +1115,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2021, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

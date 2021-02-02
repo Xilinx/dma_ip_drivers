@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.2',
+              VERSION:'2020.2.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.2
+                2020.2.1
               </div>
             
           
@@ -1177,10 +1177,10 @@
 <p>0 on success, &lt; 0 on failure</p>
 </div>
 <div class="section" id="qdma-dev-stop">
-<span id="cid-qdma-dev-stop"></span><span id="doxid-group-dpdk-devops-func-1ga148a3286b0c2a5e3904c5ee96719b34e"></span><h2>qdma_dev_stop<a class="headerlink" href="#qdma-dev-stop" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-dev-stop"></span><span id="doxid-group-dpdk-devops-func-1ga33b59d17fcc07971504946a53178a766"></span><h2>qdma_dev_stop<a class="headerlink" href="#qdma-dev-stop" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">void</span> <span class="n">qdma_dev_stop</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_stop</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
 <p>DPDK callback to stop the device.</p>
@@ -1243,13 +1243,35 @@
 </table>
 </div>
 <div class="section" id="qdma-dev-close">
-<span id="cid-qdma-dev-close"></span><span id="doxid-group-dpdk-devops-func-1gaeaa4f11806fabd53061573291c5ffb5c"></span><h2>qdma_dev_close<a class="headerlink" href="#qdma-dev-close" title="Permalink to this headline">¶</a></h2>
+<span id="cid-qdma-dev-close"></span><span id="doxid-group-dpdk-devops-func-1gab47a75fea9395f7e40a9f3e562b928b3"></span><h2>qdma_dev_close<a class="headerlink" href="#qdma-dev-close" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
 <pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">void</span> <span class="n">qdma_dev_close</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_close</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
 </pre>
 <p class="rubric">Details:</p>
 <p>DPDK callback to close the device.</p>
+<p>This API frees the descriptor rings and objects beonging to all the queues of the given port. It also clears the FMAP.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-vf-dev-close">
+<span id="cid-qdma-vf-dev-close"></span><span id="doxid-group-dpdk-devops-func-1ga561391f1379aa1f99d1618238ed37fe4"></span><h2>qdma_vf_dev_close<a class="headerlink" href="#qdma-vf-dev-close" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_vf_dev_close</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to close the VF device.</p>
 <p>This API frees the descriptor rings and objects beonging to all the queues of the given port. It also clears the FMAP.</p>
 <p class="rubric">Parameters:</p>
 <table border="1" class="colwidths-given docutils">
@@ -1352,7 +1374,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 18, 2020.
+        Last updated on February 02, 2021.
       </span>
 
     </p>
@@ -1430,7 +1452,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2021, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

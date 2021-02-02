@@ -1,7 +1,7 @@
 Driver Design
 *************
 
-QDMA DPDK driver is implemented as an Ethernet poll mode driver in DPDK v19.11.
+QDMA DPDK driver is implemented as an Ethernet poll mode driver in DPDK v20.11.
 It supports both streaming (network) and memory (compute) interface to QDMA.
 Below diagram gives a high level system overview of the QDMA DPDK driver.
 

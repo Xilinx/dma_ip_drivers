@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.2',
+              VERSION:'2020.2.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.2
+                2020.2.1
               </div>
             
           
@@ -467,8 +467,8 @@ and <code class="docutils literal"><span class="pre">xilinx_qdma_vf</span></code
 on the Xilinx GitHub <a class="reference external" href="https://github.com/Xilinx/dma_ip_drivers">https://github.com/Xilinx/dma_ip_drivers</a>, subdirectory QDMA/DPDK.</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="30%" />
-<col width="70%" />
+<col width="31%" />
+<col width="69%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Directory</th>
@@ -482,10 +482,10 @@ on the Xilinx GitHub <a class="reference external" href="https://github.com/Xili
 <tr class="row-odd"><td>examples/qdma_testapp</td>
 <td>Xilinx CLI based test application for QDMA</td>
 </tr>
-<tr class="row-even"><td>tools/0001-PKTGEN-3.6.1-
+<tr class="row-even"><td>tools/0001-PKTGEN-20.12.0-
 Patch-to-add-Jumbo-packet
 -support.patch</td>
-<td>This is dpdk-pktgen patch based on dpdk-pktgen v3.6.1.
+<td>This is dpdk-pktgen patch based on dpdk-pktgen v20.12.0.
 This patch extends dpdk-pktgen application to handle packets
 with packet sizes more than 1518 bytes and it disables the
 packet size classification logic to remove application
@@ -499,7 +499,7 @@ performance testing with dpdk-pktgen application.</td>
 </table>
 <div class="section" id="setup-download-and-modifications">
 <h3>Setup: Download and modifications<a class="headerlink" href="#setup-download-and-modifications" title="Permalink to this headline">¶</a></h3>
-<p>The reference driver code requires DPDK version 19.11.
+<p>The reference driver code requires DPDK version 20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.</p>
 <p>Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU1525
@@ -510,19 +510,20 @@ is installed and move to this directory.</p>
 cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
 git clone http://dpdk.org/git/dpdk-stable
 cd dpdk-stable
-git checkout v19.11
+git checkout v20.11
+git clone git://dpdk.org/dpdk-kmods
 cp -r &lt;dpdk_sw_database&gt;/drivers/net/qdma ./drivers/net/
 cp -r &lt;dpdk_sw_database&gt;/examples/qdma_testapp ./examples/
 </pre></div>
 </div>
-<p>Additionally, make below changes to the DPDK 19.11 tree to build QDMA driver,
+<p>Additionally, make below changes to the DPDK 20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>To build QDMA driver</li>
 </ol>
 <ol class="loweralpha simple">
-<li>Add below lines to <code class="docutils literal"><span class="pre">./config/common_base</span></code> in DPDK 19.11 tree</li>
+<li>Add below lines to <code class="docutils literal"><span class="pre">./config/common_base</span></code> in DPDK 20.11 tree</li>
 </ol>
 <div class="highlight-none"><div class="highlight"><pre><span></span>#
 #Complie Xilinx QDMA PMD driver
@@ -612,26 +613,22 @@ The following modifications must be made to the <code class="docutils literal"><
 <blockquote>
 <div><p>Execute the following to compile the driver.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable
-make config T=x86_64-native-linuxapp-gcc install
+meson build
+cd build
+ninja
+ninja install
+ldconfig
 </pre></div>
 </div>
 <ul>
-<li><p class="first">In the make output, verify that the QDMA files are being built.
-Below figure shows the QDMA files that are built as part of make.</p>
-<img alt="_images/make_output.png" src="_images/make_output.png" />
-<p>The following should appear when make completes</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>Build complete [x86_64-native-linuxapp-gcc]
+<li><p class="first">The following should appear when ninja completes</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>Linking target app/test/dpdk-test.
 </pre></div>
 </div>
 </li>
-<li><p class="first">Verify that <code class="docutils literal"><span class="pre">librte_pmd_qdma.a</span></code> is installed in <code class="docutils literal"><span class="pre">./x86_64-native-linuxapp-gcc/lib</span></code> directory.</p>
+<li><p class="first">Verify that <code class="docutils literal"><span class="pre">librte_net_qdma.a</span></code> is installed in <code class="docutils literal"><span class="pre">./build/drivers</span></code> directory.</p>
 </li>
 </ul>
-<p>Additionally, for memory mapped mode, BRAM size can be configured with <code class="docutils literal"><span class="pre">make</span></code> command.
-Default BRAM size is set to 512KB in the driver makefile.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>make config T=x86_64-native-linuxapp-gcc BRAM_SIZE=&lt;BRAM size in bytes in decimal&gt; install
-</pre></div>
-</div>
 </div></blockquote>
 </li>
 <li><p class="first">Compile Test application</p>
@@ -639,7 +636,7 @@ Default BRAM size is set to 512KB in the driver makefile.</p>
 <div><p>Change to root user and compile the application</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>sudo su
 cd examples/qdma_testapp
-make RTE_SDK=`pwd`/../.. RTE_TARGET=x86_64-native-linuxapp-gcc
+make RTE_SDK=`pwd`/../.. RTE_TARGET=build
 </pre></div>
 </div>
 <p>The following should appear when make completes</p>
@@ -648,7 +645,7 @@ make RTE_SDK=`pwd`/../.. RTE_TARGET=x86_64-native-linuxapp-gcc
 </div>
 <p>Additionally, for memory mapped mode, BRAM size can be configured with make command.
 Default BRAM size is set to 512KB in the driver makefile.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>make BRAM_SIZE=&lt;BRAM size in bytes in decimal&gt; RTE_SDK=`pwd`/../.. RTE_TARGET=x86_64-native-linuxapp-gcc
+<div class="highlight-none"><div class="highlight"><pre><span></span>make BRAM_SIZE=&lt;BRAM size in bytes in decimal&gt; RTE_SDK=`pwd`/../.. RTE_TARGET=build
 </pre></div>
 </div>
 </div></blockquote>
@@ -657,7 +654,7 @@ Default BRAM size is set to 512KB in the driver makefile.</p>
 <p>If any of above steps are missed or require code modifications,
 perform <code class="docutils literal"><span class="pre">make</span> <span class="pre">clean</span></code> before required modifications and re-building.
 For driver related modifications, perform <code class="docutils literal"><span class="pre">make</span> <span class="pre">clean</span></code>
-from inside <code class="docutils literal"><span class="pre">x86_64-native-linuxapp-gcc</span></code> directory.</p>
+from inside <code class="docutils literal"><span class="pre">build</span></code> directory.</p>
 </div>
 </div>
 </div>
@@ -692,7 +689,7 @@ from inside <code class="docutils literal"><span class="pre">x86_64-native-linux
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 18, 2020.
+        Last updated on February 02, 2021.
       </span>
 
     </p>
@@ -770,7 +767,7 @@ from inside <code class="docutils literal"><span class="pre">x86_64-native-linux
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2021, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>
