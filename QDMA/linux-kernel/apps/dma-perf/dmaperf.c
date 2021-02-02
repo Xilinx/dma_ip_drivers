@@ -180,6 +180,10 @@ struct io_info {
 	unsigned int pipe_flow_id;
 	unsigned int pipe_slr_id;
 	unsigned int pipe_tdest;
+	unsigned int mm_chnl;
+	int keyhole_en;
+	unsigned int aperture_sz;
+	unsigned int offset;
 #ifdef DEBUG
 	unsigned long long total_nodes;
 	unsigned long long freed_nodes;
@@ -203,10 +207,14 @@ struct list_head {
 
 static unsigned int *io_exit = 0;
 int io_exit_id;
+static unsigned int mm_chnl = 0;
 static unsigned int force_exit = 0;
 static unsigned int num_q = 0;
 static unsigned int pkt_sz = 0;
 static unsigned int num_pkts;
+static int keyhole_en = 0;
+static unsigned int aperture_sz = 0;
+static unsigned int offset = 0;
 static unsigned int tsecs = 0;
 struct io_info *info = NULL;
 static char cfg_name[20];
@@ -615,6 +623,7 @@ static void create_thread_info(void)
 					_info[base].q_ctrl = q_ctrl;
 					_info[base].fd = last_fd;
 					_info[base].pkt_burst = num_pkts;
+					_info[base].mm_chnl = mm_chnl;
 					_info[base].pkt_sz = pkt_sz;
 					if ((_info[base].mode == Q_MODE_ST) &&
 							(stm_mode)) {
@@ -624,6 +633,12 @@ static void create_thread_info(void)
 						_info[base].pipe_slr_id = pipe_slr_id_lst[(k*num_q) + i];
 						_info[base].pipe_tdest = pipe_tdest_lst[(k*num_q) + i];
 					}
+
+					if (_info[base].mode == Q_MODE_MM &&
+							keyhole_en) {
+						_info[base].aperture_sz = aperture_sz;
+					}
+					_info[base].offset = offset;
 #if THREADS_SET_CPU_AFFINITY
 					_info[base].cpu = h2c_cpu;
 #endif
@@ -649,6 +664,7 @@ static void create_thread_info(void)
 					_info[base].qid = q_start + i;
 					_info[base].q_ctrl = q_ctrl;
 					_info[base].pkt_burst = num_pkts;
+					_info[base].mm_chnl = mm_chnl;
 					_info[base].pkt_sz = pkt_sz;
 #if THREADS_SET_CPU_AFFINITY
 					_info[base].cpu = c2h_cpu;
@@ -830,12 +846,34 @@ static void parse_config_file(const char *cfg_fname)
 				printf("Error: Invalid pkt_sz:%s\n", value);
 				goto prase_cleanup;
 			}
+		} else if (!strncmp(config, "mm_chnl", 7)) {
+			if (arg_read_int(value, &mm_chnl)) {
+				printf("Error: Invalid mm_chnl:%s\n", value);
+				goto prase_cleanup;
+			}
 		} else if (!strncmp(config, "num_pkt", 7)) {
 			if (arg_read_int(value, &num_pkts)) {
 				printf("Error: Invalid num_pkt:%s\n", value);
 				goto prase_cleanup;
 			}
-		} else if (!strncmp(config, "no_memcpy", 9)) {
+		} else if (!strncmp(config, "aperture_sz", 11)) {
+			if (arg_read_int(value, &aperture_sz)) {
+				printf("Error: Invalid aperture size:%s\n", value);
+				goto prase_cleanup;
+			}
+		} else if (!strncmp(config, "offset", 6)) {
+			if (arg_read_int(value, &offset)) {
+				printf("Error: Invalid aperture offset:%s\n", value);
+				goto prase_cleanup;
+			}
+		}else if (!strncmp(config, "keyhole_en", 7)) {
+
+			if (arg_read_int(value, &keyhole_en)) {
+				printf("Error: Invalid keyhole option:%s\n", value);
+				goto prase_cleanup;
+			}
+		}
+		else if (!strncmp(config, "no_memcpy", 9)) {
 			if (arg_read_int(value, &no_memcpy)) {
 				printf("Error: Invalid no_memcpy:%s\n", value);
 				goto prase_cleanup;
@@ -945,6 +983,7 @@ static void parse_config_file(const char *cfg_fname)
 
 		}
 	}
+
 	fclose(fp);
 	if (vf_perf == 0) {
 		dmactl_dev_prefix_str = pf_dmactl_prefix_str;
@@ -1421,6 +1460,19 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 			qparm->flags |= XNL_F_PFETCH_EN;
 	}
 
+	if (info->dir == Q_MODE_MM) {
+		qparm->mm_channel = info->mm_chnl;
+		f_arg_set |= 1 <<QPARM_MM_CHANNEL;
+	}
+
+
+	if ((info->dir == Q_DIR_H2C) && (info->mode == Q_MODE_MM)) {
+		if (keyhole_en) {
+			qparm->aperture_sz = info->aperture_sz;
+			f_arg_set |= 1 << QPARM_KEYHOLE_EN;
+		}
+	}
+
 	qparm->flags |= (XNL_F_CMPL_STATUS_EN | XNL_F_CMPL_STATUS_ACC_EN |
 			XNL_F_CMPL_STATUS_PEND_CHK | XNL_F_CMPL_STATUS_DESC_EN |
 			XNL_F_FETCH_CREDIT);
@@ -1815,13 +1867,13 @@ static void *io_thread(void *argp)
 					       _info->fd,
 					       iov,
 					       iovcnt,
-					       0);
+						  offset);
 			} else {
 				io_prep_preadv(io_list[0],
 					       _info->fd,
 					       iov,
 					       iovcnt,
-					       0);
+						  offset);
 			}
 
 			ret = io_submit(node->ctxt, 1, io_list);

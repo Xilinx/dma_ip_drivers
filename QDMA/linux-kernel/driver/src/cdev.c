@@ -241,7 +241,7 @@ static void unmap_user_buf(struct qdma_io_cb *iocb, bool write)
 	for (i = 0; i < iocb->pages_nr; i++) {
 		if (iocb->pages[i]) {
 			if (!write)
-				set_page_dirty_lock(iocb->pages[i]);
+				set_page_dirty(iocb->pages[i]);
 			put_page(iocb->pages[i]);
 		} else
 			break;

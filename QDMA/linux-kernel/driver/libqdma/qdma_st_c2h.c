@@ -21,6 +21,7 @@
 
 #include "qdma_descq.h"
 
+#include <asm/cacheflush.h>
 #include <linux/kernel.h>
 #include <linux/delay.h>
 
@@ -516,9 +517,11 @@ int descq_st_c2h_read(struct qdma_descq *descq, struct qdma_request *req,
 			u64 *pkt_tx_time =
 			(u64 *)(page_address(fsg->pg) + fsg->offset);
 
-			if (!req->no_memcpy)
+			if (!req->no_memcpy) {
 				memcpy(page_address(tsg->pg) + toff,
 				       faddr, copy);
+				flush_dcache_page(tsg->pg);
+			}
 			if (descq->conf.ping_pong_en &&
 				*pkt_tx_time == descq->ping_pong_tx_time) {
 				u64 latency;

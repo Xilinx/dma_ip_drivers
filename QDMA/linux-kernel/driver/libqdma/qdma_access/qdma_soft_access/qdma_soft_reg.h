@@ -362,8 +362,8 @@ extern "C" {
 #define QDMA_OFFSET_GLBL2_PF_VF_BARLITE_EXT                 0x110
 #define QDMA_OFFSET_GLBL2_CHANNEL_INST                      0x114
 #define QDMA_OFFSET_GLBL2_CHANNEL_MDMA                      0x118
-#define     QDMA_GLBL2_ST_C2H_MASK                          BIT(16)
-#define     QDMA_GLBL2_ST_H2C_MASK                          BIT(17)
+#define     QDMA_GLBL2_ST_C2H_MASK                          BIT(17)
+#define     QDMA_GLBL2_ST_H2C_MASK                          BIT(16)
 #define     QDMA_GLBL2_MM_C2H_MASK                          BIT(8)
 #define     QDMA_GLBL2_MM_H2C_MASK                          BIT(0)
 #define QDMA_OFFSET_GLBL2_CHANNEL_STRM                      0x11C
