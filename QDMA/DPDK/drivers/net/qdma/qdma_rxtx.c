@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1061,7 +1061,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 
 		/* rearm descriptor */
 		rx_ring_st[id].dst_addr =
-				(uint64_t)mb->buf_physaddr +
+				(uint64_t)mb->buf_iova +
 					RTE_PKTMBUF_HEADROOM;
 		id++;
 	}
@@ -1073,7 +1073,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 
 		/* rearm descriptor */
 		rx_ring_st[id].dst_addr =
-				(uint64_t)mb->buf_physaddr +
+				(uint64_t)mb->buf_iova +
 					RTE_PKTMBUF_HEADROOM;
 	}
 #endif //QDMA_RX_VEC_X86_64
@@ -1110,7 +1110,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 
 			/* rearm descriptor */
 			rx_ring_st[id].dst_addr =
-					(uint64_t)mb->buf_physaddr +
+					(uint64_t)mb->buf_iova +
 						RTE_PKTMBUF_HEADROOM;
 		}
 	}

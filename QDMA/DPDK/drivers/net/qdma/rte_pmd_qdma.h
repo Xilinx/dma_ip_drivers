@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -720,6 +720,18 @@ int rte_pmd_qdma_dev_cmptq_stop(int port_id, uint32_t qid);
  ******************************************************************************/
 uint16_t rte_pmd_qdma_mm_cmpt_process(int port_id, uint32_t qid,
 		void *cmpt_buff, uint16_t nb_entries);
+
+/*****************************************************************************/
+/**
+ * DPDK PMD function to close the device.
+ *
+ * @param   port_id Port ID
+ *
+ * @return  '0' on success and '< 0' on failure
+ *
+ ******************************************************************************/
+int rte_pmd_qdma_dev_close(uint16_t port_id);
+
 #ifdef __cplusplus
 }
 #endif

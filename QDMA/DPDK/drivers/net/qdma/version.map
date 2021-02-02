@@ -1,0 +1,34 @@
+DPDK_21 {
+	global:
+
+	rte_pmd_qdma_set_immediate_data_state;
+	rte_pmd_qdma_get_bar_details;
+	rte_pmd_qdma_get_queue_base;
+	rte_pmd_qdma_set_queue_mode;
+	rte_pmd_qdma_get_device_capabilities;
+	qdma_pci_read_reg;
+	qdma_pci_write_reg;
+	rte_pmd_qdma_set_mm_endpoint_addr;
+	rte_pmd_qdma_dbg_qdesc;
+	rte_pmd_qdma_dbg_regdump;
+	rte_pmd_qdma_dbg_reg_info_dump;
+	rte_pmd_qdma_dbg_qinfo;
+
+	rte_pmd_qdma_get_pci_func_type;
+	rte_pmd_qdma_configure_tx_bypass;
+	rte_pmd_qdma_configure_rx_bypass;
+	rte_pmd_qdma_set_cmpt_descriptor_size;
+	rte_pmd_qdma_set_c2h_descriptor_prefetch;
+	rte_pmd_qdma_set_cmpt_overflow_check;
+	rte_pmd_qdma_set_cmpt_trigger_mode;
+	rte_pmd_qdma_set_cmpt_timer;
+	rte_pmd_qdma_get_immediate_data_state;
+	rte_pmd_qdma_dev_cmptq_setup;
+	rte_pmd_qdma_dev_cmptq_start;
+	rte_pmd_qdma_mm_cmpt_process;
+	rte_pmd_qdma_dev_cmptq_stop;
+	rte_pmd_qdma_dbg_qdevice;
+	rte_pmd_qdma_dev_close;
+
+	local: *;
+};

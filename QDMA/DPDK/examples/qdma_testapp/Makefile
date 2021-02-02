@@ -1,6 +1,6 @@
 #   BSD LICENSE
 #
-#   Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
+#   Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -33,12 +33,11 @@ $(error "Please define RTE_SDK environment variable")
 endif
 
 # Default target, can be overriden by command line or environment
-RTE_TARGET ?= x86_64-native-linuxapp-gcc
+RTE_TARGET ?= build
 
 #Default BRAM size is set to 512K
 #if modified the BRAM_SIZE, the same need to be set to the driver Makefile
 BRAM_SIZE ?= 524288
-include $(RTE_SDK)/mk/rte.vars.mk
 
 # binary name
 APP = qdma_testapp
@@ -46,15 +45,52 @@ APP = qdma_testapp
 # all source are stored in SRCS-y
 SRCS-y := testapp.c pcierw.c commands.c
 
-CFLAGS += -O3 -DDPDK=1 -DBRAM_SIZE=$(BRAM_SIZE)
-CFLAGS += $(WERROR_FLAGS)
-
 ifeq ($(CONFIG_RTE_LIBRTE_QDMA_GCOV),y)
   CFLAGS += -g -ftest-coverage -fprofile-arcs
   LDFLAGS += -lgcov
 endif
 
-# PERF benchmarking may be enabled by uncommenting following
-#CFLAGS += -DPERF_BENCHMARK
+# Build using pkg-config variables if possible
+ifneq ($(shell pkg-config --exists libdpdk && echo 0),0)
+$(error "no installation of DPDK found")
+endif
 
-include $(RTE_SDK)/mk/rte.extapp.mk
+all: shared
+.PHONY: shared static
+shared: build/$(APP)-shared
+	ln -sf $(APP)-shared build/$(APP)
+static: build/$(APP)-static
+	ln -sf $(APP)-static build/$(APP)
+
+PKGCONF ?= pkg-config
+
+CFLAGS += -DBRAM_SIZE=$(BRAM_SIZE)
+CFLAGS += -DDPDK=1
+
+# Add flag to allow experimental API as qdma_testapp uses rte_ethdev_set_ptype API
+CFLAGS += -DALLOW_EXPERIMENTAL_API
+
+PC_FILE := $(shell $(PKGCONF) --path libdpdk 2>/dev/null)
+CFLAGS += -O3 $(shell $(PKGCONF) --cflags libdpdk)
+LDFLAGS_SHARED = $(shell $(PKGCONF) --libs libdpdk)
+LDFLAGS_STATIC = $(shell $(PKGCONF) --static --libs libdpdk)
+LDFLAGS += $(shell $(PKGCONF) --libs libdpdk)
+
+LDFLAGS += -lrte_net_qdma
+
+# for shared library builds, we need to explicitly link these PMDs
+LDFLAGS_SHARED += -lrte_net_qdma
+
+build/$(APP)-shared: $(SRCS-y) Makefile $(PC_FILE) | build
+	$(CC) $(CFLAGS) $(SRCS-y) -o $@ $(LDFLAGS) $(LDFLAGS_SHARED)
+
+build/$(APP)-static: $(SRCS-y) Makefile $(PC_FILE) | build
+	$(CC) $(CFLAGS) $(SRCS-y) -o $@ $(LDFLAGS) $(LDFLAGS_STATIC)
+
+build:
+	@mkdir -p $@
+
+.PHONY: clean
+clean:
+	rm -f build/$(APP) build/$(APP)-static build/$(APP)-shared
+	test -d build && rmdir -p build || true

@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -38,7 +38,7 @@
 
 #define QDMA_PMD_MAJOR		2020
 #define QDMA_PMD_MINOR		2
-#define QDMA_PMD_PATCHLEVEL	0
+#define QDMA_PMD_PATCHLEVEL	1
 
 #define QDMA_PMD_VERSION      \
 	qdma_stringify(QDMA_PMD_MAJOR) "." \

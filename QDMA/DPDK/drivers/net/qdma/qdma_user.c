@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -178,7 +178,7 @@ int qdma_ul_update_st_h2c_desc(void *qhndl, uint64_t q_offloads,
 		desc_info = get_st_h2c_desc(qhndl);
 		desc_info->len = rte_pktmbuf_data_len(mb);
 		desc_info->pld_len = desc_info->len;
-		desc_info->src_addr = mb->buf_physaddr + mb->data_off;
+		desc_info->src_addr = mb->buf_iova + mb->data_off;
 		desc_info->flags = (S_H2C_DESC_F_SOP | S_H2C_DESC_F_EOP);
 		desc_info->cdh_flags = 0;
 	} else {
@@ -187,7 +187,7 @@ int qdma_ul_update_st_h2c_desc(void *qhndl, uint64_t q_offloads,
 
 			desc_info->len = rte_pktmbuf_data_len(mb);
 			desc_info->pld_len = desc_info->len;
-			desc_info->src_addr = mb->buf_physaddr + mb->data_off;
+			desc_info->src_addr = mb->buf_iova + mb->data_off;
 			desc_info->flags = 0;
 			if (nsegs == pkt_segs)
 				desc_info->flags |= S_H2C_DESC_F_SOP;
@@ -223,7 +223,7 @@ int qdma_ul_update_mm_c2h_desc(void *qhndl, struct rte_mbuf *mb, void *desc)
 	/* make it so the data pointer starts there too... */
 	mb->data_off = RTE_PKTMBUF_HEADROOM;
 	/* low 32-bits of phys addr must be 4KB aligned... */
-	desc_info->dst_addr = (uint64_t)mb->buf_physaddr + RTE_PKTMBUF_HEADROOM;
+	desc_info->dst_addr = (uint64_t)mb->buf_iova + RTE_PKTMBUF_HEADROOM;
 	desc_info->dv = 1;
 	desc_info->eop = 1;
 	desc_info->sop = 1;
@@ -248,7 +248,7 @@ int qdma_ul_update_mm_h2c_desc(void *qhndl, struct rte_mbuf *mb)
 	struct qdma_ul_mm_desc *desc_info;
 
 	desc_info = (struct qdma_ul_mm_desc *)get_mm_h2c_desc(qhndl);
-	desc_info->src_addr = mb->buf_physaddr + mb->data_off;
+	desc_info->src_addr = mb->buf_iova + mb->data_off;
 	desc_info->dst_addr = get_mm_h2c_ep_addr(qhndl);
 	desc_info->dv = 1;
 	desc_info->eop = 1;

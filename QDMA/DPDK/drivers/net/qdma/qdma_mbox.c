@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -125,7 +125,7 @@ static void *qdma_reset_task(void *arg)
 	if (!qdma_dev)
 		return NULL;
 
-	_rte_eth_dev_callback_process(dev, RTE_ETH_EVENT_INTR_RESET,
+	rte_eth_dev_callback_process(dev, RTE_ETH_EVENT_INTR_RESET,
 					      NULL);
 
 	return NULL;
@@ -139,7 +139,7 @@ static void *qdma_remove_task(void *arg)
 	if (!qdma_dev)
 		return NULL;
 
-	_rte_eth_dev_callback_process(dev, RTE_ETH_EVENT_INTR_RMV,
+	rte_eth_dev_callback_process(dev, RTE_ETH_EVENT_INTR_RMV,
 					      NULL);
 
 	return NULL;

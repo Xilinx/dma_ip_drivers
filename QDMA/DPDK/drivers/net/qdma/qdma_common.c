@@ -220,7 +220,7 @@ int qdma_init_rx_queue(struct qdma_rx_queue *rxq)
 				goto fail;
 			}
 
-			phys_addr = (uint64_t)mb->buf_physaddr +
+			phys_addr = (uint64_t)mb->buf_iova +
 				     RTE_PKTMBUF_HEADROOM;
 
 			mb->data_off = RTE_PKTMBUF_HEADROOM;

@@ -1,7 +1,7 @@
-From 9f9314dfc41e56068916e38c19688f0791e85ed1 Mon Sep 17 00:00:00 2001
+From cb0e7303150dcbb49c3aad88ac664b691612f1bc Mon Sep 17 00:00:00 2001
 From: Suryanarayana Raju Sangani <ssangani@xilinx.com>
 Date: Thu, 27 Feb 2020 05:13:38 -0700
-Subject: [PATCH] PKTGEN-19.12.0: Patch to add Jumbo packet support
+Subject: [PATCH] PKTGEN-20.12.0: Patch to add Jumbo packet support
 
 This patch include:
 1. Jumbo frame support for Pktgen.
@@ -27,10 +27,10 @@ Signed-off-by: Suryanarayana Raju Sangani <ssangani@xilinx.com>
  7 files changed, 55 insertions(+), 17 deletions(-)
 
 diff --git a/app/pktgen-cmds.c b/app/pktgen-cmds.c
-index e8ba94c..78fc5b4 100644
+index 4da9bab..065fbe8 100644
 --- a/app/pktgen-cmds.c
 +++ b/app/pktgen-cmds.c
-@@ -2934,18 +2934,22 @@ single_set_pkt_size(port_info_t *info, uint16_t size)
+@@ -3125,18 +3125,22 @@ single_set_pkt_size(port_info_t *info, uint16_t size)
  {
  	pkt_seq_t * pkt = &info->seq_pkt[SINGLE_PKT];
  
@@ -55,7 +55,7 @@ index e8ba94c..78fc5b4 100644
  
  	pktgen_packet_ctor(info, SINGLE_PKT, -1);
  	pktgen_packet_rate(info);
-@@ -3735,6 +3739,9 @@ range_set_cos_id(port_info_t *info, char *what, uint8_t id)
+@@ -3924,6 +3928,9 @@ range_set_cos_id(port_info_t *info, char *what, uint8_t id)
  void
  range_set_pkt_size(port_info_t *info, char *what, uint16_t size)
  {
@@ -65,7 +65,7 @@ index e8ba94c..78fc5b4 100644
  	if (!strcmp(what, "inc") || !strcmp(what, "increment")) {
  		if (size > pktgen.eth_max_pkt)
  			size = pktgen.eth_max_pkt;
-@@ -3742,8 +3749,8 @@ range_set_pkt_size(port_info_t *info, char *what, uint16_t size)
+@@ -3931,8 +3938,8 @@ range_set_pkt_size(port_info_t *info, char *what, uint16_t size)
  	} else {
  		if (size < pktgen.eth_min_pkt)
  			size = MIN_PKT_SIZE;
@@ -77,40 +77,40 @@ index e8ba94c..78fc5b4 100644
  			size -= PG_ETHER_CRC_LEN;
  
 diff --git a/app/pktgen-constants.h b/app/pktgen-constants.h
-index 7df8023..a36c278 100644
+index ede4e65..8694e18 100644
 --- a/app/pktgen-constants.h
 +++ b/app/pktgen-constants.h
 @@ -17,7 +17,7 @@ extern "C" {
  enum {
+ #ifndef RTE_LIBRTE_VMXNET3_PMD
  	DEFAULT_PKT_BURST       = 64,	/* Increasing this number consumes memory very fast */
- #ifdef RTE_LIBRTE_VMXNET3_PMD
 -	DEFAULT_RX_DESC         = (DEFAULT_PKT_BURST * 8 * 2),
 +	DEFAULT_RX_DESC         = (DEFAULT_PKT_BURST * 8 * 2 * 2),
  	DEFAULT_TX_DESC         = DEFAULT_RX_DESC * 2,
  #else
- 	DEFAULT_RX_DESC         = (DEFAULT_PKT_BURST * 8),
-@@ -30,6 +30,7 @@ enum {
+ 	DEFAULT_PKT_BURST       = 32,	/* Increasing this number consumes memory very fast */
+@@ -31,6 +31,7 @@ enum {
  
  	DEFAULT_PRIV_SIZE       = 0,
  
 +	MBUF_9K_SIZE            = 9018 + RTE_PKTMBUF_HEADROOM + DEFAULT_PRIV_SIZE,
  	NUM_Q                   = 16,	/**< Number of cores per port. */
  };
- #define DEFAULT_MBUF_SIZE	(PG_ETHER_MAX_JUMBO_FRAME_LEN + DEFAULT_PRIV_SIZE) /* See: http://dpdk.org/dev/patchwork/patch/4479/ */
+ #define DEFAULT_MBUF_SIZE	(PG_ETHER_MAX_JUMBO_FRAME_LEN + RTE_PKTMBUF_HEADROOM) /* See: http://dpdk.org/dev/patchwork/patch/4479/ */
 diff --git a/app/pktgen-main.c b/app/pktgen-main.c
-index 9d52459..676bf15 100644
+index 96d1c0c..9c22278 100644
 --- a/app/pktgen-main.c
 +++ b/app/pktgen-main.c
-@@ -174,7 +174,7 @@ pktgen_parse_args(int argc, char **argv)
+@@ -188,7 +188,7 @@ pktgen_parse_args(int argc, char **argv)
  	pktgen.mbuf_buf_size = RTE_MBUF_DEFAULT_BUF_SIZE;
  
  	pktgen.verbose = 0;
--	while ((opt = getopt_long(argc, argvopt, "p:m:f:l:s:g:hPNGTvj",
-+	while ((opt = getopt_long(argc, argvopt, "p:m:f:l:s:g:hPNGTvj9",
+-	while ((opt = getopt_long(argc, argvopt, "p:m:f:l:s:g:hPNGTvjtr",
++	while ((opt = getopt_long(argc, argvopt, "p:m:f:l:s:g:hPNGTvjtr9",
  				  lgopts, &option_index)) != EOF)
  		switch (opt) {
- 		case 'j':
-@@ -276,7 +276,12 @@ pktgen_parse_args(int argc, char **argv)
+ 		case 't':
+@@ -300,7 +300,12 @@ pktgen_parse_args(int argc, char **argv)
  
  		case 'h':	/* print out the help message */
  			pktgen_usage(prgname);
@@ -124,7 +124,7 @@ index 9d52459..676bf15 100644
  
  		case 0:	/* crc-strip for all ports */
  			printf(">>> Strip CRC in hardware is the default\n");
-@@ -381,8 +386,10 @@ RTE_FINI(pktgen_fini)
+@@ -407,8 +412,10 @@ RTE_FINI(pktgen_fini)
  int
  main(int argc, char **argv)
  {
@@ -136,7 +136,7 @@ index 9d52459..676bf15 100644
  
  	signal(SIGSEGV, sig_handler);
  	signal(SIGHUP, sig_handler);
-@@ -532,10 +539,16 @@ main(int argc, char **argv)
+@@ -563,10 +570,16 @@ main(int argc, char **argv)
  	/* Wait for all of the cores to stop running and exit. */
  	rte_eal_mp_wait_lcore();
  
@@ -155,7 +155,7 @@ index 9d52459..676bf15 100644
  
  	cli_destroy();
 diff --git a/app/pktgen-port-cfg.c b/app/pktgen-port-cfg.c
-index 1c8d36a..100a011 100644
+index a982d0d..7a27602 100644
 --- a/app/pktgen-port-cfg.c
 +++ b/app/pktgen-port-cfg.c
 @@ -101,16 +101,19 @@ pktgen_mbuf_pool_create(const char *type, uint8_t pid, uint8_t queue_id,
@@ -200,7 +200,7 @@ index 1c8d36a..100a011 100644
  	}
  
 diff --git a/app/pktgen-range.c b/app/pktgen-range.c
-index 5f04238..88cd4b5 100644
+index f88258d..bbaaa6f 100644
 --- a/app/pktgen-range.c
 +++ b/app/pktgen-range.c
 @@ -595,7 +595,8 @@ pktgen_range_setup(port_info_t *info)
@@ -214,10 +214,10 @@ index 5f04238..88cd4b5 100644
  	range->vxlan_gid = info->seq_pkt[SINGLE_PKT].group_id;
  	range->vxlan_gid_inc = 0;
 diff --git a/app/pktgen.c b/app/pktgen.c
-index 1528cb9..b17e257 100644
+index 26cc80d..43790e0 100644
 --- a/app/pktgen.c
 +++ b/app/pktgen.c
-@@ -67,6 +67,7 @@ pktgen_wire_size(port_info_t *info)
+@@ -74,6 +74,7 @@ pktgen_wire_size(port_info_t *info)
  		} else
  			size = info->seq_pkt[SINGLE_PKT].pktSize + PKT_OVERHEAD_SIZE;
  	}
@@ -225,7 +225,7 @@ index 1528cb9..b17e257 100644
  	return size;
  }
  
-@@ -870,6 +871,10 @@ pktgen_setup_cb(struct rte_mempool *mp,
+@@ -912,6 +913,10 @@ pktgen_setup_cb(struct rte_mempool *mp,
  	pkt_seq_t *pkt;
  	uint16_t qid, idx;
  
@@ -236,7 +236,7 @@ index 1528cb9..b17e257 100644
  	info = data->info;
  	qid = data->qid;
  
-@@ -899,7 +904,7 @@ pktgen_setup_cb(struct rte_mempool *mp,
+@@ -941,7 +946,7 @@ pktgen_setup_cb(struct rte_mempool *mp,
  	pktgen_packet_ctor(info, idx, -1);
  
  	rte_memcpy((uint8_t *)m->buf_addr + m->data_off,
@@ -245,7 +245,7 @@ index 1528cb9..b17e257 100644
  
  	m->pkt_len  = pkt->pktSize;
  	m->data_len = pkt->pktSize;
-@@ -1108,7 +1113,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
+@@ -1150,7 +1155,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
  {
  	uint8_t pid;
  	uint16_t qid, nb_rx;
@@ -254,7 +254,7 @@ index 1528cb9..b17e257 100644
  	struct qstats_s *qstats;
  	int i;
  
-@@ -1127,6 +1132,10 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
+@@ -1169,6 +1174,10 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
  	for(i = 0; i < nb_rx; i++)
  		qstats->rxbytes += rte_pktmbuf_data_len(pkts_burst[i]);
  
@@ -265,7 +265,7 @@ index 1528cb9..b17e257 100644
  	pktgen_recv_tstamp(info, pkts_burst, nb_rx);
  
  	/* packets are not freed in the next call. */
-@@ -1143,6 +1152,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
+@@ -1185,6 +1194,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
  	}
  
  	rte_pktmbuf_free_bulk(pkts_burst, nb_rx);
@@ -274,10 +274,10 @@ index 1528cb9..b17e257 100644
  
  static void
 diff --git a/app/pktgen.h b/app/pktgen.h
-index e871133..5271ee1 100644
+index 66fa12e..20fb943 100644
 --- a/app/pktgen.h
 +++ b/app/pktgen.h
-@@ -244,8 +244,9 @@ enum {
+@@ -253,8 +253,9 @@ enum {
  	SOCKET0                 = 0	/**< Socket ID value for allocation */
  };
  
@@ -288,7 +288,7 @@ index e871133..5271ee1 100644
  
  typedef struct rte_mbuf rte_mbuf_t;
  
-@@ -340,6 +341,7 @@ enum {						/* Pktgen flags bits */
+@@ -351,6 +352,7 @@ enum {						/* Pktgen flags bits */
  	BLINK_PORTS_FLAG        = (1 << 10),	/**< Blink the port leds */
  	ENABLE_THEME_FLAG       = (1 << 11),	/**< Enable theme or color support */
  

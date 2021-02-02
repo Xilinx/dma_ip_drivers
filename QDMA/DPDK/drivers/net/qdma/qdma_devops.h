@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2020-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -462,7 +462,7 @@ int qdma_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t qid);
  * @ingroup dpdk_devops_func
  *
  */
-void qdma_dev_stop(struct rte_eth_dev *dev);
+int qdma_dev_stop(struct rte_eth_dev *dev);
 
 /**
  * DPDK callback to release a Rx queue.
@@ -498,7 +498,19 @@ void qdma_dev_tx_queue_release(void *tqueue);
  *
  * @ingroup dpdk_devops_func
  */
-void qdma_dev_close(struct rte_eth_dev *dev);
+int qdma_dev_close(struct rte_eth_dev *dev);
+
+/**
+ * DPDK callback to close the VF device.
+ *
+ * This API frees the descriptor rings and objects beonging to all the queues
+ * of the given port. It also clears the FMAP.
+ *
+ * @param dev Pointer to Ethernet device structure
+ *
+ * @ingroup dpdk_devops_func
+ */
+int qdma_vf_dev_close(struct rte_eth_dev *dev);
 
 /**
  * DPDK callback to reset the device.

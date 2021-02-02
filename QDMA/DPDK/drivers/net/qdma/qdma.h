@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -403,4 +403,6 @@ struct rte_memzone *qdma_zone_reserve(struct rte_eth_dev *dev,
 bool is_qdma_supported(struct rte_eth_dev *dev);
 bool is_vf_device_supported(struct rte_eth_dev *dev);
 bool is_pf_device_supported(struct rte_eth_dev *dev);
+
+void qdma_check_errors(void *arg);
 #endif /* ifndef __QDMA_H__ */

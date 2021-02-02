@@ -1,13 +1,13 @@
-RELEASE: 2020.2
-===============
+RELEASE: 2020.2.1
+=================
 
-This release is based on DPDK v19.11 and contains QDMA poll mode driver and
+This release is based on DPDK v20.11 and contains QDMA poll mode driver and
 QDMA test application.
 
 This release is validated for VCU1525 and U200 devices on QDMA4.0 2020.2 based example design
 and QDMA3.1 2020.2 based example design.
 
-This release includes a patch file for dpdk-pktgen v19.12.0 that extends
+This release includes a patch file for dpdk-pktgen v20.12.0 that extends
 dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
 and it disables the packet size classification logic in dpdk-pktgen to remove
 application overhead in performance measurement.
@@ -84,6 +84,10 @@ SUPPORTED FEATURES:
 - Added support for Debug mode and Internal only mode
 - Resolved the issue related to mbuf packet length
 - Fixed VF FMAP programming of qmax issue by setting qmax to the actual user configured total queue number
+
+2020.2.1 Updates
+----------------
+- Migrated qdma dpdk driver to use DPDK framework v20.11
 
 KNOWN ISSUES:
 =============

@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -380,7 +380,7 @@ static int qdma_rxq_context_setup(struct rte_eth_dev *dev, uint16_t qid)
 		cmpt_desc_fmt = CMPT_CNTXT_DESC_SIZE_8B;
 		break;
 	}
-	descq_conf.ring_bs_addr = rxq->rx_mz->phys_addr;
+	descq_conf.ring_bs_addr = rxq->rx_mz->iova;
 	descq_conf.en_bypass = rxq->en_bypass;
 	descq_conf.irq_arm = 0;
 	descq_conf.at = 0;
@@ -396,7 +396,7 @@ static int qdma_rxq_context_setup(struct rte_eth_dev *dev, uint16_t qid)
 	} else {/* st c2h*/
 		descq_conf.desc_sz = SW_DESC_CNTXT_C2H_STREAM_DMA;
 		descq_conf.forced_en = 1;
-		descq_conf.cmpt_ring_bs_addr = rxq->rx_cmpt_mz->phys_addr;
+		descq_conf.cmpt_ring_bs_addr = rxq->rx_cmpt_mz->iova;
 		descq_conf.cmpt_desc_sz = cmpt_desc_fmt;
 		descq_conf.triggermode = rxq->triggermode;
 
@@ -458,7 +458,7 @@ static int qdma_txq_context_setup(struct rte_eth_dev *dev, uint16_t qid)
 	memset(&descq_conf, 0, sizeof(struct mbox_descq_conf));
 	txq = (struct qdma_tx_queue *)dev->data->tx_queues[qid];
 	qid_hw =  qdma_dev->queue_base + txq->queue_id;
-	descq_conf.ring_bs_addr = txq->tx_mz->phys_addr;
+	descq_conf.ring_bs_addr = txq->tx_mz->iova;
 	descq_conf.en_bypass = txq->en_bypass;
 	descq_conf.wbi_intvl_en = 1;
 	descq_conf.wbi_chk = 1;
@@ -588,7 +588,7 @@ static int qdma_vf_dev_infos_get(__rte_unused struct rte_eth_dev *dev,
 	return 0;
 }
 
-static void qdma_vf_dev_stop(struct rte_eth_dev *dev)
+static int qdma_vf_dev_stop(struct rte_eth_dev *dev)
 {
 #ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
@@ -602,9 +602,11 @@ static void qdma_vf_dev_stop(struct rte_eth_dev *dev)
 		qdma_vf_dev_tx_queue_stop(dev, qid);
 	for (qid = 0; qid < dev->data->nb_rx_queues; qid++)
 		qdma_vf_dev_rx_queue_stop(dev, qid);
+
+	return 0;
 }
 
-static void qdma_vf_dev_close(struct rte_eth_dev *dev)
+int qdma_vf_dev_close(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_tx_queue *txq;
@@ -700,6 +702,8 @@ static void qdma_vf_dev_close(struct rte_eth_dev *dev)
 	rte_free(qdma_dev->q_info);
 	qdma_dev->q_info = NULL;
 	qdma_dev->dev_configured = 0;
+
+	return 0;
 }
 
 static int qdma_vf_dev_reset(struct rte_eth_dev *dev)

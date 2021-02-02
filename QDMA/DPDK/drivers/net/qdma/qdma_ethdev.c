@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -66,7 +66,7 @@
 static void qdma_device_attributes_get(struct rte_eth_dev *dev);
 
 /* Poll for any QDMA errors */
-static void qdma_check_errors(void *arg)
+void qdma_check_errors(void *arg)
 {
 	struct qdma_pci_dev *qdma_dev;
 	qdma_dev = ((struct rte_eth_dev *)arg)->data->dev_private;
