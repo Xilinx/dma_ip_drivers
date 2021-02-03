@@ -289,7 +289,7 @@ function cleanup_queue() {
 }
 
 
-# Find user bar
+# Find AXI Master Lite bar
 function get_user_bar () {
         local pf_bdf=$1
 	tmp=`dma-ctl qdma$pf_bdf reg read bar 0 0x10C | grep "0x10c" | cut -d '=' -f2 | cut -d 'x' -f2 | cut -d '.' -f1`

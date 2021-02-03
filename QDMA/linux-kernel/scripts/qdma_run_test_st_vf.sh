@@ -18,7 +18,7 @@ num_pkt=$3 # [Optional] number of payload packet
 ################################################
 # Hard Coded Parameters
 ################################################
-usr_bar=2 # For VF, DMA BAR is bar 0. User BAR is bar 2.
+usr_bar=2 # For VF, DMA BAR is bar 0. AXI Master Lite(User BAR) is bar 2.
 vf=00080
 size_max=4096
 host_adr_high=0

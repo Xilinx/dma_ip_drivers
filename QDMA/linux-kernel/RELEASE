@@ -89,6 +89,11 @@ SUPPORTED FEATURES:
 - Added support for Debug mode and Internal only mode
 - Added support for Versal PDI programming through keyhole interface
 
+2020.2 Patch Updates
+--------------------
+- Added support for MM Channel Selection and Keyhole feature in dmaperf
+- Fixed bug in in driver which caused crash during performance run
+
 KNOWN ISSUES:
 =============
 - In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
