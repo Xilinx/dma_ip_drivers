@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2020.2',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -455,16 +445,16 @@
 <p>The QDMA Subsystem for PCIe provides an optional feature to support the Single Root I/O
 Virtualization (SR-IOV). SR-IOV classifies the functions as:</p>
 <ul class="simple">
-<li><dl class="first docutils">
-<dt>Physical Functions (PF) :</dt>
-<dd>Full featured PCIe functions which include SR-IOV capabilities among others.</dd>
+<li><dl class="simple">
+<dt>Physical Functions (PF) :</dt><dd><p>Full featured PCIe functions which include SR-IOV capabilities among others.</p>
+</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>Virtual Functions (VF):</dt>
-<dd>PCIe functions featuring configuration space with Base Address
+<li><dl class="simple">
+<dt>Virtual Functions (VF):</dt><dd><p>PCIe functions featuring configuration space with Base Address
 Registers (BARs) but lacking the full configuration resources and are controlled by the PF
-configuration. The main role of the VF is data transfer.</dd>
+configuration. The main role of the VF is data transfer.</p>
+</dd>
 </dl>
 </li>
 </ul>
@@ -478,7 +468,7 @@ The PF and VF drivers define the message formatting to be exchanged between the 
 <p>The driver enables mailbox interrupt and registers a Rx handler for notification of incoming mailbox message.
 It also creates a Tx thread to send a message and poll for its response from the peer driver.</p>
 <p>Following are the list of messages supported between PF and VF driver</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>enum mbox_msg_op {
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>enum mbox_msg_op {
         /** @MBOX_OP_BYE: vf off line */
         MBOX_OP_BYE,
         /** @MBOX_OP_HELLO: vf on line */
@@ -578,7 +568,7 @@ It also creates a Tx thread to send a message and poll for its response from the
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 21, 2020.
+        Last updated on February 03, 2021.
       </span>
 
     </p>

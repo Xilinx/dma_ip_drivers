@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2020.2',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -438,17 +428,17 @@
 <p>Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic.</p>
 <div class="section" id="note">
 <h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
-<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dmaperf</span></code>. If user installed <code class="docutils literal"><span class="pre">dmaperf</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dmaperf</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
-<p>Standard IO tools such as <code class="docutils literal"><span class="pre">fio</span></code> can be used for performing IO operations using the char device interface.</p>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal notranslate"><span class="pre">dmaperf</span></code>. If user installed <code class="docutils literal notranslate"><span class="pre">dmaperf</span></code> application aleady in <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal notranslate"><span class="pre">dmaperf</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
+<p>Standard IO tools such as <code class="docutils literal notranslate"><span class="pre">fio</span></code> can be used for performing IO operations using the char device interface.</p>
 <p>However, most of the tools are limited to sending / receiving 1 packet at a time and wait for the processing of the packet to complete, so they are not able to keep the driver/ HW busy enough for performance measurement. Although fio also supports asynchronous interfaces, it does not continuously submit IO requests while polling for the completion in parallel.</p>
 <p>To overcome this limitation, Xilinx developed dma-perf tool. It leverages the asynchronous functionality provided by libaio library. Using libaio, an application can submit IO request to the driver and the driver returns the control to the caller immediately (i.e., non-blocking). The completion notification is sent separately, so the application can then poll for the completion and free the buffer upon receiving the completion.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>usage: dma-perf [OPTIONS]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: dma-perf [OPTIONS]
 
   -c (--config) config file that has configuration for IO
 </pre></div>
 </div>
 <p>dma-perf tool takes a configuration file as input. The configuration file format is as below.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>name=mm_1_1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>name=mm_1_1
 mode=mm #mode
 dir=bi #dir
 pf_range=0:0 #no spaces
@@ -468,22 +458,26 @@ pkt_sz=64
 </div>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
-<li>name : name of the configuration</li>
-<li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
-<li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi).</li>
-<li>pf_range : Range of the PFs from 0-3 on which the performance metrics are to be collected.</li>
-<li>q_range : Range of the Queues from 0-2047 on which the performance metrics are to be collected.</li>
-<li>flags : queue flags</li>
-<li>wb_acc : write back accumulation index from CSR register ( 0 - 15 )</li>
-<li>tmr_idx : timer index from CSR register ( 0 - 15 )</li>
-<li>cntr_idx : Counter index from CSR register ( 0 - 15 )</li>
-<li>trig_mode : trigger mode (every, usr_cnt, usr, usr_tmr, dis)</li>
-<li>rngidx : Ring index from CSR register ( 0 - 15 )</li>
-<li>runtime : Duration of the performance runs, time in seconds.</li>
-<li>num_threads : number of threads to be used in dma-perf application to pump the traffic to queues</li>
-<li>bidir_en : Enable or Disable the bi-direction mode ( 0: Disable, 1: Enable )</li>
-<li>num_pkt : number of packets</li>
-<li>pkt_sz : Packet size</li>
+<li><p>name : name of the configuration</p></li>
+<li><p>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</p></li>
+<li><p>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi).</p></li>
+<li><p>pf_range : Range of the PFs from 0-3 on which the performance metrics are to be collected.</p></li>
+<li><p>q_range : Range of the Queues from 0-2047 on which the performance metrics are to be collected.</p></li>
+<li><p>flags : queue flags</p></li>
+<li><p>wb_acc : write back accumulation index from CSR register ( 0 - 15 )</p></li>
+<li><p>tmr_idx : timer index from CSR register ( 0 - 15 )</p></li>
+<li><p>cntr_idx : Counter index from CSR register ( 0 - 15 )</p></li>
+<li><p>trig_mode : trigger mode (every, usr_cnt, usr, usr_tmr, dis)</p></li>
+<li><p>rngidx : Ring index from CSR register ( 0 - 15 )</p></li>
+<li><p>runtime : Duration of the performance runs, time in seconds.</p></li>
+<li><p>num_threads : number of threads to be used in dma-perf application to pump the traffic to queues</p></li>
+<li><p>bidir_en : Enable or Disable the bi-direction mode ( 0: Disable, 1: Enable )</p></li>
+<li><p>num_pkt : number of packets</p></li>
+<li><p>pkt_sz : Packet size</p></li>
+<li><p>mm_chnl : MM Channel ( 0 - 1 ) for Versal devices</p></li>
+<li><p>keyhole_en :  Enable the Keyhole feature</p></li>
+<li><p>offset : Offset to be written to for MM Performance Use cases</p></li>
+<li><p>aperture_sz : Size of aperture when using the keyhole feature</p></li>
 </ul>
 </div>
 </div>
@@ -518,7 +512,7 @@ pkt_sz=64
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 21, 2020.
+        Last updated on February 03, 2021.
       </span>
 
     </p>

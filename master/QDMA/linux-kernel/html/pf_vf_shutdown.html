@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2020.2',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -453,8 +443,8 @@
 <h1>PF/VF Shutdown<a class="headerlink" href="#pf-vf-shutdown" title="Permalink to this headline">¶</a></h1>
 <p>QDMA design contains PFs and VFs and they can be shutdown independently as QDMA Linux driver contains seperate modules for VFs (qdma_vf.ko) and PFs (qdma.ko)</p>
 <ul class="simple">
-<li>When shutdown is issues for a VF, only the resources associated with the VFs is released and VF driver  is unloaded</li>
-<li>When shutdown is issued for PF, all resources of the PF, including that of its associated VFs, will be released</li>
+<li><p>When shutdown is issues for a VF, only the resources associated with the VFs is released and VF driver  is unloaded</p></li>
+<li><p>When shutdown is issued for PF, all resources of the PF, including that of its associated VFs, will be released</p></li>
 </ul>
 <p>The following sequence diagrams shows the shutdown process for PF and VF.</p>
 <img alt="_images/pf_vf_shutdown.png" class="align-center" src="_images/pf_vf_shutdown.png" />
@@ -490,7 +480,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 21, 2020.
+        Last updated on February 03, 2021.
       </span>
 
     </p>

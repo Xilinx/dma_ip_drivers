@@ -89,30 +89,36 @@ support 2K queues and populate Xilinx devices for binding.
 
 	1. To build QDMA driver
 
-	a. Add below lines to ``./config/common_base`` in DPDK 20.11 tree
+	a. To support 2K queues and 256 PCIe functions, update below configurations	in ``./config/rte_config.h``
 
 	::
 
-		#
-		#Complie Xilinx QDMA PMD driver
-		#
-		CONFIG_RTE_LIBRTE_QDMA_PMD=y
-		CONFIG_RTE_LIBRTE_QDMA_DEBUG_DRIVER=n
+		#define RTE_MAX_MEMZONE 20480
+		#define RTE_MAX_VFIO_CONTAINERS 256
+		#define RTE_MAX_QUEUES_PER_PORT 2048
 
-		To enable driver debug logs, set
-		CONFIG_RTE_LIBRTE_QDMA_DEBUG_DRIVER=y
-
-	b. Add below lines to ``drivers/net/Makefile``, where PMDs are added
+	b. Add below lines to ``./config/meson.build`` in DPDK 20.11 tree
 
 	::
 
-		DIRS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma
+		# Set maximum Ethernet ports to 256
+		dpdk_conf.set('RTE_MAX_ETHPORTS', 256)
 
-	c. Add below lines to ``mk/rte.app.mk``, where PMDs are added
+		# Set maximum VFIO Groups to 256
+		dpdk_conf.set('RTE_MAX_VFIO_GROUPS', 256)
+
+	c. Add below lines to ``./config/rte_config.h`` to enable driver debug logs
 
 	::
 
-		_LDLIBS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += -lrte_pmd_qdma
+		#define RTE_LIBRTE_QDMA_DEBUG_DRIVER 1
+
+	d. Add below line to ``./drivers/net/meson.build``, where PMDs are added to drivers list
+
+	::
+
+		'qdma',
+
 
 	2. To add Xilinx devices for device binding, add below lines to	``./usertools/dpdk-devbind.py`` after cavium_pkx class, where PCI base class for devices are listed.
 
@@ -128,16 +134,6 @@ support 2K queues and populate Xilinx devices for binding.
 	::
 
 		network_devices = [network_class, cavium_pkx, xilinx_qdma_pf, xilinx_qdma_vf]
-
-	3. To support 2K queues and 256 PCIe functions, update below configurations	in ``./config/common_base``
-
-	::
-
-		CONFIG_RTE_MAX_VFIO_GROUPS=256
-		CONFIG_RTE_MAX_VFIO_CONTAINERS=256
-		CONFIG_RTE_MAX_MEMZONE=7680
-		CONFIG_RTE_MAX_ETHPORTS=256
-		CONFIG_RTE_MAX_QUEUES_PER_PORT=2048
 
 
 Setup: Host system
@@ -198,6 +194,13 @@ Setup: Make Commands
 	- Verify that ``librte_net_qdma.a`` is installed in ``./build/drivers`` directory.
 
 
+	Execute the following to compile the igb_uio kernel driver.
+
+	::
+
+		cd <server_dir>/<dpdk_test_area>/dpdk-stable/dpdk-kmods/linux/igb_uio
+		make
+
 * Compile Test application
 
 	Change to root user and compile the application
@@ -212,7 +215,7 @@ Setup: Make Commands
 
 	::
 
-		INSTALL-MAP qdma_testapp.map
+		ln -sf qdma_testapp-shared build/qdma_testapp
 
 	Additionally, for memory mapped mode, BRAM size can be configured with make command.
 	Default BRAM size is set to 512KB in the driver makefile.

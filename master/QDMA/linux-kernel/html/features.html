@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2020.2',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -435,73 +425,61 @@
 <div class="section" id="qdma-hardware-features">
 <h2>QDMA Hardware Features<a class="headerlink" href="#qdma-hardware-features" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">SRIOV with 4 Physical Functions (PF) and 252 Virtual Functions (VF)</p>
-</li>
-<li><p class="first">Memory Mapped (MM) and Stream (ST) interfaces per queue</p>
-</li>
-<li><p class="first">2048 queue sets</p>
+<li><p>SRIOV with 4 Physical Functions (PF) and 252 Virtual Functions (VF)</p></li>
+<li><p>Memory Mapped (MM) and Stream (ST) interfaces per queue</p></li>
+<li><p>2048 queue sets</p>
 <blockquote>
 <div><ul class="simple">
-<li>2048 H2C (Host-to-Card) descriptor rings</li>
-<li>2048 C2H (Card-to-Host) descriptor rings</li>
-<li>2048 completion rings</li>
+<li><p>2048 H2C (Host-to-Card) descriptor rings</p></li>
+<li><p>2048 C2H (Card-to-Host) descriptor rings</p></li>
+<li><p>2048 completion rings</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">Supports MSI-X Interrupts</p>
+<li><p>Supports MSI-X Interrupts</p>
 <blockquote>
 <div><ul class="simple">
-<li>2048 MSI-X vectors.</li>
-<li>Up to 32 MSI-X per function.</li>
-<li>Interrupt Aggregation</li>
-<li>User Interrupts</li>
-<li>Error Interrupts</li>
+<li><p>2048 MSI-X vectors.</p></li>
+<li><p>Up to 32 MSI-X per function.</p></li>
+<li><p>Interrupt Aggregation</p></li>
+<li><p>User Interrupts</p></li>
+<li><p>Error Interrupts</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">Mailbox communication between PF and VF</p>
-</li>
-<li><p class="first">HW Error reporting</p>
-</li>
-<li><p class="first">Immediate data transfers</p>
-</li>
-<li><p class="first">Streaming H2C to C2H and C2H to H2C loopback support</p>
-</li>
-<li><p class="first">Configuring queues in internal mode or bypass mode</p>
-</li>
-<li><p class="first">Dynamic queue configuration</p>
-</li>
-<li><p class="first">Descriptor bypass(8, 16, 32 descriptor sizes) support</p>
-</li>
-<li><p class="first">Descriptor Prefetching</p>
-</li>
-<li><p class="first">Completion ring descriptors of 8, 16, 32 bytes sizes</p>
-</li>
-<li><p class="first">ECC support</p>
-</li>
+<li><p>Mailbox communication between PF and VF</p></li>
+<li><p>HW Error reporting</p></li>
+<li><p>Immediate data transfers</p></li>
+<li><p>Streaming H2C to C2H and C2H to H2C loopback support</p></li>
+<li><p>Configuring queues in internal mode or bypass mode</p></li>
+<li><p>Dynamic queue configuration</p></li>
+<li><p>Descriptor bypass(8, 16, 32 descriptor sizes) support</p></li>
+<li><p>Descriptor Prefetching</p></li>
+<li><p>Completion ring descriptors of 8, 16, 32 bytes sizes</p></li>
+<li><p>ECC support</p></li>
 </ul>
 <div class="section" id="features-supported-only-in-qdma3-1-and-qdma4-0-designs">
 <h3>Features Supported only in QDMA3.1 and QDMA4.0 Designs<a class="headerlink" href="#features-supported-only-in-qdma3-1-and-qdma4-0-designs" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Interrupt support for Mailbox events</li>
-<li>Flexible interrupt allocation between PF and VF</li>
-<li>Zero byte transfers</li>
-<li>Streaming C2H completion entry coalescing</li>
-<li>Disabling overflow check in completion ring</li>
-<li>Completion ring descriptors of 64 bytes sizes</li>
+<li><p>Interrupt support for Mailbox events</p></li>
+<li><p>Flexible interrupt allocation between PF and VF</p></li>
+<li><p>Zero byte transfers</p></li>
+<li><p>Streaming C2H completion entry coalescing</p></li>
+<li><p>Disabling overflow check in completion ring</p></li>
+<li><p>Completion ring descriptors of 64 bytes sizes</p></li>
 </ul>
 </div>
 <div class="section" id="features-supported-only-in-qdma3-1-design">
 <h3>Features Supported only in QDMA3.1 Design<a class="headerlink" href="#features-supported-only-in-qdma3-1-design" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Flexible BAR mapping for QDMA configuration register space</li>
+<li><p>Flexible BAR mapping for QDMA configuration register space</p></li>
 </ul>
 </div>
 <div class="section" id="features-supported-only-in-qdma4-0-design">
 <h3>Features Supported only in QDMA4.0 Design<a class="headerlink" href="#features-supported-only-in-qdma4-0-design" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Debug mode, with extra registers for debug purposes</li>
-<li>Descriptor Engine can be configured in Internal Mode only</li>
+<li><p>Debug mode, with extra registers for debug purposes</p></li>
+<li><p>Descriptor Engine can be configured in Internal Mode only</p></li>
 </ul>
 <p>For details on Hardware Features refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
 </div>
@@ -509,36 +487,35 @@
 <div class="section" id="qdma-software-features">
 <h2>QDMA Software Features<a class="headerlink" href="#qdma-software-features" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><dl class="first docutils">
-<dt>Polling and Interrupt Modes</dt>
-<dd><blockquote class="first">
+<li><dl>
+<dt>Polling and Interrupt Modes</dt><dd><blockquote>
 <div><p>QDMA software provides 2 different drivers. PF driver for Physical functions and and VF driver for Virtual Functions.
 PF and VF drivers can be inserted in different modes.</p>
 </div></blockquote>
-<ul class="last simple">
-<li><dl class="first docutils">
-<dt>Polling Mode</dt>
-<dd>In Poll Mode, Software polls for the write back completions (Status Descriptor Write Back)</dd>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Polling Mode</dt><dd><p>In Poll Mode, Software polls for the write back completions (Status Descriptor Write Back)</p>
+</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>Direct Interrupt Mode</dt>
-<dd>In Direct Interrupt mode, each queue is assigned to one of the available interrupt vectors in a round robin fashion to service the requests.
-Interrupt is raised by the HW upon receiving the completions and software reads the completion status.</dd>
+<li><dl class="simple">
+<dt>Direct Interrupt Mode</dt><dd><p>In Direct Interrupt mode, each queue is assigned to one of the available interrupt vectors in a round robin fashion to service the requests.
+Interrupt is raised by the HW upon receiving the completions and software reads the completion status.</p>
+</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>Indirect Interrupt Mode</dt>
-<dd>In Indirect Interrupt mode or Interrupt Aggregation mode, each vector has an associated Interrupt Aggregation Ring.
+<li><dl class="simple">
+<dt>Indirect Interrupt Mode</dt><dd><p>In Indirect Interrupt mode or Interrupt Aggregation mode, each vector has an associated Interrupt Aggregation Ring.
 The QID and status of queues requiring service are written into the Interrupt Aggregation Ring.
 When a PCIe MSI-X interrupt is received by the Host, the software reads the Interrupt Aggregation Ring to determine which queue needs service.
-Mapping of queues to vectors is programmable</dd>
+Mapping of queues to vectors is programmable</p>
+</dd>
 </dl>
 </li>
-<li><dl class="first docutils">
-<dt>Auto Mode</dt>
-<dd>Auto mode is mix of Poll and Interrupt Aggregation mode. Driver polls for the write back status updates.
-Interrupt aggregation is used for processing the completion ring.</dd>
+<li><dl class="simple">
+<dt>Auto Mode</dt><dd><p>Auto mode is mix of Poll and Interrupt Aggregation mode. Driver polls for the write back status updates.
+Interrupt aggregation is used for processing the completion ring.</p>
+</dd>
 </dl>
 </li>
 </ul>
@@ -547,12 +524,12 @@ Interrupt aggregation is used for processing the completion ring.</dd>
 </li>
 </ul>
 <ul class="simple">
-<li>Allows only Privileged Physical Function to program the contexts and registers</li>
-<li>Dynamic queue configuration, refer to Interface file, libqdma_export.h (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">qdma_queue_conf</span></code>) for configurable parameters</li>
-<li>Dynamic driver configuration, refer to Interface file, libqdma_export.h (<code class="docutils literal"><span class="pre">struct</span> <span class="pre">qdma_dev_conf</span></code>) for configurable parameters</li>
-<li>Driver configuration through sysfs</li>
-<li>Asynchronous and Synchronous IO support</li>
-<li>Display the Version details for SW and HW</li>
+<li><p>Allows only Privileged Physical Function to program the contexts and registers</p></li>
+<li><p>Dynamic queue configuration, refer to Interface file, libqdma_export.h (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_queue_conf</span></code>) for configurable parameters</p></li>
+<li><p>Dynamic driver configuration, refer to Interface file, libqdma_export.h (<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">qdma_dev_conf</span></code>) for configurable parameters</p></li>
+<li><p>Driver configuration through sysfs</p></li>
+<li><p>Asynchronous and Synchronous IO support</p></li>
+<li><p>Display the Version details for SW and HW</p></li>
 </ul>
 </div>
 </div>
@@ -587,7 +564,7 @@ Interrupt aggregation is used for processing the completion ring.</dd>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 21, 2020.
+        Last updated on February 03, 2021.
       </span>
 
     </p>

@@ -523,28 +523,33 @@ support 2K queues and populate Xilinx devices for binding.</p>
 <li>To build QDMA driver</li>
 </ol>
 <ol class="loweralpha simple">
-<li>Add below lines to <code class="docutils literal"><span class="pre">./config/common_base</span></code> in DPDK 20.11 tree</li>
+<li>To support 2K queues and 256 PCIe functions, update below configurations     in <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code></li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#
-#Complie Xilinx QDMA PMD driver
-#
-CONFIG_RTE_LIBRTE_QDMA_PMD=y
-CONFIG_RTE_LIBRTE_QDMA_DEBUG_DRIVER=n
-
-To enable driver debug logs, set
-CONFIG_RTE_LIBRTE_QDMA_DEBUG_DRIVER=y
+<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_MEMZONE 20480
+#define RTE_MAX_VFIO_CONTAINERS 256
+#define RTE_MAX_QUEUES_PER_PORT 2048
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="2">
-<li>Add below lines to <code class="docutils literal"><span class="pre">drivers/net/Makefile</span></code>, where PMDs are added</li>
+<li>Add below lines to <code class="docutils literal"><span class="pre">./config/meson.build</span></code> in DPDK 20.11 tree</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>DIRS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += qdma
+<div class="highlight-none"><div class="highlight"><pre><span></span># Set maximum Ethernet ports to 256
+dpdk_conf.set(&#39;RTE_MAX_ETHPORTS&#39;, 256)
+
+# Set maximum VFIO Groups to 256
+dpdk_conf.set(&#39;RTE_MAX_VFIO_GROUPS&#39;, 256)
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="3">
-<li>Add below lines to <code class="docutils literal"><span class="pre">mk/rte.app.mk</span></code>, where PMDs are added</li>
+<li>Add below lines to <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code> to enable driver debug logs</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>_LDLIBS-$(CONFIG_RTE_LIBRTE_QDMA_PMD) += -lrte_pmd_qdma
+<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_LIBRTE_QDMA_DEBUG_DRIVER 1
+</pre></div>
+</div>
+<ol class="loweralpha simple" start="4">
+<li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/meson.build</span></code>, where PMDs are added to drivers list</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>&#39;qdma&#39;,
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
@@ -558,16 +563,6 @@ xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39
 </div>
 <p>Update entries in network devices class in <code class="docutils literal"><span class="pre">./usertools/dpdk-devbind.py</span></code> to add Xilinx devices</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>network_devices = [network_class, cavium_pkx, xilinx_qdma_pf, xilinx_qdma_vf]
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li>To support 2K queues and 256 PCIe functions, update below configurations     in <code class="docutils literal"><span class="pre">./config/common_base</span></code></li>
-</ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>CONFIG_RTE_MAX_VFIO_GROUPS=256
-CONFIG_RTE_MAX_VFIO_CONTAINERS=256
-CONFIG_RTE_MAX_MEMZONE=7680
-CONFIG_RTE_MAX_ETHPORTS=256
-CONFIG_RTE_MAX_QUEUES_PER_PORT=2048
 </pre></div>
 </div>
 </div></blockquote>
@@ -629,6 +624,11 @@ ldconfig
 <li><p class="first">Verify that <code class="docutils literal"><span class="pre">librte_net_qdma.a</span></code> is installed in <code class="docutils literal"><span class="pre">./build/drivers</span></code> directory.</p>
 </li>
 </ul>
+<p>Execute the following to compile the igb_uio kernel driver.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable/dpdk-kmods/linux/igb_uio
+make
+</pre></div>
+</div>
 </div></blockquote>
 </li>
 <li><p class="first">Compile Test application</p>
@@ -640,7 +640,7 @@ make RTE_SDK=`pwd`/../.. RTE_TARGET=build
 </pre></div>
 </div>
 <p>The following should appear when make completes</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>INSTALL-MAP qdma_testapp.map
+<div class="highlight-none"><div class="highlight"><pre><span></span>ln -sf qdma_testapp-shared build/qdma_testapp
 </pre></div>
 </div>
 <p>Additionally, for memory mapped mode, BRAM size can be configured with make command.

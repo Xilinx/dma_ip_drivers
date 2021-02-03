@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2020.2',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -435,8 +425,8 @@
 <p>This section describes the details on controlling and configuring the QDMA IP</p>
 <div class="section" id="system-level-configurations">
 <h2>System Level Configurations<a class="headerlink" href="#system-level-configurations" title="Permalink to this headline">¶</a></h2>
-<p>QDMA driver provides the sysfs interface to enable user to perform system level configurations. QDMA <code class="docutils literal"><span class="pre">PF</span></code> and <code class="docutils literal"><span class="pre">VF</span></code> drivers expose several <code class="docutils literal"><span class="pre">sysfs</span></code> nodes under the <code class="docutils literal"><span class="pre">pci</span></code> device root node. <code class="docutils literal"><span class="pre">sysfs</span></code> provides an interface to configure  the module.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep -i Xilinx
+<p>QDMA driver provides the sysfs interface to enable user to perform system level configurations. QDMA <code class="docutils literal notranslate"><span class="pre">PF</span></code> and <code class="docutils literal notranslate"><span class="pre">VF</span></code> drivers expose several <code class="docutils literal notranslate"><span class="pre">sysfs</span></code> nodes under the <code class="docutils literal notranslate"><span class="pre">pci</span></code> device root node. <code class="docutils literal notranslate"><span class="pre">sysfs</span></code> provides an interface to configure  the module.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# lspci | grep -i Xilinx
 
 01:00.0 Memory controller: Xilinx Corporation Device 903f
 01:00.1 Memory controller: Xilinx Corporation Device 913f
@@ -444,37 +434,37 @@
 01:00.3 Memory controller: Xilinx Corporation Device 933f
 </pre></div>
 </div>
-<p>Based on the above lspci output, traverse to <code class="docutils literal"><span class="pre">/sys/bus/pci/devices/&lt;device</span> <span class="pre">node&gt;/qdma</span></code> to find the list of configurable parameters specific to PF or VF driver.</p>
+<p>Based on the above lspci output, traverse to <code class="docutils literal notranslate"><span class="pre">/sys/bus/pci/devices/&lt;device</span> <span class="pre">node&gt;/qdma</span></code> to find the list of configurable parameters specific to PF or VF driver.</p>
 <div class="section" id="instantiate-the-virtual-functions">
 <h3>1. <strong>Instantiate the Virtual Functions</strong><a class="headerlink" href="#instantiate-the-virtual-functions" title="Permalink to this headline">¶</a></h3>
-<p>QDMA IP supports 252 Virtual Functions (VFs). <code class="docutils literal"><span class="pre">/sys/bus/pci/devices/&lt;device</span> <span class="pre">node&gt;</span></code> provides two configurable entries</p>
+<p>QDMA IP supports 252 Virtual Functions (VFs). <code class="docutils literal notranslate"><span class="pre">/sys/bus/pci/devices/&lt;device</span> <span class="pre">node&gt;</span></code> provides two configurable entries</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">sriov_totalvfs</span></code> : Indicates the maximum number of VFs supported for PF. This is a read only entry having the value the that was configured during bit stream generation.</li>
-<li><code class="docutils literal"><span class="pre">sriov_numvfs</span></code> : Enables the user to specify the number of VFs required for a PF</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sriov_totalvfs</span></code> : Indicates the maximum number of VFs supported for PF. This is a read only entry having the value the that was configured during bit stream generation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sriov_numvfs</span></code> : Enables the user to specify the number of VFs required for a PF</p></li>
 </ul>
 <p>Display the currently supported max VFs:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/sriov_totalvfs
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/sriov_totalvfs
 </pre></div>
 </div>
 <p>Instantiate the required number of VFs for a PF:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# echo 3 &gt; /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# echo 3 &gt; /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs
 </pre></div>
 </div>
-<p>Once the VFS are instantiated, required number of queues can be allocated the VF using <code class="docutils literal"><span class="pre">qmax</span></code> sysfs entry available in VF at
+<p>Once the VFS are instantiated, required number of queues can be allocated the VF using <code class="docutils literal notranslate"><span class="pre">qmax</span></code> sysfs entry available in VF at
 /sys/bus/pci/devices/&lt;VF function number&gt;/qdma/qmax</p>
 </div>
 <div class="section" id="allocate-the-queues-to-a-function">
 <h3>2. <strong>Allocate the Queues to a function</strong><a class="headerlink" href="#allocate-the-queues-to-a-function" title="Permalink to this headline">¶</a></h3>
 <p>QDMA IP supports maximum of 2048 queues. By default, all functions have 0 queues assigned.</p>
-<p><code class="docutils literal"><span class="pre">qmax</span></code> configuration parameter enables the user to update the number of queues for a PF. This configuration parameter indicates “Maximum number of queues associated for the current pf”.</p>
+<p><code class="docutils literal notranslate"><span class="pre">qmax</span></code> configuration parameter enables the user to update the number of queues for a PF. This configuration parameter indicates “Maximum number of queues associated for the current pf”.</p>
 <p>If the queue allocation needs to be different for any PF, access the qmax sysfs entry and set the required number.</p>
 <p>Display the current value:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# cat /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
 0
 </pre></div>
 </div>
 <p>To set 1024 as qmax for PF0:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# echo 1024 &gt; /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# echo 1024 &gt; /sys/bus/pci/devices/0000:01:00.0/qdma/qmax
 
 [xilinx@]# dma-ctl dev list
 
@@ -485,7 +475,7 @@ qdma01003       0000:01:00.3    max QP: 0, -~-
 </pre></div>
 </div>
 <p>To set 1770 as qmax for PF0, 8 as q max for PF1, PF2, PF3:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# echo 1770 &gt;  /sys/bus/pci/devices/0000\:01\:00.0/qdma/qmax
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# echo 1770 &gt;  /sys/bus/pci/devices/0000\:01\:00.0/qdma/qmax
 [xilinx@]# echo 8 &gt;  /sys/bus/pci/devices/0000\:01\:00.1/qdma/qmax
 [xilinx@]# echo 8 &gt;  /sys/bus/pci/devices/0000\:01\:00.2/qdma/qmax
 [xilinx@]# echo 8 &gt;  /sys/bus/pci/devices/0000\:01\:00.3/qdma/qmax
@@ -498,18 +488,18 @@ qdma01002       0000:01:00.2    max QP: 8, 1778~1785
 qdma01003       0000:01:00.3    max QP: 8, 1786~1793
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">qmax</span></code> configuration parameter is available for virtual functions as well.</p>
+<p><code class="docutils literal notranslate"><span class="pre">qmax</span></code> configuration parameter is available for virtual functions as well.</p>
 </div>
 <div class="section" id="reserve-the-queues-for-vfs">
 <h3>3. <strong>Reserve the Queues for VFs</strong><a class="headerlink" href="#reserve-the-queues-for-vfs" title="Permalink to this headline">¶</a></h3>
-<p>QDMA IP supports 2048 queues and from the set of 2048 queues, use the <code class="docutils literal"><span class="pre">qmax</span></code> sysfs entry to allocate queues to VFs similar to PFs.</p>
+<p>QDMA IP supports 2048 queues and from the set of 2048 queues, use the <code class="docutils literal notranslate"><span class="pre">qmax</span></code> sysfs entry to allocate queues to VFs similar to PFs.</p>
 <p>Display the current value:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@] #cat /sys/bus/pci/devices/0000:81:00.4/qdma/qmax
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@] #cat /sys/bus/pci/devices/0000:81:00.4/qdma/qmax
 0
 </pre></div>
 </div>
 <p>To set 1024 as qmax for VF0 of PF0:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@] #echo 1024 &gt; /sys/bus/pci/devices/0000:81:00.4/qdma/qmax
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@] #echo 1024 &gt; /sys/bus/pci/devices/0000:81:00.4/qdma/qmax
 </pre></div>
 </div>
 </div>
@@ -518,7 +508,7 @@ qdma01003       0000:01:00.3    max QP: 8, 1786~1793
 <p>Interrupt ring size is associated with indirect interrupt mode.</p>
 <p>When the mode is set to indirect interrupt mode, by default the interrupt aggregation ring size is set 0 index value.
 Each interrupt aggregation ring entry size is 64 Bytes. Index size 0 refers to 4KB size, i.e 4KB/64 = 512 entries.</p>
-<p>User can configure the interrupt ring entries in multiples of 512 hence set the <code class="docutils literal"><span class="pre">intr_rngsz</span></code> with multiplication factor</p>
+<p>User can configure the interrupt ring entries in multiples of 512 hence set the <code class="docutils literal notranslate"><span class="pre">intr_rngsz</span></code> with multiplication factor</p>
 <div class="line-block">
 <div class="line">0 - INTR_RING_SZ_4KB, Accommodates 512 entries</div>
 <div class="line">1 - INTR_RING_SZ_8KB, Accommodates 1024 entries</div>
@@ -530,19 +520,19 @@ Each interrupt aggregation ring entry size is 64 Bytes. Index size 0 refers to 4
 <div class="line">7 - INTR_RING_SZ_32KB, Accommodates 4096 entries</div>
 </div>
 <p>Display the current value:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# cat /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
 0
 </pre></div>
 </div>
 <p>To set value 2 to intr_rngsz:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# echo 2 &gt; /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# echo 2 &gt; /sys/bus/pci/devices/0000:81:00.0/qdma/intr_rngsz
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="queue-management">
 <h2>Queue Management<a class="headerlink" href="#queue-management" title="Permalink to this headline">¶</a></h2>
-<p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal"><span class="pre">dma-ctl</span></code> to manage the queues in the system.</p>
+<p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal notranslate"><span class="pre">dma-ctl</span></code> to manage the queues in the system.</p>
 </div>
 </div>
 
@@ -576,7 +566,7 @@ Each interrupt aggregation ring entry size is 64 Bytes. Index size 0 refers to 4
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 21, 2020.
+        Last updated on February 03, 2021.
       </span>
 
     </p>

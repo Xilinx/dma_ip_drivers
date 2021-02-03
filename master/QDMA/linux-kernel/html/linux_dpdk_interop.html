@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2020.2',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -454,22 +444,22 @@
 <p>QDMA supports 4 PFs and 252 VFs. Each PF can be binded to a different driver or each VF can be mapped to a VM and user can load the required driver in VM based on the required use case. Xilinx provides two Linux based QDMA reference drivers (Linux Kernel driver and DPDK user space driver). These two drivers are inter-operable in terms of mailbox communication for VF configuration and management. Hence, PFs and VFs can be binded independently to any of these two drivers.</p>
 <p>An example use case is depicted in below figure where</p>
 <ul class="simple">
-<li>2 PFs are attached to Linux driver, each PF creating 1 VF</li>
-<li>2 PFs are attached to DPDK driver, each PF creating 1 VF</li>
-<li>2 VMs are created where VF created from Linux kernel driver binded PF is attached to DPDK driver and vice versa.</li>
+<li><p>2 PFs are attached to Linux driver, each PF creating 1 VF</p></li>
+<li><p>2 PFs are attached to DPDK driver, each PF creating 1 VF</p></li>
+<li><p>2 VMs are created where VF created from Linux kernel driver binded PF is attached to DPDK driver and vice versa.</p></li>
 </ul>
 <img alt="_images/linux_dpdk_interop.PNG" class="align-center" src="_images/linux_dpdk_interop.PNG" />
 <p>To achieve this setup,</p>
 <ul class="simple">
-<li>remove the [Vendor-ID:Device-ID] tuple from pci table for the required functions to be binded with DPDK in linux-kernel/drv/pci_ids.h</li>
-<li>Undefine <code class="docutils literal"><span class="pre">ENABLE_INIT_CTXT_MEMORY</span></code> in <code class="docutils literal"><span class="pre">qdma_access.c</span></code> for the driver that is loaded last</li>
+<li><p>remove the [Vendor-ID:Device-ID] tuple from pci table for the required functions to be binded with DPDK in linux-kernel/drv/pci_ids.h</p></li>
+<li><p>Undefine <code class="docutils literal notranslate"><span class="pre">ENABLE_INIT_CTXT_MEMORY</span></code> in <code class="docutils literal notranslate"><span class="pre">qdma_access.c</span></code> for the driver that is loaded last</p></li>
 </ul>
 <div class="section" id="note">
 <h2><strong>Note</strong><a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
 <p>If any mailbox timeouts are observed during DPDK and Linux Interop testing, tweak the mailbox timeout values</p>
 <ul class="simple">
-<li>DPDK Driver:  <code class="docutils literal"><span class="pre">#define</span> <span class="pre">MBOX_OP_RSP_TIMEOUT</span> <span class="pre">(10000</span> <span class="pre">*</span> <span class="pre">MBOX_POLL_FRQ)</span></code> located in <code class="docutils literal"><span class="pre">dpdk/drivers/net/qdma/qdma_mbox.h</span></code></li>
-<li>LINUX Driver: and <code class="docutils literal"><span class="pre">#define</span> <span class="pre">QDMA_MBOX_MSG_TIMEOUT_MS</span>&#160; <span class="pre">10000</span> <span class="pre">/*</span> <span class="pre">10</span> <span class="pre">sec*/</span></code>  located in <code class="docutils literal"><span class="pre">linux_kernel/driver/libqdma/qdma_mbox.h</span></code></li>
+<li><p>DPDK Driver:  <code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">MBOX_OP_RSP_TIMEOUT</span> <span class="pre">(10000</span> <span class="pre">*</span> <span class="pre">MBOX_POLL_FRQ)</span></code> located in <code class="docutils literal notranslate"><span class="pre">dpdk/drivers/net/qdma/qdma_mbox.h</span></code></p></li>
+<li><p>LINUX Driver: and <code class="docutils literal notranslate"><span class="pre">#define</span> <span class="pre">QDMA_MBOX_MSG_TIMEOUT_MS</span>&#160; <span class="pre">10000</span> <span class="pre">/*</span> <span class="pre">10</span> <span class="pre">sec*/</span></code>  located in <code class="docutils literal notranslate"><span class="pre">linux_kernel/driver/libqdma/qdma_mbox.h</span></code></p></li>
 </ul>
 </div>
 </div>
@@ -504,7 +494,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 21, 2020.
+        Last updated on February 03, 2021.
       </span>
 
     </p>
