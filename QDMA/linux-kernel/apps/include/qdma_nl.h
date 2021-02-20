@@ -9,7 +9,7 @@
  * in the COPYING file in the root directory of this source tree).
  * You may select, at your option, one of the above-listed licenses.
  */
- 
+
 #ifndef QDMA_NL_H__
 #define QDMA_NL_H__
 /**
@@ -288,7 +288,6 @@ enum xnl_op_t {
 	XNL_CMD_REG_DUMP,	/**< dump the register information */
 	XNL_CMD_REG_RD,		/**< read a register value */
 	XNL_CMD_REG_WRT,	/**< write value to a register */
-	XNL_CMD_REG_INFO_READ,
 
 	XNL_CMD_Q_LIST,		/**< list all the queue present in the system */
 	XNL_CMD_Q_ADD,		/**< add a queue */
@@ -309,6 +308,7 @@ enum xnl_op_t {
 	XNL_CMD_GLOBAL_CSR,	/**< get all global csr register values */
 	XNL_CMD_DEV_CAP,	/**< list h/w capabilities , hw and sw version */
 	XNL_CMD_GET_Q_STATE,	/**< get the queue state */
+	XNL_CMD_REG_INFO_READ,
 	XNL_CMD_MAX,		/**< max number of XNL commands*/
 };
 
@@ -335,10 +335,15 @@ static const char *xnl_op_str[XNL_CMD_MAX] = {
 	"Q_CMPT",		/** XNL_CMD_Q_CMPT */
 	"Q_RX_PKT",		/** XNL_CMD_Q_RX_PKT */
 	"Q_CMPT_READ",		/** XNL_CMD_Q_CMPT_READ */
-	"INTR_RING_DUMP",	/** XNL_CMD_INTR_RING_DUMP */
 #ifdef ERR_DEBUG
-	"Q_ERR_INDUCE"		/** XNL_CMD_Q_ERR_INDUCE */
+	"Q_ERR_INDUCE",		/** XNL_CMD_Q_ERR_INDUCE */
 #endif
+	"INTR_RING_DUMP",	/** XNL_CMD_INTR_RING_DUMP */
+	"Q_UDD_DUMP",	/** XNL_CMD_Q_UDD */
+	"GLOBAL_CSR",	/** XNL_CMD_GLOBAL_CSR */
+	"DEV_CAPABILITIES",	/** XNL_CMD_DEV_CAP */
+	"GET_Q_STATE",	/** XNL_CMD_GET_Q_STATE */
+	"REG_INFO_READ",	/** XNL_CMD_REG_INFO_READ */
 };
 
 enum qdma_queue_state {
