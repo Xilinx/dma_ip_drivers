@@ -186,7 +186,7 @@ static struct xreg_info qdma_config_regs[] = {
 		0x27C, 1,  0, 0, 0, 0,
 		QDMA_MM_ST_MODE, QDMA_REG_READ_PF_VF, 0, NULL},
 	{"GLBL_INTERRUPT_CFG",
-		0x288, 1, 0, 0, 0, 0,
+		0x2C4, 1, 0, 0, 0, 0,
 		QDMA_MM_ST_MODE, QDMA_REG_READ_PF_VF, 0, NULL},
 
 	/* QDMA_TRQ_SEL_FMAP (0x00400 - 0x7FC) */
