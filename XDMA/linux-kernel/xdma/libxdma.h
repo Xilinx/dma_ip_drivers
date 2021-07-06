@@ -472,7 +472,7 @@ struct xdma_request_cb {
 
 	unsigned int sw_desc_idx;
 	unsigned int sw_desc_cnt;
-	struct sw_desc sdesc[0];
+	struct sw_desc sdesc[0]; // potent. overflow if > 0 scatterlist (see libxdma.c line 3114 - 3131)
 };
 
 struct xdma_engine {
