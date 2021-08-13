@@ -74,8 +74,18 @@ MODULE_PARM_DESC(desc_blen_max,
 			swait_event_interruptible
 #else
 #define xlx_wake_up	wake_up_interruptible
-#define xlx_wait_event_interruptible_timeout \
-			wait_event_interruptible_timeout
+/* wait_event_interruptible_timeout() could return prematurely (-ERESTARTSYS)
+ * if it is interrupted by a signal */
+#define xlx_wait_event_interruptible_timeout(wq, condition, timeout) \
+({\
+	int __ret = 0;  \
+	unsigned long expire = timeout + jiffies; \
+	do { \
+		__ret = wait_event_interruptible_timeout(wq, condition, \
+							timeout); \
+	} while ((__ret < 0) && (jiffies < expire)); \
+       __ret; \
+})
 #define xlx_wait_event_interruptible \
 			wait_event_interruptible
 #endif
