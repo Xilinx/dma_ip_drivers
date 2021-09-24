@@ -90,7 +90,8 @@
 #define XDMA_OFS_CONFIG		(0x3000UL)
 
 /* maximum number of desc per transfer request */
-#define XDMA_TRANSFER_MAX_DESC (2048)
+#define XDMA_ENGINE_XFER_MAX_DESC		0x800
+#define XDMA_ENGINE_CREDIT_XFER_MAX_DESC	0x3FF
 
 /* maximum size of a single DMA transfer descriptor */
 #define XDMA_DESC_BLEN_BITS	28
@@ -502,6 +503,7 @@ struct xdma_engine {
 
 	int max_extra_adj;	/* descriptor prefetch capability */
 	int desc_dequeued;	/* num descriptors of completed transfers */
+	u32 desc_max;		/* max # descriptors per xfer */
 	u32 status;		/* last known status of device */
 	/* only used for MSIX mode to store per-engine interrupt mask value */
 	u32 interrupt_enable_mask_value;

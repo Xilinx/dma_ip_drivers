@@ -42,11 +42,10 @@ static unsigned int interrupt_mode;
 module_param(interrupt_mode, uint, 0644);
 MODULE_PARM_DESC(interrupt_mode, "0 - Auto , 1 - MSI, 2 - Legacy, 3 - MSI-x");
 
-static unsigned int enable_credit_mp = 1;
-module_param(enable_credit_mp, uint, 0644);
-MODULE_PARM_DESC(
-	enable_credit_mp,
-	"Set 0 to disable credit feature, default is 1 ( credit control enabled)");
+static unsigned int enable_st_c2h_credit = 0;
+module_param(enable_st_c2h_credit, uint, 0644);
+MODULE_PARM_DESC(enable_st_c2h_credit,
+	"Set 1 to enable ST C2H engine credit feature, default is 0 ( credit control disabled)");
 
 unsigned int desc_blen_max = XDMA_DESC_BLEN_MAX;
 module_param(desc_blen_max, uint, 0644);
@@ -548,7 +547,7 @@ static int xdma_engine_stop(struct xdma_engine *engine)
 	}
 	dbg_tfr("%s(engine=%p)\n", __func__, engine);
 
-	if (enable_credit_mp && engine->streaming &&
+	if (enable_st_c2h_credit && engine->streaming &&
 	    engine->dir == DMA_FROM_DEVICE)
 		write_register(0, &engine->sgdma_regs->credits, 0);
 
@@ -718,7 +717,7 @@ static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 	dbg_tfr("%s(%s): transfer=0x%p.\n", __func__, engine->name, transfer);
 
 	/* Add credits for Streaming mode C2H */
-	if (enable_credit_mp && engine->streaming &&
+	if (enable_st_c2h_credit && engine->streaming &&
 	    engine->dir == DMA_FROM_DEVICE)
 		write_register(engine->desc_used,
 					&engine->sgdma_regs->credits, 0);
@@ -2265,12 +2264,6 @@ static int transfer_desc_init(struct xdma_transfer *transfer, int count)
 	dma_addr_t desc_bus = transfer->desc_bus;
 	int i;
 
-	if (count > XDMA_TRANSFER_MAX_DESC) {
-		pr_err("Engine cannot transfer more than %d descriptors\n",
-		       XDMA_TRANSFER_MAX_DESC);
-		return -EINVAL;
-	}
-
 	/* create singly-linked list for SG DMA controller */
 	for (i = 0; i < count - 1; i++) {
 		/* increment bus address to next in array */
@@ -2580,8 +2573,7 @@ static void engine_free_resource(struct xdma_engine *engine)
 			 dev_name(&xdev->pdev->dev), engine->name, engine->desc,
 			 engine->desc_bus);
 		dma_free_coherent(&xdev->pdev->dev,
-				  XDMA_TRANSFER_MAX_DESC *
-					  sizeof(struct xdma_desc),
+				  engine->desc_max * sizeof(struct xdma_desc),
 				  engine->desc, engine->desc_bus);
 		engine->desc = NULL;
 	}
@@ -2589,7 +2581,7 @@ static void engine_free_resource(struct xdma_engine *engine)
 	if (engine->cyclic_result) {
 		dma_free_coherent(
 			&xdev->pdev->dev,
-			XDMA_TRANSFER_MAX_DESC * sizeof(struct xdma_result),
+			engine->desc_max * sizeof(struct xdma_result),
 			engine->cyclic_result, engine->cyclic_result_bus);
 		engine->cyclic_result = NULL;
 	}
@@ -2614,7 +2606,7 @@ static int engine_destroy(struct xdma_dev *xdev, struct xdma_engine *engine)
 		       (unsigned long)(&engine->regs->interrupt_enable_mask) -
 			       (unsigned long)(&engine->regs));
 
-	if (enable_credit_mp && engine->streaming &&
+	if (enable_st_c2h_credit && engine->streaming &&
 	    engine->dir == DMA_FROM_DEVICE) {
 		u32 reg_value = (0x1 << engine->channel) << 16;
 		struct sgdma_common_regs *reg =
@@ -2776,7 +2768,7 @@ static int engine_init_regs(struct xdma_engine *engine)
 	engine->interrupt_enable_mask_value = reg_value;
 
 	/* only enable credit mode for AXI-ST C2H */
-	if (enable_credit_mp && engine->streaming &&
+	if (enable_st_c2h_credit && engine->streaming &&
 	    engine->dir == DMA_FROM_DEVICE) {
 		struct xdma_dev *xdev = engine->xdev;
 		u32 reg_value = (0x1 << engine->channel) << 16;
@@ -2799,7 +2791,7 @@ static int engine_alloc_resource(struct xdma_engine *engine)
 	struct xdma_dev *xdev = engine->xdev;
 
 	engine->desc = dma_alloc_coherent(&xdev->pdev->dev,
-					  XDMA_TRANSFER_MAX_DESC *
+					  engine->desc_max *
 						  sizeof(struct xdma_desc),
 					  &engine->desc_bus, GFP_KERNEL);
 	if (!engine->desc) {
@@ -2823,7 +2815,7 @@ static int engine_alloc_resource(struct xdma_engine *engine)
 	if (engine->streaming && engine->dir == DMA_FROM_DEVICE) {
 		engine->cyclic_result = dma_alloc_coherent(
 			&xdev->pdev->dev,
-			XDMA_TRANSFER_MAX_DESC * sizeof(struct xdma_result),
+			engine->desc_max * sizeof(struct xdma_result),
 			&engine->cyclic_result_bus, GFP_KERNEL);
 
 		if (!engine->cyclic_result) {
@@ -2873,6 +2865,12 @@ static int engine_init(struct xdma_engine *engine, struct xdma_dev *xdev,
 	snprintf(engine->name, sizeof(engine->name), "%d-%s%d-%s", xdev->idx,
 		(dir == DMA_TO_DEVICE) ? "H2C" : "C2H", channel,
 		engine->streaming ? "ST" : "MM");
+
+	if (enable_st_c2h_credit && engine->streaming &&
+	    engine->dir == DMA_FROM_DEVICE)
+	    	engine->desc_max = XDMA_ENGINE_CREDIT_XFER_MAX_DESC;
+	else
+	    	engine->desc_max = XDMA_ENGINE_XFER_MAX_DESC;
 
 	dbg_init("engine %p name %s irq_bitmask=0x%08x\n", engine, engine->name,
 		 (int)engine->irq_bitmask);
@@ -2961,7 +2959,7 @@ static int transfer_init(struct xdma_engine *engine,
 {
 	unsigned int desc_max = min_t(unsigned int,
 				req->sw_desc_cnt - req->sw_desc_idx,
-				XDMA_TRANSFER_MAX_DESC);
+				engine->desc_max);
 	int i = 0;
 	int last = 0;
 	u32 control;
@@ -2988,10 +2986,10 @@ static int transfer_init(struct xdma_engine *engine,
 			(sizeof(struct xdma_result) * engine->desc_idx);
 	xfer->desc_index = engine->desc_idx;
 
-	/* Need to handle desc_used >= XDMA_TRANSFER_MAX_DESC */
+	/* Need to handle desc_used >= engine->desc_max */
 
-	if ((engine->desc_idx + desc_max) >= XDMA_TRANSFER_MAX_DESC)
-		desc_max = XDMA_TRANSFER_MAX_DESC - engine->desc_idx;
+	if ((engine->desc_idx + desc_max) >= engine->desc_max)
+		desc_max = engine->desc_max - engine->desc_idx;
 
 	transfer_desc_init(xfer, desc_max);
 
@@ -3018,8 +3016,7 @@ static int transfer_init(struct xdma_engine *engine,
 		xfer->desc_cmpl_th = desc_max;
 
 	xfer->desc_num = desc_max;
-	engine->desc_idx = (engine->desc_idx + desc_max) %
-					XDMA_TRANSFER_MAX_DESC;
+	engine->desc_idx = (engine->desc_idx + desc_max) % engine->desc_max;
 	engine->desc_used += desc_max;
 
 	/* fill in adjacent numbers */
