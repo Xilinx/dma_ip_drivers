@@ -4,13 +4,29 @@ and example test scripts that can be used to exercise the Xilinx PCIe DMA IP.
 This software can be used directly or referenced to create drivers and software
 for your Xilinx FPGA hardware design.
 
+Operating System Support:
+=========================
+Operating System Architecture: x86_64
+Linux kernel:	3.10+
+RHEL/CentOS:	7.6, 7.7, 7.8, 7.9,
+		8.1, 8.2
+Ubuntu:		16.04.5 LTS, 16.04.6 LTS
+		18.04.1 LTS, 18.04.2 LTS, 18.04.4 LTS3, 18.04.5 LTS
+		20.04 LTS, 20.04.1 LT
+
+HW Requirement:
+===============
+The PCIe DMA supports UltraScale+, UltraScale, Virtex-7 XT and 7 Series Gen2
+devices.
+
+Please refer to the Xilinx documentation "PG195 DMA/Bridge Subsystem for PCI
+Express" for details of the IP.
+
+
 Directory and file description:
 ===============================
  - xdma/: This directory contains the Xilinx PCIe DMA kernel module
        driver files.
-
- - libxdma/: This directory contains support files for the kernel driver module,
-	which interfaces directly with the XDMA IP.
 
  - include/: This directory contains all include files that are needed for
 	compiling driver.
@@ -28,10 +44,20 @@ Directory and file description:
 		cards. Root permissions will be required to run this script.
 
 	 - run_test.sh:
-		This script runs sample tests on a Xilinx PCIe DMA target and
+	 - dma_memory_mapped_test.sh, dma_streaming_test.sh:
+	 - data/:
+		run_test.sh runs sample tests on a Xilinx PCIe DMA target and
 		returns a pass (0) or fail (1) result.
-		This script is intended for use with the PCIe DMA example
-		design.
+		This script calls 2 other scripts in the same directory:
+		- dma_memory_mapped_test.sh for memory-mapped dma mode
+		- dma_streaming_test.sh for streaming dma mode
+		The data/ directory contains binary data files that are used
+		for DMA data transfers to the Xilinx FPGA PCIe endpoint device
+		with the run_test.sh.
+		!NOTE!:
+		=======
+		These scripts are intended for use with the PCIe DMA EXAMPLE
+		DESIGN ONLY.
 
 	 - perform_hwcount.sh:
 		This script runs hardware performance for XDMA for both Host to
@@ -53,9 +79,6 @@ Directory and file description:
 		generate proper numbers.
 		If a AXI-ST design is independent of H2C and C2H, performance
 		number can be generated. 
-	- data/:
-		This directory contains binary data files that are used for DMA
-		data transfers to the Xilinx FPGA PCIe endpoint device.
 
 Usage:
   - Change directory to the driver directory.

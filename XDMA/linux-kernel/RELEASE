@@ -1,3 +1,10 @@
+v2020.2.0
+=========
+- renamed module parameter "enable_credit_mp" to "enable_st_c2h_credit" to 
+  accurately describe its usage.
+- turn off the ST C2H credit as default (i.e., enable_st_c2h_credit = 0)
+- fixed c2h streaming credit issue when data buffers uses >= 1K descriptors.
+
 v2020.1.08
 ===============
 - replaced module parameter "sgdma_timeout" to "h2c_timeout" and "c2h_timeout"
