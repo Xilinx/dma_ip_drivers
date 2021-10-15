@@ -24,6 +24,11 @@
 /*---------------------------------------------------------------------------*/
 /*                        Standard header includes                           */
 /*---------------------------------------------------------------------------*/
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+// #define _BSD_SOURCE  deprecated
+// #define _XOPEN_SOURCE 500
+//
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,8 +36,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
-#include <stdint.h>atca
+#include <stdint.h>
 #include <signal.h>
+#include <getopt.h>
 //#include <fcntl.h>
 
 #include <sys/types.h>
@@ -41,13 +47,33 @@
 /*---------------------------------------------------------------------------*/
 /*                        Project header includes                            */
 /*---------------------------------------------------------------------------*/
+#include "dma_utils.c"
 #include "esther-daq.h"
 #include "esther-daq-lib.h"
+
+   // int dmasize= 1048576*3; // 0x100000   maxx ~ 132k Samples
+#define SIZE_DEFAULT (1048576*3)
 
 //#define N_PACKETS 2  // size in full buffers (2MB) of data to save to disk. 2M=64 kSample =16 ms
 //Global vars
 //int run=1;
-
+// https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html
+/* Flag set by ‘--verbose’. */
+static int verbose_flag;
+static struct option long_options[] = {
+    /*   NAME       ARGUMENT           FLAG  SHORTNAME */
+        {"atrigger",    required_argument, NULL, 'a'},
+        {"btrigger",    required_argument, NULL, 'b'},
+        {"ctrigger",    required_argument, NULL, 'c'},
+        {"device",      required_argument, NULL, 'd'},
+        {"size",        required_argument, NULL, 's'},
+        {"soft_trigger", no_argument,       NULL, 't'},
+        //{"delete",  required_argument, NULL, 0},
+        {"verbose", no_argument        ,&verbose_flag, 1},
+        //{"create",  required_argument, NULL, 'c'},
+        {"file",    required_argument, NULL, 0},
+        {NULL,      0,                 NULL, 0}
+    };
 
 void getkey ()
 {
@@ -112,22 +138,89 @@ void save_to_disk(int dmasize, short *acqData){
 
 int main(int argc, char *argv[])
 {
-    int dev_num = 0;
+    //int dev_num = 0;
     int i,  k;  					// loop iterators i
     int rc;
     //int fd;
-    char *arg = "-sw";
-    int hw_trigger = 0; 				// trigger scheme to start acquisition
+    //char *arg = "-sw";
+    /*int hw_trigger = 0; 				// trigger scheme to start acquisition*/
     void *map_base;//, *virt_addr;
     int fd_bar_0, fd_bar_1;   // file descriptor of device2
     short * acqData; //[ N_AQS * N_PACKETS * 2 *NUM_CHAN];	// large buffer to store data for 2096 ms which can be saved to hard drive
     uint32_t control_reg;
     shapi_device_info * pDevice;
     shapi_module_info * pModule;
-    uint32_t trigOff32, dly; 
+    uint32_t trigOff32, dly;
 
-    int dmasize= 1048576*3; // 0x100000   maxx ~ 132k Samples
+    //int dmasize= 1048576*3; // 0x100000   maxx ~ 132k Samples
 
+    int c;
+    /*uint64_t aopt = SIZE_DEFAULT;*/
+
+    int digit_optind = 0, swtrigger=0;
+    //int aaopt = 0, bopt = 0, copt=0, dopt=0, sizeopt=0;
+    uint64_t aopt = SIZE_DEFAULT, bopt = 0, copt=0, dopt=0, sizeopt=0;
+    //char *dopt = 0;
+    int option_index = 0;
+    while ((c = getopt_long(argc, argv, "a:b:c:d:t012",
+                 long_options, &option_index)) != -1) {
+        int this_option_optind = optind ? optind : 1;
+        switch (c) {
+        case 0:
+            printf ("option %s", long_options[option_index].name);
+            if (optarg)
+                printf (" with arg %s", optarg);
+            printf ("\n");
+            break;
+        case '1':
+        case '2':
+            if (digit_optind != 0 && digit_optind != this_option_optind)
+              printf ("digits occur in two different argv-elements.\n");
+            digit_optind = this_option_optind;
+            printf ("option %c\n", c);
+            break;
+        case 'a':
+            aopt = getopt_integer(optarg);
+            printf ("option a 0x%08X\n", aopt);
+            break;
+        case 'b':
+            bopt = getopt_integer(optarg);
+            printf ("option b %d\n", bopt);
+            break;
+        case 'c':
+            printf ("option c with value '%s'\n", optarg);
+            copt = getopt_integer(optarg);
+            break;
+        case 'd':
+            dopt = atoi(optarg);
+            printf ("option d %d\n", dopt);
+            break;
+        case 's':
+            sizeopt = getopt_integer(optarg);
+            printf ("option size with value '%d'\n", sizeopt);
+            break;
+        case 't':
+            swtrigger = 1;
+            break;
+/*        case 'd':
+            //printf ("option d with value '%s'\n", optarg);
+            dopt = strdup(optarg);
+            printf ("option d with value '%s'\n", dopt);
+            break;
+*/
+        case '?':
+            break;
+        default:
+            printf ("?? getopt returned character code 0%o ??\n", c);
+        }
+    }
+    if (optind < argc) {
+        printf ("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf ("%s ", argv[optind++]);
+        printf ("\n");
+    }
+/*
     // Check command line
     if(argc < 2) {
         printf("Usage: estherdaq  -hw|-sw [size]\n");
@@ -146,12 +239,14 @@ int main(int argc, char *argv[])
         dmasize = atoi(arg);
         printf("arg2n = %d\n", dmasize);
     }
-    printf("read %d, 0x%08X bytes\n", dmasize, dmasize);
+    */
 
-    map_base=init_device(dev_num, 0, 0, &fd_bar_0, &fd_bar_1);
+    //printf("read %d, 0x%08X bytes\n", dmasize, dmasize);
+
+    map_base=init_device(dopt, 0, 0, &fd_bar_0, &fd_bar_1);
     if (fd_bar_1   < 0)  {
         //if (map_base == MAP_FAILED){ //  (void *) -1
-        fprintf (stderr,"Error: cannot open device %d \n", dev_num);
+        fprintf (stderr,"Error: cannot open device %d \n", dopt);
         fprintf (stderr," errno = %i\n",errno);
         printf ("open error : %s\n", strerror(errno));
         exit(1);
@@ -179,7 +274,7 @@ int main(int argc, char *argv[])
     //write_fpga_reg(map_base, TRIG0_REG_OFF, (2000 << 16));
 //    write_fpga_reg(map_base, TRIG0_REG_OFF, 2000);
 
-    acqData = (short *) malloc(dmasize);
+    acqData = (short *) malloc(sizeopt);
 //    i = 0;
     control_reg = read_control_reg(map_base);
     control_reg |= (1<<ACQE_BIT);
@@ -189,8 +284,7 @@ int main(int argc, char *argv[])
 
         printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);
     // ADC board is armed and waiting for trigger (hardware or software)
-    if (!hw_trigger)
-    {
+    if (swtrigger) {
         printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
         printf("software trigger mode active\n");
         getkey(); // Press any key to start the acquisition
@@ -209,7 +303,7 @@ int main(int argc, char *argv[])
 
     rc = 0;
 
-    rc = read(fd_bar_1, acqData, dmasize); // loop until there is something to read.
+    rc = read(fd_bar_1, acqData, sizeopt); // loop until there is something to read.
     usleep(10);
     dly = read_fpga_reg(map_base, PULSE_DLY_REG_OFF);
     write_control_reg(map_base, 0);  // stop board
@@ -223,7 +317,7 @@ int main(int argc, char *argv[])
     rc = read_status_reg(map_base);
 
 //    save_to_disk(dmasize, acqData);
-    save_to_bin(dmasize, acqData);
+    save_to_bin(sizeopt, acqData);
 
     printf("Streaming off - FPGA Status: 0x%.8X, Delay = 0x%08X, %d \n", rc, dly, dly >>16);
     close(fd_bar_0);

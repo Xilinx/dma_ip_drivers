@@ -6,14 +6,14 @@ TARGET = estherdaq
 
 CFLAGS =  -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -D_LARGE_FILE_SOURCE
 CFLAGS += -I../include
-CFLAGS += -MMD     # option to generate a .d file during compilation
+#CFLAGS += -MMD     # option to generate a .d file during compilation
 
-LDFLAGS = lrt
--include $(dep)   # include all dep files in the makefile
+#LDFLAGS = lrt
+#-include $(dep)   # include all dep files in the makefile
 
-$(TARGET): $(obj)
-	echo $(src)
-	$(CC)  $(CFLAGS) -o $@ $<
+#$(TARGET): $(obj)
+#	echo $(src)
+#	$(CC)  $(CFLAGS) -o $@ $<
 #	$(CC)  $(CFLAGS) -o $@ $^
 
 estherdaq: $(obj)
