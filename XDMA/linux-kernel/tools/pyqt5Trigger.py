@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # vim: sta:et:sw=4:ts=4:sts=4
 #
+#https://www.pythonguis.com/tutorials/qprocess-external-programs/
 # https://stackoverflow.com/questions/35056635/how-to-update-a-realtime-plot-and-use-buttons-to-interact-in-pyqtgraph
 # https://stackoverflow.com/questions/56918912/how-to-enable-legends-and-change-style-in-pyqtgraph
 import sys
