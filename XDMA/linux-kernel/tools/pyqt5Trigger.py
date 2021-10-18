@@ -11,23 +11,23 @@ from PyQt5 import QtWidgets
 import numpy as np
 import pyqtgraph as pg
 
-FILENAME = 'data/out_16.bin'
-FILENAME32 = 'data/out_32.bin'
+FILENAME = 'data/out_32.bin'
+FILENAME32 = 'data/out_fmc.bin'
 NUMCHANNELS = 12
 
 SCALE_32 = 2**12
 DECIMATION = 20
 
 
-class atcaWave(QtWidgets.QWidget):
+class estherTrig(QtWidgets.QWidget):
     def __init__(self):
         pg.setConfigOption('background', 'w')  # before loading widget
-        super(atcaWave, self).__init__()
+        super(estherTrig, self).__init__()
+        #QtWidgets.QWidget.__init__(self)
         self.init_ui()
-        self.qt_connections()
+        #self.qt_connections()
         # self.plotcurve = pg.PlotCurveItem(pen=pg.mkPen('r', width=3))
         # self.plotcurve2 = pg.PlotCurveItem(pen=pg.mkPen('g', width=3))
-        # self.plotwidget.addItem(self.plotcurve)
         # self.plotwidget.addItem(self.plotcurve2)
         # call plt.addLegend() BEFORE you create the curves.
         self.plotwidget.addLegend()
@@ -74,23 +74,22 @@ class atcaWave(QtWidgets.QWidget):
         vbox2.addWidget(self.plotwidget)
         self.clearbutton = QtWidgets.QPushButton("Clear Plots")
         # self.decreasebutton = QtWidgets.QPushButton("Decrease Amplitude")
-        hbox1 = QtWidgets.QHBoxLayout()
+        hboxD = QtWidgets.QHBoxLayout()
         decLabel = QtWidgets.QLabel("Decimation")
         self.line_editDec = QtWidgets.QLineEdit("10", self)
         self.line_editDec.resize(100, 32)
-        hbox1.addWidget(decLabel)
+        hboxD.addWidget(decLabel)
         # hbox1.addWidget(QtWidgets.QLabel("Decimation "))
-        hbox1.addWidget(self.line_editDec)
+        hboxD.addWidget(self.line_editDec)
         hbox.addLayout(vbox1)
-        self.plot16Button = QtWidgets.QPushButton("Plot data 16 bit")
-        self.plot16dButton = QtWidgets.QPushButton("Plot data 16 D bit")
-        self.plot32Button = QtWidgets.QPushButton("Plot data 32 bit")
+        self.plot16Button = QtWidgets.QPushButton("Plot Data")
+        # self.plot16dButton = QtWidgets.QPushButton("Plot data 16 D bit")
+        # self.plot32Button = QtWidgets.QPushButton("Plot data 32 bit")
         self.line_edit = QtWidgets.QLineEdit(FILENAME, self)
-        self.line_edit32 = QtWidgets.QLineEdit(FILENAME32, self)
-        vbox1.addWidget(self.clearbutton)
+        # self.line_edit32 = QtWidgets.QLineEdit(FILENAME32, self)
         # vbox.addWidget(self.decreasebutton)
         vbox2.addWidget(self.line_edit)
-        vbox2.addWidget(self.line_edit32)
+        # vbox2.addWidget(self.line_edit32)
         # butt = QtWidgets.QPushButton("Increa1") butt.setSizePolicy(
         #      QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
 #            QtWidgets.QSizePolicy.MinimumExpanding))
@@ -98,18 +97,47 @@ class atcaWave(QtWidgets.QWidget):
             QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.clearbutton.setSizePolicy(sizePolicy)
         # vbox1.addWidget(butt)
+        vbox1.addWidget(self.clearbutton)
         verticalSpacer = QtWidgets.QSpacerItem(
             20, 40, QtWidgets.QSizePolicy.Minimum,
             QtWidgets.QSizePolicy.Expanding)
         vbox1.addItem(verticalSpacer)
-        vbox1.addLayout(hbox1)
+        fbox = QtWidgets.QFormLayout()
+        self.atlevelHigh=QtWidgets.QLineEdit("8000")
+        self.atlevelLow=QtWidgets.QLineEdit("-9000")
+        vbox3 = QtWidgets.QVBoxLayout()
+        vbox3.addWidget(self.atlevelHigh)
+        vbox3.addWidget(self.atlevelLow)
+        fbox.addRow(QtWidgets.QLabel("A Level"), vbox3)
+        vbox1.addLayout(fbox)
+
+        self.btlevelHigh=QtWidgets.QLineEdit("8000")
+        self.btlevelLow=QtWidgets.QLineEdit("-9000")
+        fbox = QtWidgets.QFormLayout()
+        vbox3 = QtWidgets.QVBoxLayout()
+        vbox3.addWidget(self.btlevelHigh)
+        vbox3.addWidget(self.btlevelLow)
+        fbox.addRow(QtWidgets.QLabel("B Level"), vbox3)
+        vbox1.addLayout(fbox)
+
+        self.ctlevelHigh=QtWidgets.QLineEdit("8000")
+        self.ctlevelLow=QtWidgets.QLineEdit("-9000")
+        fbox = QtWidgets.QFormLayout()
+        vbox3 = QtWidgets.QVBoxLayout()
+        vbox3.addWidget(self.ctlevelHigh)
+        vbox3.addWidget(self.ctlevelLow)
+        fbox.addRow(QtWidgets.QLabel("C Level"), vbox3)
+        vbox1.addLayout(fbox)
+
+        vbox1.addItem(verticalSpacer)
+        vbox1.addLayout(hboxD)
         vbox1.addWidget(self.plot16Button)
-        vbox1.addWidget(self.plot16dButton)
-        vbox1.addWidget(self.plot32Button)
+        # vbox1.addWidget(self.plot16dButton)
+        # vbox1.addWidget(self.plot32Button)
         self.plot16Button.setSizePolicy(sizePolicy)
-        self.plot16dButton.setSizePolicy(sizePolicy)
-        self.plot32Button.setSizePolicy(sizePolicy)
-        hbox.addLayout(vbox1, 1)
+        # self.plot16dButton.setSizePolicy(sizePolicy)
+        # self.plot32Button.setSizePolicy(sizePolicy)
+        # hbox.addLayout(vbox1, 1)
         # hbox.addStretch()
         line = QtWidgets.QFrame(self)
         # line.setObjectName(QtWidgets.QStringLiteral("line"))
@@ -123,14 +151,14 @@ class atcaWave(QtWidgets.QWidget):
         hbox.addLayout(vbox2, 3)
         self.setLayout(hbox)
         self.setGeometry(10, 10, 1000, 600)
-        self.show()
+        # self.show()
 
     def qt_connections(self):
         self.clearbutton.clicked.connect(self.on_clearbutton_clicked)
         # self.decreasebutton.clicked.connect(self.on_decreasebutton_clicked)
         self.plot16Button.clicked.connect(self.on_plot16Button_clicked)
         self.plot16dButton.clicked.connect(self.on_plot16dButton_clicked)
-        self.plot32Button.clicked.connect(self.on_plot32Button_clicked)
+        # self.plot32Button.clicked.connect(self.on_plot32Button_clicked)
         # adding action to the line edit when enter key is pressed
         # line_edit.returnPressed.connect(lambda: do_action())
 
@@ -161,44 +189,9 @@ class atcaWave(QtWidgets.QWidget):
         # print ("Amplitude decreased")
         self.draw16()
 
-    def on_plot16dButton_clicked(self):
-        self.draw16d()
-
-    def on_plot32Button_clicked(self):
-        # print ("Amplitude decreased")
-        self.draw32()
-
-    def draw16d(self):
-        data = np.fromfile(FILENAME, dtype='int16')
-# ‘F’ means to readthe elements using Fortran-like index order,
-# with the first index changing fastest,
-        filename = self.line_edit.text()
-        data = np.fromfile(filename, dtype='int16')
-        data_mat = np.reshape(data, (32, -1), order='F')
-        # for i in range(3):
-        # self.graphicsView.plot(data_mat[i], pen=(i,3))
-        # self.graphicsView.plot(data_mat[0], pen='r')
-        # self.graphicsView.plot(data_mat[1], pen='g')
-        # self.plotcurve.setData(data_mat[0])
-        # self.plotcurve2.setData(data_mat[1])
-        self.plotwidget.setYRange(-32768, 32768, padding=0.01)
-        self.plotwidget.setLabels(
-            title='16 bit Data', bottom='Sample', left='LSB', right='Chopp')
-        decim = int(self.line_editDec.text())
-        print(" decim is {0}".format(int(decim)))
-        for i in range(NUMCHANNELS):
-            self.plotCurves[i].clear()
-        for i in [0, 1, 2, 3]:
-            self.plotCurves[i].setPen(
-                pen=pg.mkPen(i, width=2),  name="cha{}".format(i + 28))
-            self.plotCurves[i].setDownsampling(
-                ds=decim, auto=None, method='subsample')
-        self.plotCurves[0].setData(data_mat[28])
-        self.plotCurves[1].setData(data_mat[29])
-        self.plotCurves[2].setData(data_mat[30])
-        self.plotCurves[3].setData(data_mat[31])
-        self.curveChp.setData(data_mat[31] & 0x01)
-        self.updateViews()
+    # def on_plot32Button_clicked(self):
+        # # print ("Amplitude decreased")
+        # self.draw32()
 
     def draw16(self):
         filename = self.line_edit.text()
@@ -220,23 +213,23 @@ class atcaWave(QtWidgets.QWidget):
             ds=DECIMATION, auto=None, method='subsample')
         self.updateViews()
 
-    def draw32(self):
-        filename = self.line_edit32.text()
-        data = np.fromfile(filename, dtype='int32')
-        data_mat = np.reshape(data, (32, -1), order='F')
-        self.plotwidget.setLabels(
-            title='32 bit Data', bottom='Sample', left='LSB', right='Chopp')
-        # data_u64 = np.fromfile(filename, dtype='u8')
-        # data_u64 = np.reshape(data_u64, (8, -1), order='F')
-        self.plotwidget.setYRange(
-            -32768 * 4, 32768 * 4, padding=0.01)
-        for i in range(NUMCHANNELS):
-            self.plotCurves[i].clear()
-            self.plotCurves[i].setData(data_mat[i]/SCALE_32)
-        self.curveChp.setData((data_mat[31] & 0x0001))
-        self.curveChp.setDownsampling(
-            ds=DECIMATION, auto=None, method='subsample')
-        self.updateViews()
+    # def draw32(self):
+        # filename = self.line_edit32.text()
+        # data = np.fromfile(filename, dtype='int32')
+        # data_mat = np.reshape(data, (32, -1), order='F')
+        # self.plotwidget.setLabels(
+            # title='32 bit Data', bottom='Sample', left='LSB', right='Chopp')
+        # # data_u64 = np.fromfile(filename, dtype='u8')
+        # # data_u64 = np.reshape(data_u64, (8, -1), order='F')
+        # self.plotwidget.setYRange(
+            # -32768 * 4, 32768 * 4, padding=0.01)
+        # for i in range(NUMCHANNELS):
+            # self.plotCurves[i].clear()
+            # self.plotCurves[i].setData(data_mat[i]/SCALE_32)
+        # self.curveChp.setData((data_mat[31] & 0x0001))
+        # self.curveChp.setDownsampling(
+            # ds=DECIMATION, auto=None, method='subsample')
+        # self.updateViews()
 
 # Handle view resizing
     def updateViews(self):
@@ -250,10 +243,10 @@ class atcaWave(QtWidgets.QWidget):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName('ATCA Data 16 bit')
-    ex = atcaWave()
+    app.setApplicationName('Esther Data 16 bit')
+    myapp = estherTrig()
+    myapp.show()
     sys.exit(app.exec_())
-
 
 if __name__ == '__main__':
     main()
