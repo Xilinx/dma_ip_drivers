@@ -7,7 +7,10 @@
 import sys
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction
+from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, \
+        QPlainTextEdit
+
+from PyQt5.QtCore import QProcess
 
 # from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QIcon
@@ -19,6 +22,7 @@ FILENAME = 'data/out_fmc.bin'
 NUMCHANNELS = 3
 
 SCALE_32 = 1
+from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction,QPlainTextEdit
 DECIMATION = 20
 
 
@@ -28,6 +32,7 @@ class estherTrig(QtWidgets.QWidget):
         super(estherTrig, self).__init__()
         # QtWidgets.QWidget.__init__(self)
         self.init_ui()
+        self.p = None
         self.qt_connections()
 
         # self.amplitude = 10
@@ -39,6 +44,7 @@ class estherTrig(QtWidgets.QWidget):
         # self.timer.start(500)
 
     def init_ui(self):
+
         self.setWindowTitle('ADC FMC Data')
         hbox = QtWidgets.QHBoxLayout()
         vbox1 = QtWidgets.QVBoxLayout()
@@ -112,6 +118,13 @@ class estherTrig(QtWidgets.QWidget):
         verticalSpacer = QtWidgets.QSpacerItem(
             20, 40, QtWidgets.QSizePolicy.Minimum,
             QtWidgets.QSizePolicy.Expanding)
+
+        self.btn = QPushButton("Execute")
+        self.text = QPlainTextEdit()
+        self.text.setReadOnly(True)
+
+        vbox1.addWidget(self.btn)
+        vbox1.addWidget(self.text)
         vbox1.addItem(verticalSpacer)
         fbox = QtWidgets.QFormLayout()
         self.atlevelHigh = QtWidgets.QLineEdit("9000")
@@ -132,11 +145,13 @@ class estherTrig(QtWidgets.QWidget):
         vbox1.addLayout(fbox)
 
         self.ctlevelHigh = QtWidgets.QLineEdit("9000")
+        self.btn.pressed.connect(self.start_process)
         self.ctlevelLow = QtWidgets.QLineEdit("-9000")
         fbox = QtWidgets.QFormLayout()
         vbox3 = QtWidgets.QVBoxLayout()
         vbox3.addWidget(self.ctlevelHigh)
         vbox3.addWidget(self.ctlevelLow)
+        self.btn.pressed.connect(self.start_process)
         fbox.addRow(QtWidgets.QLabel("C Level"), vbox3)
         vbox1.addLayout(fbox)
 
@@ -145,6 +160,7 @@ class estherTrig(QtWidgets.QWidget):
         vbox1.addWidget(self.plot16Button)
         # vbox1.addWidget(self.plot16dButton)
         # vbox1.addWidget(self.plot32Button)#
+        self.btn.pressed.connect(self.start_process)
         self.plot16Button.setSizePolicy(sizePolicy)
         # self.plot16dButton.setSizePolicy(sizePolicy)
         # self.plot32Button.setSizePolicy(sizePolicy)
@@ -184,11 +200,48 @@ class estherTrig(QtWidgets.QWidget):
         self.clearbutton.clicked.connect(self.on_clearbutton_clicked)
         # self.decreasebutton.clicked.connect(self.on_decreasebutton_clicked)
         self.plot16Button.clicked.connect(self.on_plot16Button_clicked)
+        self.btn.pressed.connect(self.start_process)
         # self.plot16dButton.clicked.connect(self.on_plot16dButton_clicked)
         # self.plot32Button.clicked.connect(self.on_plot32Button_clicked)
         # adding action to the line edit when enter key is pressed
         # line_edit.returnPressed.connect(lambda: do_action())
         # call plt.addLegend() BEFORE you create the curves.
+
+    def message(self, s):
+        self.text.appendPlainText(s)
+
+    def start_process(self):
+        if self.p is None:  # No process running.
+            self.message("Executing process")
+            self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
+            self.p.readyReadStandardOutput.connect(self.handle_stdout)
+            self.p.readyReadStandardError.connect(self.handle_stderr)
+            self.p.stateChanged.connect(self.handle_state)
+            self.p.finished.connect(self.process_finished)  # Clean up once complete.
+            self.p.start("python3", ['dummy_script.py'])
+
+    def handle_stderr(self):
+        data = self.p.readAllStandardError()
+        stderr = bytes(data).decode("utf8") 
+        self.message(stderr)
+
+    def handle_stdout(self):
+        data = self.p.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        self.message(stdout)
+
+    def handle_state(self, state):
+        states = {
+            QProcess.NotRunning: 'Not running',
+            QProcess.Starting: 'Starting',
+            QProcess.Running: 'Running',
+        }
+        state_name = states[state]
+        self.message(f"State changed: {state_name}")
+
+    def process_finished(self):
+        self.message("Process finished.")
+        self.p = None 
 
     def moveplot(self):
         self.t += 1
