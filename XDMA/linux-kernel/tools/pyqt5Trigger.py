@@ -25,14 +25,13 @@ SCALE_32 = 1
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction,QPlainTextEdit
 DECIMATION = 20
 
-
 class estherTrig(QtWidgets.QWidget):
     def __init__(self):
         pg.setConfigOption('background', 'w')  # before loading widget
         super(estherTrig, self).__init__()
         # QtWidgets.QWidget.__init__(self)
         self.init_ui()
-        self.p = None
+        self.proc = None
         self.qt_connections()
 
         # self.amplitude = 10
@@ -55,16 +54,16 @@ class estherTrig(QtWidgets.QWidget):
         self.pw.setWindowTitle('pyqtgraph example: MultiplePlotAxes')
         self.p1 = self.pw.plotItem
         self.p1.setLabels(left='axis 1')
+        self.p1.showAxis('right')
         # call plt.addLegend() BEFORE you create the curves.
         self.pw.addLegend()
         self.pw.show()
         # create a new ViewBox, link the right axis to its coordinate system
         self.p2 = pg.ViewBox()
-        self.p1.showAxis('right')
         self.p1.scene().addItem(self.p2)
         self.p1.getAxis('right').linkToView(self.p2)
         self.p2.setXLink(self.p1)
-        self.p1.getAxis('right').setLabel('axis2', color='b')  # '#0000ff')
+        self.p1.getAxis('right').setLabel('Count', color='b')  # '#0000ff')
 
         self.plotCurves = [0]*NUMCHANNELS
         for i in range(NUMCHANNELS):
@@ -73,9 +72,10 @@ class estherTrig(QtWidgets.QWidget):
             self.p1.addItem(self.plotCurves[i])
         # self.pw.setLabels(
         #    title='ADC FMC data', bottom='Sample', left='LSB', right='Count')
-        self.pw.setYRange(-32768, 32768, padding=0.01)
+        # self.pw.setYRange(-32768, 32768, padding=0.01)
+        self.p1.setYRange(-32768, 32768, padding=0.01)
         self.curveCnt = pg.PlotCurveItem(
-            [0], [0], pen=pg.mkPen(color='#025b94', width=3), name="count")
+            [0, 200000, 400000], [-10000, 200000, 400000], pen=pg.mkPen(color='#025b94', width=3), name="count")
         # self.p1.setLabels(left='axis 1')
 
         # self.p2.setYRange(-1, 5)
@@ -177,7 +177,7 @@ class estherTrig(QtWidgets.QWidget):
 
         hbox.addLayout(vbox2, 3)
         self.setLayout(hbox)
-        self.setGeometry(10, 10, 1000, 600)
+        self.setGeometry(10, 10, 1500, 800)
 
         # # Create exit action
         # exitAction = QAction(QIcon('exit.png'), '&Exit', self)
@@ -210,23 +210,38 @@ class estherTrig(QtWidgets.QWidget):
     def message(self, s):
         self.text.appendPlainText(s)
 
+    def toHex(self, val, nbits):
+        return hex((val + (1 << nbits)) % (1 << nbits))
+
     def start_process(self):
-        if self.p is None:  # No process running.
+        if self.proc is None:  # No process running.
             self.message("Executing process")
-            self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
-            self.p.readyReadStandardOutput.connect(self.handle_stdout)
-            self.p.readyReadStandardError.connect(self.handle_stderr)
-            self.p.stateChanged.connect(self.handle_state)
-            self.p.finished.connect(self.process_finished)  # Clean up once complete.
-            self.p.start("python3", ['dummy_script.py'])
+            self.proc = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
+            self.proc.readyReadStandardOutput.connect(self.handle_stdout)
+            self.proc.readyReadStandardError.connect(self.handle_stderr)
+            self.proc.stateChanged.connect(self.handle_state)
+            self.proc.finished.connect(self.process_finished)  # Clean up once complete.
+            High = self.toHex(int(self.atlevelHigh.text()), 16)
+            Low = self.toHex(int(self.atlevelLow.text()), 16)
+            arga ='-a ' + High + Low[2:]
+            High = self.toHex(int(self.btlevelHigh.text()), 16)
+            Low = self.toHex(int(self.btlevelLow.text()), 16)
+            argb ='-b ' + High + Low[2:]
+            High = self.toHex(int(self.ctlevelHigh.text()), 16)
+            Low = self.toHex(int(self.ctlevelLow.text()), 16)
+            argc ='--ctrigger ' + High + Low[2:]
+            # 0x{:04X}{:04X}'.format(High, Low)
+            print(arga + ' ' + argb + ' ' + argc)
+            # self.proc.start("python3", ['dummy_script.py'])
+            self.proc.start("./estherdaq", [arga, argb, argc, '-t'])
 
     def handle_stderr(self):
-        data = self.p.readAllStandardError()
+        data = self.proc.readAllStandardError()
         stderr = bytes(data).decode("utf8") 
         self.message(stderr)
 
     def handle_stdout(self):
-        data = self.p.readAllStandardOutput()
+        data = self.proc.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
         self.message(stdout)
 
@@ -283,7 +298,8 @@ class estherTrig(QtWidgets.QWidget):
         data_mat = np.reshape(data, (8, - 1), order='F')
         data_cnt = np.reshape(dataC, (4, -1), order='F')
         x = np.arange(data_mat.shape[1])
-        self.pw.setYRange(-9000, 9000, padding=0.01)
+        self.p1.setYRange(-9000, 9000, padding=0.01)
+        # self.pw.setYRange(-9000, 9000, padding=0.01)
         # self.pw.setLabels(
         # title='16 bit Data', bottom='Sample', left='LSB', right='Count')
         # self.plotcurve2.setData(data_mat[1])
@@ -296,8 +312,8 @@ class estherTrig(QtWidgets.QWidget):
         #self.p2.setYRange(-161310185, 161509684, padding=0.01)
         x = np.arange(data_cnt.shape[1])
         self.curveCnt.setData(x*2, data_cnt[3])
-        print(data_cnt[3])
-        print(x)
+        # print("Shape = {0}".format(data_mat.shape[1]))
+        # print(data_cnt.shape[1])
         # self.curveCnt.setDownsampling(
             # ds=DECIMATION, auto=None, method='subsample')
         self.updateViews()
