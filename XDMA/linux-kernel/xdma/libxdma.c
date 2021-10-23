@@ -3147,6 +3147,304 @@ static struct xdma_request_cb *xdma_init_request(struct sg_table *sgt,
 	return req;
 }
 
+ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
+			unsigned int aperture, struct sg_table *sgt,
+			bool dma_mapped, int timeout_ms)
+{
+	struct xdma_dev *xdev;
+	struct xdma_request_cb *req = NULL;
+	struct scatterlist *sg;
+	enum dma_data_direction dir = write ? DMA_TO_DEVICE : DMA_FROM_DEVICE;
+	unsigned int maxlen = min_t(unsigned int, aperture, desc_blen_max);
+	unsigned int sg_max;
+	unsigned int tlen = 0;
+	u64 ep_addr_max = ep_addr + aperture - 1;
+	ssize_t done = 0;
+	int i, rv = 0;
+
+	if (!engine) {
+		pr_err("dma engine NULL\n");
+		return -EINVAL;
+	}
+
+	if (engine->magic != MAGIC_ENGINE) {
+		pr_err("%s has invalid magic number %lx\n", engine->name,
+		       engine->magic);
+		return -EINVAL;
+	}
+
+	xdev = engine->xdev;
+	if (xdma_device_flag_check(xdev, XDEV_FLAG_OFFLINE)) {
+		pr_info("xdev 0x%p, offline.\n", xdev);
+		return -EBUSY;
+	}
+
+	/* check the direction */
+	if (engine->dir != dir) {
+		pr_info("0x%p, %s, W %d, 0x%x/0x%x mismatch.\n", engine,
+			engine->name, write, engine->dir, dir);
+		return -EINVAL;
+	}
+
+	if (engine->streaming) {
+		pr_info("%s aperture not supported in ST.\n", engine->name);
+		return -EINVAL;
+	}
+
+	if (!dma_mapped) {
+		sgt->nents = pci_map_sg(xdev->pdev, sgt->sgl, sgt->orig_nents,
+					dir);
+		if (!sgt->nents) {
+			pr_info("map sgl failed, sgt 0x%p.\n", sgt);
+			return -EIO;
+		}
+	} else if (!sgt->nents) {
+		pr_err("sg table has invalid number of entries 0x%p.\n", sgt);
+		return -EIO;
+	}
+	sg_max = sgt->nents;
+
+	req = kzalloc(sizeof(struct xdma_request_cb), GFP_KERNEL);
+	if (!req) {
+		rv = -ENOMEM;
+		goto unmap_sgl;
+	}
+	memset(req, 0, sizeof(struct xdma_request_cb));
+	req->sgt = sgt;
+	req->ep_addr = ep_addr;
+	req->aperture = aperture;
+	req->sg = sgt->sgl;
+
+	for (i = 0, sg = sgt->sgl; i < sgt->nents; i++, sg = sg_next(sg))
+		tlen += sg_dma_len(sg);
+	req->total_len = tlen;
+
+	dbg_tfr("%s, aperture: sg cnt %u.\n", engine->name, sgt->nents);
+
+	mutex_lock(&engine->desc_lock);
+
+	while (req->offset < req->total_len) {
+		unsigned long flags;
+		struct xdma_transfer *xfer = &req->tfer[0];
+		unsigned int sg_offset = req->sg_offset;
+		unsigned int desc_idx, desc_max, desc_cnt = 0;
+		struct xdma_desc *desc_virt;
+		dma_addr_t desc_bus;
+
+		/* initialize transfer */
+		memset(xfer, 0, sizeof(struct xdma_transfer));
+#if HAS_SWAKE_UP
+		init_swait_queue_head(&xfer->wq);
+#else
+		init_waitqueue_head(&xfer->wq);
+#endif
+		xfer->dir = engine->dir;
+		if (!dma_mapped)
+			xfer->flags = XFER_FLAG_NEED_UNMAP;
+
+		spin_lock_irqsave(&engine->lock, flags);
+
+		desc_idx = engine->desc_idx;
+		desc_max = engine->desc_max;
+
+		xfer->desc_virt = desc_virt = engine->desc + desc_idx;
+		xfer->res_virt = engine->cyclic_result + desc_idx;
+		xfer->desc_bus = desc_bus = engine->desc_bus +
+					(sizeof(struct xdma_desc) * desc_idx);
+		xfer->res_bus = engine->cyclic_result_bus +
+					(sizeof(struct xdma_result) * desc_idx);
+		xfer->desc_index = desc_idx;
+
+		/* build transfer */
+		sg = req->sg;
+		ep_addr = req->ep_addr + (req->offset & (aperture - 1));
+		i = req->sg_idx;
+		
+		for (sg = req->sg; i < sg_max && desc_idx < desc_max;
+			i++, sg = sg_next(sg)) {
+			dma_addr_t addr = sg_dma_address(sg);
+
+			tlen = sg_dma_len(sg);
+			if (sg_offset) {
+				tlen -= sg_offset;
+				addr += sg_offset;
+			}
+
+			while (tlen) {
+				unsigned int len = min_t(unsigned int, tlen,
+								 maxlen);
+
+				if (ep_addr > ep_addr_max)
+					ep_addr = req->ep_addr;
+
+				if ((ep_addr + len) > ep_addr_max)
+					len = ep_addr_max - ep_addr + 1;
+
+				xdma_desc_set(engine->desc + desc_idx, addr,
+						ep_addr, len, dir);
+
+	                	dbg_desc("sg %d -> desc %u: ep 0x%llx, 0x%llx + %u \n",
+					i, desc_idx, ep_addr, addr, len);
+
+				sg_offset += len;
+				req->offset += len;
+				xfer->len += len;
+				ep_addr += len;
+				addr += len;
+				tlen -= len;
+				
+				desc_idx++;
+				desc_cnt++;
+				if (desc_idx == desc_max)
+					break;
+			}
+
+			if (!tlen)
+				sg_offset = 0;
+			else
+				break;
+		}
+		
+		req->sg_offset = sg_offset;
+		req->sg_idx = i;
+
+		xfer->desc_adjacent = desc_cnt;
+		xfer->desc_num = desc_cnt;
+		engine->desc_used += desc_cnt;
+
+		/* create the desc linked list */
+		for (i = 0; i < (desc_cnt - 1); i++, desc_virt++) {
+			desc_bus += sizeof(struct xdma_desc);
+			/* singly-linked list uses bus addresses */
+			desc_virt->next_lo = cpu_to_le32(PCI_DMA_L(desc_bus));
+                	desc_virt->next_hi = cpu_to_le32(PCI_DMA_H(desc_bus));
+                	desc_virt->control = cpu_to_le32(DESC_MAGIC);
+		}
+		/* terminate the last descriptor next pointer */
+		desc_virt->next_lo = cpu_to_le32(0);
+		desc_virt->next_hi = cpu_to_le32(0);
+		desc_virt->control = cpu_to_le32(DESC_MAGIC |
+					XDMA_DESC_STOPPED | XDMA_DESC_EOP |
+					XDMA_DESC_COMPLETED);
+
+		xfer->desc_cmpl_th = desc_cnt;
+
+		/* fill in adjacent numbers */
+		for (i = 0; i < desc_cnt; i++) {
+			u32 next_adj = xdma_get_next_adj(desc_cnt - i - 1,
+					(xfer->desc_virt + i)->next_lo);
+
+	                dbg_desc("set next adj at idx %d to %u\n", i, next_adj);
+        	        xdma_desc_adjacent(xfer->desc_virt + i, next_adj);
+        	}
+
+		engine->desc_idx = (engine->desc_idx + desc_cnt) % desc_max;
+		spin_unlock_irqrestore(&engine->lock, flags);
+
+		/* last transfer for the given request? */
+		if (req->offset == req->total_len) {
+			xfer->last_in_request = 1;
+			xfer->sgt = sgt;
+		}
+
+		dbg_tfr("xfer %u,%u/%u, ep 0x%llx/0x%x, done %ld, sg %u/%u, desc %u.\n",
+			xfer->len, req->offset, req->total_len, req->ep_addr,
+			req->aperture, done, req->sg_idx, sg_max, desc_cnt);
+
+		rv = transfer_queue(engine, xfer);
+		if (rv < 0) {
+			mutex_unlock(&engine->desc_lock);
+			pr_info("unable to submit %s, %d.\n", engine->name, rv);
+			goto unmap_sgl;
+		}
+
+		if (engine->cmplthp)
+			xdma_kthread_wakeup(engine->cmplthp);
+
+		if (timeout_ms > 0)
+			xlx_wait_event_interruptible_timeout(xfer->wq,
+				(xfer->state != TRANSFER_STATE_SUBMITTED),
+				msecs_to_jiffies(timeout_ms));
+		else
+			xlx_wait_event_interruptible(xfer->wq,
+				(xfer->state != TRANSFER_STATE_SUBMITTED));
+
+		spin_lock_irqsave(&engine->lock, flags);
+
+		switch (xfer->state) {
+		case TRANSFER_STATE_COMPLETED:
+			spin_unlock_irqrestore(&engine->lock, flags);
+
+			rv = 0;
+			dbg_tfr("transfer %p, %u, ep 0x%llx compl, +%lu.\n",
+				xfer, xfer->len, req->ep_addr - xfer->len,
+				done);
+
+			done += xfer->len;
+
+			break;
+		case TRANSFER_STATE_FAILED:
+			pr_info("xfer 0x%p,%u, failed, ep 0x%llx.\n", xfer,
+				xfer->len, req->ep_addr - xfer->len);
+			spin_unlock_irqrestore(&engine->lock, flags);
+
+#ifdef __LIBXDMA_DEBUG__
+			transfer_dump(xfer);
+			sgt_dump(sgt);
+#endif
+			rv = -EIO;
+			break;
+		default:
+			/* transfer can still be in-flight */
+			pr_info("xfer 0x%p,%u, s 0x%x timed out, ep 0x%llx.\n",
+				xfer, xfer->len, xfer->state, req->ep_addr);
+			rv = engine_status_read(engine, 0, 1);
+			if (rv < 0) {
+				pr_err("Failed to read engine status\n");
+			} else if (rv == 0) {
+				//engine_status_dump(engine);
+				rv = transfer_abort(engine, xfer);
+				if (rv < 0) {
+					pr_err("Failed to stop engine\n");
+				} else if (rv == 0) {
+					rv = xdma_engine_stop(engine);
+					if (rv < 0)
+						pr_err("Failed to stop engine\n");
+				}
+			}
+			spin_unlock_irqrestore(&engine->lock, flags);
+
+#ifdef __LIBXDMA_DEBUG__
+			transfer_dump(xfer);
+			sgt_dump(sgt);
+#endif
+			rv = -ERESTARTSYS;
+			break;
+		}
+
+		engine->desc_used -= xfer->desc_num;
+		transfer_destroy(xdev, xfer);
+
+		if (rv < 0) {
+			mutex_unlock(&engine->desc_lock);
+			goto unmap_sgl;
+		}
+	} /* while (sg) */
+	mutex_unlock(&engine->desc_lock);
+
+unmap_sgl:
+	if (!dma_mapped && sgt->nents) {
+		pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
+		sgt->nents = 0;
+	}
+
+	if (req)
+		xdma_request_free(req);
+
+	/* as long as some data is processed, return the count */
+	return done ? done : rv;
+}
+
 ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			 struct sg_table *sgt, bool dma_mapped, int timeout_ms)
 {

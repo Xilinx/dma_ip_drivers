@@ -460,8 +460,15 @@ struct xdma_transfer {
 
 struct xdma_request_cb {
 	struct sg_table *sgt;
-	unsigned int total_len;
 	u64 ep_addr;
+	unsigned int aperture;
+
+	unsigned int total_len;
+	unsigned int offset;
+
+	struct scatterlist *sg;
+	unsigned int sg_idx;
+	unsigned int sg_offset;
 
 	/* Use two transfers in case single request needs to be split */
 	struct xdma_transfer tfer[2];
@@ -675,4 +682,8 @@ void get_perf_stats(struct xdma_engine *engine);
 
 int engine_addrmode_set(struct xdma_engine *engine, unsigned long arg);
 int engine_service_poll(struct xdma_engine *engine, u32 expected_desc_count);
+
+ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
+			unsigned int aperture, struct sg_table *sgt,
+			bool dma_mapped, int timeout_ms);
 #endif /* XDMA_LIB_H */
