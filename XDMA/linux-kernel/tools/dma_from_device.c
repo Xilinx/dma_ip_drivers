@@ -24,7 +24,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include <sys/ioctl.h>
+
+#include "../xdma/cdev_sgdma.h"
 
 #include "dma_utils.c"
 
@@ -177,7 +179,6 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 	size_t out_offset = 0;
 	size_t bytes_done = 0;
 	uint64_t i;
-	uint64_t apt_loop = aperture ? (size + aperture - 1) / aperture : 0;
 	char *buffer = NULL;
 	char *allocated = NULL;
 	struct timespec ts_start, ts_end;
@@ -230,34 +231,38 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 
 	for (i = 0; i < count; i++) {
 		rc = clock_gettime(CLOCK_MONOTONIC, &ts_start);
-		if (apt_loop) {
-			uint64_t j;
-			uint64_t len = size;
-			char *buf = buffer;
+		if (aperture) {
+			struct xdma_aperture_ioctl io;
 
-			bytes_done = 0;
-			for (j = 0; j < apt_loop; j++, len -= aperture, buf += aperture) {
-				uint64_t bytes = (len > aperture) ? aperture : len,
-				rc = read_to_buffer(devname, fpga_fd, buf,
-						bytes, addr);
-				if (rc < 0)
-					goto out;
+			io.buffer = (unsigned long)buffer;
+			io.len = size;
+			io.ep_addr = addr;
+			io.aperture = aperture;
+			io.done = 0UL;
 
-				if (!underflow && rc < bytes)
-					underflow = 1;
-				bytes_done += rc;
+			rc = ioctl(fpga_fd, IOCTL_XDMA_APERTURE_R, &io);
+			if (rc < 0 || io.error) {
+				fprintf(stderr,
+					"#%d: aperture R failed %d,%d.\n",
+					i, rc, io.error);
+				goto out;
 			}
+
+			bytes_done = io.done;
 		} else {
 			rc = read_to_buffer(devname, fpga_fd, buffer, size, addr);
 			if (rc < 0)
 				goto out;
 			bytes_done = rc;
 
-			if (!underflow && bytes_done < size)
-				underflow = 1;
 		}
 		clock_gettime(CLOCK_MONOTONIC, &ts_end);
 
+		if (bytes_done < size) {
+			fprintf(stderr, "#%d: underflow %ld/%ld.\n",
+				i, bytes_done, size);
+			underflow = 1;
+		}
 
 		/* subtract the start time from the end time */
 		timespec_sub(&ts_end, &ts_start);
