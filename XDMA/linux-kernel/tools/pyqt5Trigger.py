@@ -8,7 +8,7 @@ import sys
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, \
-        QPlainTextEdit
+        QPlainTextEdit, QLineEdit, QLabel, QFormLayout, QCheckBox
 
 from PyQt5.QtCore import QProcess
 
@@ -22,10 +22,9 @@ FILENAME = 'data/out_fmc.bin'
 NUMCHANNELS = 3
 
 SCALE_32 = 1
-from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction,QPlainTextEdit
 DECIMATION = 20
 
-class estherTrig(QtWidgets.QWidget):
+class estherTrig(QWidget):
     def __init__(self):
         pg.setConfigOption('background', 'w')  # before loading widget
         super(estherTrig, self).__init__()
@@ -53,7 +52,7 @@ class estherTrig(QtWidgets.QWidget):
         self.pw = pg.PlotWidget()
         self.pw.setWindowTitle('pyqtgraph example: MultiplePlotAxes')
         self.p1 = self.pw.plotItem
-        self.p1.setLabels(left='axis 1')
+        self.p1.setLabels(left='axis 1', bottom='Sample')
         self.p1.showAxis('right')
         # call plt.addLegend() BEFORE you create the curves.
         self.pw.addLegend()
@@ -75,41 +74,32 @@ class estherTrig(QtWidgets.QWidget):
         # self.pw.setYRange(-32768, 32768, padding=0.01)
         self.p1.setYRange(-32768, 32768, padding=0.01)
         self.curveCnt = pg.PlotCurveItem(
-            [0, 200000, 400000], [-10000, 200000, 400000], pen=pg.mkPen(color='#025b94', width=3), name="count")
-        # self.p1.setLabels(left='axis 1')
+            [], [], pen=pg.mkPen(color='#025b94', width=3), name="count")
+            # [0, 200000, 400000], [-10000, 200000, 400000], pen=pg.mkPen(color='#025b94', width=3), name="count")
 
-        # self.p2.setYRange(-1, 5)
 
-        # self.pw.setLabels(
-        # title='Window 1', bottom='X Axis', left='LSB', right='Count')
-
+        # Add  infinite line with labels
+        inf1 = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
+                       labelOpts={'position':0.1, 'color': (200,200,100),
+                           'fill': (200,200,200,50), 'movable': True})
+        inf1.setPos([32768, 2])
+        self.p1.addItem(inf1)
         self.p2.addItem(self.curveCnt)
-        # self.p2.addItem(self.plotCurves[0])
 
         vbox2.addWidget(self.pw)
         self.clearbutton = QPushButton("Clear Plots")
-        # self.decreasebutton = QtWidgets.QPushButton("Decrease Amplitude")
         hboxD = QtWidgets.QHBoxLayout()
-        decLabel = QtWidgets.QLabel("Decimation")
-        self.line_editDec = QtWidgets.QLineEdit("10", self)
+        decLabel = QLabel("Decimation")
+        self.line_editDec = QLineEdit("10", self)
         self.line_editDec.resize(100, 32)
         hboxD.addWidget(decLabel)
         # hbox1.addWidget(QtWidgets.QLabel("Decimation "))
         hboxD.addWidget(self.line_editDec)
         hbox.addLayout(vbox1)
         self.plot16Button = QPushButton("Plot Data")
-        # self.plot16dButton = QtWidgets.QPushButton("Plot data 16 D bit")
-        # self.plot32Button = QtWidgets.QPushButton(",Plot data 32 bit")
-        self.line_edit = QtWidgets.QLineEdit(FILENAME, self)
-        # self.line_edit32 = QtWidgets.QLineEdit(FILENAME32, self)
-        # vbox.addWidget(self.decreasebutton)#
+        self.line_edit = QLineEdit(FILENAME, self)
         vbox2.addWidget(self.line_edit)
         # vbox2.addWidget(self.line_edit32)
-        # butt = QtWidgets.QPushButton("Increa1") butt.setSizePolicy(
-        #      QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
-#            QtWidgets.QSizePolicy.MinimumExpanding))
-        self.curveCnt = pg.PlotDataItem(
-            [0], [0], pen=pg.mkPen(color='#025b94', width=1))
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.clearbutton.setSizePolicy(sizePolicy)
@@ -120,51 +110,54 @@ class estherTrig(QtWidgets.QWidget):
             QtWidgets.QSizePolicy.Expanding)
 
         self.btn = QPushButton("Execute")
+        vbox1.addWidget(self.btn)
         self.text = QPlainTextEdit()
         self.text.setReadOnly(True)
-
-        vbox1.addWidget(self.btn)
         vbox1.addWidget(self.text)
+        self.textErr = QPlainTextEdit()
+        self.textErr.setReadOnly(True)
+        vbox1.addWidget(self.textErr)
         vbox1.addItem(verticalSpacer)
         fbox = QtWidgets.QFormLayout()
-        self.atlevelHigh = QtWidgets.QLineEdit("9000")
-        self.atlevelLow = QtWidgets.QLineEdit("-9000")
+        self.atlevelHigh = QLineEdit("4000")
+        self.atlevelLow = QLineEdit("-9000")
         vbox3 = QtWidgets.QVBoxLayout()
         vbox3.addWidget(self.atlevelHigh)
         vbox3.addWidget(self.atlevelLow)
-        fbox.addRow(QtWidgets.QLabel("A Level"), vbox3)
+        fbox.addRow(QLabel("A Level"), vbox3)
         vbox1.addLayout(fbox)
 
-        self.btlevelHigh = QtWidgets.QLineEdit("9000")
-        self.btlevelLow = QtWidgets.QLineEdit("-9000")
+        self.btlevelHigh = QLineEdit("9000")
+        self.btlevelLow = QLineEdit("-4000")
         fbox = QtWidgets.QFormLayout()
         vbox3 = QtWidgets.QVBoxLayout()
         vbox3.addWidget(self.btlevelHigh)
         vbox3.addWidget(self.btlevelLow)
-        fbox.addRow(QtWidgets.QLabel("B Level"), vbox3)
+        fbox.addRow(QLabel("B Level"), vbox3)
         vbox1.addLayout(fbox)
 
-        self.ctlevelHigh = QtWidgets.QLineEdit("9000")
-        self.btn.pressed.connect(self.start_process)
-        self.ctlevelLow = QtWidgets.QLineEdit("-9000")
+        self.ctlevelHigh = QLineEdit("4000")
+        self.ctlevelLow = QLineEdit("-9000")
         fbox = QtWidgets.QFormLayout()
         vbox3 = QtWidgets.QVBoxLayout()
         vbox3.addWidget(self.ctlevelHigh)
         vbox3.addWidget(self.ctlevelLow)
-        self.btn.pressed.connect(self.start_process)
-        fbox.addRow(QtWidgets.QLabel("C Level"), vbox3)
+        fbox.addRow(QLabel("C Level"), vbox3)
+        self.multParam = QLineEdit("0x30000")
+        fbox.addRow(QLabel("Mult Param"), self.multParam)
+        self.offParam = QLineEdit("0x0000")
+        fbox.addRow(QLabel("Off Param"), self.offParam)
+        self.acqSize = QLineEdit("0x300000")
+        fbox.addRow(QLabel("Acq Size"), self.acqSize)
         vbox1.addLayout(fbox)
+        self.chB = QCheckBox("Soft trigger")
+        self.chB.setChecked(False)
 
+        vbox1.addWidget(self.chB)
         vbox1.addItem(verticalSpacer)
         vbox1.addLayout(hboxD)
         vbox1.addWidget(self.plot16Button)
-        # vbox1.addWidget(self.plot16dButton)
-        # vbox1.addWidget(self.plot32Button)#
-        self.btn.pressed.connect(self.start_process)
         self.plot16Button.setSizePolicy(sizePolicy)
-        # self.plot16dButton.setSizePolicy(sizePolicy)
-        # self.plot32Button.setSizePolicy(sizePolicy)
-        # hbox.addLayout(vbox1, 1)
         # hbox.addStretch()
         line = QtWidgets.QFrame(self)
         # line.setObjectName(QtWidgets.QStringLiteral("line"))
@@ -184,8 +177,8 @@ class estherTrig(QtWidgets.QWidget):
         # exitAction.setShortcut('Ctrl+Q')
         # exitAction.setStatusTip('Exit application')
         # exitAction.triggered.connect(self.exitCall)
-        self.curveCnt = pg.PlotDataItem(
-            [0], [0], pen=pg.mkPen(color='#025b94', width=1))
+        # self.curveCnt = pg.PlotDataItem(
+            # [0], [0], pen=pg.mkPen(color='#025b94', width=1))
 
         # # Create menu bar and add action
         # menuBar = self.menuBar()
@@ -199,16 +192,16 @@ class estherTrig(QtWidgets.QWidget):
     def qt_connections(self):
         self.clearbutton.clicked.connect(self.on_clearbutton_clicked)
         # self.decreasebutton.clicked.connect(self.on_decreasebutton_clicked)
-        self.plot16Button.clicked.connect(self.on_plot16Button_clicked)
         self.btn.pressed.connect(self.start_process)
-        # self.plot16dButton.clicked.connect(self.on_plot16dButton_clicked)
-        # self.plot32Button.clicked.connect(self.on_plot32Button_clicked)
+        self.plot16Button.clicked.connect(self.on_plot16Button_clicked)
         # adding action to the line edit when enter key is pressed
         # line_edit.returnPressed.connect(lambda: do_action())
-        # call plt.addLegend() BEFORE you create the curves.
 
     def message(self, s):
         self.text.appendPlainText(s)
+
+    def messageErr(self, s):
+        self.textErr.appendPlainText(s)
 
     def toHex(self, val, nbits):
         return hex((val + (1 << nbits)) % (1 << nbits))
@@ -223,26 +216,44 @@ class estherTrig(QtWidgets.QWidget):
             self.proc.finished.connect(self.process_finished)  # Clean up once complete.
             High = self.toHex(int(self.atlevelHigh.text()), 16)
             Low = self.toHex(int(self.atlevelLow.text()), 16)
-            arga ='-a ' + High + Low[2:]
+            # arga =' ./estherdaq -a ' + High + Low[2:]
+            arga = High + Low[2:]
             High = self.toHex(int(self.btlevelHigh.text()), 16)
+            # arga =' -a ' + High + Low[2:]
             Low = self.toHex(int(self.btlevelLow.text()), 16)
-            argb ='-b ' + High + Low[2:]
+            argb = High + Low[2:]
             High = self.toHex(int(self.ctlevelHigh.text()), 16)
             Low = self.toHex(int(self.ctlevelLow.text()), 16)
-            argc ='--ctrigger ' + High + Low[2:]
+            #argc ='--ctrigger ' + High + Low[2:]
+            argc = High + Low[2:]
+            acqsize = self.acqSize.text()
+
+            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize
             # 0x{:04X}{:04X}'.format(High, Low)
-            print(arga + ' ' + argb + ' ' + argc)
+            print(command)
             # self.proc.start("python3", ['dummy_script.py'])
-            self.proc.start("./estherdaq", [arga, argb, argc, '-t'])
+            if self.chB.isChecked() == True:
+                argT = '-t'
+                print(self.chB.text()+ " is selected")
+            else:
+                argT = ''
+            self.proc.start("./estherdaq", ['-a', arga, '-b',  argb, '-c', argc,
+                '-s', acqsize, argT])
+                # '-s', '0x20000', '-t'])
+        else:
+            self.messageErr("Process not finished")
+
 
     def handle_stderr(self):
         data = self.proc.readAllStandardError()
-        stderr = bytes(data).decode("utf8") 
-        self.message(stderr)
+        stderr = bytes(data).decode("utf8")
+        print('stderr ' + stderr)
+        self.messageErr(stderr)
 
     def handle_stdout(self):
         data = self.proc.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
+        print('stdout ' + stdout)
         self.message(stdout)
 
     def handle_state(self, state):
@@ -256,7 +267,7 @@ class estherTrig(QtWidgets.QWidget):
 
     def process_finished(self):
         self.message("Process finished.")
-        self.p = None 
+        self.proc = None
 
     def moveplot(self):
         self.t += 1
@@ -282,7 +293,6 @@ class estherTrig(QtWidgets.QWidget):
         # self.updateplot()
 
     def on_plot16Button_clicked(self):
-        print ("ploting 16")
         self.draw16()
 
     # def on_plot32Button_clicked(self):
@@ -294,7 +304,7 @@ class estherTrig(QtWidgets.QWidget):
         data = np.fromfile(filename, dtype='int16')
         dataC = np.fromfile(filename, dtype='uint32')
 # ‘F’ means to readthe elements using Fortran-like index order,
-# with the first index changing fastest,
+# with the first index changing fastest, 
         data_mat = np.reshape(data, (8, - 1), order='F')
         data_cnt = np.reshape(dataC, (4, -1), order='F')
         x = np.arange(data_mat.shape[1])
@@ -317,24 +327,6 @@ class estherTrig(QtWidgets.QWidget):
         # self.curveCnt.setDownsampling(
             # ds=DECIMATION, auto=None, method='subsample')
         self.updateViews()
-
-    # def draw32(self):
-        # filename = self.line_edit32.text()
-        # data = np.fromfile(filename, dtype='int32')
-        # data_mat = np.reshape(data, (32, -1), order='F')
-        # self.plotwidget.setLabels(
-        # title='32 bit Data', bottom='Sample', left='LSB', right='Chopp')
-        # # data_u64 = np.fromfile(filename, dtype='u8')
-        # # data_u64 = np.reshape(data_u64, (8, -1), order='F')
-        # self.plotwidget.setYRange(
-        # -32768 * 4, 32768 * 4, padding=0.01)
-        # for i in range(NUMCHANNELS):
-        # self.plotCurves[i].clear()
-        # self.plotCurves[i].setData(da,ta_mat[i]/SCALE_32)
-        # self.curveChp.setData((data_mat[31] & 0x0001))
-        # self.curveChp.setDownsampling(
-        # ds=DECIMATION, auto=None, method='subsample')
-        # self.updateViews()
 
 # Handle view resizing
     def updateViews(self):

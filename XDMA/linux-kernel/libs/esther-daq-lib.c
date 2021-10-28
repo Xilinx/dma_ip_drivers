@@ -34,7 +34,7 @@
 #include <fcntl.h>
 #include <time.h>
 
-#include <sys/stat.h>O
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 
@@ -43,9 +43,9 @@
 /*-----------------------------------O----------------------------------------*/
 #include "esther-daq-lib.h"
 
-#define DEVICE_NAME_STR "/dev/adc_xdma%d_c2h_0"
-#define DEVICE_C2H_1_STR "/dev/adc_xdma%d_c2h_1"
-#define DEVICE_USER_STR "/dev/adc_xdma%d_user"
+#define DEVICE_NAME_STR "/dev/fmc_xdma%d_c2h_0"
+#define DEVICE_C2H_1_STR "/dev/fmc_xdma%d_c2h_1"
+#define DEVICE_USER_STR "/dev/fmc_xdma%d_user"
 
 #define MAP_SIZE (32*1024UL) 
 #define MAP_MASK (MAP_SIZE - 1)
@@ -82,10 +82,10 @@ void save_to_disk2(int nrOfReads, short *acqData){
         // Write data of each channel  into a separate file (max 32)
         for (nrpk=0; nrpk < nrOfReads*N_AQS ; nrpk++) {
 
-            fprintf(stream_out, "%.4hd ",acqData[(nrpk*NUM_CHAN)+numchan]);
+            fprintf(stream_out, "%.4hd ",acqData[(nrpk * NUM_CHAN)+numchan]);
             fprintf(stream_out, "\n");
         }
-        printf("%d values for channel %d saved\n", nrOfReads*N_AQS, numchan+1);
+        printf("%d values for channel %d saved\n", nrOfReads * N_AQS, numchan+1);
     }
     
 
@@ -97,8 +97,8 @@ void save_to_disk2(int nrOfReads, short *acqData){
 
 int init_device_c2h_1(unsigned int dev_num){
     char devname[80];
-    uint32_t control_reg =0;
-    int i, fd_dma;
+    uint32_t control_reg = 0;
+    int fd_dma;
 
    sprintf(devname, DEVICE_C2H_1_STR, dev_num);
 /*

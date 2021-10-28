@@ -23,7 +23,7 @@
 
 /*---------------------------------------------------------------------------*/
 /*                        Standard header includes                           */
-/*---------------------------------------------------------------------------*/
+/*---------------------------- -----------------------------------------------*/
 #define _POSIX_C_SOURCE 200809L
 #define _DEFAULT_SOURCE
 // #define _BSD_SOURCE  deprecated
@@ -43,7 +43,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-
 /*---------------------------------------------------------------------------*/
 /*                        Project header includes                            */
 /*---------------------------------------------------------------------------*/
@@ -52,7 +51,10 @@
 #include "esther-daq-lib.h"
 
    // int dmasize= 1048576*3; // 0x100000   maxx ~ 132k Samples
-#define SIZE_DEFAULT (1048576*3)
+#define SIZE_DEFAULT (1048576*3) // 3Mbytes ~25 ms
+#define TRIG_DEFAULT 0x7D0F830 // 9000,  -9000
+#define MULT_DEFAULT 0x00030000
+#define OFF_DEFAULT 0x00
 
 //#define N_PACKETS 2  // size in full buffers (2MB) of data to save to disk. 2M=64 kSample =16 ms
 //Global vars
@@ -67,7 +69,10 @@ static struct option long_options[] = {
         {"ctrigger",    required_argument, NULL, 'c'},
         {"device",      required_argument, NULL, 'd'},
         {"size",        required_argument, NULL, 's'},
+        {"mult",        required_argument, NULL, 'm'},
+        {"offset",      required_argument, NULL, 'o'},
         {"soft_trigger", no_argument,       NULL, 't'},
+        {"user_trigger", no_argument,       NULL, 'u'},
         //{"delete",  required_argument, NULL, 0},
         {"verbose", no_argument        ,&verbose_flag, 1},
         //{"create",  required_argument, NULL, 'c'},
@@ -139,35 +144,31 @@ void save_to_disk(int dmasize, short *acqData){
 int main(int argc, char *argv[])
 {
     //int dev_num = 0;
-    int i,  k;  					// loop iterators i
+    int i,  k , c;  					// loop iterators i
     int rc;
-    //int fd;
-    //char *arg = "-sw";
-    /*int hw_trigger = 0; 				// trigger scheme to start acquisition*/
     void *map_base;//, *virt_addr;
     int fd_bar_0, fd_bar_1;   // file descriptor of device2
-    short * acqData; //[ N_AQS * N_PACKETS * 2 *NUM_CHAN];	// large buffer to store data for 2096 ms which can be saved to hard drive
+    short * acqData; 
     uint32_t control_reg;
     shapi_device_info * pDevice;
     shapi_module_info * pModule;
-    uint32_t trigOff32, dly;
-
-    //int dmasize= 1048576*3; // 0x100000   maxx ~ 132k Samples
-
-    int c;
-    /*uint64_t aopt = SIZE_DEFAULT;*/
+    uint32_t dly;
+    float dlyF=0.0;
 
     int digit_optind = 0, swtrigger=0;
-    //int aaopt = 0, bopt = 0, copt=0, dopt=0, sizeopt=0;
-    uint64_t aopt = SIZE_DEFAULT, bopt = 0, copt=0, dopt=0, sizeopt=0;
-    //char *dopt = 0;
+    int dopt=0;
+    uint32_t sizeopt = SIZE_DEFAULT;
+    uint32_t aopt = TRIG_DEFAULT, bopt = TRIG_DEFAULT, copt = TRIG_DEFAULT;
+    uint32_t mopt = MULT_DEFAULT, offopt = OFF_DEFAULT;
+
+    /*char *dopt = 0;*/
     int option_index = 0;
-    while ((c = getopt_long(argc, argv, "a:b:c:d:t012",
+    while ((c = getopt_long(argc, argv, "a:b:c:d:s:m:o:tu012",
                  long_options, &option_index)) != -1) {
         int this_option_optind = optind ? optind : 1;
         switch (c) {
         case 0:
-            printf ("option %s", long_options[option_index].name);
+            printf ("Goption %s", long_options[option_index].name);
             if (optarg)
                 printf (" with arg %s", optarg);
             printf ("\n");
@@ -177,30 +178,39 @@ int main(int argc, char *argv[])
             if (digit_optind != 0 && digit_optind != this_option_optind)
               printf ("digits occur in two different argv-elements.\n");
             digit_optind = this_option_optind;
-            printf ("option %c\n", c);
+            /*printf ("option %c\n", c);*/
             break;
         case 'a':
             aopt = getopt_integer(optarg);
-            printf ("option a 0x%08X\n", aopt);
+            /*printf ("option a 0x%08X\n", aopt);*/
             break;
         case 'b':
             bopt = getopt_integer(optarg);
-            printf ("option b %d\n", bopt);
+            fprintf(stderr, "option b 0x%08X\n", bopt);
             break;
         case 'c':
-            printf ("option c with value '%s'\n", optarg);
             copt = getopt_integer(optarg);
+            /*printf ("option c 0x%08X\n", copt);*/
             break;
         case 'd':
             dopt = atoi(optarg);
-            printf ("option d %d\n", dopt);
+            /*printf ("option d %d\n", dopt);*/
             break;
         case 's':
             sizeopt = getopt_integer(optarg);
-            printf ("option size with value '%d'\n", sizeopt);
+            //printf ("option size with value '%d'\n", sizeopt) print ("ploting 16");
+            break;
+        case 'm':
+            mopt = getopt_integer(optarg);
+            break;
+        case 'o':
+            offopt = getopt_integer(optarg);
             break;
         case 't':
             swtrigger = 1;
+            break;
+        case 'u':
+            swtrigger = 2;
             break;
 /*        case 'd':
             //printf ("option d with value '%s'\n", optarg);
@@ -220,86 +230,83 @@ int main(int argc, char *argv[])
             printf ("%s ", argv[optind++]);
         printf ("\n");
     }
-/*
-    // Check command line
-    if(argc < 2) {
-        printf("Usage: estherdaq  -hw|-sw [size]\n");
-        exit(-1);
-    }
-    arg = argv[1];
-    if (!strcmp(arg, "-hw")){
-        hw_trigger = 1;
-    }
-    printf("arg1 = %s\n", arg);
-
-    if(argc > 2){
-        arg = argv[2];
-        printf("arg2 = %s\n", arg);
-        //dev_name = argv[3];
-        dmasize = atoi(arg);
-        printf("arg2n = %d\n", dmasize);
-    }
-    */
-
-    //printf("read %d, 0x%08X bytes\n", dmasize, dmasize);
 
     map_base=init_device(dopt, 0, 0, &fd_bar_0, &fd_bar_1);
     if (fd_bar_1   < 0)  {
         //if (map_base == MAP_FAILED){ //  (void *) -1
-        fprintf (stderr,"Error: cannot open device %d \n", dopt);
+        fprintf (stderr,"Error: cannot open device %d \t", dopt);
         fprintf (stderr," errno = %i\n",errno);
         printf ("open error : %s\n", strerror(errno));
         exit(1);
     }
     printf("CR: 0x%0X\n", read_control_reg(map_base));
     pDevice = (shapi_device_info *) map_base;
-    printf("SHAPI VER: 0x%X\n", pDevice->SHAPI_VERSION);
+    /*printf("SHAPI VER: 0x%X\n", pDevice->SHAPI_VERSION);*/
     pModule = (shapi_module_info *) (map_base +
             pDevice->SHAPI_FIRST_MODULE_ADDRESS);
     printf("SHAPI MOD VER: 0x%X\n", pModule->SHAPI_VERSION);
     write_control_reg(map_base, 0);
-    trigOff32 = ( (2000U << 16) & 0xFFFF0000) | (-2000 & 0xFFFF);
-    printf("TRIG0: 0x%0X\n",trigOff32 );
-    write_fpga_reg(map_base, TRIG0_REG_OFF, trigOff32);
-    trigOff32 = ( (9000U << 16) & 0xFFFF0000) | (-6000 & 0xFFFF);
-    printf("TRIG1: 0x%0X\n",trigOff32 );
-    write_fpga_reg(map_base, TRIG1_REG_OFF, trigOff32);
-    trigOff32 = ( (4000U << 16) & 0xFFFF0000) | (-9000 & 0xFFFF);
-    write_fpga_reg(map_base, TRIG2_REG_OFF, trigOff32);
-    printf("TRIG2: 0x%0X\n", read_fpga_reg(map_base, TRIG2_REG_OFF));
+    /*printf("TRIG0: 0x%0X\n",trigOff32 );*/
+    write_fpga_reg(map_base, TRIG0_REG_OFF, aopt);
+    /*printf("TRIG1: 0x%0X\n",trigOff32 );*/
+    write_fpga_reg(map_base, TRIG1_REG_OFF, bopt);
+    /*trigOff32 = ( (4000U << 16) & 0xFFFF0000) | (-9000 & 0xFFFF);*/
+    write_fpga_reg(map_base, TRIG2_REG_OFF, copt);
+    /*printf("TRIG2: 0x%0X\n", read_fpga_reg(map_base, TRIG2_REG_OFF));*/
     printf("DLY 0x%0X\n", read_fpga_reg(map_base, PULSE_DLY_REG_OFF));
-    write_fpga_reg(map_base, PARAM_M_REG_OFF, 0x00030000);
+    write_fpga_reg(map_base, PARAM_M_REG_OFF, mopt);
+    /*write_fpga_reg(map_base, PARAM_M_REG_OFF, 0x00030000);*/
     printf("PMUL: 0x%0X\n", read_fpga_reg(map_base, PARAM_M_REG_OFF));
-    write_fpga_reg(map_base, PARAM_OFF_REG_OFF, 0x0A290001);
-    //write_fpga_reg(map_base, TRIG0_REG_OFF, (2000 << 16));
-//    write_fpga_reg(map_base, TRIG0_REG_OFF, 2000);
-
+    write_fpga_reg(map_base, PARAM_OFF_REG_OFF, offopt);
+    /*write_fpga_reg(map_base, PARAM_OFF_REG_OFF, 0x0A290001);*/
+    /**
+option size with value '3145728'
+CR: 0x800000
+SHAPI VER: 0x53480100
+SHAPI MOD VER: 0x534D0100
+TRIG2: 0xFA0DCD8
+DLY 0xFFFF
+PMUL: 0x30000
+CR: 0x800000, mb:0x7f2a66add000
+FPGA Status: 0x00000005
+Software trigger mode active
+CR: 0x1800000, mb:0x7f2a66add000
+FPGA Status: 0x01630011
+*/
     acqData = (short *) malloc(sizeopt);
 //    i = 0;
     control_reg = read_control_reg(map_base);
     control_reg |= (1<<ACQE_BIT);
-  
+
     write_control_reg(map_base, control_reg);
     //loss_hits = 0;
 
         printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);
     // ADC board is armed and waiting for trigger (hardware or software)
-    if (swtrigger) {
-        printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
-        printf("software trigger mode active\n");
+    if (swtrigger == 2) {  // option '-u'
+        printf("FPGA Status: 0x%.8X\t", read_status_reg(map_base));
+        fprintf(stderr, "User software trigger mode active\n");
         getkey(); // Press any key to start the acquisition
+        // Start the dacq with a software trigger
+        fpga_soft_trigger(map_base);
+        //	    rc = ioctl(fd, PCIE_ADC_IOCG_STATUS, &tmp);
+        printf("CR: 0x%0X, mb:%p\t", read_control_reg(map_base), map_base);
+        printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
+        // Check status to see if everything is okay (optional)
+    }
+    else if (swtrigger == 1) {  // option '-u'
+        printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
+        printf("Software trigger mode active\n");
         // Start the dacq with a software trigger
         fpga_soft_trigger(map_base);
         //	    rc = ioctl(fd, PCIE_ADC_IOCG_STATUS, &tmp);
         printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);
         printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
-        // Check status to see if everything is okay (optional)
     }
     else
         printf("hardware trigger mode active\n");
 
     fflush(stdout);
-    //while (loops++ < N_PACKETS) {
 
     rc = 0;
 
@@ -307,7 +314,6 @@ int main(int argc, char *argv[])
     usleep(10);
     dly = read_fpga_reg(map_base, PULSE_DLY_REG_OFF);
     write_control_reg(map_base, 0);  // stop board
-    //    rc = read(fd, &acqData[fposition], DMA_SIZE); // loop until there is something to read.
     if (close(fd_bar_1)) {
 
         printf("Error closing : %s\n", strerror(errno));
@@ -319,7 +325,8 @@ int main(int argc, char *argv[])
 //    save_to_disk(dmasize, acqData);
     save_to_bin(sizeopt, acqData);
 
-    printf("Streaming off - FPGA Status: 0x%.8X, Delay = 0x%08X, %d \n", rc, dly, dly >>16);
+    printf("Streaming off - FPGA Status: 0x%.8X\n", rc );
+    printf("Delay = 0x%08X, %d := %10.3f us\n", dly, (dly >>16), (dly>>16) /125.0);
     close(fd_bar_0);
     close(fd_bar_1);
     free(acqData);
