@@ -5,6 +5,8 @@
 # https://stackoverflow.com/questions/35056635/how-to-update-a-realtime-plot-and-use-buttons-to-interact-in-pyqtgraph
 # https://stackoverflow.com/questions/56918912/how-to-enable-legends-and-change-style-in-pyqtgraph
 import sys
+import re
+
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, \
@@ -16,6 +18,14 @@ from PyQt5.QtCore import QProcess
 from PyQt5.QtGui import QIcon
 import numpy as np
 import pyqtgraph as pg
+
+# A regular expression, to extract the % complete.
+#progress_re = re.compile("Total complete: (\d+)%")
+#progress_re = re.compile("Delay:\s+[+-]?([0-9]*[.])?[0-9]+ us")
+#progress_re = re.compile("Delay:\s+[0-9]*[.][0-9]+\sus")
+# progress_re = re.compile("Delay:\s+(\d+).(\d+)\sus")
+progress_re = re.compile("Delay=\s+(\d+)")
+
 
 # FILENAME = 'data/out_32.bin'
 FILENAME = 'data/out_fmc.bin'
@@ -143,8 +153,10 @@ class estherTrig(QWidget):
         vbox3.addWidget(self.ctlevelHigh)
         vbox3.addWidget(self.ctlevelLow)
         fbox.addRow(QLabel("C Level"), vbox3)
-        self.multParam = QLineEdit("0x30000")
-        fbox.addRow(QLabel("Mult Param"), self.multParam)
+        # self.multParam = QLineEdit("0x30000")
+        # fbox.addRow(QLabel("Mult Param"), self.multParam)
+        self.multParamFloat = QLineEdit("3.1")
+        fbox.addRow(QLabel("Mult Param"), self.multParamFloat)
         self.offParam = QLineEdit("0x0000")
         fbox.addRow(QLabel("Off Param"), self.offParam)
         self.acqSize = QLineEdit("0x300000")
@@ -167,7 +179,6 @@ class estherTrig(QWidget):
 
         hbox.addWidget(line)
 # verticalLayout->addWidget(line)
-
         hbox.addLayout(vbox2, 3)
         self.setLayout(hbox)
         self.setGeometry(10, 10, 1500, 800)
@@ -228,7 +239,9 @@ class estherTrig(QWidget):
             argc = High + Low[2:]
             acqsize = self.acqSize.text()
 
-            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize
+            argm = self.toHex(int(float(self.multParamFloat.text()) * 2**16), 32)
+
+            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize+ '-m' + argm
             # 0x{:04X}{:04X}'.format(High, Low)
             print(command)
             # self.proc.start("python3", ['dummy_script.py'])
@@ -238,7 +251,7 @@ class estherTrig(QWidget):
             else:
                 argT = ''
             self.proc.start("./estherdaq", ['-a', arga, '-b',  argb, '-c', argc,
-                '-s', acqsize, argT])
+                '-s', acqsize, '-m', argm, argT])
                 # '-s', '0x20000', '-t'])
         else:
             self.messageErr("Process not finished")
@@ -254,6 +267,18 @@ class estherTrig(QWidget):
         data = self.proc.readAllStandardOutput()
         stdout = bytes(data).decode("utf8")
         print('stdout ' + stdout)
+        m = progress_re.search(stdout)
+        # n = progress_re.findall(stdout)
+        if m:
+            pc_complete = m.group(1)
+            tu = m.groups()
+            print( 'found ' + pc_complete)
+            valf = float(m.group(1))
+            print("Fval {:.3f}".format(valf))
+            print( valf )
+        else:
+            print('not found')
+#             int(pc_complete)
         self.message(stdout)
 
     def handle_state(self, state):

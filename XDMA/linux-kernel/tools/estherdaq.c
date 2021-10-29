@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
             swtrigger = 2;
             break;
 /*        case 'd':
-            //printf ("option d with value '%s'\n", optarg);
+            //printfLY ("option d with value '%s'\n", optarg);
             dopt = strdup(optarg);
             printf ("option d with value '%s'\n", dopt);
             break;
@@ -239,12 +239,13 @@ int main(int argc, char *argv[])
         printf ("open error : %s\n", strerror(errno));
         exit(1);
     }
-    printf("CR: 0x%0X\n", read_control_reg(map_base));
+    /*printf("CR: 0x%0X\n", read_control_reg(map_base));*/
     pDevice = (shapi_device_info *) map_base;
     /*printf("SHAPI VER: 0x%X\n", pDevice->SHAPI_VERSION);*/
     pModule = (shapi_module_info *) (map_base +
             pDevice->SHAPI_FIRST_MODULE_ADDRESS);
     printf("SHAPI MOD VER: 0x%X\n", pModule->SHAPI_VERSION);
+    printf("TS %d\n", read_fpga_reg(map_base,TIME_STAMP_REG_OFF));
     write_control_reg(map_base, 0);
     /*printf("TRIG0: 0x%0X\n",trigOff32 );*/
     write_fpga_reg(map_base, TRIG0_REG_OFF, aopt);
@@ -253,7 +254,6 @@ int main(int argc, char *argv[])
     /*trigOff32 = ( (4000U << 16) & 0xFFFF0000) | (-9000 & 0xFFFF);*/
     write_fpga_reg(map_base, TRIG2_REG_OFF, copt);
     /*printf("TRIG2: 0x%0X\n", read_fpga_reg(map_base, TRIG2_REG_OFF));*/
-    printf("DLY 0x%0X\n", read_fpga_reg(map_base, PULSE_DLY_REG_OFF));
     write_fpga_reg(map_base, PARAM_M_REG_OFF, mopt);
     /*write_fpga_reg(map_base, PARAM_M_REG_OFF, 0x00030000);*/
     printf("PMUL: 0x%0X\n", read_fpga_reg(map_base, PARAM_M_REG_OFF));
@@ -326,7 +326,12 @@ FPGA Status: 0x01630011
     save_to_bin(sizeopt, acqData);
 
     printf("Streaming off - FPGA Status: 0x%.8X\n", rc );
-    printf("Delay = 0x%08X, %d := %10.3f us\n", dly, (dly >>16), (dly>>16) /125.0);
+    /*
+     *printf("Del = 0x%08X, %d := %10.3f us\n", dly, (dly >>16), (dly>>16) /125.0);
+     *printf("Delay: %10.3f us\n", (dly>>16) /125.0);
+     */
+    printf("Del = 0x%08X, %d, := %10.3f us\n", dly, dly , dly /125.0);
+    printf("Delay: %d\n", dly);
     close(fd_bar_0);
     close(fd_bar_1);
     free(acqData);
