@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
             break;
         case 's':
             sizeopt = getopt_integer(optarg);
-            //printf ("option size with value '%d'\n", sizeopt) print ("ploting 16");
+            printf ("option size '%d'\n", sizeopt);
             break;
         case 'm':
             mopt = getopt_integer(optarg);
