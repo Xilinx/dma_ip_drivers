@@ -24,7 +24,7 @@ import pyqtgraph as pg
 #progress_re = re.compile("Delay:\s+[+-]?([0-9]*[.])?[0-9]+ us")
 #progress_re = re.compile("Delay:\s+[0-9]*[.][0-9]+\sus")
 # progress_re = re.compile("Delay:\s+(\d+).(\d+)\sus")
-progress_re = re.compile("Delay=\s+(\d+)")
+progress_re = re.compile("Delay:\s+(\d+)")
 
 
 # FILENAME = 'data/out_32.bin'
@@ -85,26 +85,23 @@ class estherTrig(QWidget):
         self.p1.setYRange(-32768, 32768, padding=0.01)
         self.curveCnt = pg.PlotCurveItem(
             [], [], pen=pg.mkPen(color='#025b94', width=3), name="count")
-            # [0, 200000, 400000], [-10000, 200000, 400000], pen=pg.mkPen(color='#025b94', width=3), name="count")
-
 
         # Add  infinite line with labels
         inf1 = pg.InfiniteLine(movable=True, angle=90, label='x={value:0.2f}',
                        labelOpts={'position':0.1, 'color': (200,200,100),
                            'fill': (200,200,200,50), 'movable': True})
-        inf1.setPos([32768, 2])
+        inf1.setPos([65536, 2])
         self.p1.addItem(inf1)
         self.p2.addItem(self.curveCnt)
 
         vbox2.addWidget(self.pw)
         self.clearbutton = QPushButton("Clear Plots")
-        hboxD = QtWidgets.QHBoxLayout()
-        decLabel = QLabel("Decimation")
-        self.line_editDec = QLineEdit("10", self)
-        self.line_editDec.resize(100, 32)
-        hboxD.addWidget(decLabel)
+        # hboxD = QtWidgets.QHBoxLayout()
+        # decLabel = QLabel("Decimation")
+        # self.line_editDec.resize(100, 32)
+        # hboxD.addWidget(decLabel)
         # hbox1.addWidget(QtWidgets.QLabel("Decimation "))
-        hboxD.addWidget(self.line_editDec)
+        # hboxD.addWidget(self.line_editDec)
         hbox.addLayout(vbox1)
         self.plot16Button = QPushButton("Plot Data")
         self.line_edit = QLineEdit(FILENAME, self)
@@ -131,43 +128,45 @@ class estherTrig(QWidget):
         fbox = QtWidgets.QFormLayout()
         self.atlevelHigh = QLineEdit("4000")
         self.atlevelLow = QLineEdit("-9000")
-        vbox3 = QtWidgets.QVBoxLayout()
-        vbox3.addWidget(self.atlevelHigh)
-        vbox3.addWidget(self.atlevelLow)
-        fbox.addRow(QLabel("A Level"), vbox3)
-        vbox1.addLayout(fbox)
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(self.atlevelHigh)
+        vbox.addWidget(self.atlevelLow)
+        fbox.addRow(QLabel("A Level"), vbox)
+        # vbox1.addLayout(fbox)
 
         self.btlevelHigh = QLineEdit("9000")
         self.btlevelLow = QLineEdit("-4000")
-        fbox = QtWidgets.QFormLayout()
-        vbox3 = QtWidgets.QVBoxLayout()
-        vbox3.addWidget(self.btlevelHigh)
-        vbox3.addWidget(self.btlevelLow)
-        fbox.addRow(QLabel("B Level"), vbox3)
-        vbox1.addLayout(fbox)
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(self.btlevelHigh)
+        vbox.addWidget(self.btlevelLow)
+        fbox.addRow(QLabel("B Level"), vbox)
+        # vbox1.addLayout(fbox)
 
         self.ctlevelHigh = QLineEdit("4000")
         self.ctlevelLow = QLineEdit("-9000")
-        fbox = QtWidgets.QFormLayout()
-        vbox3 = QtWidgets.QVBoxLayout()
-        vbox3.addWidget(self.ctlevelHigh)
-        vbox3.addWidget(self.ctlevelLow)
-        fbox.addRow(QLabel("C Level"), vbox3)
-        # self.multParam = QLineEdit("0x30000")
-        # fbox.addRow(QLabel("Mult Param"), self.multParam)
+        # fbox = QtWidgets.QFormLayout()
+        vbox = QtWidgets.QVBoxLayout()
+        vbox.addWidget(self.ctlevelHigh)
+        vbox.addWidget(self.ctlevelLow)
+        fbox.addRow(QLabel("C Level"), vbox)
         self.multParamFloat = QLineEdit("3.1")
         fbox.addRow(QLabel("Mult Param"), self.multParamFloat)
         self.offParam = QLineEdit("0x0000")
         fbox.addRow(QLabel("Off Param"), self.offParam)
-        self.acqSize = QLineEdit("0x300000")
+        self.acqSize = QLineEdit("0x3F0000")
         fbox.addRow(QLabel("Acq Size"), self.acqSize)
+        self.line_editDec = QLineEdit("10", self)
+        fbox.addRow(QLabel("Decimation"), self.line_editDec)
+        self.line_Delay = QLineEdit("10.0", self)
+        self.line_Delay.setReadOnly(True)
+        fbox.addRow(QLabel("Delay:"), self.line_Delay)
         vbox1.addLayout(fbox)
         self.chB = QCheckBox("Soft trigger")
         self.chB.setChecked(False)
 
         vbox1.addWidget(self.chB)
         vbox1.addItem(verticalSpacer)
-        vbox1.addLayout(hboxD)
+        # vbox1.addLayout(hboxD)
         vbox1.addWidget(self.plot16Button)
         self.plot16Button.setSizePolicy(sizePolicy)
         # hbox.addStretch()
@@ -241,18 +240,17 @@ class estherTrig(QWidget):
 
             argm = self.toHex(int(float(self.multParamFloat.text()) * 2**16), 32)
 
-            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize+ '-m' + argm
+            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize+ ' -m ' + argm
             # 0x{:04X}{:04X}'.format(High, Low)
             print(command)
-            # self.proc.start("python3", ['dummy_script.py'])
             if self.chB.isChecked() == True:
                 argT = '-t'
-                print(self.chB.text()+ " is selected")
+                # print(self.chB.text()+ " is selected")
             else:
                 argT = ''
+            self.textErr.clear()
             self.proc.start("./estherdaq", ['-a', arga, '-b',  argb, '-c', argc,
                 '-s', acqsize, '-m', argm, argT])
-                # '-s', '0x20000', '-t'])
         else:
             self.messageErr("Process not finished")
 
@@ -272,10 +270,11 @@ class estherTrig(QWidget):
         if m:
             pc_complete = m.group(1)
             tu = m.groups()
-            print( 'found ' + pc_complete)
+            # print( 'found ' + pc_complete)
             valf = float(m.group(1))
-            print("Fval {:.3f}".format(valf))
-            print( valf )
+            print("Fval: {:.3f}, Vel: {:.3f}:".format(valf,0.10/(valf *8e-9)))
+            self.line_Delay.setText(str(8e-3*valf))
+            # print( valf )
         else:
             print('not found')
 #             int(pc_complete)

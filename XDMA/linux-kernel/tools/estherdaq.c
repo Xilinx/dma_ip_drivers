@@ -80,12 +80,31 @@ static struct option long_options[] = {
         {NULL,      0,                 NULL, 0}
     };
 
-void getkey ()
+void getkey()
 {
     printf("Press Return to continue ...\n");
     getchar();
 }
-void save_to_bin(int dmasize, short *acqData){
+void check_count(short *acqData, int dmaSize){
+    uint32_t * pCount = (uint32_t *) acqData;
+    uint32_t lastCount, cnt, i;
+    uint32_t firstMiss =0, misses =0;
+    lastCount = pCount[3] +1;
+    for (i=1; i< dmaSize/16; i++){
+        cnt = pCount[i*4 + 3];
+        if(cnt != lastCount){
+            if(firstMiss==0)
+                firstMiss = i;
+            misses++;
+            /*fprintf(stderr, "ce : %d %d %d\n", i, lastCount, cnt);*/
+        }
+        lastCount = cnt + 1;
+    }
+    if(misses != 0)
+        fprintf(stderr, "First Miss %d, Misses:%d\n", firstMiss, misses);
+
+}
+void save_to_bin(short *acqData, int dmasize){
     FILE *stream_out;
     char path_name[80];
     //stream_out = fopen("data/out_fmc.bin","wb");
@@ -186,7 +205,7 @@ int main(int argc, char *argv[])
             break;
         case 'b':
             bopt = getopt_integer(optarg);
-            fprintf(stderr, "option b 0x%08X\n", bopt);
+            /*fprintf(stderr, "option b 0x%08X\n", bopt);*/
             break;
         case 'c':
             copt = getopt_integer(optarg);
@@ -198,7 +217,7 @@ int main(int argc, char *argv[])
             break;
         case 's':
             sizeopt = getopt_integer(optarg);
-            printf ("option size '%d'\n", sizeopt);
+            /*printf ("option size '%d'\n", sizeopt);*/
             break;
         case 'm':
             mopt = getopt_integer(optarg);
@@ -231,12 +250,22 @@ int main(int argc, char *argv[])
         printf ("\n");
     }
 
+	posix_memalign((void **)&acqData, 4096 /*alignment */ , sizeopt + 4096);
+	if (!acqData) {
+		fprintf(stderr, "OOM %lu.\n", sizeopt + 4096);
+		rc = -ENOMEM;
+        exit(-1);
+		/*goto out;*/
+	}
+
+
     map_base=init_device(dopt, 0, 0, &fd_bar_0, &fd_bar_1);
     if (fd_bar_1   < 0)  {
         //if (map_base == MAP_FAILED){ //  (void *) -1
         fprintf (stderr,"Error: cannot open device %d \t", dopt);
         fprintf (stderr," errno = %i\n",errno);
         printf ("open error : %s\n", strerror(errno));
+        free(acqData);
         exit(1);
     }
     /*printf("CR: 0x%0X\n", read_control_reg(map_base));*/
@@ -244,7 +273,7 @@ int main(int argc, char *argv[])
     /*printf("SHAPI VER: 0x%X\n", pDevice->SHAPI_VERSION);*/
     pModule = (shapi_module_info *) (map_base +
             pDevice->SHAPI_FIRST_MODULE_ADDRESS);
-    printf("SHAPI MOD VER: 0x%X\n", pModule->SHAPI_VERSION);
+    /*printf("SHAPI MOD VER: 0x%X\n", pModule->SHAPI_VERSION);*/
     printf("TS %d\n", read_fpga_reg(map_base,TIME_STAMP_REG_OFF));
     write_control_reg(map_base, 0);
     /*printf("TRIG0: 0x%0X\n",trigOff32 );*/
@@ -273,7 +302,7 @@ Software trigger mode active
 CR: 0x1800000, mb:0x7f2a66add000
 FPGA Status: 0x01630011
 */
-    acqData = (short *) malloc(sizeopt);
+    //acqData = (short *) malloc(sizeopt);
 //    i = 0;
     control_reg = read_control_reg(map_base);
     control_reg |= (1<<ACQE_BIT);
@@ -281,7 +310,7 @@ FPGA Status: 0x01630011
     write_control_reg(map_base, control_reg);
     //loss_hits = 0;
 
-        printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);
+        /*printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);*/
     // ADC board is armed and waiting for trigger (hardware or software)
     if (swtrigger == 2) {  // option '-u'
         printf("FPGA Status: 0x%.8X\t", read_status_reg(map_base));
@@ -323,7 +352,9 @@ FPGA Status: 0x01630011
     rc = read_status_reg(map_base);
 
 //    save_to_disk(dmasize, acqData);
-    save_to_bin(sizeopt, acqData);
+    save_to_bin(acqData, sizeopt);
+    check_count(acqData, sizeopt);
+    /*save_to_bin(sizeopt, acqData);*/
 
     printf("Streaming off - FPGA Status: 0x%.8X\n", rc );
     /*
