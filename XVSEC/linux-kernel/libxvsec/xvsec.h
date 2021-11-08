@@ -794,14 +794,14 @@ int xvsec_mcap_access_axi_reg(xvsec_handle_t *handle, uint32_t address,
  * xvsec_mcap_file_download() - Performs File download at specified address
  *
  *
- * @param[in]	handle		Unique handle to access the device
+ * @param[in]	handle		    Unique handle to access the device
  * @param[in]	fixed_address	Address Type (is it fixed/incr)
  * @param[in]	mode_128_bit	Access Mode (128 bit or 32 bit)
- * @param[in]	file_name	File to download
- * @param[in]	dev_address	The address to download the file
- * @param[in]	tr_mode		Data transfer mode(slow/fast)
- * @param[out]	op_status	file download status
- * @param[out]	err_index	file download error index
+ * @param[in]	file_name	    File to download
+ * @param[in]	dev_address	  The address to download the file
+ * @param[in]	tr_mode		    Data transfer mode(slow/fast)
+ * @param[out]	op_status	  file download status
+ * @param[out]	err_index	  file download error index
  *
  * @return	XVSEC_SUCCESS				: Success
  * @return	XVSEC_ERR_INVALID_PARAM			: Failure
@@ -812,7 +812,7 @@ int xvsec_mcap_access_axi_reg(xvsec_handle_t *handle, uint32_t address,
 int xvsec_mcap_file_download(xvsec_handle_t *handle,
 	bool fixed_address, bool mode_128_bit,
 	char *file_name, uint32_t dev_address,
-	data_transfer_mode_t tr_mode,
+	data_transfer_mode_t tr_mode, bool sbi_target,
 	file_operation_status_t  *op_status, size_t *err_index);
 
 /*****************************************************************************/

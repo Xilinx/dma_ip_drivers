@@ -83,7 +83,7 @@ static const char *MCAPV2_reg_names[] = {
 	"VSEC Header",
 	"Status",
 	"Control",
-	"MCAP RW Adrr register",
+	"MCAP RW Addr Register",
 	"MCAP Write Data",
 	"MCAP Read Data",
 };
@@ -698,7 +698,7 @@ static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
 	ret = xvsec_mcap_file_download(xvsec_handle,
 		args->download.is_fixed_addr, args->download.is_128b_mode,
 		args->download.file_name, args->download.dev_addr,
-		args->download.tr_mode, &status, &err_index);
+		args->download.tr_mode, args->download.sbi_target, &status, &err_index);
 	if(ret < 0)
 	{
 		fprintf(stderr, "xvsec_mcap_file_download "

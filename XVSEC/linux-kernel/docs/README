@@ -458,14 +458,14 @@ _____________________________________________________________________________
            bit  8       MCAP Reset                       0
            bit  19:16   MCAP AXI Cache                   0
            bit  22:20   MCAP AXI Protect                 0
-        0x0010          MCAP RW Adrr register   0x00000000
+        0x0010          MCAP RW Addr Register   0x00000000
         0x0014          MCAP Write Data         0x00000000
         0x0018          MCAP Read Data          0x00000000
     
     2.3.3. PDI Download
     -------------------
     
-    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p mode <32b/128b> type <fixed/incr> <Address> <PDI File> [tr_mode <slow/fast>]
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p mode <32b/128b> type <fixed/incr> <Address> <PDI File> [tr_mode <slow/fast>] [sbi <y/n>]
     
     Description:
     This command is used to Download the specified File (.pdi) at given address.
@@ -483,12 +483,18 @@ _____________________________________________________________________________
         - PDI file to be downloaded
       [tr_mode ]
         - optional slow/fast download mode option for data transfer
-        - If tr_mode is not specified, It will use Default(fast) mode
+        - If tr_mode is not specified, it will use Default(fast) mode
+      [sbi ]
+        - optional y/n specifier for targeting PDI download to slave boot 
+          interface (SBI); can be specified without tr_mode, but not before 
+        - If targeting PDI download to SBI, file download enables this datapath 
+          before beginning actual file transfer
+        - If sbi is not specified, it will use Default(y) mode
     
       Examples:
         1) Slow mode example: 32b, incr mode with DDR at address 0x0
         ------------------------------------------------------------
-        [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 32b type incr 0x0 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow
+        [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 32b type incr 0x0 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow sbi n
 	    
         MCAP version: 2
         tr_mode: 0
@@ -497,7 +503,7 @@ _____________________________________________________________________________
 	    
         2) Fast mode example: 128b, incr mode with DDR at address 0x0
         -------------------------------------------------------------
-        [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type incr 0x0 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode fast
+        [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type incr 0x0 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode fast sbi n
         
         MCAP version: 2
         tr_mode: 1
