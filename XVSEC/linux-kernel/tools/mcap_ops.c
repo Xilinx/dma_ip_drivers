@@ -710,7 +710,8 @@ static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
 				 (status == XVSEC_MCAP_FILE_OP_HW_BUSY) ||
 				 (status == XVSEC_MCAP_FILE_OP_FAILED))) {
 			fprintf(stdout, "Please try PDI transfer using download "
-				        "option <tr_mode slow>\n");
+				        "option <tr_mode slow>, setting option <sbi> explicitly, "
+                "and/or check hardware address mapping is correct\n");
 		}
 
 	}

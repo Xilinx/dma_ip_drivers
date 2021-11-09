@@ -287,6 +287,11 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args)
 		fprintf(stdout, "sbi: %d\n", args->download.sbi_target);
   }
 
+	if((argv[optind + 7] == NULL)) {
+		args->download.sbi_target = true; 
+		goto EXIT;
+	}
+
 	if (strncmp(argv[optind + 7], "sbi", sizeof("sbi")) == 0) {
 
 		if(argv[optind + 8] == NULL) {
