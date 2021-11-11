@@ -761,7 +761,7 @@ CLEANUP:
 int xvsec_mcap_file_download(xvsec_handle_t *handle,
 	bool fixed_address, bool mode_128_bit,
 	char *file_name, uint32_t dev_address,
-	data_transfer_mode_t tr_mode, bool sbi_target,
+	data_transfer_mode_t tr_mode, uint32_t sbi_address,
 	file_operation_status_t  *op_status, size_t *err_index)
 {
 	int			ret = XVSEC_SUCCESS;
@@ -791,7 +791,7 @@ int xvsec_mcap_file_download(xvsec_handle_t *handle,
 	download_info.v2.op_status = FILE_OP_FAILED;
 	download_info.v2.tr_mode =
 		(tr_mode == XVSEC_MCAP_DATA_TR_MODE_SLOW) ? DATA_TRANSFER_MODE_SLOW : DATA_TRANSFER_MODE_FAST;
-  download_info.v2.sbi_target = sbi_target;
+  download_info.v2.sbi_address = sbi_address;
 
 	status = ioctl(xvsec_user_ctx[device_index].fd,
 		IOC_MCAP_FILE_DOWNLOAD, &download_info);

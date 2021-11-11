@@ -698,7 +698,7 @@ static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
 	ret = xvsec_mcap_file_download(xvsec_handle,
 		args->download.is_fixed_addr, args->download.is_128b_mode,
 		args->download.file_name, args->download.dev_addr,
-		args->download.tr_mode, args->download.sbi_target, &status, &err_index);
+		args->download.tr_mode, args->download.sbi_addr, &status, &err_index);
 	if(ret < 0)
 	{
 		fprintf(stderr, "xvsec_mcap_file_download "
@@ -710,7 +710,7 @@ static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
 				 (status == XVSEC_MCAP_FILE_OP_HW_BUSY) ||
 				 (status == XVSEC_MCAP_FILE_OP_FAILED))) {
 			fprintf(stdout, "Please try PDI transfer using download "
-				        "option <tr_mode slow>, setting option <sbi> explicitly, "
+				        "option <tr_mode slow>, review option <sbi>, "
                 "and/or check hardware address mapping is correct\n");
 		}
 

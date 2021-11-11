@@ -234,7 +234,7 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args)
 	/*optional transfer mode and sbi parameters*/
 	if((argv[optind + 5] == NULL)) {
 		args->download.tr_mode = XVSEC_MCAP_DATA_TR_MODE_FAST;
-		args->download.sbi_target = true; 
+		args->download.sbi_addr = 0xFFFFFFFF;
 		goto EXIT;
 	}
 
@@ -264,58 +264,27 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args)
 		fprintf(stdout, "tr_mode: %d\n", args->download.tr_mode);
 	} else if (strncmp(argv[optind + 5], "sbi", sizeof("sbi")) == 0) {
 		if(argv[optind + 6] == NULL) {
-			fprintf(stderr, "Please enter valid identifier for target sbi, "
-					"Only y and n are valid\n");
+			fprintf(stderr, "Please enter valid address for sbi reg block\n");
 			ret = XVSEC_FAILURE;
 			goto CLEANUP;
-		}
-
-		if (strncmp(argv[optind + 6], "y", sizeof("y")) == 0) {
-			/*target is SBI FIFO*/
-			args->download.sbi_target = true;
-		}
-		else if (strncmp(argv[optind + 6], "n", sizeof("n")) == 0) {
-			/*target is not SBI FIFO*/
-			args->download.sbi_target = false;
-		}
-		else {
-			fprintf(stderr, "Invalid SBI target identifier provided, "
-					"Only y and n are valid\n");
-			ret = XVSEC_FAILURE;
-			goto CLEANUP;
-		}
-		fprintf(stdout, "sbi: %d\n", args->download.sbi_target);
+		} else {
+	    args->download.sbi_addr = (uint32_t) strtoul(argv[optind + 6], NULL, 0);
+    }
   }
 
 	if((argv[optind + 7] == NULL)) {
-		args->download.sbi_target = true; 
+		args->download.sbi_addr = 0xFFFFFFFF;
 		goto EXIT;
 	}
 
 	if (strncmp(argv[optind + 7], "sbi", sizeof("sbi")) == 0) {
-
 		if(argv[optind + 8] == NULL) {
-			fprintf(stderr, "Please enter valid identifier for target sbi, "
-					"Only y and n are valid\n");
+			fprintf(stderr, "Please enter valid address for sbi reg block\n");
 			ret = XVSEC_FAILURE;
 			goto CLEANUP;
-		}
-
-		if (strncmp(argv[optind + 8], "y", sizeof("y")) == 0) {
-			/*target is SBI FIFO*/
-			args->download.sbi_target = true;
-		}
-		else if (strncmp(argv[optind + 8], "n", sizeof("n")) == 0) {
-			/*target is not SBI FIFO*/
-			args->download.sbi_target = false;
-		}
-		else {
-			fprintf(stderr, "Invalid SBI target identifier provided, "
-					"Only y and n are valid\n");
-			ret = XVSEC_FAILURE;
-			goto CLEANUP;
-		}
-		fprintf(stdout, "sbi: %d\n", args->download.sbi_target);
+		} else {
+	    args->download.sbi_addr = (uint32_t) strtoul(argv[optind + 8], NULL, 0);
+    }
 	} 
 
 EXIT:
@@ -475,7 +444,7 @@ CLEANUP:
 
 
 /*
- * retrieve arguement 
+ * retrieve argument 
  *
  */
 int parse_opt_t_arguments(int argc, char *argv[], struct args *args)
@@ -770,7 +739,7 @@ CLEANUP:
 
 /*
  *
- * mcap parser function for the arguements
+ * mcap parser function for the arguments
  * dependent on the MCAP version
  *
  */

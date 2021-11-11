@@ -337,7 +337,7 @@ int xvsec_mcapv2_file_download(
 	uint8_t fifo_capacity = 0;
 	uint8_t min_len = 0;
   union axi_reg_data sbi_ctrl;  
-  bool  sbi_target;
+  uint32_t sbi_address;
 
 	pr_debug("In %s\n", __func__);
 
@@ -369,15 +369,15 @@ int xvsec_mcapv2_file_download(
 			pr_err("File Name Copy Failed\n");
 			return -(EINVAL);
 		}
-		pr_info("pdi File Name : %s, tr_mode: %d, sbi: %d\n", pdifile,
-			file_info->v2.tr_mode, file_info->v2.sbi_target);
+		pr_info("pdi File Name : %s, tr_mode: %d\n", pdifile,
+			file_info->v2.tr_mode);
 	}
 
 	fname = pdifile;
 	dev_address = file_info->v2.address;
 	mode = file_info->v2.mode;
 	tr_mode = file_info->v2.tr_mode;
-	sbi_target = file_info->v2.sbi_target;
+	sbi_address = file_info->v2.sbi_address;
 
 	/** At present only PDI file format is implemented */
 	if (xvsec_util_find_file_type(fname, MCAPV2_PDI_FILE) < 0) {
@@ -414,9 +414,9 @@ int xvsec_mcapv2_file_download(
 	/** FIXME: pprereps, does mcap needs a reset here? */
 
   /** RdModWr SBI Control register to accept data from MCAP datapath; restore later **/
-  if (sbi_target) {
+  if (sbi_address != 0xFFFFFFFF) {
     sbi_ctrl.v2.mode = MCAP_AXI_MODE_32B;
-    sbi_ctrl.v2.address = SLAVE_BOOT_CTRL_REG;
+    sbi_ctrl.v2.address = sbi_address + SLAVE_BOOT_CTRL_OFFSET;
     xvsec_mcapv2_axi_rd_addr(mcap_ctx, &sbi_ctrl);
     sbi_ctrl.v2.data[1] = sbi_ctrl.v2.data[0]; //restore later
     sbi_ctrl.v2.data[0] &= ~SBI_CTRL_IF_MASK;
@@ -575,7 +575,7 @@ CLEANUP:
 	}
 
   // Restore SBI control reg to previous state
-  if (sbi_target) {
+  if (sbi_address != 0xFFFFFFFF) {
     sbi_ctrl.v2.data[0] = sbi_ctrl.v2.data[1]; 
     xvsec_mcapv2_axi_wr_addr(mcap_ctx, &sbi_ctrl);
   }

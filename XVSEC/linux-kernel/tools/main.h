@@ -91,7 +91,7 @@ struct mcap_file_download {
 	bool flag;
 	bool is_fixed_addr;
 	bool is_128b_mode;
-  bool sbi_target;
+  uint32_t sbi_addr;
 	char *file_name;
 	uint32_t dev_addr;
 	data_transfer_mode_t tr_mode;

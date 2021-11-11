@@ -379,8 +379,8 @@ union file_download_upload {
 		size_t length;
 		/** data transfer mode */
 		enum data_transfer_mode tr_mode;
-		/** SBI target identifer */
-		bool sbi_target;
+		/** SBI reg block address */
+		uint32_t sbi_address;
 		/** File Download/Upload Status */
 		enum file_operation_status op_status;
 		/** upload/download failed at byte index */

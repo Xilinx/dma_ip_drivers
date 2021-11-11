@@ -812,7 +812,7 @@ int xvsec_mcap_access_axi_reg(xvsec_handle_t *handle, uint32_t address,
 int xvsec_mcap_file_download(xvsec_handle_t *handle,
 	bool fixed_address, bool mode_128_bit,
 	char *file_name, uint32_t dev_address,
-	data_transfer_mode_t tr_mode, bool sbi_target,
+	data_transfer_mode_t tr_mode, uint32_t sbi_address,
 	file_operation_status_t  *op_status, size_t *err_index);
 
 /*****************************************************************************/
