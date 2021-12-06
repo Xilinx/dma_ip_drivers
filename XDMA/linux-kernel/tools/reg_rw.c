@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
 	device = strdup(argv[1]);
 	target = strtoul(argv[2], 0, 0);
-	printf("device: %s, address: 0x%08x, access %s: %s.\n",
+	printf("device: %s, address: 0x%08x, access %s.\n",
 		device, (unsigned int)target, argc >= 4 ? "write" : "read");
 
 	/* data given? */
