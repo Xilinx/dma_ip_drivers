@@ -1,0 +1,4 @@
+apps/data
+*.o
+tools/estherdaq
+

@@ -26,7 +26,7 @@
 #include <linux/errno.h>
 #include "xdma_mod.h"
 
-#define XDMA_NODE_NAME	"xdma"
+#define XDMA_NODE_NAME	"fmc_xdma"
 #define XDMA_MINOR_BASE (0)
 #define XDMA_MINOR_COUNT (255)
 
