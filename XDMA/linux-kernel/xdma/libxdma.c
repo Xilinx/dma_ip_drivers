@@ -1002,6 +1002,7 @@ engine_service_final_transfer(struct xdma_engine *engine,
 			WARN_ON(*pdesc_completed > transfer->desc_num);
 		}
 		/* mark transfer as successfully completed */
+		engine_service_shutdown(engine);
 		transfer->state = TRANSFER_STATE_COMPLETED;
 		transfer->desc_cmpl = transfer->desc_num;
 		/* add dequeued number of descriptors during this run */
