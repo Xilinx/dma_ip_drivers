@@ -916,9 +916,13 @@ static int xvsec_mcap_program(struct vsec_context *mcap_ctx, char *fname)
 
 	pr_info("After fopen\n");
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	ret = xvsec_util_get_file_size(fname, &file_size);
 	if (ret < 0)
 		goto CLEANUP;
+#else
+        file_size = xvsec_util_get_file_size(filep);
+#endif
 
 	pr_info("After getsize\n");
 
