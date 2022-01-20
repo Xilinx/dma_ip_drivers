@@ -133,7 +133,9 @@ static int qdma_req_completed(struct qdma_request *req,
 	if (caio->cmpl_count == caio->req_count) {
 		res = caio->cmpl_count - caio->err_cnt;
 		res2 = caio->res2;
-#if KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 16, 0) <= LINUX_VERSION_CODE
+		caio->iocb->ki_complete(caio->iocb, res);
+#elif KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
 #else
 		aio_complete(caio->iocb, res, res2);
