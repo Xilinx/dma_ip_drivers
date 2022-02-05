@@ -27,7 +27,7 @@ do
   streamEnable=${statusRegVal:4:1}
   if [ $channelId == "1fc" ]; then
     h2cChannels=$((h2cChannels + 1))
-    if [ $streamEnable == "8" ]; then
+    if [ "$streamEnable" == "8" ]; then
       isStreaming=1
     fi
   fi
@@ -41,7 +41,7 @@ do
   returnVal=$?
   if [ $returnVal -eq 0 ]; then
     c2hChannels=$((c2hChannels + 1))
-    if [ $streamEnable == "8" ]; then
+    if [ "$streamEnable" == "8" ]; then
       isStreaming=1
     fi
   fi
