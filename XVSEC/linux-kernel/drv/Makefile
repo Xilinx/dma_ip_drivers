@@ -1,7 +1,5 @@
 XVSEC_HOME := $(shell pwd)
 XVSEC_KVER := $(shell uname -r)
-KERN_MAJ := $(shell echo $(XVSEC_KVER) | awk -F'.' '{print $$1}')
-KERN_MIN := $(shell echo $(XVSEC_KVER) | awk -F'.' '{print $$2}')
 
 build_path := ../build
 module_path := $(build_path)/modules
@@ -14,10 +12,6 @@ xvsec-objs += ./xvsec_mcap/versal/xvsec_mcap_versal.o
 ccflags-y := -I$(PWD) -I$(PWD)/xvsec_mcap
 ccflags-y += -I$(PWD)/xvsec_mcap/us
 ccflags-y += -I$(PWD)/xvsec_mcap/versal
-
-ifeq ($(shell [ $(KERN_MAJ) -lt 4 ] || [ $(KERN_MAJ) -eq 4 ] && [ $(KERN_MIN) -lt 14 ]; echo $$?),0)
-  EXTRA_CFLAGS:= -D PRE4_14KERN
-endif
 
 all:
 	@mkdir -p -m 755 $(build_path)

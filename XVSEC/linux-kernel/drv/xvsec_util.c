@@ -91,7 +91,7 @@ int xvsec_util_fread(struct file *filep, uint64_t offset,
 
 	oldfs = get_fs();
 	set_fs(get_ds());
-#ifdef PRE4_14KERN
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
 	ret = vfs_read(filep, (char __user *)data, size, (loff_t *)&offset);
 #else
 	ret = kernel_read(filep, (char __user *)data, size, (loff_t *)&offset);
@@ -100,7 +100,7 @@ int xvsec_util_fread(struct file *filep, uint64_t offset,
 	set_fs(oldfs);
 
 	if (ret < 0) {
-#ifdef PRE4_14KERN
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
 		pr_err("%s : vfs_read failed with error : %d\n", __func__, ret);
 #else
 		pr_err("%s : kernel_read failed with error : %d\n", __func__, ret);
@@ -119,7 +119,7 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 
 	oldfs = get_fs();
 	set_fs(get_ds());
-#ifdef PRE4_14KERN
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
 	ret = vfs_write(filep, (char __user *)data, size, (loff_t *)&offset);
 #else
 	ret = kernel_write(filep, (char __user *)data, size, (loff_t *)&offset);
@@ -128,7 +128,7 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 	set_fs(oldfs);
 
 	if (ret < 0) {
-#ifdef PRE4_14KERN
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
 		pr_err("%s : vfs_write failed, err : %d\n", __func__, ret);
 #else
 		pr_err("%s : kernel_write failed, err : %d\n", __func__, ret);
