@@ -486,10 +486,13 @@ _____________________________________________________________________________
         - If tr_mode is not specified, it will use Default(fast) mode
       [sbi ]
         - required specifier iff targeting PDI download to slave boot 
-          interface (SBI); can be specified without tr_mode or after 
-          tr_mode 
-        - If targeting PDI download to SBI, both the download address 
-          and the SBI reg block address must be remapped in hardware
+          interface (SBI) and the SBI_CTRL register has not been set to
+          accept data from the AXI interface (0x101220004[4:2] != 3'b010)
+        - Can be specified without tr_mode or after tr_mode
+        - If targeting PDI download to SBI, both the SBI FIFO address 
+          and the SBI reg block address must be mapped in hardware
+          from the CPM master to the PMC slave and there must be NMU remap(s)
+          in place to remap from a 32 bit address to a 48 bit address 
     
       Examples:
         1) Slow mode example: 32b, incr mode with DDR at address 0x0
