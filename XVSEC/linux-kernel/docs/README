@@ -487,7 +487,7 @@ _____________________________________________________________________________
       [sbi ]
         - required specifier iff targeting PDI download to slave boot 
           interface (SBI) and the SBI_CTRL register has not been set to
-          accept data from the AXI interface (0x101220004[4:2] != 3'b010)
+          accept data from the AXI interface (0xF1220004[4:2] != 3'b010)
         - Can be specified without tr_mode or after tr_mode
         - If targeting PDI download to SBI, both the SBI FIFO address 
           and the SBI reg block address must be mapped in hardware
