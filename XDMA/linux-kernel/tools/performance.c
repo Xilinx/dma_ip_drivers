@@ -24,7 +24,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-/* @TODO During kernel upstreaming, the IOCTL must move into the public user API of the kernel */
 #include "../xdma/cdev_sgdma.h"
 
 struct xdma_performance_ioctl perf;
