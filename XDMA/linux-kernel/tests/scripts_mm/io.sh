@@ -1,6 +1,6 @@
 #!/bin/sh
 
-tool_path=../tools
+tool_path=../../tools
 logdir=/tmp
 
 if [ $# -lt 9 ]; then

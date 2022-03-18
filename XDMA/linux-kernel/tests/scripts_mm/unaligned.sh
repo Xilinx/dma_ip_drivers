@@ -10,7 +10,7 @@ io_list="1 10 127 128 1021 1022 1023 1024 4095 4096 4097 4098 4099 8189 8190 819
 io_max=8192
 
 # offset
-offset_list="1 2 3 4 20?45 2046 2047 2048 2049 4091 4092 4093 4094 4095"
+offset_list="1 2 3 4 2045 2046 2047 2048 2049 4091 4092 4093 4094 4095"
 
 # starting address
 address=0
@@ -49,6 +49,7 @@ fi
 if [ ! -d "$tmpdir" ]; then
 	mkdir -p $tmpdir
 fi
+rm -rf $tmpdir/*
 
 # generate data file, minimum 64MB
 cnt=$(($io_max / 1024))

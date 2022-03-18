@@ -53,7 +53,7 @@ for dm in $driver_modes; do
 
 	echo -e "\n\n====> xdma mode $dm ...\n"
 
-	cd ../tests
+	cd ../../tests
 
 	./load_driver.sh $dm
 	if [ $? -ne 0 ]; then

@@ -1,6 +1,5 @@
-tool_path=../tools
+tool_path=../../tools
 ERR=255
-CHANNEL_NOOP=4
 
 ############################
 #

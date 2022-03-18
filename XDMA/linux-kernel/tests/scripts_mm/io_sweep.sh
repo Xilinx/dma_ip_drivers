@@ -38,6 +38,7 @@ fi
 if [ ! -d "$tmpdir" ]; then
 	mkdir -p $tmpdir
 fi
+rm -rf ${tmpdir}/*
 
 if [ "$data_check" -ne 0 ]; then
 	cnt=$(($io_max / 1024))

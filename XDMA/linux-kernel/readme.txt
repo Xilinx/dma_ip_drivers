@@ -129,7 +129,7 @@ Usage:
 	For more extensive memory mapped test:
 	assume the XDMA FGPA is at pci slot 0000:01:00.0
 		cd scripts_mm
-		./xdma_mm.sh 0000:01:00.0
+		./xdma_mm.sh 0000:01:00.0 | tee /tmp/xdma_mm.log
 
   - Check driver Version number
         modinfo xdma (or)
