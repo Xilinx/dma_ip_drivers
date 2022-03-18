@@ -35,7 +35,7 @@ Directory and file description:
 	provided kernel module driver and Xilinx PCIe DMA IP. This directory
 	also contains the following scripts and directories.
 
-	 - load_driver.sh:
+	- load_driver.sh:
 		This script loads the kernel module and creates the necissary
 		kernel nodes used by the provided software.
 		The The kernel device nodes will be created under /dev/xdma*.
@@ -43,9 +43,9 @@ Directory and file description:
 		more easily differentiate between multiple PCIe DMA enabled
 		cards. Root permissions will be required to run this script.
 
-	 - run_test.sh:
-	 - dma_memory_mapped_test.sh, dma_streaming_test.sh:
-	 - data/:
+	- run_test.sh: 
+	- dma_memory_mapped_test.sh, dma_streaming_test.sh:
+	- data/:
 		run_test.sh runs sample tests on a Xilinx PCIe DMA target and
 		returns a pass (0) or fail (1) result.
 		This script calls 2 other scripts in the same directory:
@@ -80,6 +80,35 @@ Directory and file description:
 		If a AXI-ST design is independent of H2C and C2H, performance
 		number can be generated. 
 
+	- scripts_mm/
+		This directory contains a set of scripts to check basic driver
+		loading/unloading and perform dma operations in memory-mapped
+		mode.
+		Compare with dma_memory_mapped_test.sh, the test is more
+		extensive with more dma size and it also utilizes fio tool in
+		addition to dma_from/to_device tools.
+
+		- xdma_mm.sh
+			top level script.
+
+		- io_sweep.sh, io.sh, unaligned
+			dma test via dma_from/to_device
+
+		- fio_test.sh fio_parse_result.sh
+			dma test via fio tool
+
+	- scripts_mm/ dependency
+		Some test in script_mm/ requires fio tool and python extension
+
+		Install fio:
+		- Centos/RHEL: yum install fio
+		- Ubuntu: apt install fio
+
+		Install python extension openpyxl, xlrd(version 1.2.0)
+			python --version
+			pip2 install openpyxl
+			pip2 install xlrd=1.2.0
+
 Usage:
   - Change directory to the driver directory.
         cd xdma
@@ -96,6 +125,12 @@ Usage:
         	./load_driver.sh
   - Run the provided test script to generate basic DMA traffic.
         ./run_test.sh
+ 	
+	For more extensive memory mapped test:
+	assume the XDMA FGPA is at pci slot 0000:01:00.0
+		cd scripts_mm
+		./xdma_mm.sh 0000:01:00.0 | tee /tmp/xdma_mm.log
+
   - Check driver Version number
         modinfo xdma (or)
         modinfo ../xdma/xdma.ko    
