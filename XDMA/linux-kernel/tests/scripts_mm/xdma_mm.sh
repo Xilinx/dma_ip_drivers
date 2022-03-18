@@ -142,7 +142,7 @@ for dm in $driver_modes; do
 	#
 	for ((i=1; i<=$channel_pairs; i++)); do
 		for iodir in $fio_iodir_list; do
-			out=${outdir}/fio/${i}/${iodir}
+			out=${outdir}/fio_d${dm}/${i}/${iodir}
 			mkdir -p ${out}
 			rm -rf ${out}/*
 
@@ -156,7 +156,7 @@ for dm in $driver_modes; do
 			done
 	       	done
        	done
-	./fio_parse_result.sh ${outdir}/fio
+	./fio_parse_result.sh ${outdir}/fio_d${dm}
 
 	echo -e "\n\n====> xdma mode $dm COMPLETED.\n"
 done
