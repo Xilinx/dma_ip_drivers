@@ -6,6 +6,9 @@ SHELL = /bin/bash
 # - xvc_bar_num=,	xvc pci bar #
 # - xvc_bar_offset=,	xvc register base offset
 # 
+
+all : # default target
+
 ifneq ($(xvc_bar_num),)
 	XVC_FLAGS += -D__XVC_BAR_NUM__=$(xvc_bar_num)
 endif
@@ -35,8 +38,6 @@ ifneq ($(KERNELRELEASE),)
 else
 	BUILDSYSTEM_DIR:=/lib/modules/$(shell uname -r)/build
 	PWD:=$(shell pwd)
-all :
-	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) modules
 
 clean:
 	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) clean
@@ -44,5 +45,12 @@ clean:
 
 install: all
 	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) modules_install
+
+all : ; $(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) modules
+
+build : all
+rebuild : clean all
+
+.PHONY: all clean build rebuild install
 
 endif
