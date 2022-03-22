@@ -36,13 +36,13 @@
 #include "xdma_thread.h"
 
 /* Module Parameters */
-unsigned int h2c_timeout = 10;
-module_param(h2c_timeout, uint, 0644);
-MODULE_PARM_DESC(h2c_timeout, "H2C sgdma timeout in seconds, default is 10 sec.");
+unsigned int h2c_timeout_ms = 10000;
+module_param(h2c_timeout_ms, uint, 0644);
+MODULE_PARM_DESC(h2c_timeout_ms, "H2C sgdma timeout in milliseconds, default is 10 seconds.");
 
-unsigned int c2h_timeout = 10;
-module_param(c2h_timeout, uint, 0644);
-MODULE_PARM_DESC(c2h_timeout, "C2H sgdma timeout in seconds, default is 10 sec.");
+unsigned int c2h_timeout_ms = 10000;
+module_param(c2h_timeout_ms, uint, 0644);
+MODULE_PARM_DESC(c2h_timeout_ms, "C2H sgdma timeout in milliseconds, default is 10 seconds.");
 
 extern struct kmem_cache *cdev_cache;
 static void char_sgdma_unmap_user_buf(struct xdma_io_cb *cb, bool write);
@@ -89,8 +89,7 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 		numbytes = xdma_xfer_completion((void *)cb, xdev,
 				engine->channel, cb->write, cb->ep_addr,
 				&cb->sgt, 0, 
-				cb->write ? h2c_timeout * 1000 :
-					    c2h_timeout * 1000);
+				cb->write ? h2c_timeout_ms : c2h_timeout_ms);
 
 	char_sgdma_unmap_user_buf(cb, cb->write);
 
@@ -415,8 +414,7 @@ static ssize_t char_sgdma_read_write(struct file *file, const char __user *buf,
 		return rv;
 
 	res = xdma_xfer_submit(xdev, engine->channel, write, *pos, &cb.sgt,
-				0, write ? h2c_timeout * 1000 :
-					   c2h_timeout * 1000);
+				0, write ? h2c_timeout_ms : c2h_timeout_ms);
 
 	char_sgdma_unmap_user_buf(&cb, write);
 
@@ -499,7 +497,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		rv = xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
 					engine->channel, caio->cb[i].write,
 					caio->cb[i].ep_addr, &caio->cb[i].sgt,
-					0, h2c_timeout * 1000);
+					0, h2c_timeout_ms);
 	}
 
 	if (engine->cmplthp)
@@ -573,7 +571,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		rv = xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
 					engine->channel, caio->cb[i].write,
 					caio->cb[i].ep_addr, &caio->cb[i].sgt,
-					0, c2h_timeout * 1000);
+					0, c2h_timeout_ms);
 	}
 
 	if (engine->cmplthp)
@@ -820,8 +818,7 @@ static int ioctl_do_aperture_dma(struct xdma_engine *engine, unsigned long arg,
 
 	io.error = 0;
 	res = xdma_xfer_aperture(engine, write, io.ep_addr, io.aperture,
-				&cb.sgt, 0, write ? h2c_timeout * 1000 :
-						c2h_timeout * 1000);
+				&cb.sgt, 0, write ? h2c_timeout_ms : c2h_timeout_ms);
 
 	char_sgdma_unmap_user_buf(&cb, write);
 	if (res < 0)
