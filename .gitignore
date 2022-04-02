@@ -1,0 +1,16 @@
+*.ko
+*.ko.cmd
+*.mod.c
+modules.order
+Module.symvers
+*.o
+*.o.cmd
+.*.o.d
+.tmp_versions
+.vscode
+XDMA/linux-kernel/tools/dma_from_device
+XDMA/linux-kernel/tools/dma_to_device
+XDMA/linux-kernel/tools/fill
+XDMA/linux-kernel/tools/performance
+XDMA/linux-kernel/tools/reg_rw
+XDMA/linux-kernel/tools/test_chrdev
