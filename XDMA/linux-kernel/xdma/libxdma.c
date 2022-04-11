@@ -966,10 +966,10 @@ engine_service_final_transfer(struct xdma_engine *engine,
 				}
 			}
 
-			transfer->desc_cmpl += *pdesc_completed;
 			if (!(transfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED)) {
 				return NULL;
 			}
+			transfer->desc_cmpl = *pdesc_completed;
 
 			/* mark transfer as successfully completed */
 			engine_service_shutdown(engine);
@@ -3597,8 +3597,8 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 				for (i = 0; i < xfer->desc_cmpl; i++)
 					done += result[i].length;
 
-				/* finish the whole request */
-				if (engine->eop_flush)
+				/* finish the whole request when EOP revcived */
+				if (engine->eop_flush && (xfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED))
 					nents = 0;
 			} else
 				done += xfer->len;
