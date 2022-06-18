@@ -1,6 +1,6 @@
 #   BSD LICENSE
 #
-#   Copyright(c) 2021 Xilinx, Inc. All rights reserved.
+#   Copyright(c) 2021-2022 Xilinx, Inc. All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -35,9 +35,10 @@ includes += include_directories('.')
 includes += include_directories('qdma_access')
 includes += include_directories('qdma_access/qdma_soft_access')
 includes += include_directories('qdma_access/eqdma_soft_access')
-includes += include_directories('qdma_access/qdma_s80_hard_access')
+includes += include_directories('qdma_access/qdma_cpm4_access')
+includes += include_directories('qdma_access/eqdma_cpm5_access')
 
-headers = files('rte_pmd_qdma.h')
+headers += files('rte_pmd_qdma.h')
 
 deps += ['mempool_ring']
 
@@ -51,8 +52,10 @@ sources = files(
 	'qdma_user.c',
 	'qdma_access/eqdma_soft_access/eqdma_soft_access.c',
 	'qdma_access/eqdma_soft_access/eqdma_soft_reg_dump.c',
-	'qdma_access/qdma_s80_hard_access/qdma_s80_hard_access.c',
-	'qdma_access/qdma_s80_hard_access/qdma_s80_hard_reg_dump.c',
+	'qdma_access/qdma_cpm4_access/qdma_cpm4_access.c',
+	'qdma_access/qdma_cpm4_access/qdma_cpm4_reg_dump.c',
+	'qdma_access/eqdma_cpm5_access/eqdma_cpm5_access.c',
+	'qdma_access/eqdma_cpm5_access/eqdma_cpm5_reg_dump.c',
 	'qdma_access/qdma_soft_access/qdma_soft_access.c',
 	'qdma_access/qdma_list.c',
 	'qdma_access/qdma_resource_mgmt.c',

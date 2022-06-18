@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -708,6 +708,17 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 			return -EINVAL;
 		}
 
+#ifdef TANDEM_BOOT_SUPPORTED
+		if (dma_priv->en_st_mode) {
+			ret = dma_priv->hw_access->qdma_init_st_ctxt(dev);
+			if (ret < 0) {
+				PMD_DRV_LOG(ERR,
+					"%s: Failed to initialize st ctxt memory, err = %d\n",
+					__func__, ret);
+				return -EINVAL;
+			}
+		}
+#endif
 		dma_priv->hw_access->qdma_hw_error_enable(dev,
 				dma_priv->hw_access->qdma_max_errors);
 		if (ret < 0) {

@@ -1,7 +1,9 @@
-RELEASE: 2020.1 Patch 
-=====================
+RELEASE: 2022.1
+===============
 
-This release is validated on QDMA4.0 2020.2 based example design and QDMA3.1 2020.2 based example design.
+This release is validated for
+	- QDMA4.0 2020.1 Patch based example design
+	- XCVP1202 for CPM5 2022.1 example design
 
 SUPPORTED FEATURES:
 ===================
@@ -94,15 +96,55 @@ SUPPORTED FEATURES:
 - Added support for MM Channel Selection and Keyhole feature in dmaperf
 - Fixed bug in in driver which caused crash during performance run
 
+2022.1 Updates
+--------------
+CPM5
+	- Tandem Boot support 
+	- FMAP context dump
+	- Debug register dump for ST and MM Errors
+	- Dual Instance support
+
 KNOWN ISSUES:
 =============
-- In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
-- On QDMA4.0 2020.1 design onwards, HW error observed during the probe of the VFs
-- With 2020.2 QDMA4.0 design, ST Performance design has performance drop for higher packet sizes
+- CPM5 Only
+	- Sufficient host memory is required to accommodate 4K queues. Tested only upto 2099 queues with our test environment though driver supports 4K queues.
+
+- All Designs
+	- In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
+	- On QDMA4.0 2020.1 design, HW error observed during the probe of the VFs
+	- With 2020.2 QDMA4.0 design, ST Performance design has performance drop for higher packet sizes
 
 DRIVER LIMITATIONS:
 ===================
-- Driver compilation on Fedora 28 with gcc8.1 results in compilation warnings
-- Big endian systems are not supported
-- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
-- FLR is not supported in the Driver for CentOS because linux kernels provided in CentOS versions does not support the driver call back registration for FLR functionality
+- CPM5 Only
+	- VF functionality is verified with 240 VF's as per CPM5 HW limitation
+
+- All Designs
+	- Driver compilation on Fedora 28 with gcc8.1 results in compilation warnings
+	- Big endian systems are not supported
+	- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
+	- FLR is not supported in the Driver for CentOS because linux kernels provided in CentOS versions does not support the driver call back registration for FLR functionality
+
+
+
+
+
+
+/*
+ * This file is part of the Xilinx DMA IP Core driver for Linux
+ *
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
+ * All rights reserved.
+ *
+ * This source code is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ * The full GNU General Public License is included in this distribution in
+ * the file called "COPYING".
+ */

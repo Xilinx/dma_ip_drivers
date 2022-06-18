@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -262,10 +262,10 @@ struct xlnx_dma_dev {
 	/**< wait q for vf offline */
 	qdma_wait_queue wq;
 	/**< function id */
-	u8 func_id;
+	u16 func_id;
 #ifdef __QDMA_VF__
 	/**< parent function id, valid only for virtual function */
-	u8 func_id_parent;
+	u16 func_id_parent;
 #else
 	/**< number of physical functions */
 	u8 pf_count;
@@ -499,7 +499,7 @@ int xdev_check_hndl(const char *fname,
  * @return	0: success
  * @return	-1: on failure
  *****************************************************************************/
-int xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id);
+int xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u16 func_id);
 
 /*****************************************************************************/
 /**
@@ -523,7 +523,7 @@ int xdev_sriov_vf_reset_offline(struct xlnx_dma_dev *xdev);
  * @return	0: success
  * @return	-1: on failure
  *****************************************************************************/
-int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id);
+int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u16 func_id);
 #elif defined(CONFIG_PCI_IOV)
 /* SR-IOV */
 /*****************************************************************************/
@@ -557,7 +557,7 @@ int xdev_sriov_enable(struct xlnx_dma_dev *xdev, int num_vfs);
  *
  * @return	none
  *****************************************************************************/
-void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id);
+void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u16 func_id);
 
 /*****************************************************************************/
 /**
@@ -569,7 +569,7 @@ void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id);
  * @return	0: success
  * @return	-1: on failure
  *****************************************************************************/
-int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id);
+int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u16 func_id);
 
 /*****************************************************************************/
 /**
@@ -583,7 +583,7 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id);
  * @return	0: success
  * @return	-1: on failure
  *****************************************************************************/
-int xdev_sriov_vf_fmap(struct xlnx_dma_dev *xdev, u8 func_id,
+int xdev_sriov_vf_fmap(struct xlnx_dma_dev *xdev, u16 func_id,
 			unsigned short qbase, unsigned short qmax);
 
 #define xdev_sriov_vf_reset_offline(xdev)

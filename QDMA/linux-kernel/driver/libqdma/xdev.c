@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -547,7 +547,9 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 		int rv = 0;
 
 		/* AXI Master Lite BAR IDENTIFICATION */
-		if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)
+		if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+				(xdev->version_info.device_type ==
+				 QDMA_DEVICE_VERSAL_CPM4))
 			xdev->conf.bar_num_user = DEFAULT_USER_BAR;
 		else {
 #ifndef __QDMA_VF__
@@ -1067,6 +1069,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	/* get the device attributes */
 	qdma_device_attributes_get(xdev);
+	qmax = xdev->dev_cap.num_qs;
 	if (pdev->bus->parent)
 		rv = qdma_master_resource_create(pdev->bus->number,
 				pci_bus_max_busnr(pdev->bus->parent), qbase,
@@ -1131,7 +1134,8 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 #ifdef __QDMA_VF__
 	if ((conf->qdma_drv_mode != POLL_MODE) &&
-		(xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)) {
+		(xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+		(xdev->version_info.device_type == QDMA_DEVICE_VERSAL_CPM4)) {
 		pr_warn("VF is not supported in %s mode\n",
 				mode_name_list[conf->qdma_drv_mode].name);
 		pr_info("Switching VF to poll mode\n");

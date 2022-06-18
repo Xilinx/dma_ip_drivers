@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -25,7 +25,6 @@ static int (*xnl_proc_fn[XNL_CMD_MAX])(struct xcmd_info *xcmd) = {
 	qdma_reg_dump,           /* XNL_CMD_REG_DUMP */
 	qdma_reg_read,           /* XNL_CMD_REG_RD */
 	qdma_reg_write,          /* XNL_CMD_REG_WRT */
-	qdma_reg_info_read,      /* XNL_CMD_REG_INFO_READ */
 	qdma_dev_q_list_dump,    /* XNL_CMD_Q_LIST */
 	qdma_q_add,              /* XNL_CMD_Q_ADD */
 	qdma_q_start,            /* XNL_CMD_Q_START */
@@ -43,7 +42,11 @@ static int (*xnl_proc_fn[XNL_CMD_MAX])(struct xcmd_info *xcmd) = {
 	NULL,                    /* XNL_CMD_Q_UDD */
 	qdma_dev_get_global_csr, /* XNL_CMD_GLOBAL_CSR */
 	qdma_dev_cap,            /* XNL_CMD_DEV_CAP */
-	NULL                     /* XNL_CMD_GET_Q_STATE */
+	NULL,                    /* XNL_CMD_GET_Q_STATE */
+	qdma_reg_info_read,       /* XNL_CMD_REG_INFO_READ */
+#ifdef TANDEM_BOOT_SUPPORTED
+	qdma_en_st,           /* XNL_CMD_EN_ST */
+#endif
 };
 
 static const char *desc_engine_mode[] = {
@@ -54,7 +57,7 @@ static const char *desc_engine_mode[] = {
 
 static void dump_dev_cap(struct xcmd_info *xcmd)
 {
-	printf("%s", xcmd->resp.cap.version_str);
+	printf("%s\n\n", xcmd->resp.cap.version_str);
 	printf("=============Hardware Capabilities============\n\n");
 	printf("Number of PFs supported                : %u\n", xcmd->resp.cap.num_pfs);
 	printf("Total number of queues supported       : %u\n", xcmd->resp.cap.num_qs);

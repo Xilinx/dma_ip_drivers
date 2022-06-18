@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1116,7 +1116,9 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 		dma_priv->bar_addr[dma_priv->user_bar_idx] = baseaddr;
 	}
 
-	if (dma_priv->ip_type == QDMA_VERSAL_HARD_IP)
+	if (dma_priv->ip_type == QDMA_VERSAL_HARD_IP &&
+			dma_priv->device_type ==
+			QDMA_DEVICE_VERSAL_CPM4)
 		dma_priv->dev_cap.mailbox_intr = 0;
 	else
 		dma_priv->dev_cap.mailbox_intr = 1;

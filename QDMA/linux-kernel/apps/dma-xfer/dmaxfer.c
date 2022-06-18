@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -35,7 +35,7 @@
 #include "dmaxfer.h"
 
 #define QDMA_Q_NAME_LEN     100
-#define QDMA_ST_MAX_PKT_SIZE 0x7000  
+#define QDMA_ST_MAX_PKT_SIZE 0x7000
 #define QDMA_RW_MAX_SIZE	0x7ffff000
 #define QDMA_GLBL_MAX_ENTRIES  (16)
 
@@ -385,7 +385,7 @@ static int parse_config_file(const char *cfg_fname)
 			else if(!strncmp(value, "c2h", 3))
 				dir = QDMA_Q_DIR_C2H;
 			else if(!strncmp(value, "bi", 2))
-				dir = QDMA_Q_DIR_BIDI; 
+				dir = QDMA_Q_DIR_BIDI;
 			else if(!strncmp(value, "cmpt", 4)) {
 				printf("Error: cmpt type queue validation is not supported\n");
 				goto prase_cleanup;
@@ -496,7 +496,7 @@ static int parse_config_file(const char *cfg_fname)
 
 	if (!pci_bus && !pci_dev) {
 		printf("Error: PCI bus information not provided\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 
 	if (fun_id < 0) {
@@ -556,7 +556,7 @@ static int parse_config_file(const char *cfg_fname)
 		trig_mode = 0;
 	else {
 		printf("Error: unknown q trigmode %s.\n", trigmode_str);
-		return -EINVAL;	
+		return -EINVAL;
 	}
 
 	return 0;
@@ -583,7 +583,7 @@ static int qdma_validate_qrange(void)
 
 	memset(&xcmd, 0, sizeof(struct xcmd_info));
 	xcmd.op = XNL_CMD_DEV_INFO;
-	xcmd.vf = is_vf; 
+	xcmd.vf = is_vf;
 	xcmd.if_bdf = (pci_bus << 12) | (pci_dev << 4) | fun_id;
 
 	/* Get dev info from qdma driver */
@@ -621,7 +621,7 @@ static int qdma_prepare_q_stop(struct xcmd_info *xcmd,
 	qparm = &xcmd->req.qparm;
 
 	xcmd->op = XNL_CMD_Q_STOP;
-	xcmd->vf = is_vf; 
+	xcmd->vf = is_vf;
 	xcmd->if_bdf = (pci_bus << 12) | (pci_dev << 4) | pf;
 	qparm->idx = qid;
 	qparm->num_q = 1;
@@ -631,14 +631,14 @@ static int qdma_prepare_q_stop(struct xcmd_info *xcmd,
 	else if (mode == QDMA_Q_MODE_ST)
 		qparm->flags |= XNL_F_QMODE_ST;
 	else
-		return -EINVAL;	
+		return -EINVAL;
 
 	if (dir == DMAXFER_IO_WRITE)
 		qparm->flags |= XNL_F_QDIR_H2C;
 	else if (dir == DMAXFER_IO_READ)
 		qparm->flags |= XNL_F_QDIR_C2H;
 	else
-		return -EINVAL;	
+		return -EINVAL;
 
 
 	return 0;
@@ -658,7 +658,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 	qparm = &xcmd->req.qparm;
 
 	xcmd->op = XNL_CMD_Q_START;
-	xcmd->vf = is_vf; 
+	xcmd->vf = is_vf;
 	xcmd->if_bdf = (pci_bus << 12) | (pci_dev << 4) | pf;
 	qparm->idx = qid;
 	qparm->num_q = 1;
@@ -669,7 +669,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QMODE_ST;
 	else {
 		printf("Error: Invalid mode\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 
 	if (dir == DMAXFER_IO_WRITE)
@@ -678,18 +678,18 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QDIR_C2H;
 	else {
 		printf("Error: Invalid Direction\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 
-	qparm->qrngsz_idx = idx_rngsz; 
+	qparm->qrngsz_idx = idx_rngsz;
 
 	if ((dir == QDMA_Q_DIR_C2H) && (mode == QDMA_Q_MODE_ST)) {
 		if (cmptsz)
 			qparm->cmpt_entry_size = cmptsz;
 		else
 			qparm->cmpt_entry_size = XNL_ST_C2H_CMPT_DESC_SIZE_8B;
-		qparm->cmpt_tmr_idx = idx_tmr; 
-		qparm->cmpt_cntr_idx = idx_cnt; 
+		qparm->cmpt_tmr_idx = idx_tmr;
+		qparm->cmpt_cntr_idx = idx_cnt;
 		qparm->cmpt_trig_mode = trig_mode;
 		if (pfetch_en)
 			qparm->flags |= XNL_F_PFETCH_EN;
@@ -716,7 +716,7 @@ static int qdma_prepare_q_del(struct xcmd_info *xcmd,
 	qparm = &xcmd->req.qparm;
 
 	xcmd->op = XNL_CMD_Q_DEL;
-	xcmd->vf = is_vf; 
+	xcmd->vf = is_vf;
 	xcmd->if_bdf = (pci_bus << 12) | (pci_dev << 4) | pf;
 	qparm->idx = qid;
 	qparm->num_q = 1;
@@ -727,7 +727,7 @@ static int qdma_prepare_q_del(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QMODE_ST;
 	else {
 		printf("Error: Invalid mode\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 
 	if (dir == DMAXFER_IO_WRITE)
@@ -736,7 +736,7 @@ static int qdma_prepare_q_del(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QDIR_C2H;
 	else {
 		printf("Error: Invalid Direction\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 
 	return 0;
@@ -756,7 +756,7 @@ static int qdma_prepare_q_add(struct xcmd_info *xcmd,
 	qparm = &xcmd->req.qparm;
 
 	xcmd->op = XNL_CMD_Q_ADD;
-	xcmd->vf = is_vf; 
+	xcmd->vf = is_vf;
 	xcmd->if_bdf = (pci_bus << 12) | (pci_dev << 4) | pf;
 	qparm->idx = qid;
 	qparm->num_q = 1;
@@ -767,7 +767,7 @@ static int qdma_prepare_q_add(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QMODE_ST;
 	else {
 		printf("Error: Invalid mode\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 	if (dir == DMAXFER_IO_WRITE)
 		qparm->flags |= XNL_F_QDIR_H2C;
@@ -775,7 +775,7 @@ static int qdma_prepare_q_add(struct xcmd_info *xcmd,
 		qparm->flags |= XNL_F_QDIR_C2H;
 	else {
 		printf("Error: Invalid Direction\n");
-		return -EINVAL;	
+		return -EINVAL;
 	}
 	qparm->sflags = qparm->flags;
 
@@ -791,7 +791,7 @@ static int qdma_destroy_queue(enum qdmautils_io_dir dir,
 	memset(&xcmd, 0, sizeof(struct xcmd_info));
 	ret = qdma_prepare_q_stop(&xcmd, dir, qid, pf);
 	if (ret < 0)
-		return ret;	
+		return ret;
 
 	ret = qdma_q_stop(&xcmd);
 	if (ret < 0)
@@ -870,7 +870,7 @@ static int qdma_register_write(unsigned int pf, int bar,
 	int ret;
 	regcmd = &xcmd.req.reg;
 	xcmd.op = XNL_CMD_REG_WRT;
-	xcmd.vf = is_vf; 
+	xcmd.vf = is_vf;
 	xcmd.if_bdf = (pci_bus << 12) | (pci_dev << 4) | pf;
 	regcmd->bar = bar;
 	regcmd->reg = reg;
@@ -916,7 +916,7 @@ static int qdma_setup_queues(struct queue_info **pq_info)
 
 	if (dir == QDMA_Q_DIR_BIDI)
 		q_count = num_q * 2;
-	else	
+	else
 		q_count = num_q;
 
 	*pq_info = q_info = (struct queue_info *)calloc(q_count, sizeof(struct queue_info));
@@ -953,7 +953,7 @@ static int qdma_setup_queues(struct queue_info **pq_info)
 		return ret;
 	}
 
-	return q_count; 
+	return q_count;
 }
 
 
@@ -981,7 +981,7 @@ static int qdma_trigger_data_generator(struct queue_info *q_info)
 
 	memset(&xcmd, 0, sizeof(struct xcmd_info));
 	xcmd.op = XNL_CMD_DEV_INFO;
-	xcmd.vf = is_vf; 
+	xcmd.vf = is_vf;
 	xcmd.if_bdf = (pci_bus << 12) | (pci_dev << 4) | q_info->pf;
 
 	ret = qdma_dev_info(&xcmd);
@@ -1025,7 +1025,7 @@ static int qdma_trigger_data_generator(struct queue_info *q_info)
 				q_info->pf, q_info->qid);
 	}
 
-	/* trigger data generator */ 
+	/* trigger data generator */
 	ret = qdma_register_write(q_info->pf, user_bar, 0x08,
 			2);
 	if (ret < 0) {
@@ -1058,7 +1058,7 @@ static int qdmautils_read(struct queue_info *q_info,
 		printf("Error: unable to open/create output file %s, ret :%d\n",
 				output_file, outfile_fd);
 		perror("open/create output file");
-		return outfile_fd; 
+		return outfile_fd;
 	}
 
 	offset = 0;
@@ -1076,14 +1076,14 @@ static int qdmautils_read(struct queue_info *q_info,
 		if (ret < 0)
 			printf("Error: QDMA SYNC transfer Failed, ret :%d\n", ret);
 		else
-			printf("PF :%d Queue :%d C2H Sync transfer success\n", q_info->pf, q_info->qid); 
+			printf("PF :%d Queue :%d C2H Sync transfer success\n", q_info->pf, q_info->qid);
 	} else {
 		ret = qdmautils_async_xfer(q_info->q_name,
 				q_info->dir, buffer, size);
 		if (ret < 0)
 			printf("Error: QDMA ASYNC transfer Failed, ret :%d\n", ret);
 		else
-			printf("PF :%d Queue :%d C2H ASync transfer success\n", q_info->pf, q_info->qid); 
+			printf("PF :%d Queue :%d C2H ASync transfer success\n", q_info->pf, q_info->qid);
 	}
 	if (ret < 0)
 		goto out;
@@ -1143,14 +1143,14 @@ static int qdmautils_write(struct queue_info *q_info,
 		if (ret < 0)
 			printf("Error: QDMA SYNC transfer Failed, ret :%d\n", ret);
 		else
-			printf("PF :%d Queue :%d H2C Sync transfer success\n", q_info->pf, q_info->qid); 
+			printf("PF :%d Queue :%d H2C Sync transfer success\n", q_info->pf, q_info->qid);
 	} else {
 		ret = qdmautils_async_xfer(q_info->q_name,
 				q_info->dir, buffer, size);
 		if (ret < 0)
 			printf("Error: QDMA ASYNC transfer Failed, ret :%d\n", ret);
 		else
-			printf("PF :%d Queue :%d H2C Async transfer success\n", q_info->pf, q_info->qid); 
+			printf("PF :%d Queue :%d H2C Async transfer success\n", q_info->pf, q_info->qid);
 	}
 
 out:
@@ -1209,7 +1209,7 @@ int main(int argc, char *argv[])
 		if (!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version")) {
 			printf("%s version %s\n", PROGNAME, VERSION);
 			printf("%s\n", COPYRIGHT);
-			return 0;	
+			return 0;
 		}
 	}
 
@@ -1252,7 +1252,7 @@ int main(int argc, char *argv[])
 	q_count = qdma_setup_queues(&q_info);
 	if (q_count < 0) {
 		printf("qdma_setup_queues failed, ret:%d\n", q_count);
-		return q_count; 
+		return q_count;
 	}
 
 	/* queues has to be deleted upon termination */

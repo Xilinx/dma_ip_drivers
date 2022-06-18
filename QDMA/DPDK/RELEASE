@@ -1,18 +1,19 @@
-RELEASE: 2020.2.1
-=================
+RELEASE: 2022.1
+===============
 
 This release is based on DPDK v20.11 and contains QDMA poll mode driver and
 QDMA test application.
 
-This release is validated for VCU1525 and U200 devices on QDMA4.0 2020.2 based example design
-and QDMA3.1 2020.2 based example design.
+This release is validated for 
+	- On VCU1525 for QDMA4.0 2020.2 example design
+	- On XCVP1202 for CPM5 2022.1 example design
 
 This release includes a patch file for dpdk-pktgen v20.12.0 that extends
 dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
 and it disables the packet size classification logic in dpdk-pktgen to remove
-application overhead in performance measurement.
+application overhead in performance measurement.This patch is used for 
+performance testing with dpdk-pktgen application.
 
-This patch is used for performance testing with dpdk-pktgen application.
 The driver is validated against dpdk-pktgen and testpmd applications for API compliance.
 
 SUPPORTED FEATURES:
@@ -89,12 +90,63 @@ SUPPORTED FEATURES:
 ----------------
 - Migrated qdma dpdk driver to use DPDK framework v20.11
 
-KNOWN ISSUES:
-=============
-- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
-- DPDK C2H and Forwarding performance values for 8 queue is lesser compared to 4 queue case for both PF and VF.
+2022.1 Updates
+--------------
+CPM5
+	- FMAP context dump
+	- Debug register dump for ST and MM Errors
+	- Dual Instance support
+
+KNOWN ISSUE:
+============
+- CPM5 Only
+	- Sufficient host memory is required to accommodate 4K queues. Tested only upto 2048 queues with our test environment though driver supports 4K queues.
+	- Tandem Boot support not available completely
+
+- All Designs
+	- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
+	- DPDK C2H and Forwarding performance values for 8 queue is lesser compared to 4 queue case for both PF and VF.
+
 
 DRIVER LIMITATIONS:
 ===================
-- Big endian systems are not supported
-- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
+- CPM5 Only
+	- VF functionality is verified with 240 VF's as per CPM5 HW limitation
+
+- All Designs
+	- Big endian systems are not supported
+	- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
+
+
+
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of the copyright holder nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */

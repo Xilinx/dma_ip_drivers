@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -56,7 +56,7 @@ static void usage(const char *name)
 
 	fprintf(stdout, "%s\n\n", name);
 	fprintf(stdout, "usage: %s [OPTIONS]\n\n", name);
-	fprintf(stdout, 
+	fprintf(stdout,
 		"Write via SGDMA, optionally read input from a file.\n\n");
 
 	fprintf(stdout, "  -%c (--%s) device (defaults to %s)\n",
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (verbose)
-		fprintf(stdout, 
+		fprintf(stdout,
 		"dev %s, address 0x%lx, size 0x%lx, offset 0x%lx, count %lu\n",
 		device, address, size, offset, count);
 
@@ -211,7 +211,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t size,
 	buffer = allocated + offset;
 	if (verbose)
 		fprintf(stdout, "host buffer 0x%lx = %p\n",
-			size + 4096, buffer); 
+			size + 4096, buffer);
 
 	if (infile_fd >= 0) {
 		rc = read_to_buffer(infname, infile_fd, buffer, size, 0);
@@ -235,8 +235,8 @@ static int test_dma(char *devname, uint64_t addr, uint64_t size,
 		if (verbose)
 		fprintf(stdout,
 			"#%lu: CLOCK_MONOTONIC %ld.%09ld sec. write %lu bytes\n",
-			i, ts_end.tv_sec, ts_end.tv_nsec, size); 
-			
+			i, ts_end.tv_sec, ts_end.tv_nsec, size);
+
 		if (outfile_fd >= 0) {
 			rc = write_from_buffer(ofname, outfile_fd, buffer,
 						 size, i * size);

@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -23,6 +23,7 @@
 #endif
 
 /** EQDMA Context array size */
+#define EQDMA_FMAP_NUM_WORDS				 2
 #define EQDMA_SW_CONTEXT_NUM_WORDS           8
 #define EQDMA_HW_CONTEXT_NUM_WORDS           2
 #define EQDMA_PFETCH_CONTEXT_NUM_WORDS       2
@@ -37,7 +38,7 @@
 #define EQDMA_REG_GROUP_3_START_ADDR	0xB00
 #define EQDMA_REG_GROUP_4_START_ADDR	0x5014
 
-#define EQDMA_TOTAL_LEAF_ERROR_AGGREGATORS   9
+#define EQDMA_TOTAL_LEAF_ERROR_AGGREGATORS   11
 #define EQDMA_GLBL_TRQ_ERR_ALL_MASK          0XB3
 #define EQDMA_GLBL_DSC_ERR_ALL_MASK			0X1F9037E
 #define EQDMA_C2H_ERR_ALL_MASK				0X3F6DF
@@ -45,13 +46,14 @@
 #define EQDMA_H2C_ERR_ALL_MASK				0X3F
 #define EQDMA_SBE_ERR_ALL_MASK				0XFFFFFFFF
 #define EQDMA_DBE_ERR_ALL_MASK				0XFFFFFFFF
+#define EQDMA_MM_C2H_ERR_ALL_MASK			0X70000003
+#define EQDMA_MM_H2C0_ERR_ALL_MASK		    0X3041013E
 
 /* H2C Throttle settings */
 #define EQDMA_H2C_THROT_DATA_THRESH       0x5000
 #define EQDMA_THROT_EN_DATA               1
 #define EQDMA_THROT_EN_REQ                0
 #define EQDMA_H2C_THROT_REQ_THRESH        0xC0
-
 
 /** Auxillary Bitmasks for fields spanning multiple words */
 #define EQDMA_SW_CTXT_PASID_GET_H_MASK              GENMASK(21, 12)
@@ -78,12 +80,18 @@
 #define EQDMA_GLBL2_FLR_PRESENT_MASK			BIT(1)
 #define EQDMA_GLBL2_MAILBOX_EN_MASK				BIT(0)
 
+/** EQDMA_IND_REG_SEL_FMAP */
+#define EQDMA_FMAP_CTXT_W1_QID_MAX_MASK         GENMASK(11, 0)
+#define EQDMA_FMAP_CTXT_W0_QID_MASK             GENMASK(10, 0)
+
 static void eqdma_hw_st_h2c_err_process(void *dev_hndl);
 static void eqdma_hw_st_c2h_err_process(void *dev_hndl);
 static void eqdma_hw_desc_err_process(void *dev_hndl);
 static void eqdma_hw_trq_err_process(void *dev_hndl);
 static void eqdma_hw_ram_sbe_err_process(void *dev_hndl);
 static void eqdma_hw_ram_dbe_err_process(void *dev_hndl);
+static void eqdma_mm_h2c0_err_process(void *dev_hndl);
+static void eqdma_mm_c2h0_err_process(void *dev_hndl);
 
 static struct eqdma_hw_err_info eqdma_err_info[EQDMA_ERRS_ALL] = {
 	/* Descriptor errors */
@@ -219,6 +227,15 @@ static struct eqdma_hw_err_info eqdma_err_info[EQDMA_ERRS_ALL] = {
 		EQDMA_GLBL_DSC_ERR_MSK_ADDR,
 		EQDMA_GLBL_DSC_ERR_STS_ADDR,
 		GLBL_DSC_ERR_STS_SBE_MASK,
+		GLBL_ERR_STAT_ERR_DSC_MASK,
+		&eqdma_hw_desc_err_process
+	},
+	{
+		EQDMA_DSC_ERR_PORT_ID,
+		"Port ID Error",
+		EQDMA_GLBL_DSC_ERR_MSK_ADDR,
+		EQDMA_GLBL_DSC_ERR_STS_ADDR,
+		GLBL_DSC_ERR_STS_PORT_ID_MASK,
 		GLBL_ERR_STAT_ERR_DSC_MASK,
 		&eqdma_hw_desc_err_process
 	},
@@ -439,6 +456,15 @@ static struct eqdma_hw_err_info eqdma_err_info[EQDMA_ERRS_ALL] = {
 		EQDMA_C2H_ERR_MASK_ADDR,
 		EQDMA_C2H_ERR_STAT_ADDR,
 		C2H_ERR_STAT_HDR_ECC_COR_ERR_MASK,
+		GLBL_ERR_STAT_ERR_C2H_ST_MASK,
+		&eqdma_hw_st_c2h_err_process
+	},
+	{
+		EQDMA_ST_C2H_ERR_WRB_PORT_ID_ERR,
+		"Port ID error",
+		EQDMA_C2H_ERR_MASK_ADDR,
+		EQDMA_C2H_ERR_STAT_ADDR,
+		C2H_ERR_STAT_WRB_PORT_ID_ERR_MASK,
 		GLBL_ERR_STAT_ERR_C2H_ST_MASK,
 		&eqdma_hw_st_c2h_err_process
 	},
@@ -1323,7 +1349,154 @@ static struct eqdma_hw_err_info eqdma_err_info[EQDMA_ERRS_ALL] = {
 		EQDMA_DBE_ERR_ALL_MASK,
 		GLBL_ERR_STAT_ERR_RAM_DBE_MASK,
 		&eqdma_hw_ram_dbe_err_process
-	}
+	},
+	/* MM C2H Engine 0 errors */
+	{
+		EQDMA_MM_C2H_WR_SLR_ERR,
+		"MM C2H0 WR SLV Error",
+		EQDMA_C2H_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_C2H_MM_STATUS_ADDR,
+		C2H_MM_ERR_CODE_ENABLE_WR_SLV_ERR_MASK,
+		GLBL_ERR_STAT_ERR_C2H_MM_0_MASK,
+		&eqdma_mm_c2h0_err_process
+	},
+	{
+		EQDMA_MM_C2H_RD_SLR_ERR,
+		"MM C2H0 RD SLV Error",
+		EQDMA_C2H_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_C2H_MM_STATUS_ADDR,
+		C2H_MM_ERR_CODE_ENABLE_RD_SLV_ERR_MASK,
+		GLBL_ERR_STAT_ERR_C2H_MM_0_MASK,
+		&eqdma_mm_c2h0_err_process
+	},
+	{
+		EQDMA_MM_C2H_WR_FLR_ERR,
+		"MM C2H0 WR FLR Error",
+		EQDMA_C2H_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_C2H_MM_STATUS_ADDR,
+		C2H_MM_ERR_CODE_ENABLE_WR_FLR_MASK,
+		GLBL_ERR_STAT_ERR_C2H_MM_0_MASK,
+		&eqdma_mm_c2h0_err_process
+	},
+	{
+		EQDMA_MM_C2H_UR_ERR,
+		"MM C2H0 Unsupported Request Error",
+		EQDMA_C2H_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_C2H_MM_STATUS_ADDR,
+		C2H_MM_ERR_CODE_ENABLE_WR_UR_MASK,
+		GLBL_ERR_STAT_ERR_C2H_MM_0_MASK,
+		&eqdma_mm_c2h0_err_process
+	},
+	{
+		EQDMA_MM_C2H_WR_UC_RAM_ERR,
+		"MM C2H0 Write Uncorrectable RAM Error",
+		EQDMA_C2H_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_C2H_MM_STATUS_ADDR,
+		C2H_MM_ERR_CODE_ENABLE_WR_UC_RAM_MASK,
+		GLBL_ERR_STAT_ERR_C2H_MM_0_MASK,
+		&eqdma_mm_c2h0_err_process
+	},
+	{
+		EQDMA_MM_C2H_ERR_ALL,
+		"All MM C2H Errors",
+		EQDMA_C2H_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_C2H_MM_STATUS_ADDR,
+		EQDMA_MM_C2H_ERR_ALL_MASK,
+		GLBL_ERR_STAT_ERR_C2H_MM_0_MASK,
+		&eqdma_mm_c2h0_err_process
+	},
+	/* MM H2C Engine 0 Errors */
+	{
+		EQDMA_MM_H2C0_RD_HDR_POISON_ERR,
+		"MM H2C0 Read cmpt header pison Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_HRD_POISON_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_RD_UR_CA_ERR,
+		"MM H2C0 Read cmpt unsupported request Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_UR_CA_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_RD_HDR_BYTE_ERR,
+		"MM H2C0 Read cmpt hdr byte cnt Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_HDR_BYTE_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_RD_HDR_PARAM_ERR,
+		"MM H2C0 Read cmpt hdr param mismatch Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_HDR_PARA_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_RD_FLR_ERR,
+		"MM H2C0 Read flr Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_FLR_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_RD_DAT_POISON_ERR,
+		"MM H2C0 Read data poison Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_DAT_POISON_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_RD_RQ_DIS_ERR,
+		"MM H2C0 Read request disable Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_RQ_DIS_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_WR_DEC_ERR,
+		"MM H2C0 Write desc Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_WR_DEC_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_WR_SLV_ERR,
+		"MM H2C0 Write slv Error",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_WR_SLV_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+	{
+		EQDMA_MM_H2C0_ERR_ALL,
+		"All MM H2C Errors",
+		EQDMA_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_H2C_MM_STATUS_ADDR,
+		EQDMA_MM_H2C0_ERR_ALL_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_mm_h2c0_err_process
+	},
+
 };
 
 static int32_t all_eqdma_hw_errs[EQDMA_TOTAL_LEAF_ERROR_AGGREGATORS] = {
@@ -1336,7 +1509,9 @@ static int32_t all_eqdma_hw_errs[EQDMA_TOTAL_LEAF_ERROR_AGGREGATORS] = {
 	EQDMA_SBE_1_ERR_ALL,
 	EQDMA_SBE_ERR_ALL,
 	EQDMA_DBE_1_ERR_ALL,
-	EQDMA_DBE_ERR_ALL
+	EQDMA_DBE_ERR_ALL,
+	EQDMA_MM_C2H_ERR_ALL,
+	EQDMA_MM_H2C0_ERR_ALL
 };
 
 static struct qctx_entry eqdma_sw_ctxt_entries[] = {
@@ -1382,6 +1557,11 @@ static struct qctx_entry eqdma_hw_ctxt_entries[] = {
 
 static struct qctx_entry eqdma_credit_ctxt_entries[] = {
 	{"Credit", 0},
+};
+
+static struct qctx_entry eqdma_fmap_ctxt_entries[] = {
+	{"Queue Base", 0},
+	{"Queue Max", 0},
 };
 
 static struct qctx_entry eqdma_cmpt_ctxt_entries[] = {
@@ -1486,6 +1666,10 @@ int eqdma_context_buf_len(uint8_t st,
 
 		len += (((sizeof(eqdma_credit_ctxt_entries) /
 			sizeof(eqdma_credit_ctxt_entries[0])) + 1) *
+			REG_DUMP_SIZE_PER_LINE);
+
+		len += (((sizeof(eqdma_fmap_ctxt_entries) /
+			sizeof(eqdma_fmap_ctxt_entries[0])) + 1) *
 			REG_DUMP_SIZE_PER_LINE);
 
 		if (st && (q_type == QDMA_DEV_Q_TYPE_C2H)) {
@@ -1818,6 +2002,17 @@ static void eqdma_fill_pfetch_ctxt(struct qdma_descq_prefetch_ctxt
 }
 
 /*
+ * eqdma_fill_fmap_ctxt() - Helper function to fill fmap context
+ *                           into structure
+ *
+ */
+static void eqdma_fill_fmap_ctxt(struct qdma_fmap_cfg *fmap_ctxt)
+{
+	eqdma_fmap_ctxt_entries[0].value = fmap_ctxt->qbase;
+	eqdma_fmap_ctxt_entries[1].value = fmap_ctxt->qmax;
+}
+
+/*
  * eqdma_fill_intr_ctxt() - Helper function to fill interrupt context
  *                           into structure
  *
@@ -1903,23 +2098,16 @@ int eqdma_set_default_global_csr(void *dev_hndl)
 				QDMA_NUM_C2H_BUFFER_SIZES, buf_sz);
 
 		/* Prefetch Configuration */
-
-		cfg_val = qdma_reg_read(dev_hndl,
+		reg_val = qdma_reg_read(dev_hndl,
 				EQDMA_C2H_PFCH_CACHE_DEPTH_ADDR);
-
-		reg_val =
-			FIELD_SET(C2H_PFCH_CFG_FL_TH_MASK,
-					DEFAULT_PFCH_STOP_THRESH);
-		qdma_reg_write(dev_hndl, EQDMA_C2H_PFCH_CFG_ADDR, reg_val);
-
-		reg_val = FIELD_SET(C2H_PFCH_CFG_1_QCNT_MASK, (cfg_val >> 1)) |
+		cfg_val = FIELD_GET(C2H_PFCH_CACHE_DEPTH_MASK, reg_val);
+		reg_val = FIELD_SET(C2H_PFCH_CFG_1_QCNT_MASK, (cfg_val >> 2)) |
 				  FIELD_SET(C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK,
-						((cfg_val >> 1) - 2));
+						((cfg_val >> 2) - 4));
 		qdma_reg_write(dev_hndl, EQDMA_C2H_PFCH_CFG_1_ADDR, reg_val);
 
-		reg_val = FIELD_SET(C2H_PFCH_CFG_2_NUM_MASK,
-					DEFAULT_PFCH_NUM_ENTRIES_PER_Q);
-
+		reg_val = qdma_reg_read(dev_hndl, EQDMA_C2H_PFCH_CFG_2_ADDR);
+		reg_val |= FIELD_SET(C2H_PFCH_CFG_2_FENCE_MASK, 1);
 		qdma_reg_write(dev_hndl, EQDMA_C2H_PFCH_CFG_2_ADDR, reg_val);
 
 		/* C2H interrupt timer tick */
@@ -1992,6 +2180,8 @@ static int dump_eqdma_context(struct qdma_descq_context *queue_context,
 			eqdma_fill_cmpt_ctxt(&queue_context->cmpt_ctxt);
 		}
 	}
+
+	eqdma_fill_fmap_ctxt(&queue_context->fmap);
 
 	if (q_type != QDMA_DEV_Q_TYPE_CMPT) {
 		for (i = 0; i < DEBGFS_LINE_SZ - 5; i++) {
@@ -2323,6 +2513,69 @@ static int dump_eqdma_context(struct qdma_descq_context *queue_context,
 			}
 			len += rv;
 		}
+	}
+
+	/* FMAP context dump */
+	n = sizeof(eqdma_fmap_ctxt_entries) /
+		sizeof((eqdma_fmap_ctxt_entries)[0]);
+	for (i = 0; i < n; i++) {
+		if ((len >= buf_sz) ||
+			((len + DEBGFS_LINE_SZ) >= buf_sz))
+			goto INSUF_BUF_EXIT;
+
+		if (i == 0) {
+			if ((len + (3 * DEBGFS_LINE_SZ)) >= buf_sz)
+				goto INSUF_BUF_EXIT;
+
+			rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+				DEBGFS_LINE_SZ, "\n%s", banner);
+			if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+				qdma_log_error(
+					"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+					__LINE__, __func__,
+					rv);
+				goto INSUF_BUF_EXIT;
+			}
+			len += rv;
+
+			rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+				DEBGFS_LINE_SZ, "\n%40s",
+				"FMAP Context");
+			if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+				qdma_log_error(
+					"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+					__LINE__, __func__,
+					rv);
+				goto INSUF_BUF_EXIT;
+			}
+			len += rv;
+
+			rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+				DEBGFS_LINE_SZ, "\n%s\n", banner);
+			if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+				qdma_log_error(
+					"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+					__LINE__, __func__,
+					rv);
+				goto INSUF_BUF_EXIT;
+			}
+			len += rv;
+		}
+
+		rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+			DEBGFS_LINE_SZ,
+			"%-47s %#-10x %u\n",
+			eqdma_fmap_ctxt_entries[i].name,
+			eqdma_fmap_ctxt_entries[i].value,
+			eqdma_fmap_ctxt_entries[i].value);
+		if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+			qdma_log_error(
+				"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+				__LINE__, __func__,
+				rv);
+			goto INSUF_BUF_EXIT;
+		}
+		len += rv;
 	}
 
 	return len;
@@ -3721,6 +3974,142 @@ int eqdma_credit_ctx_conf(void *dev_hndl, uint8_t c2h,
 	return rv;
 }
 
+/*****************************************************************************/
+/**
+ * eqdma_fmap_context_write() - create fmap context and program it
+ *
+ * @dev_hndl:	device handle
+ * @func_id:	function id of the device
+ * @config:	pointer to the fmap data strucutre
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+static int eqdma_fmap_context_write(void *dev_hndl, uint16_t func_id,
+		   const struct qdma_fmap_cfg *config)
+{
+	uint32_t fmap[EQDMA_FMAP_NUM_WORDS] = {0};
+	uint16_t num_words_count = 0;
+	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_FMAP;
+
+	if (!dev_hndl || !config) {
+		qdma_log_error("%s: dev_handle=%p fmap=%p NULL, err:%d\n",
+				__func__, dev_hndl, config,
+				-QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	qdma_log_debug("%s: func_id=%hu, qbase=%hu, qmax=%hu\n", __func__,
+				   func_id, config->qbase, config->qmax);
+	fmap[num_words_count++] =
+		FIELD_SET(EQDMA_FMAP_CTXT_W0_QID_MASK, config->qbase);
+	fmap[num_words_count++] =
+		FIELD_SET(EQDMA_FMAP_CTXT_W1_QID_MAX_MASK, config->qmax);
+
+	return eqdma_indirect_reg_write(dev_hndl, sel, func_id,
+			fmap, num_words_count);
+}
+
+/*****************************************************************************/
+/**
+ * eqdma_fmap_context_read() - read fmap context
+ *
+ * @dev_hndl:   device handle
+ * @func_id:    function id of the device
+ * @config:	pointer to the output fmap data
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+static int eqdma_fmap_context_read(void *dev_hndl, uint16_t func_id,
+			 struct qdma_fmap_cfg *config)
+{
+	int rv = QDMA_SUCCESS;
+	uint32_t fmap[EQDMA_FMAP_NUM_WORDS] = {0};
+	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_FMAP;
+
+	if (!dev_hndl || !config) {
+		qdma_log_error("%s: dev_handle=%p fmap=%p NULL, err:%d\n",
+						__func__, dev_hndl, config,
+					   -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	rv = eqdma_indirect_reg_read(dev_hndl, sel, func_id,
+			EQDMA_FMAP_NUM_WORDS, fmap);
+	if (rv < 0)
+		return rv;
+
+	config->qbase = FIELD_GET(EQDMA_FMAP_CTXT_W0_QID_MASK, fmap[0]);
+	config->qmax = FIELD_GET(EQDMA_FMAP_CTXT_W1_QID_MAX_MASK, fmap[1]);
+
+	qdma_log_debug("%s: func_id=%hu, qbase=%hu, qmax=%hu\n", __func__,
+				   func_id, config->qbase, config->qmax);
+
+	return QDMA_SUCCESS;
+}
+
+/*****************************************************************************/
+/**
+ * eqdma_fmap_context_clear() - clear fmap context
+ *
+ * @dev_hndl:   device handle
+ * @func_id:    function id of the device
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+static int eqdma_fmap_context_clear(void *dev_hndl, uint16_t func_id)
+{
+	enum ind_ctxt_cmd_sel sel = QDMA_CTXT_SEL_FMAP;
+
+	if (!dev_hndl) {
+		qdma_log_error("%s: dev_handle is NULL, err:%d\n", __func__,
+					   -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	qdma_log_debug("%s: func_id=%hu\n", __func__, func_id);
+	return eqdma_indirect_reg_clear(dev_hndl, sel, func_id);
+}
+
+/*****************************************************************************/
+/**
+ * eqdma_fmap_conf() - configure fmap context
+ *
+ * @dev_hndl:	device handle
+ * @func_id:	function id of the device
+ * @config:	pointer to the fmap data
+ * @access_type HW access type (qdma_hw_access_type enum) value
+ *		QDMA_HW_ACCESS_INVALIDATE Not supported
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+int eqdma_fmap_conf(void *dev_hndl, uint16_t func_id,
+				struct qdma_fmap_cfg *config,
+				enum qdma_hw_access_type access_type)
+{
+	int rv = QDMA_SUCCESS;
+
+	switch (access_type) {
+	case QDMA_HW_ACCESS_READ:
+		rv = eqdma_fmap_context_read(dev_hndl, func_id, config);
+		break;
+	case QDMA_HW_ACCESS_WRITE:
+		rv = eqdma_fmap_context_write(dev_hndl, func_id, config);
+		break;
+	case QDMA_HW_ACCESS_CLEAR:
+		rv = eqdma_fmap_context_clear(dev_hndl, func_id);
+		break;
+	case QDMA_HW_ACCESS_INVALIDATE:
+	default:
+		qdma_log_error("%s: access_type(%d) invalid, err:%d\n",
+						__func__,
+						access_type,
+					   -QDMA_ERR_INV_PARAM);
+		rv = -QDMA_ERR_INV_PARAM;
+		break;
+	}
+
+	return rv;
+}
 
 /*****************************************************************************/
 /**
@@ -4166,6 +4555,7 @@ int eqdma_dump_intr_context(void *dev_hndl,
  * context in a buffer
  *
  * @dev_hndl:   device handle
+ * @func_id:    function id
  * @hw_qid:     queue id
  * @st:			Queue Mode(ST or MM)
  * @q_type:		Queue type(H2C/C2H/CMPT)
@@ -4175,6 +4565,7 @@ int eqdma_dump_intr_context(void *dev_hndl,
  * Return:	Length up-till the buffer is filled -success and < 0 - failure
  *****************************************************************************/
 int eqdma_read_dump_queue_context(void *dev_hndl,
+		uint16_t func_id,
 		uint16_t qid_hw,
 		uint8_t st,
 		enum qdma_dev_q_type q_type,
@@ -4273,6 +4664,14 @@ int eqdma_read_dump_queue_context(void *dev_hndl,
 		}
 	}
 
+	rv = eqdma_fmap_conf(dev_hndl, func_id,
+			&(context.fmap), QDMA_HW_ACCESS_READ);
+	if (rv < 0) {
+		qdma_log_error(
+		"%s: Failed to read fmap context, err = %d",
+				__func__, rv);
+		return rv;
+	}
 
 	rv = dump_eqdma_context(&context, st, q_type,
 				buf, buflen);
@@ -4292,7 +4691,7 @@ int eqdma_read_dump_queue_context(void *dev_hndl,
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
 int eqdma_get_user_bar(void *dev_hndl, uint8_t is_vf,
-		uint8_t func_id, uint8_t *user_bar)
+		uint16_t func_id, uint8_t *user_bar)
 {
 	uint8_t bar_found = 0;
 	uint8_t bar_idx = 0;
@@ -4425,6 +4824,100 @@ static void eqdma_hw_trq_err_process(void *dev_hndl)
 
 /*****************************************************************************/
 /**
+ * eqdma_hw_err_dump_ctxt_info() - Dump the imp ctxt fields on HW error
+ *
+ * @dev_hndl: device handle
+ * @first_err_qid: First Error QID
+ * @en_st: ST Mode or MM Mode enabled
+ * @c2h: C2H or H2C Mode
+ *
+ * Return: void
+ *****************************************************************************/
+static void eqdma_hw_err_dump_ctxt_info(void *dev_hndl,
+		uint32_t first_err_qid_reg,
+		uint8_t en_st, uint8_t c2h)
+{
+	uint16_t first_err_qid	= 0;
+	struct qdma_descq_sw_ctxt sw_ctxt;
+	struct qdma_descq_hw_ctxt hw_ctxt;
+	struct qdma_descq_cmpt_ctxt cmpt_ctxt;
+
+	first_err_qid = qdma_reg_read(dev_hndl, first_err_qid_reg);
+
+	eqdma_sw_context_read(dev_hndl, c2h, first_err_qid, &sw_ctxt);
+	eqdma_hw_context_read(dev_hndl, c2h, first_err_qid, &hw_ctxt);
+	eqdma_fill_sw_ctxt(&sw_ctxt);
+	eqdma_fill_hw_ctxt(&hw_ctxt);
+
+	if (sw_ctxt.pidx != hw_ctxt.cidx) {
+		qdma_log_info("\n%40s\n", "SW Context:");
+		/** SW Context: PIDX ***/
+		qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_sw_ctxt_entries[0].name,
+					eqdma_sw_ctxt_entries[0].value,
+					eqdma_sw_ctxt_entries[0].value);
+		qdma_log_info("\n%40s\n", "HW Context:");
+		/*** HW Context: CIDX ***/
+		qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_hw_ctxt_entries[0].name,
+					eqdma_hw_ctxt_entries[0].value,
+					eqdma_hw_ctxt_entries[0].value);
+	}
+
+	if (sw_ctxt.err != 0) {
+		/*** SW Context: ERR ***/
+		qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_sw_ctxt_entries[17].name,
+					eqdma_sw_ctxt_entries[17].value,
+					eqdma_sw_ctxt_entries[17].value);
+	}
+
+	/*** SW Context: ERR WB SENT***/
+	qdma_log_info("%-47s %#-10x %u\n",
+				eqdma_sw_ctxt_entries[18].name,
+				eqdma_sw_ctxt_entries[18].value,
+				eqdma_sw_ctxt_entries[18].value);
+
+	/*** SW Context: IRQ REQ***/
+	qdma_log_info("%-47s %#-10x %u\n",
+				eqdma_sw_ctxt_entries[19].name,
+				eqdma_sw_ctxt_entries[19].value,
+				eqdma_sw_ctxt_entries[19].value);
+
+	if (en_st && c2h) {
+		eqdma_cmpt_context_read(dev_hndl, first_err_qid, &cmpt_ctxt);
+		eqdma_fill_cmpt_ctxt(&cmpt_ctxt);
+
+		qdma_log_info("\n%40s\n", "CMPT Context:");
+
+		/*** CMPT Context: int_st ***/
+		qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_cmpt_ctxt_entries[6].name,
+					eqdma_cmpt_ctxt_entries[6].value,
+					eqdma_cmpt_ctxt_entries[6].value);
+
+		/** CMPT Context: PIDX ***/
+		qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_cmpt_ctxt_entries[12].name,
+					eqdma_cmpt_ctxt_entries[12].value,
+					eqdma_cmpt_ctxt_entries[12].value);
+		/*** CMPT Context: CIDX ***/
+		qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_cmpt_ctxt_entries[13].name,
+					eqdma_cmpt_ctxt_entries[13].value,
+					eqdma_cmpt_ctxt_entries[13].value);
+
+		if (cmpt_ctxt.err != 0) {
+			/*** CMPT Context: ERR ***/
+			qdma_log_info("%-47s %#-10x %u\n",
+					eqdma_cmpt_ctxt_entries[15].name,
+					eqdma_cmpt_ctxt_entries[15].value,
+					eqdma_cmpt_ctxt_entries[15].value);
+		}
+	}
+}
+/*****************************************************************************/
+/**
  * eqdma_hw_st_h2c_err_process() - Function to dump MM H2C Error information
  *
  * @dev_hndl: device handle
@@ -4451,6 +4944,10 @@ static void eqdma_hw_st_h2c_err_process(void *dev_hndl)
 		eqdma_dump_reg_info(dev_hndl, st_h2c_err_reg_list[i],
 					1, NULL, 0);
 	}
+
+	eqdma_hw_err_dump_ctxt_info(dev_hndl,
+				EQDMA_H2C_FIRST_ERR_QID_ADDR, 1, 0);
+
 }
 
 
@@ -4467,6 +4964,7 @@ static void eqdma_hw_st_h2c_err_process(void *dev_hndl)
 static void eqdma_hw_st_c2h_err_process(void *dev_hndl)
 {
 	int i = 0;
+
 	uint32_t st_c2h_err_reg_list[] = {
 		EQDMA_C2H_ERR_STAT_ADDR,
 		EQDMA_C2H_FATAL_ERR_STAT_ADDR,
@@ -4488,9 +4986,71 @@ static void eqdma_hw_st_c2h_err_process(void *dev_hndl)
 		eqdma_dump_reg_info(dev_hndl, st_c2h_err_reg_list[i],
 					1, NULL, 0);
 	}
+
+	eqdma_hw_err_dump_ctxt_info(dev_hndl,
+				EQDMA_C2H_FIRST_ERR_QID_ADDR, 1, 1);
+
 }
 
+/*****************************************************************************/
+/**
+ * eqdma_mm_c2h0_err_process() - Function to dump MM C2H
+ * Error information
+ *
+ * @dev_hndl: device handle
+ *
+ * Return: void
+ *****************************************************************************/
+static void eqdma_mm_c2h0_err_process(void *dev_hndl)
+{
+	int i = 0;
+	uint32_t mm_c2h_err_reg_list[] = {
+		EQDMA_C2H_MM_STATUS_ADDR,
+		EQDMA_C2H_MM_CMPL_DESC_CNT_ADDR,
+		EQDMA_C2H_MM_ERR_CODE_ADDR,
+		EQDMA_C2H_MM_ERR_INFO_ADDR,
+		EQDMA_C2H_MM_DBG_ADDR
+	};
+	int mm_c2h_err_num_regs = sizeof(mm_c2h_err_reg_list)/sizeof(uint32_t);
 
+	for (i = 0; i < mm_c2h_err_num_regs; i++) {
+		eqdma_dump_reg_info(dev_hndl, mm_c2h_err_reg_list[i],
+					1, NULL, 0);
+	}
+
+	eqdma_hw_err_dump_ctxt_info(dev_hndl,
+			EQDMA_C2H_MM_ERR_INFO_ADDR, 0, 1);
+}
+
+/*****************************************************************************/
+/**
+ * eqdma_mm_h2c0_err_process() - Function to dump MM H2C
+ * Error information
+ *
+ * @dev_hndl: device handle
+ *
+ * Return: void
+ *****************************************************************************/
+static void eqdma_mm_h2c0_err_process(void *dev_hndl)
+{
+	int i = 0;
+	uint32_t mm_h2c_err_reg_list[] = {
+		EQDMA_H2C_MM_STATUS_ADDR,
+		EQDMA_H2C_MM_CMPL_DESC_CNT_ADDR,
+		EQDMA_H2C_MM_ERR_CODE_ADDR,
+		EQDMA_H2C_MM_ERR_INFO_ADDR,
+		EQDMA_H2C_MM_DBG_ADDR
+	};
+	int mm_h2c_err_num_regs = sizeof(mm_h2c_err_reg_list)/sizeof(uint32_t);
+
+	for (i = 0; i < mm_h2c_err_num_regs; i++) {
+		eqdma_dump_reg_info(dev_hndl, mm_h2c_err_reg_list[i],
+					1, NULL, 0);
+	}
+
+	eqdma_hw_err_dump_ctxt_info(dev_hndl,
+			EQDMA_H2C_MM_ERR_INFO_ADDR, 0, 1);
+}
 
 /*****************************************************************************/
 /**
@@ -4536,7 +5096,9 @@ int eqdma_hw_error_process(void *dev_hndl)
 		EQDMA_SBE_1_ERR_RC_RRQ_EVEN_RAM,
 		EQDMA_SBE_ERR_MI_H2C0_DAT,
 		EQDMA_DBE_1_ERR_RC_RRQ_EVEN_RAM,
-		EQDMA_DBE_ERR_MI_H2C0_DAT
+		EQDMA_DBE_ERR_MI_H2C0_DAT,
+		EQDMA_MM_C2H_WR_SLR_ERR,
+		EQDMA_MM_H2C0_RD_HDR_POISON_ERR
 	};
 
 	if (!dev_hndl) {
@@ -5865,4 +6427,3 @@ int eqdma_dump_reg_info(void *dev_hndl, uint32_t reg_addr,
 
 	return data_len;
 }
-

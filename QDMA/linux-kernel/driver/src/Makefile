@@ -1,3 +1,22 @@
+#/*
+# * This file is part of the Xilinx DMA IP Core driver for Linux
+# *
+# * Copyright (c) 2017-2022,  Xilinx, Inc.
+# * All rights reserved.
+# *
+# * This source code is free software; you can redistribute it and/or modify it
+# * under the terms and conditions of the GNU General Public License,
+# * version 2, as published by the Free Software Foundation.
+# *
+# * This program is distributed in the hope that it will be useful, but WITHOUT
+# * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# * more details.
+# *
+# * The full GNU General Public License is included in this distribution in
+# * the file called "COPYING".
+# */
+
 SHELL = /bin/bash
 
 export topdir
@@ -31,7 +50,8 @@ EXTRA_CFLAGS += -I$(srcdir)/../include
 EXTRA_CFLAGS += -I$(KSRC)/../include
 EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_soft_access
 EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_soft_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_s80_hard_access
+EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_cpm5_access
+EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_cpm4_access
 EXTRA_CFLAGS += -I.
 
 # linux >= 3.13 genl_ops become part of the genl_family. And although
@@ -89,11 +109,13 @@ LIBQDMA_OBJS := libqdma/qdma_mbox.o libqdma/qdma_intr.o libqdma/qdma_st_c2h.o \
 
 QDMA_ACCESS_OBJS := libqdma/qdma_access/qdma_mbox_protocol.o libqdma/qdma_access/qdma_list.o \
 	libqdma/qdma_access/qdma_access_common.o libqdma/qdma_access/qdma_resource_mgmt.o \
-	libqdma/qdma_access/qdma_s80_hard_access/qdma_s80_hard_access.o \
-	libqdma/qdma_access/qdma_s80_hard_access/qdma_s80_hard_reg_dump.o \
+	libqdma/qdma_access/qdma_cpm4_access/qdma_cpm4_access.o \
+	libqdma/qdma_access/qdma_cpm4_access/qdma_cpm4_reg_dump.o \
 	libqdma/qdma_access/qdma_soft_access/qdma_soft_access.o \
 	libqdma/qdma_access/eqdma_soft_access/eqdma_soft_access.o \
-	libqdma/qdma_access/eqdma_soft_access/eqdma_soft_reg_dump.o
+	libqdma/qdma_access/eqdma_soft_access/eqdma_soft_reg_dump.o \
+	libqdma/qdma_access/eqdma_cpm5_access/eqdma_cpm5_access.o \
+	libqdma/qdma_access/eqdma_cpm5_access/eqdma_cpm5_reg_dump.o
 
 
 

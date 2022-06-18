@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -75,8 +75,15 @@ static int mbox_hw_rcv(struct qdma_mbox *mbox, struct mbox_msg *m)
 static void mbox_msg_destroy(struct kref *kref)
 {
 	struct mbox_msg *m = container_of(kref, struct mbox_msg, refcnt);
-
+#ifdef RHEL_RELEASE_VERSION
+#if RHEL_RELEASE_VERSION(8, 1) <= RHEL_RELEASE_CODE
+	vfree(m);
+#else
 	kfree(m);
+#endif
+#else
+	kfree(m);
+#endif
 }
 
 void __qdma_mbox_msg_free(const char *f, struct mbox_msg *m)
@@ -86,11 +93,18 @@ void __qdma_mbox_msg_free(const char *f, struct mbox_msg *m)
 
 struct mbox_msg *qdma_mbox_msg_alloc(void)
 {
+#ifdef RHEL_RELEASE_VERSION
+#if RHEL_RELEASE_VERSION(8, 1) <= RHEL_RELEASE_CODE
+	struct mbox_msg *m = vmalloc(sizeof(struct mbox_msg));
+#else
 	struct mbox_msg *m = kzalloc(sizeof(struct mbox_msg), GFP_KERNEL);
-
+#endif
+#else
+	struct mbox_msg *m = kzalloc(sizeof(struct mbox_msg), GFP_KERNEL);
+#endif
 	if (!m)
 		return NULL;
-
+	memset(m, 0, sizeof(struct mbox_msg));
 	kref_init(&m->refcnt);
 	qdma_waitq_init(&m->waitq);
 
@@ -210,11 +224,11 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 		/* a matching request is found */
 		spin_lock_bh(&mbox->list_lock);
 		list_del(&m_snd->list);
-		spin_unlock_bh(&mbox->list_lock);
 		memcpy(m_snd->raw, m_rcv->raw, MBOX_MSG_REG_MAX *
 		       sizeof(uint32_t));
 		/* wake up anyone waiting on the response */
 		qdma_waitq_wakeup(&m_snd->waitq);
+		spin_unlock_bh(&mbox->list_lock);
 	}
 
 	return 0;
@@ -239,7 +253,8 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 	if (rv == QDMA_MBOX_VF_OFFLINE ||
 		rv == QDMA_MBOX_VF_RESET_BYE) {
 #ifdef CONFIG_PCI_IOV
-		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m->raw, QDMA_DEV);
+		uint16_t vf_func_id = qdma_mbox_vf_func_id_get(m->raw,
+				QDMA_DEV);
 
 		xdev_sriov_vf_offline(mbox->xdev, vf_func_id);
 #endif
@@ -250,7 +265,8 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 			qdma_mbox_msg_free(m_resp);
 	} else if (rv == QDMA_MBOX_VF_ONLINE) {
 #ifdef CONFIG_PCI_IOV
-		uint8_t vf_func_id = qdma_mbox_vf_func_id_get(m->raw, QDMA_DEV);
+		uint16_t vf_func_id = qdma_mbox_vf_func_id_get(m->raw,
+				QDMA_DEV);
 
 		xdev_sriov_vf_online(mbox->xdev, vf_func_id);
 #endif
@@ -426,6 +442,22 @@ static void mbox_timer_handler(unsigned long arg)
 		queue_work(mbox->workq, &mbox->tx_work);
 }
 
+bool qdma_mbox_is_irq_availabe(struct xlnx_dma_dev *xdev)
+{
+	/*MBOX is available in all QDMA Soft Devices for vivado release >
+	 * 2019.1
+	 */
+	if (((xdev->version_info.device_type == QDMA_DEVICE_SOFT) &&
+		(xdev->version_info.vivado_release >= QDMA_VIVADO_2019_1)))
+		return true;
+	/*MBOX is available in all Versal Hard IP from CPM5 onwards */
+	if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+		(xdev->version_info.device_type == QDMA_DEVICE_VERSAL_CPM5))
+		return true;
+
+	return false;
+}
+
 /*
  * mailbox initialization and cleanup
  */
@@ -457,8 +489,7 @@ void qdma_mbox_stop(struct xlnx_dma_dev *xdev)
 	} while (retry_count != 0);
 	mbox_timer_stop(&xdev->mbox);
 	pr_debug("func_id=%d retry_count=%d\n", xdev->func_id, retry_count);
-	if ((xdev->version_info.device_type == QDMA_DEVICE_SOFT) &&
-	(xdev->version_info.vivado_release >= QDMA_VIVADO_2019_1)) {
+	if (qdma_mbox_is_irq_availabe(xdev)) {
 		if (!xdev->mbox.rx_poll)
 			qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
 	}
@@ -517,6 +548,9 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 
 	spin_lock_init(&mbox->lock);
 	spin_lock_init(&mbox->list_lock);
+	spin_lock_init(&mbox->hw_rx_lock);
+	spin_lock_init(&mbox->hw_tx_lock);
+
 	INIT_LIST_HEAD(&mbox->tx_todo_list);
 	INIT_LIST_HEAD(&mbox->rx_pend_list);
 	INIT_WORK(&mbox->tx_work, mbox_tx_work);
@@ -540,8 +574,7 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 #endif
 	/* ack any received messages in the Q */
 	qdma_mbox_hw_init(xdev, QDMA_DEV);
-	if ((xdev->version_info.device_type == QDMA_DEVICE_SOFT) &&
-	(xdev->version_info.vivado_release >= QDMA_VIVADO_2019_1)) {
+	if (qdma_mbox_is_irq_availabe(xdev)) {
 		if ((xdev->conf.qdma_drv_mode != POLL_MODE) &&
 			(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) {
 			mbox->rx_poll = 0;

@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -1052,7 +1052,7 @@ ssize_t dmaperf_asynciosubmit(int fd, char *buffer, ssize_t size,
 	return size;
 }
 
-ssize_t dmaxfer_iosubmit(char *fname, unsigned char write, 
+ssize_t dmaxfer_iosubmit(char *fname, unsigned char write,
 		enum dmaxfer_io_type io_type, char *buffer,
 		uint64_t size)
 {
@@ -1066,7 +1066,7 @@ ssize_t dmaxfer_iosubmit(char *fname, unsigned char write,
 		return -EINVAL;
 	}
 
-	if (write) 
+	if (write)
 		flags = O_WRONLY | O_NONBLOCK;
 	else
 		flags = O_RDONLY | O_NONBLOCK;
@@ -1077,7 +1077,7 @@ ssize_t dmaxfer_iosubmit(char *fname, unsigned char write,
 
 	if (io_type == DMAXFER_IO_SYNC)
 		if (write)
-			count = write_from_buffer(fd, buffer, size, base);		
+			count = write_from_buffer(fd, buffer, size, base);
 		else
 			count = read_to_buffer(fd, buffer, size, base);
 	else
@@ -1109,7 +1109,7 @@ void dmaxfer_perf_stop(struct dmaxfer_io_info *list,
 		error(-1, errno, " ");
 		return;
 	}
-	
+
 	for (i = 0; i < handle->active_threads; i++) {
 		sem_wait(&info[i].llock);
 		info[i].io_exit = 1;

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -39,6 +39,7 @@
 #include <linux/interrupt.h>
 #include "libqdma_config.h"
 #include "qdma_access_export.h"
+#include "qdma_compat.h"
 
 
 /** @defgroup libqdma_enums Enumerations
@@ -82,9 +83,11 @@
 #define QDMA_QUEUE_VEC_INVALID	0xFF
 
 /**
- * QDMA_REQ_OPAQUE_SIZE - Maximum request length
+ * QDMA_REQ_OPAQUE_SIZE - Maximum request length.
+ * QDMA_REQ_OPAQUE_SIZE varies according to kernel params.
+ * Size of spinlock_t varies when spinlock debug params are enabled.
  */
-#define QDMA_REQ_OPAQUE_SIZE	80
+#define QDMA_REQ_OPAQUE_SIZE    (56 + sizeof(qdma_wait_queue))
 
 /**
  * QDMA_UDD_MAXLEN - Maximum length of the user defined data
@@ -1661,6 +1664,21 @@ int qdma_config_reg_info_dump(unsigned long dev_hndl, uint32_t reg_addr,
  *
  *****************************************************************************/
 int qdma_vf_qconf(unsigned long dev_hndl, int qmax);
+#endif
+
+#ifdef TANDEM_BOOT_SUPPORTED
+/*****************************************************************************/
+/**
+ * Clear ST context for tandem boot designs
+ *
+ * @param dev_hndl	dev_hndl retunred from qdma_device_open()
+ * @param buflen	input buffer length
+ * @param buf		error message buffer, can be NULL/0 (i.e., optional
+ *
+ * @returns		0 for success or <0 for error
+ *
+ *****************************************************************************/
+int qdma_init_st_ctxt(unsigned long dev_hndl, char *buf, int buflen);
 #endif
 
 #endif

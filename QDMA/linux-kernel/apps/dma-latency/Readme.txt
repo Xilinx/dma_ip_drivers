@@ -1,3 +1,15 @@
+/*
+ * This file is part of the Xilinx DMA IP Core driver for Linux
+ *
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under both the BSD-style license (found in the
+ * LICENSE file in the root directory of this source tree) and the GPLv2 (found
+ * in the COPYING file in the root directory of this source tree).
+ * You may select, at your option, one of the above-listed licenses.
+ */
+
 What is the dma-lat tool?
 The intent of the tool is to gather metrics related how much time do packets
 take to loopback to the host when a packet is transmitted in the ST H2C direction 

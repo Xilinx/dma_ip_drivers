@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2019-2020,  Xilinx, Inc.
+ * Copyright (c) 2019-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -872,3 +872,14 @@ int qdma_reg_dump(struct xcmd_info *cmd)
 	return proc_reg_cmd(cmd);
 }
 
+#ifdef TANDEM_BOOT_SUPPORTED
+int qdma_en_st(struct xcmd_info *cmd)
+{
+	uint32_t attrs[XNL_ATTR_MAX] = {0};
+	int rv;
+
+	rv = xnl_common_msg_send(cmd, attrs);
+	if (rv < 0)
+		return rv;
+}
+#endif

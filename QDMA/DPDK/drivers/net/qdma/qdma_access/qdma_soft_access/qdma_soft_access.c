@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -54,6 +54,8 @@
 #define QDMA_REG_GROUP_2_START_ADDR	0x400
 #define QDMA_REG_GROUP_3_START_ADDR	0xB00
 #define QDMA_REG_GROUP_4_START_ADDR	0x1014
+
+#define QDMA_DEFAULT_PFCH_STOP_THRESH            256
 
 static void qdma_hw_st_h2c_err_process(void *dev_hndl);
 static void qdma_hw_st_c2h_err_process(void *dev_hndl);
@@ -1628,6 +1630,11 @@ static struct qctx_entry c2h_pftch_ctxt_entries[] = {
 	{"Valid", 0},
 };
 
+static struct qctx_entry fmap_ctxt_entries[] = {
+	{"Queue Base", 0},
+	{"Queue Max", 0},
+};
+
 static struct qctx_entry ind_intr_ctxt_entries[] = {
 	{"valid", 0},
 	{"vec", 0},
@@ -1682,6 +1689,10 @@ int qdma_soft_context_buf_len(uint8_t st,
 
 		len += (((sizeof(credit_ctxt_entries) /
 			sizeof(credit_ctxt_entries[0])) + 1) *
+			REG_DUMP_SIZE_PER_LINE);
+
+		len += (((sizeof(fmap_ctxt_entries) /
+			sizeof(fmap_ctxt_entries[0])) + 1) *
 			REG_DUMP_SIZE_PER_LINE);
 
 		if (st && (q_type == QDMA_DEV_Q_TYPE_C2H)) {
@@ -1809,6 +1820,17 @@ static void qdma_fill_pfetch_ctxt(struct qdma_descq_prefetch_ctxt *pfetch_ctxt)
 }
 
 /*
+ * qdma_acc_fill_fmap_ctxt() - Helper function to fill fmap context
+ *                           into structure
+ *
+ */
+static void qdma_fill_fmap_ctxt(struct qdma_fmap_cfg *fmap_ctxt)
+{
+	fmap_ctxt_entries[0].value = fmap_ctxt->qbase;
+	fmap_ctxt_entries[1].value = fmap_ctxt->qmax;
+}
+
+/*
  * dump_soft_context() - Helper function to dump queue context into string
  *
  * return len - length of the string copied into buffer
@@ -1845,6 +1867,8 @@ static int dump_soft_context(struct qdma_descq_context *queue_context,
 			qdma_fill_cmpt_ctxt(&queue_context->cmpt_ctxt);
 		}
 	}
+
+	qdma_fill_fmap_ctxt(&queue_context->fmap);
 
 	for (i = 0; i < DEBGFS_LINE_SZ - 5; i++) {
 		rv = QDMA_SNPRINTF_S(banner + i,
@@ -2175,6 +2199,69 @@ static int dump_soft_context(struct qdma_descq_context *queue_context,
 		}
 	}
 
+	/* Fmap context dump */
+	n = sizeof(fmap_ctxt_entries) /
+		sizeof(fmap_ctxt_entries[0]);
+	for (i = 0; i < n; i++) {
+		if ((len >= buf_sz) ||
+			((len + DEBGFS_LINE_SZ) >= buf_sz))
+			goto INSUF_BUF_EXIT;
+
+		if (i == 0) {
+			if ((len + (3 * DEBGFS_LINE_SZ)) >= buf_sz)
+				goto INSUF_BUF_EXIT;
+
+			rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+				DEBGFS_LINE_SZ, "\n%s", banner);
+			if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+				qdma_log_error(
+			"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+					__LINE__, __func__,
+					rv);
+				goto INSUF_BUF_EXIT;
+			}
+			len += rv;
+
+			rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+				DEBGFS_LINE_SZ, "\n%40s",
+				"Fmap Context");
+			if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+				qdma_log_error(
+			"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+					__LINE__, __func__,
+					rv);
+				goto INSUF_BUF_EXIT;
+			}
+			len += rv;
+
+			rv = QDMA_SNPRINTF_S(buf + len, (buf_sz - len),
+				DEBGFS_LINE_SZ, "\n%s\n", banner);
+			if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+				qdma_log_error(
+			"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+					__LINE__, __func__,
+					rv);
+				goto INSUF_BUF_EXIT;
+			}
+			len += rv;
+		}
+
+		rv = QDMA_SNPRINTF_S(buf + len,
+			(buf_sz - len), DEBGFS_LINE_SZ,
+			"%-47s %#-10x %u\n",
+			fmap_ctxt_entries[i].name,
+			fmap_ctxt_entries[i].value,
+			fmap_ctxt_entries[i].value);
+		if ((rv < 0) || (rv > DEBGFS_LINE_SZ)) {
+			qdma_log_error(
+			"%d:%s QDMA_SNPRINTF_S() failed, err:%d\n",
+				__LINE__, __func__,
+				rv);
+			goto INSUF_BUF_EXIT;
+		}
+		len += rv;
+	}
+
 	return len;
 
 INSUF_BUF_EXIT:
@@ -2465,6 +2552,7 @@ static int qdma_fmap_read(void *dev_hndl, uint16_t func_id,
 
 	qdma_log_debug("%s: func_id=%hu, qbase=%hu, qmax=%hu\n", __func__,
 				   func_id, config->qbase, config->qmax);
+
 	return QDMA_SUCCESS;
 }
 
@@ -3876,7 +3964,7 @@ int qdma_set_default_global_csr(void *dev_hndl)
 				QDMA_OFFSET_C2H_PFETCH_CACHE_DEPTH);
 		reg_val =
 			FIELD_SET(QDMA_C2H_PFCH_FL_TH_MASK,
-					DEFAULT_PFCH_STOP_THRESH) |
+					QDMA_DEFAULT_PFCH_STOP_THRESH) |
 			FIELD_SET(QDMA_C2H_NUM_PFCH_MASK,
 					DEFAULT_PFCH_NUM_ENTRIES_PER_Q) |
 			FIELD_SET(QDMA_C2H_PFCH_QCNT_MASK, (cfg_val >> 1)) |
@@ -4071,7 +4159,7 @@ int qdma_queue_intr_cidx_update(void *dev_hndl, uint8_t is_vf,
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
 int qdma_get_user_bar(void *dev_hndl, uint8_t is_vf,
-		uint8_t func_id, uint8_t *user_bar)
+		uint16_t func_id, uint8_t *user_bar)
 {
 	uint8_t bar_found = 0;
 	uint8_t bar_idx = 0;
@@ -4896,6 +4984,7 @@ int qdma_soft_dump_queue_context(void *dev_hndl,
  * Return:	Length up-till the buffer is filled -success and < 0 - failure
  *****************************************************************************/
 int qdma_soft_read_dump_queue_context(void *dev_hndl,
+				uint16_t func_id,
 				uint16_t qid_hw,
 				uint8_t st,
 				enum qdma_dev_q_type q_type,
@@ -4993,6 +5082,16 @@ int qdma_soft_read_dump_queue_context(void *dev_hndl,
 					__func__, rv);
 			return rv;
 		}
+	}
+
+	rv = qdma_fmap_conf(dev_hndl, func_id,
+				 &(context.fmap),
+				 QDMA_HW_ACCESS_READ);
+	if (rv < 0) {
+		qdma_log_error(
+		"%s:fmap ctxt read fail, err = %d",
+				__func__, rv);
+		return rv;
 	}
 
 	rv = dump_soft_context(&context, st, q_type, buf, buflen);

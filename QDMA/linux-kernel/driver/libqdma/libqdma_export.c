@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -205,7 +205,8 @@ static int qdma_validate_qconfig(struct xlnx_dma_dev *xdev,
 		return -EINVAL;
 	}
 
-	if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) {
+	if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP &&
+		xdev->version_info.device_type == QDMA_DEVICE_VERSAL_CPM4) {
 		/* 64B desc size is not supported in 2018.2 release */
 		if ((qconf->cmpl_desc_sz == CMPT_DESC_SZ_64B) ||
 				(qconf->sw_desc_sz == DESC_SZ_64B)) {
@@ -2611,6 +2612,75 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	return 0;
 }
 
+#ifdef TANDEM_BOOT_SUPPORTED
+/*****************************************************************************/
+/**
+ * qdma_init_st_ctxt()       initialize the QDMA ST context
+ *
+ * @param dev_hndl	dev_hndl retunred from qdma_device_open()
+ * @param buflen	input buffer length
+ * @param buf		error message buffer, can be NULL/0 (i.e., optional
+ *
+ * @return	0:	success
+ * @return	<0:	error
+ *****************************************************************************/
+int qdma_init_st_ctxt(unsigned long dev_hndl, char *buf, int buflen)
+{
+	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	int rv;
+
+	/** make sure that input buffer is not empty, else return error */
+	if (!buf || !buflen) {
+		pr_err("invalid argument: buf=%p, buflen=%d\n", buf, buflen);
+		return -EINVAL;
+	}
+
+	/** make sure that the dev_hndl passed is Valid */
+	if (!xdev) {
+		pr_err("dev_hndl is NULL");
+		snprintf(buf, buflen, "dev_hndl is NULL");
+		return -EINVAL;
+	}
+
+	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0) {
+		pr_err("Invalid dev_hndl passed");
+		snprintf(buf, buflen, "Invalid dev_hndl passed\n");
+		return -EINVAL;
+	}
+
+	if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+		(xdev->version_info.device_type == QDMA_DEVICE_VERSAL_CPM5)) {
+		if (xdev->hw.qdma_init_st_ctxt == NULL) {
+			pr_err("Err: Feature not supported\n");
+			snprintf(buf, buflen, "Err: Feature not supported\n");
+			return -EPERM;
+		}
+
+		rv = xdev->hw.qdma_init_st_ctxt((void *)dev_hndl);
+
+		if (rv == QDMA_SUCCESS) {
+			snprintf(buf, buflen,
+			"qdma%05x : Steaming Enabled successfully\n",
+			xdev->conf.bdf);
+			pr_info("Steaming Enabled successfully\n");
+		} else {
+			snprintf(buf, buflen,
+			"qdma%05x : Failed to Enable Steaming\n",
+			xdev->conf.bdf);
+			pr_info("Failed to Enable Steaming\n");
+			return -EINVAL;
+		}
+	} else {
+		snprintf(buf, buflen,
+			"qdma%05x : Steaming Enabled during Initialization\n",
+			xdev->conf.bdf);
+		pr_info("Steaming Enabled during Initialization\n");
+	}
+
+	return rv;
+}
+#endif
+
 /*****************************************************************************/
 /**
  * libqdma_init()       initialize the QDMA core library
@@ -2630,7 +2700,7 @@ int libqdma_init(unsigned int num_threads, void *debugfs_root)
 	 *  If not, return error
 	 */
 	if (sizeof(struct qdma_sgt_req_cb) > QDMA_REQ_OPAQUE_SIZE) {
-		pr_err("dma req. opaque data size too big %lu > %d.\n",
+		pr_err("dma req. opaque data size too big %lu > %lu.\n",
 			sizeof(struct qdma_sgt_req_cb), QDMA_REQ_OPAQUE_SIZE);
 		return -1;
 	}

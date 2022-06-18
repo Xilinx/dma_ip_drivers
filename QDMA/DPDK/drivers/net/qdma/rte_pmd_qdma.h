@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -213,8 +213,10 @@ enum rte_pmd_qdma_xdebug_desc_type {
 enum rte_pmd_qdma_device_type {
 	/** QDMA Soft device e.g. UltraScale+ IP's  */
 	RTE_PMD_QDMA_DEVICE_SOFT,
-	/** QDMA Versal device */
-	RTE_PMD_QDMA_DEVICE_VERSAL,
+	/** QDMA Versal CPM4 device */
+	RTE_PMD_QDMA_DEVICE_VERSAL_CPM4,
+	/** QDMA Versal CPM5 device */
+	RTE_PMD_QDMA_DEVICE_VERSAL_CPM5,
 	/** Invalid QDMA device  */
 	RTE_PMD_QDMA_DEVICE_NONE
 };

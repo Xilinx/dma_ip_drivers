@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -220,7 +220,7 @@ struct qdma_rx_queue {
 	/**< pend_pkt_avg_thr_lo: lower average threshold */
 	unsigned int pend_pkt_avg_thr_lo;
 	/**< sorted_c2h_cntr_idx: sorted c2h counter index */
-	unsigned char sorted_c2h_cntr_idx;
+	int8_t sorted_c2h_cntr_idx;
 	/**< c2h_cntr_monitor_cnt: c2h counter stagnant monitor count */
 	unsigned char c2h_cntr_monitor_cnt;
 #endif //QDMA_LATENCY_OPTIMIZED
@@ -285,7 +285,7 @@ struct qdma_pci_dev {
 	/* Driver Attributes */
 	uint32_t qsets_en;  /* no. of queue pairs enabled */
 	uint32_t queue_base;
-	uint8_t func_id;  /* Function id */
+	uint16_t func_id;  /* Function id */
 
 	/* DMA identifier used by the resource manager
 	 * for the DMA instances used by this driver
@@ -298,6 +298,9 @@ struct qdma_pci_dev {
 	uint8_t cmpt_desc_len;
 	uint8_t c2h_bypass_mode;
 	uint8_t h2c_bypass_mode;
+#ifdef TANDEM_BOOT_SUPPORTED
+	uint8_t en_st_mode;
+#endif
 	uint8_t trigger_mode;
 	uint8_t timer_count;
 

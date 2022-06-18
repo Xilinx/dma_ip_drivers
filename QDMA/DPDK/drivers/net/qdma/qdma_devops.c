@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -503,6 +503,14 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 					qdma_dev->sorted_idx_c2h_cnt_th,
 					QDMA_NUM_C2H_COUNTERS,
 					qdma_dev->g_c2h_cnt_th[rxq->threshidx]);
+
+	if (rxq->sorted_c2h_cntr_idx < 0) {
+		PMD_DRV_LOG(ERR,
+				"Expected counter threshold %d not found\n",
+				qdma_dev->g_c2h_cnt_th[rxq->threshidx]);
+		err = -EINVAL;
+		goto rx_setup_err;
+	}
 
 	/* Initialize pend_pkt_moving_avg */
 	rxq->pend_pkt_moving_avg = qdma_dev->g_c2h_cnt_th[rxq->threshidx];
@@ -1775,6 +1783,7 @@ qdma_dev_get_regs(struct rte_eth_dev *dev,
 
 	ret = qdma_acc_get_num_config_regs(dev,
 				(enum qdma_ip_type)qdma_dev->ip_type,
+				(enum qdma_device_type)qdma_dev->device_type,
 				&reg_length);
 	if (ret < 0 || reg_length == 0) {
 		PMD_DRV_LOG(ERR, "%s: Failed to get number of config registers\n",
@@ -1793,7 +1802,8 @@ qdma_dev_get_regs(struct rte_eth_dev *dev,
 	    (regs->length == (reg_length - 1))) {
 		regs->version = 1;
 		ret = qdma_acc_get_config_regs(dev, qdma_dev->is_vf,
-			(enum qdma_ip_type)qdma_dev->ip_type, data);
+			(enum qdma_ip_type)qdma_dev->ip_type,
+			(enum qdma_device_type)qdma_dev->device_type, data);
 		if (ret < 0) {
 			PMD_DRV_LOG(ERR, "%s: Failed to get config registers\n",
 					__func__);

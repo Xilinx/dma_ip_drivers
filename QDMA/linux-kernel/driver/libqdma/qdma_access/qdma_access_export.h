@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -210,6 +210,10 @@ enum qdma_vivado_release_id {
 	QDMA_VIVADO_2020_1,
 	/** @QDMA_VIVADO_2020_2 - Vivado version 2020.2  */
 	QDMA_VIVADO_2020_2,
+	/** @QDMA_VIVADO_2021_1 - Vivado version 2021.1  */
+	QDMA_VIVADO_2021_1,
+	/** @QDMA_VIVADO_2022_1 - Vivado version 2022.1  */
+	QDMA_VIVADO_2022_1,
 	/** @QDMA_VIVADO_NONE - Not a valid Vivado version*/
 	QDMA_VIVADO_NONE
 };
@@ -231,8 +235,10 @@ enum qdma_ip_type {
 enum qdma_device_type {
 	/** @QDMA_DEVICE_SOFT - UltraScale+ IP's  */
 	QDMA_DEVICE_SOFT,
-	/** @QDMA_DEVICE_VERSAL -VERSAL IP  */
-	QDMA_DEVICE_VERSAL,
+	/** @QDMA_DEVICE_VERSAL_CPM4 -VERSAL IP  */
+	QDMA_DEVICE_VERSAL_CPM4,
+	/** @QDMA_DEVICE_VERSAL_CPM5 -VERSAL IP  */
+	QDMA_DEVICE_VERSAL_CPM5,
 	/** @QDMA_DEVICE_NONE - Not a valid device  */
 	QDMA_DEVICE_NONE
 };

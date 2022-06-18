@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -407,6 +407,9 @@ static void adjust_c2h_cntr_avgs(struct qdma_rx_queue *rxq)
 {
 	int i;
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+
+	if (rxq->sorted_c2h_cntr_idx < 0)
+		return;
 
 	rxq->pend_pkt_moving_avg =
 		qdma_dev->g_c2h_cnt_th[rxq->cmpt_cidx_info.counter_idx];
@@ -921,8 +924,12 @@ static uint16_t prepare_packets_v(struct qdma_rx_queue *rxq,
 			pkt_mb2);
 
 			/* Accumulate packet length counter */
-			pktlen = _mm_add_epi32(pktlen, pkt_len[0]);
-			pktlen = _mm_add_epi32(pktlen, pkt_len[1]);
+			pktlen = _mm_add_epi64(pktlen,
+				_mm_set_epi16(0, 0, 0, 0,
+					0, 0, 0, pktlen1));
+			pktlen = _mm_add_epi64(pktlen,
+				_mm_set_epi16(0, 0, 0, 0,
+					0, 0, 0, pktlen2));
 
 			count_pkts += RTE_QDMA_DESCS_PER_LOOP;
 			id += RTE_QDMA_DESCS_PER_LOOP;
@@ -935,14 +942,18 @@ static uint16_t prepare_packets_v(struct qdma_rx_queue *rxq,
 				mb = prepare_segmented_packet(rxq,
 					pktlen1, &id);
 				rx_pkts[count_pkts++] = mb;
-				pktlen = _mm_add_epi32(pktlen, pkt_len[0]);
+				pktlen = _mm_add_epi64(pktlen,
+					_mm_set_epi16(0, 0, 0, 0,
+						0, 0, 0, pktlen1));
 			}
 
 			if (pktlen2) {
 				mb = prepare_segmented_packet(rxq,
 					pktlen2, &id);
 				rx_pkts[count_pkts++] = mb;
-				pktlen = _mm_add_epi32(pktlen, pkt_len[1]);
+				pktlen = _mm_add_epi64(pktlen,
+					_mm_set_epi16(0, 0, 0, 0,
+						0, 0, 0, pktlen2));
 			}
 		}
 	}

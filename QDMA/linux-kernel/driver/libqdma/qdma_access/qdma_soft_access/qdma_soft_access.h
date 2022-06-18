@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -243,6 +243,7 @@ int qdma_soft_dump_queue_context(void *dev_hndl,
 		char *buf, uint32_t buflen);
 
 int qdma_soft_read_dump_queue_context(void *dev_hndl,
+				uint16_t func_id,
 				uint16_t qid_hw,
 				uint8_t st,
 				enum qdma_dev_q_type q_type,
@@ -258,7 +259,7 @@ int qdma_get_device_attributes(void *dev_hndl,
 		struct qdma_dev_attributes *dev_info);
 
 int qdma_get_user_bar(void *dev_hndl, uint8_t is_vf,
-		uint8_t func_id, uint8_t *user_bar);
+		uint16_t func_id, uint8_t *user_bar);
 
 int qdma_soft_dump_config_reg_list(void *dev_hndl,
 		uint32_t total_regs,

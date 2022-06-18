@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -18,8 +18,9 @@
 #include "qdma_platform.h"
 #include "qdma_soft_reg.h"
 #include "qdma_soft_access.h"
-#include "qdma_s80_hard_access.h"
+#include "qdma_cpm4_access.h"
 #include "eqdma_soft_access.h"
+#include "eqdma_cpm5_access.h"
 #include "qdma_reg_dump.h"
 
 #ifdef ENABLE_WPP_TRACING
@@ -138,8 +139,10 @@ static const char *qdma_get_device_type(enum qdma_device_type device_type)
 	switch (device_type) {
 	case QDMA_DEVICE_SOFT:
 		return "Soft IP";
-	case QDMA_DEVICE_VERSAL:
-		return "Versal S80 Hard IP";
+	case QDMA_DEVICE_VERSAL_CPM4:
+		return "Versal CPM4 Hard IP";
+	case QDMA_DEVICE_VERSAL_CPM5:
+		return "Versal Hard CPM5";
 	default:
 		qdma_log_error("%s: invalid device type(%d), err:%d\n",
 				__func__, device_type, -QDMA_ERR_INV_PARAM);
@@ -170,6 +173,10 @@ static const char *qdma_get_vivado_release_id(
 		return "vivado 2020.1";
 	case QDMA_VIVADO_2020_2:
 		return "vivado 2020.2";
+	case QDMA_VIVADO_2021_1:
+		return "vivado 2021.1";
+	case QDMA_VIVADO_2022_1:
+		return "vivado 2022.1";
 	default:
 		qdma_log_error("%s: invalid vivado_release_id(%d), err:%d\n",
 				__func__,
@@ -256,7 +263,10 @@ void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
 		version_info->device_type = QDMA_DEVICE_SOFT;
 		break;
 	case 1:
-		version_info->device_type = QDMA_DEVICE_VERSAL;
+		version_info->device_type = QDMA_DEVICE_VERSAL_CPM4;
+		break;
+	case 2:
+		version_info->device_type = QDMA_DEVICE_VERSAL_CPM5;
 		break;
 	default:
 		version_info->device_type = QDMA_DEVICE_NONE;
@@ -322,6 +332,21 @@ void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
 			break;
 		case 1:
 			version_info->vivado_release = QDMA_VIVADO_2020_2;
+			break;
+		case 2:
+			version_info->vivado_release = QDMA_VIVADO_2022_1;
+			break;
+		default:
+			version_info->vivado_release = QDMA_VIVADO_NONE;
+			break;
+		}
+	} else if (version_info->device_type == QDMA_DEVICE_VERSAL_CPM5) {
+		switch (vivado_release_id) {
+		case 0:
+			version_info->vivado_release = QDMA_VIVADO_2021_1;
+			break;
+		case 1:
+			version_info->vivado_release = QDMA_VIVADO_2022_1;
 			break;
 		default:
 			version_info->vivado_release = QDMA_VIVADO_NONE;
@@ -554,8 +579,8 @@ static int qdma_is_config_bar(void *dev_hndl, uint8_t is_vf, enum qdma_ip *ip)
 	return QDMA_SUCCESS;
 }
 
-int qdma_acc_reg_dump_buf_len(void *dev_hndl,
-		enum qdma_ip_type ip_type, int *buflen)
+int qdma_acc_reg_dump_buf_len(void *dev_hndl, enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type, int *buflen)
 {
 	uint32_t len = 0;
 	int rv = 0;
@@ -574,7 +599,16 @@ int qdma_acc_reg_dump_buf_len(void *dev_hndl,
 		len = qdma_soft_reg_dump_buf_len();
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		len = qdma_s80_hard_reg_dump_buf_len();
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			len = qdma_cpm4_reg_dump_buf_len();
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			len = eqdma_cpm5_reg_dump_buf_len();
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		len = eqdma_reg_dump_buf_len();
@@ -589,8 +623,8 @@ int qdma_acc_reg_dump_buf_len(void *dev_hndl,
 	return rv;
 }
 
-int qdma_acc_reg_info_len(void *dev_hndl,
-		enum qdma_ip_type ip_type, int *buflen, int *num_regs)
+int qdma_acc_reg_info_len(void *dev_hndl, enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type, int *buflen, int *num_regs)
 {
 	uint32_t len = 0;
 	int rv = 0;
@@ -624,8 +658,17 @@ int qdma_acc_reg_info_len(void *dev_hndl,
 		*num_regs = 0;
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		len = qdma_s80_hard_reg_dump_buf_len();
-		*num_regs = (int)((len / REG_DUMP_SIZE_PER_LINE) - 1);
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4) {
+			len = qdma_cpm4_reg_dump_buf_len();
+			*num_regs = (int)((len / REG_DUMP_SIZE_PER_LINE) - 1);
+		} else if (device_type == QDMA_DEVICE_VERSAL_CPM5) {
+			len = eqdma_cpm5_reg_dump_buf_len();
+			*num_regs = (int)((len / REG_DUMP_SIZE_PER_LINE) - 1);
+		} else {
+			qdma_log_error("%s: Invalid device type, err = %d",
+				__func__, -QDMA_ERR_INV_PARAM);
+			return -QDMA_ERR_INV_PARAM;
+		}
 		break;
 	case EQDMA_SOFT_IP:
 		len = eqdma_reg_dump_buf_len();
@@ -641,8 +684,8 @@ int qdma_acc_reg_info_len(void *dev_hndl,
 	return rv;
 }
 
-int qdma_acc_context_buf_len(void *dev_hndl,
-		enum qdma_ip_type ip_type, uint8_t st,
+int qdma_acc_context_buf_len(void *dev_hndl, enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type, uint8_t st,
 		enum qdma_dev_q_type q_type, uint32_t *buflen)
 {
 	int rv = 0;
@@ -660,7 +703,16 @@ int qdma_acc_context_buf_len(void *dev_hndl,
 		rv = qdma_soft_context_buf_len(st, q_type, buflen);
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_context_buf_len(st, q_type, buflen);
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_context_buf_len(st, q_type, buflen);
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_context_buf_len(st, q_type, buflen);
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		rv = eqdma_context_buf_len(st, q_type, buflen);
@@ -674,8 +726,8 @@ int qdma_acc_context_buf_len(void *dev_hndl,
 	return rv;
 }
 
-int qdma_acc_get_num_config_regs(void *dev_hndl,
-		enum qdma_ip_type ip_type, uint32_t *num_regs)
+int qdma_acc_get_num_config_regs(void *dev_hndl, enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type, uint32_t *num_regs)
 {
 	int rv = 0;
 
@@ -692,7 +744,16 @@ int qdma_acc_get_num_config_regs(void *dev_hndl,
 		rv = qdma_get_config_num_regs();
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_get_config_num_regs();
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_get_config_num_regs();
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_get_config_num_regs();
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		rv = eqdma_get_config_num_regs();
@@ -715,12 +776,13 @@ int qdma_acc_get_num_config_regs(void *dev_hndl,
  * @dev_hndl:   device handle
  * @is_vf:      Whether PF or VF
  * @ip_type:	QDMA IP Type
+ * @device_type:QDMA DEVICE Type
  * @reg_data:   pointer to register data to be filled
  *
  * Return:	Length up-till the buffer is filled -success and < 0 - failure
  *****************************************************************************/
 int qdma_acc_get_config_regs(void *dev_hndl, uint8_t is_vf,
-		enum qdma_ip_type ip_type,
+		enum qdma_ip_type ip_type, enum qdma_device_type device_type,
 		uint32_t *reg_data)
 {
 	struct xreg_info *reg_info;
@@ -754,8 +816,17 @@ int qdma_acc_get_config_regs(void *dev_hndl, uint8_t is_vf,
 		reg_info = qdma_get_config_regs();
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		num_regs = qdma_s80_hard_get_config_num_regs();
-		reg_info = qdma_s80_hard_get_config_regs();
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4) {
+			num_regs = qdma_cpm4_get_config_num_regs();
+			reg_info = qdma_cpm4_get_config_regs();
+		} else if (device_type == QDMA_DEVICE_VERSAL_CPM5) {
+			num_regs = eqdma_cpm5_get_config_num_regs();
+			reg_info = eqdma_cpm5_get_config_regs();
+		} else {
+			qdma_log_error("%s: Invalid device type, err = %d",
+				__func__, -QDMA_ERR_INV_PARAM);
+			return -QDMA_ERR_INV_PARAM;
+		}
 		break;
 	case EQDMA_SOFT_IP:
 		num_regs = eqdma_get_config_num_regs();
@@ -784,13 +855,14 @@ int qdma_acc_get_config_regs(void *dev_hndl, uint8_t is_vf,
  * @dev_hndl:   device handle
  * @is_vf:      Whether PF or VF
  * @ip_type:	QDMA IP Type
+ * @device_type:QDMA DEVICE Type
  * @buf :       pointer to buffer to be filled
  * @buflen :    Length of the buffer
  *
  * Return:	Length up-till the buffer is filled -success and < 0 - failure
  *****************************************************************************/
 int qdma_acc_dump_config_regs(void *dev_hndl, uint8_t is_vf,
-		enum qdma_ip_type ip_type,
+		enum qdma_ip_type ip_type, enum qdma_device_type device_type,
 		char *buf, uint32_t buflen)
 {
 	int rv = 0;
@@ -801,8 +873,18 @@ int qdma_acc_dump_config_regs(void *dev_hndl, uint8_t is_vf,
 				buf, buflen);
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_dump_config_regs(dev_hndl, is_vf,
-				buf, buflen);
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_dump_config_regs(dev_hndl, is_vf,
+					buf, buflen);
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_dump_config_regs(dev_hndl, is_vf,
+					buf, buflen);
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		rv = eqdma_dump_config_regs(dev_hndl, is_vf,
@@ -824,13 +906,14 @@ int qdma_acc_dump_config_regs(void *dev_hndl, uint8_t is_vf,
  *
  * @dev_hndl:   device handle
  * @ip_type:	QDMA IP Type
+ * @device_type:QDMA DEVICE Type
  * @buf :       pointer to buffer to be filled
  * @buflen :    Length of the buffer
  *
  * Return:	Length up-till the buffer is filled -success and < 0 - failure
  *****************************************************************************/
-int qdma_acc_dump_reg_info(void *dev_hndl,
-		enum qdma_ip_type ip_type, uint32_t reg_addr,
+int qdma_acc_dump_reg_info(void *dev_hndl, enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type, uint32_t reg_addr,
 		uint32_t num_regs, char *buf, uint32_t buflen)
 {
 	int rv = 0;
@@ -853,8 +936,18 @@ int qdma_acc_dump_reg_info(void *dev_hndl,
 		"QDMA reg field info not supported for QDMA_SOFT_IP\n");
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_dump_reg_info(dev_hndl, reg_addr,
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_dump_reg_info(dev_hndl, reg_addr,
 				num_regs, buf, buflen);
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_dump_reg_info(dev_hndl, reg_addr,
+				num_regs, buf, buflen);
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		rv = eqdma_dump_reg_info(dev_hndl, reg_addr,
@@ -876,6 +969,7 @@ int qdma_acc_dump_reg_info(void *dev_hndl,
  *
  * @dev_hndl:   device handle
  * @ip_type:	QDMA IP Type
+ * @device_type:QDMA DEVICE Type
  * @st:		Queue Mode (ST or MM)
  * @q_type:	Queue Type
  * @ctxt_data:  Context Data
@@ -886,6 +980,7 @@ int qdma_acc_dump_reg_info(void *dev_hndl,
  *****************************************************************************/
 int qdma_acc_dump_queue_context(void *dev_hndl,
 		enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type,
 		uint8_t st,
 		enum qdma_dev_q_type q_type,
 		struct qdma_descq_context *ctxt_data,
@@ -899,8 +994,18 @@ int qdma_acc_dump_queue_context(void *dev_hndl,
 				st, q_type, ctxt_data, buf, buflen);
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_dump_queue_context(dev_hndl,
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_dump_queue_context(dev_hndl,
 				st, q_type, ctxt_data, buf, buflen);
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_dump_queue_context(dev_hndl,
+				st, q_type, ctxt_data, buf, buflen);
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		rv = eqdma_dump_queue_context(dev_hndl,
@@ -924,6 +1029,7 @@ int qdma_acc_dump_queue_context(void *dev_hndl,
  *
  * @dev_hndl:   device handle
  * @ip_type:	QDMA IP type
+ * @device_type:QDMA DEVICE Type
  * @hw_qid:     queue id
  * @st:		Queue Mode(ST or MM)
  * @q_type:	Queue type(H2C/C2H/CMPT)*
@@ -934,6 +1040,8 @@ int qdma_acc_dump_queue_context(void *dev_hndl,
  *****************************************************************************/
 int qdma_acc_read_dump_queue_context(void *dev_hndl,
 				enum qdma_ip_type ip_type,
+				enum qdma_device_type device_type,
+				uint16_t func_id,
 				uint16_t qid_hw,
 				uint8_t st,
 				enum qdma_dev_q_type q_type,
@@ -943,15 +1051,25 @@ int qdma_acc_read_dump_queue_context(void *dev_hndl,
 
 	switch (ip_type) {
 	case QDMA_SOFT_IP:
-		rv = qdma_soft_read_dump_queue_context(dev_hndl,
+		rv = qdma_soft_read_dump_queue_context(dev_hndl, func_id,
 				qid_hw, st, q_type, buf, buflen);
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_read_dump_queue_context(dev_hndl,
-				qid_hw, st, q_type, buf, buflen);
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_read_dump_queue_context(dev_hndl,
+				func_id, qid_hw, st, q_type, buf, buflen);
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_read_dump_queue_context(dev_hndl,
+				func_id, qid_hw, st, q_type, buf, buflen);
+		else {
+			qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+			return -QDMA_ERR_INV_PARAM;
+		}
+
 		break;
 	case EQDMA_SOFT_IP:
-		rv = eqdma_read_dump_queue_context(dev_hndl,
+		rv = eqdma_read_dump_queue_context(dev_hndl, func_id,
 				qid_hw, st, q_type, buf, buflen);
 		break;
 	default:
@@ -978,6 +1096,7 @@ int qdma_acc_read_dump_queue_context(void *dev_hndl,
  *****************************************************************************/
 int qdma_acc_dump_config_reg_list(void *dev_hndl,
 		enum qdma_ip_type ip_type,
+		enum qdma_device_type device_type,
 		uint32_t num_regs,
 		struct qdma_reg_data *reg_list,
 		char *buf, uint32_t buflen)
@@ -991,9 +1110,20 @@ int qdma_acc_dump_config_reg_list(void *dev_hndl,
 				reg_list, buf, buflen);
 		break;
 	case QDMA_VERSAL_HARD_IP:
-		rv = qdma_s80_hard_dump_config_reg_list(dev_hndl,
+		if (device_type == QDMA_DEVICE_VERSAL_CPM4)
+			rv = qdma_cpm4_dump_config_reg_list(dev_hndl,
 				num_regs,
 				reg_list, buf, buflen);
+		else if (device_type == QDMA_DEVICE_VERSAL_CPM5)
+			rv = eqdma_cpm5_dump_config_reg_list(dev_hndl,
+				num_regs,
+				reg_list, buf, buflen);
+	else {
+		qdma_log_error("%s: Invalid device type, err = %d",
+			__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
 		break;
 	case EQDMA_SOFT_IP:
 		rv = eqdma_dump_config_reg_list(dev_hndl,
@@ -1019,7 +1149,7 @@ int qdma_acc_dump_config_reg_list(void *dev_hndl,
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-static int qdma_get_function_number(void *dev_hndl, uint8_t *func_id)
+static int qdma_get_function_number(void *dev_hndl, uint16_t *func_id)
 {
 	if (!dev_hndl || !func_id) {
 		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
@@ -1195,56 +1325,111 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 	qdma_log_info("Vivado Release: %s\n",
 		qdma_get_vivado_release_id(version_info.vivado_release));
 
-	if (version_info.ip_type == QDMA_VERSAL_HARD_IP) {
+	if (version_info.ip_type == QDMA_VERSAL_HARD_IP &&
+			version_info.device_type == QDMA_DEVICE_VERSAL_CPM4) {
 		hw_access->qdma_init_ctxt_memory =
-				&qdma_s80_hard_init_ctxt_memory;
-		hw_access->qdma_qid2vec_conf = &qdma_s80_hard_qid2vec_conf;
-		hw_access->qdma_fmap_conf = &qdma_s80_hard_fmap_conf;
-		hw_access->qdma_sw_ctx_conf = &qdma_s80_hard_sw_ctx_conf;
+				&qdma_cpm4_init_ctxt_memory;
+		hw_access->qdma_qid2vec_conf = &qdma_cpm4_qid2vec_conf;
+		hw_access->qdma_fmap_conf = &qdma_cpm4_fmap_conf;
+		hw_access->qdma_sw_ctx_conf = &qdma_cpm4_sw_ctx_conf;
 		hw_access->qdma_pfetch_ctx_conf =
-				&qdma_s80_hard_pfetch_ctx_conf;
-		hw_access->qdma_cmpt_ctx_conf = &qdma_s80_hard_cmpt_ctx_conf;
-		hw_access->qdma_hw_ctx_conf = &qdma_s80_hard_hw_ctx_conf;
+				&qdma_cpm4_pfetch_ctx_conf;
+		hw_access->qdma_cmpt_ctx_conf = &qdma_cpm4_cmpt_ctx_conf;
+		hw_access->qdma_hw_ctx_conf = &qdma_cpm4_hw_ctx_conf;
 		hw_access->qdma_credit_ctx_conf =
-				&qdma_s80_hard_credit_ctx_conf;
+				&qdma_cpm4_credit_ctx_conf;
 		hw_access->qdma_indirect_intr_ctx_conf =
-				&qdma_s80_hard_indirect_intr_ctx_conf;
+				&qdma_cpm4_indirect_intr_ctx_conf;
 		hw_access->qdma_set_default_global_csr =
-					&qdma_s80_hard_set_default_global_csr;
+					&qdma_cpm4_set_default_global_csr;
 		hw_access->qdma_queue_pidx_update =
-				&qdma_s80_hard_queue_pidx_update;
+				&qdma_cpm4_queue_pidx_update;
 		hw_access->qdma_queue_cmpt_cidx_update =
-				&qdma_s80_hard_queue_cmpt_cidx_update;
+				&qdma_cpm4_queue_cmpt_cidx_update;
 		hw_access->qdma_queue_intr_cidx_update =
-				&qdma_s80_hard_queue_intr_cidx_update;
+				&qdma_cpm4_queue_intr_cidx_update;
 		hw_access->qdma_get_user_bar = &qdma_cmp_get_user_bar;
 		hw_access->qdma_get_device_attributes =
-				&qdma_s80_hard_get_device_attributes;
+				&qdma_cpm4_get_device_attributes;
 		hw_access->qdma_dump_config_regs =
-				&qdma_s80_hard_dump_config_regs;
+				&qdma_cpm4_dump_config_regs;
 		hw_access->qdma_dump_intr_context =
-				&qdma_s80_hard_dump_intr_context;
+				&qdma_cpm4_dump_intr_context;
 		hw_access->qdma_hw_error_enable =
-				&qdma_s80_hard_hw_error_enable;
+				&qdma_cpm4_hw_error_enable;
 		hw_access->qdma_hw_error_process =
-				&qdma_s80_hard_hw_error_process;
+				&qdma_cpm4_hw_error_process;
 		hw_access->qdma_hw_get_error_name =
-				&qdma_s80_hard_hw_get_error_name;
+				&qdma_cpm4_hw_get_error_name;
 		hw_access->qdma_legacy_intr_conf = NULL;
-		hw_access->qdma_read_reg_list = &qdma_s80_hard_read_reg_list;
+		hw_access->qdma_read_reg_list = &qdma_cpm4_read_reg_list;
 		hw_access->qdma_dump_config_reg_list =
-				&qdma_s80_hard_dump_config_reg_list;
+				&qdma_cpm4_dump_config_reg_list;
 		hw_access->qdma_dump_queue_context =
-				&qdma_s80_hard_dump_queue_context;
+				&qdma_cpm4_dump_queue_context;
 		hw_access->qdma_read_dump_queue_context =
-				&qdma_s80_hard_read_dump_queue_context;
-		hw_access->qdma_dump_reg_info = &qdma_s80_hard_dump_reg_info;
-		hw_access->qdma_max_errors = QDMA_S80_HARD_ERRS_ALL;
+				&qdma_cpm4_read_dump_queue_context;
+		hw_access->qdma_dump_reg_info = &qdma_cpm4_dump_reg_info;
+		hw_access->qdma_max_errors = QDMA_CPM4_ERRS_ALL;
 	}
+
+	if (version_info.ip_type == QDMA_VERSAL_HARD_IP &&
+			version_info.device_type == QDMA_DEVICE_VERSAL_CPM5) {
+		hw_access->qdma_init_ctxt_memory =
+			&eqdma_cpm5_init_ctxt_memory;
+#ifdef TANDEM_BOOT_SUPPORTED
+		hw_access->qdma_init_st_ctxt =
+			&eqdma_cpm5_init_st_ctxt;
+#endif
+		hw_access->qdma_sw_ctx_conf = &eqdma_cpm5_sw_ctx_conf;
+		hw_access->qdma_fmap_conf = &eqdma_cpm5_fmap_conf;
+		hw_access->qdma_pfetch_ctx_conf =
+			&eqdma_cpm5_pfetch_ctx_conf;
+		hw_access->qdma_cmpt_ctx_conf = &eqdma_cpm5_cmpt_ctx_conf;
+		hw_access->qdma_indirect_intr_ctx_conf =
+				&eqdma_cpm5_indirect_intr_ctx_conf;
+		hw_access->qdma_dump_config_regs =
+			&eqdma_cpm5_dump_config_regs;
+		hw_access->qdma_dump_intr_context =
+			&eqdma_cpm5_dump_intr_context;
+		hw_access->qdma_hw_error_enable =
+			&eqdma_cpm5_hw_error_enable;
+		hw_access->qdma_hw_error_process =
+			&eqdma_cpm5_hw_error_process;
+		hw_access->qdma_hw_get_error_name =
+			&eqdma_cpm5_hw_get_error_name;
+		hw_access->qdma_hw_ctx_conf = &eqdma_cpm5_hw_ctx_conf;
+		hw_access->qdma_credit_ctx_conf =
+			&eqdma_cpm5_credit_ctx_conf;
+		hw_access->qdma_set_default_global_csr =
+				&eqdma_cpm5_set_default_global_csr;
+		hw_access->qdma_get_device_attributes =
+				&eqdma_cpm5_get_device_attributes;
+		hw_access->qdma_get_user_bar = &eqdma_cpm5_get_user_bar;
+		hw_access->qdma_read_reg_list = &eqdma_cpm5_read_reg_list;
+		hw_access->qdma_dump_config_reg_list =
+				&eqdma_cpm5_dump_config_reg_list;
+		hw_access->qdma_dump_queue_context =
+				&eqdma_cpm5_dump_queue_context;
+		hw_access->qdma_read_dump_queue_context =
+				&eqdma_cpm5_read_dump_queue_context;
+		hw_access->qdma_dump_reg_info = &eqdma_cpm5_dump_reg_info;
+		/* All CSR and Queue space register belongs to Window 0.
+		 * Mailbox and MSIX register belongs to Window 1
+		 * Therefore, Mailbox offsets are different for EQDMA
+		 * Mailbox offset for PF : 128K + original address
+		 * Mailbox offset for VF : 16K + original address
+		 */
+		hw_access->mbox_base_pf = EQDMA_CPM5_OFFSET_MBOX_BASE_PF;
+		hw_access->mbox_base_vf = EQDMA_CPM5_OFFSET_MBOX_BASE_VF;
+		hw_access->qdma_max_errors = EQDMA_CPM5_ERRS_ALL;
+
+}
 
 	if (version_info.ip_type == EQDMA_SOFT_IP) {
 		hw_access->qdma_init_ctxt_memory = &eqdma_init_ctxt_memory;
 		hw_access->qdma_sw_ctx_conf = &eqdma_sw_ctx_conf;
+		hw_access->qdma_fmap_conf = &eqdma_fmap_conf;
 		hw_access->qdma_pfetch_ctx_conf = &eqdma_pfetch_ctx_conf;
 		hw_access->qdma_cmpt_ctx_conf = &eqdma_cmpt_ctx_conf;
 		hw_access->qdma_indirect_intr_ctx_conf =

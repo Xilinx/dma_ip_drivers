@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -134,10 +134,12 @@ static int dbgfs_dump_qdma_regs(unsigned long dev_hndl, char *dev_name,
 
 #ifndef __QDMA_VF__
 	rv = qdma_acc_reg_dump_buf_len((void *)dev_hndl,
-			xdev->version_info.ip_type, &buflen);
+			xdev->version_info.ip_type,
+			xdev->version_info.device_type, &buflen);
 #else
 	rv = qdma_acc_reg_dump_buf_len((void *)dev_hndl,
-			xdev->version_info.ip_type, &buflen);
+			xdev->version_info.ip_type,
+			xdev->version_info.device_type, &buflen);
 #endif
 	if (rv < 0) {
 		pr_err("Failed to get reg dump buffer length\n");
@@ -201,7 +203,8 @@ static int dbgfs_dump_qdma_reg_info(unsigned long dev_hndl, char *dev_name,
 		return -EINVAL;
 
 	rv = qdma_acc_reg_info_len((void *)dev_hndl,
-			xdev->version_info.ip_type, &buflen, &num_regs);
+			xdev->version_info.ip_type,
+			xdev->version_info.device_type, &buflen, &num_regs);
 
 	if (rv < 0) {
 		pr_err("Failed to get reg dump buffer length\n");

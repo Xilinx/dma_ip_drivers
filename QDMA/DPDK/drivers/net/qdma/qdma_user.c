@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -133,7 +133,8 @@ int qdma_ul_process_immediate_data_st(void *qhndl, void *cmpt_entry,
 #else
 	qdma_get_device_info(qhndl, &dev_type, &ip_type);
 
-	if (ip_type == QDMA_VERSAL_HARD_IP) {
+	if (ip_type == QDMA_VERSAL_HARD_IP &&
+			dev_type == QDMA_DEVICE_VERSAL_CPM4) {
 		//Ignoring first 20 bits of length feild
 		dprintf(ofd, "%02x",
 			(*((uint8_t *)cmpt_entry + 2) & 0xF0));

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -199,6 +199,11 @@ static int xnl_register_write(struct sk_buff *, struct genl_info *);
 static int xnl_get_global_csr(struct sk_buff *skb2, struct genl_info *info);
 static int xnl_get_queue_state(struct sk_buff *, struct genl_info *);
 static int xnl_config_reg_info_dump(struct sk_buff *, struct genl_info *);
+
+#ifdef TANDEM_BOOT_SUPPORTED
+static int xnl_en_st(struct sk_buff *skb2, struct genl_info *info);
+#endif
+
 #ifdef ERR_DEBUG
 static int xnl_err_induce(struct sk_buff *skb2, struct genl_info *info);
 #endif
@@ -503,6 +508,23 @@ static struct genl_ops xnl_ops[] = {
 #endif
 		.doit = xnl_get_queue_state,
 	},
+
+#ifdef TANDEM_BOOT_SUPPORTED
+	{
+		.cmd = XNL_CMD_EN_ST,
+#ifdef RHEL_RELEASE_VERSION
+#if RHEL_RELEASE_VERSION(8, 3) > RHEL_RELEASE_CODE
+		.policy = xnl_policy,
+#endif
+#else
+#if KERNEL_VERSION(5, 2, 0) > LINUX_VERSION_CODE
+		.policy = xnl_policy,
+#endif
+#endif
+		.doit = xnl_en_st,
+	},
+#endif
+
 #ifdef ERR_DEBUG
 	{
 		.cmd = XNL_CMD_Q_ERR_INDUCE,
@@ -2859,6 +2881,33 @@ free_msg_buff:
 	kfree(csr);
 	return rv;
 }
+
+#ifdef TANDEM_BOOT_SUPPORTED
+static int xnl_en_st(struct sk_buff *skb2, struct genl_info *info)
+{
+	struct xlnx_pci_dev *xpdev;
+	int rv;
+	char *buf;
+
+	if (info == NULL)
+		return -EINVAL;
+
+	xnl_dump_attrs(info);
+
+	xpdev = xnl_rcv_check_xpdev(info);
+	if (!xpdev)
+		return -EINVAL;
+	buf = xnl_mem_alloc(XNL_RESP_BUFLEN_MIN, info);
+	if (!buf)
+		return -ENOMEM;
+
+	qdma_init_st_ctxt(xpdev->dev_hndl, buf, XNL_RESP_BUFLEN_MAX);
+	rv = xnl_respond_buffer(info, buf, XNL_RESP_BUFLEN_MAX, 0);
+
+	kfree(buf);
+	return rv;
+}
+#endif
 
 int xlnx_nl_init(void)
 {

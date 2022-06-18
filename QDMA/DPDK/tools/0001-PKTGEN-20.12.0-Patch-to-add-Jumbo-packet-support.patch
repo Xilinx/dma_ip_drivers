@@ -1,4 +1,4 @@
-From cb0e7303150dcbb49c3aad88ac664b691612f1bc Mon Sep 17 00:00:00 2001
+From 8d8204c48660cfe67ce27c95ce029e2cfa302958 Mon Sep 17 00:00:00 2001
 From: Suryanarayana Raju Sangani <ssangani@xilinx.com>
 Date: Thu, 27 Feb 2020 05:13:38 -0700
 Subject: [PATCH] PKTGEN-20.12.0: Patch to add Jumbo packet support
@@ -19,12 +19,12 @@ Signed-off-by: Suryanarayana Raju Sangani <ssangani@xilinx.com>
 ---
  app/pktgen-cmds.c      | 15 +++++++++++----
  app/pktgen-constants.h |  3 ++-
- app/pktgen-main.c      | 21 +++++++++++++++++----
+ app/pktgen-main.c      | 24 +++++++++++++++++-------
  app/pktgen-port-cfg.c  | 12 ++++++++----
  app/pktgen-range.c     |  3 ++-
- app/pktgen.c           | 14 ++++++++++++--
+ app/pktgen.c           | 19 +++++++++++++++++--
  app/pktgen.h           |  4 +++-
- 7 files changed, 55 insertions(+), 17 deletions(-)
+ 7 files changed, 60 insertions(+), 20 deletions(-)
 
 diff --git a/app/pktgen-cmds.c b/app/pktgen-cmds.c
 index 4da9bab..065fbe8 100644
@@ -98,7 +98,7 @@ index ede4e65..8694e18 100644
  };
  #define DEFAULT_MBUF_SIZE	(PG_ETHER_MAX_JUMBO_FRAME_LEN + RTE_PKTMBUF_HEADROOM) /* See: http://dpdk.org/dev/patchwork/patch/4479/ */
 diff --git a/app/pktgen-main.c b/app/pktgen-main.c
-index 96d1c0c..9c22278 100644
+index 96d1c0c..1ca2941 100644
 --- a/app/pktgen-main.c
 +++ b/app/pktgen-main.c
 @@ -188,7 +188,7 @@ pktgen_parse_args(int argc, char **argv)
@@ -136,16 +136,16 @@ index 96d1c0c..9c22278 100644
  
  	signal(SIGSEGV, sig_handler);
  	signal(SIGHUP, sig_handler);
-@@ -563,10 +570,16 @@ main(int argc, char **argv)
+@@ -563,10 +570,13 @@ main(int argc, char **argv)
  	/* Wait for all of the cores to stop running and exit. */
  	rte_eal_mp_wait_lcore();
  
 -	RTE_ETH_FOREACH_DEV(i) {
+-		rte_eth_dev_stop(i);
+-		rte_delay_us_sleep(100 * 1000);
+-		rte_eth_dev_close(i);
 +	nb_ports = rte_eth_dev_count_avail();
 +	for(i = nb_ports-1; i >= 0; i--) {
- 		rte_eth_dev_stop(i);
- 		rte_delay_us_sleep(100 * 1000);
- 		rte_eth_dev_close(i);
 +		dev = rte_eth_devices[i].device;
 +		if (rte_dev_remove(dev))
 +			printf("Failed to detach port '%d'\n", i);
@@ -214,7 +214,7 @@ index f88258d..bbaaa6f 100644
  	range->vxlan_gid = info->seq_pkt[SINGLE_PKT].group_id;
  	range->vxlan_gid_inc = 0;
 diff --git a/app/pktgen.c b/app/pktgen.c
-index 26cc80d..43790e0 100644
+index 26cc80d..1042a47 100644
 --- a/app/pktgen.c
 +++ b/app/pktgen.c
 @@ -74,6 +74,7 @@ pktgen_wire_size(port_info_t *info)
@@ -225,7 +225,26 @@ index 26cc80d..43790e0 100644
  	return size;
  }
  
-@@ -912,6 +913,10 @@ pktgen_setup_cb(struct rte_mempool *mp,
+@@ -296,6 +297,7 @@ pktgen_send_burst(port_info_t *info, uint16_t qid)
+ 	struct qstats_s *qstats;
+ 	uint32_t ret, cnt, tap, rnd, tstamp, i;
+ 	int32_t seq_idx;
++	pkt_seq_t *pkt;
+ 
+ 	if ((cnt = mtab->len) == 0)
+ 		return;
+@@ -310,6 +312,10 @@ pktgen_send_burst(port_info_t *info, uint16_t qid)
+ 	else
+ 		seq_idx = SINGLE_PKT;
+ 
++	pkt = &info->seq_pkt[seq_idx];
++	for (i = 0; i < cnt; i++)
++		rte_pktmbuf_pkt_len(pkts[i]) = pkt->pktSize;
++
+ 	tap = pktgen_tst_port_flags(info, PROCESS_TX_TAP_PKTS);
+ 	rnd = pktgen_tst_port_flags(info, SEND_RANDOM_PKTS);
+ 	tstamp = pktgen_tst_port_flags(info, (SEND_LATENCY_PKTS | SEND_RATE_PACKETS | SAMPLING_LATENCIES));
+@@ -912,6 +918,10 @@ pktgen_setup_cb(struct rte_mempool *mp,
  	pkt_seq_t *pkt;
  	uint16_t qid, idx;
  
@@ -236,7 +255,7 @@ index 26cc80d..43790e0 100644
  	info = data->info;
  	qid = data->qid;
  
-@@ -941,7 +946,7 @@ pktgen_setup_cb(struct rte_mempool *mp,
+@@ -941,7 +951,7 @@ pktgen_setup_cb(struct rte_mempool *mp,
  	pktgen_packet_ctor(info, idx, -1);
  
  	rte_memcpy((uint8_t *)m->buf_addr + m->data_off,
@@ -245,7 +264,7 @@ index 26cc80d..43790e0 100644
  
  	m->pkt_len  = pkt->pktSize;
  	m->data_len = pkt->pktSize;
-@@ -1150,7 +1155,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
+@@ -1150,7 +1160,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
  {
  	uint8_t pid;
  	uint16_t qid, nb_rx;
@@ -254,7 +273,7 @@ index 26cc80d..43790e0 100644
  	struct qstats_s *qstats;
  	int i;
  
-@@ -1169,6 +1174,10 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
+@@ -1169,6 +1179,10 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
  	for(i = 0; i < nb_rx; i++)
  		qstats->rxbytes += rte_pktmbuf_data_len(pkts_burst[i]);
  
@@ -265,7 +284,7 @@ index 26cc80d..43790e0 100644
  	pktgen_recv_tstamp(info, pkts_burst, nb_rx);
  
  	/* packets are not freed in the next call. */
-@@ -1185,6 +1194,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
+@@ -1185,6 +1199,7 @@ pktgen_main_receive(port_info_t *info, uint8_t lid,
  	}
  
  	rte_pktmbuf_free_bulk(pkts_burst, nb_rx);

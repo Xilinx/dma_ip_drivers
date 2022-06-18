@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -1769,10 +1769,18 @@ static void qdma_error_resume(struct pci_dev *pdev)
 	}
 
 	pr_info("dev 0x%p,0x%p.\n", pdev, xpdev);
+#ifdef RHEL_RELEASE_VERSION
+#if RHEL_RELEASE_VERSION(8, 3) > RHEL_RELEASE_CODE
+	pci_cleanup_aer_uncorrect_error_status(pdev);
+#else
+	pci_aer_clear_nonfatal_status(pdev);
+#endif
+#else
 #if KERNEL_VERSION(5, 7, 0) <= LINUX_VERSION_CODE
 	pci_aer_clear_nonfatal_status(pdev);
 #else
 	pci_cleanup_aer_uncorrect_error_status(pdev);
+#endif
 #endif
 }
 
@@ -1802,14 +1810,18 @@ static void qdma_reset_prepare(struct pci_dev *pdev)
 	qdma_device_offline(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);
 
 	/* FLR setting is required for Versal Hard IP */
-	if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)
+	if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+			(xdev->version_info.device_type ==
+			 QDMA_DEVICE_VERSAL_CPM4))
 		qdma_device_flr_quirk_set(pdev, xpdev->dev_hndl);
 	xpdev_queue_delete_all(xpdev);
 	xpdev_device_cleanup(xpdev);
 	xdev->conf.qsets_max = 0;
 	xdev->conf.qsets_base = -1;
 
-	if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)
+	if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+			(xdev->version_info.device_type ==
+			 QDMA_DEVICE_VERSAL_CPM4))
 		qdma_device_flr_quirk_check(pdev, xpdev->dev_hndl);
 }
 
@@ -1837,14 +1849,18 @@ static void qdma_reset_notify(struct pci_dev *pdev, bool prepare)
 	if (prepare) {
 		qdma_device_offline(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);
 		/* FLR setting is not required for 2018.3 IP */
-		if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)
+		if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+				(xdev->version_info.device_type ==
+				 QDMA_DEVICE_VERSAL_CPM4))
 			qdma_device_flr_quirk_set(pdev, xpdev->dev_hndl);
 		xpdev_queue_delete_all(xpdev);
 		xpdev_device_cleanup(xpdev);
 		xdev->conf.qsets_max = 0;
 		xdev->conf.qsets_base = -1;
 
-		if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP)
+		if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+				(xdev->version_info.device_type ==
+				 QDMA_DEVICE_VERSAL_CPM4))
 			qdma_device_flr_quirk_check(pdev, xpdev->dev_hndl);
 	} else
 		qdma_device_online(pdev, xpdev->dev_hndl, XDEV_FLR_ACTIVE);

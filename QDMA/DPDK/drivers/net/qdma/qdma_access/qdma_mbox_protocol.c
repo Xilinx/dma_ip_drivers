@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019-2020 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -938,8 +938,8 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t dma_device_index,
 	return QDMA_SUCCESS;
 }
 
-static int mbox_read_queue_contexts(void *dev_hndl, uint16_t qid_hw,
-			uint8_t st, uint8_t c2h,
+static int mbox_read_queue_contexts(void *dev_hndl, uint16_t func_id,
+			uint16_t qid_hw, uint8_t st, uint8_t c2h,
 			enum mbox_cmpt_ctxt_type cmpt_ctxt_type,
 			struct qdma_descq_context *ctxt)
 {
@@ -968,6 +968,14 @@ static int mbox_read_queue_contexts(void *dev_hndl, uint16_t qid_hw,
 				      QDMA_HW_ACCESS_READ);
 	if (rv < 0) {
 		qdma_log_error("%s: read credit ctxt, err:%d\n",
+					__func__, rv);
+		return rv;
+	}
+
+	rv = hw->qdma_fmap_conf(dev_hndl, func_id, &ctxt->fmap,
+				      QDMA_HW_ACCESS_READ);
+	if (rv < 0) {
+		qdma_log_error("%s: read fmap ctxt, err:%d\n",
 					__func__, rv);
 		return rv;
 	}
@@ -1339,7 +1347,8 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t dma_device_index,
 	{
 		struct mbox_msg_qctxt *qctxt = &rcv->qctxt;
 
-		rv = mbox_read_queue_contexts(dev_hndl, qctxt->qid_hw,
+		rv = mbox_read_queue_contexts(dev_hndl, hdr->src_func_id,
+						qctxt->qid_hw,
 						qctxt->st,
 						qctxt->c2h,
 						qctxt->cmpt_ctxt_type,

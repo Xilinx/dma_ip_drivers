@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -145,6 +145,13 @@ enum q_dir {
 	Q_DIRS
 };
 
+
+enum mm_channel_ctrl {
+	MM_CHANNEL_0, /*All Qs are assigned to channel 0*/
+	MM_CHANNEL_1, /*All Qs are assigned to channel 1*/
+	MM_CHANNEL_INTERLEAVE /*Odd queues are assigned to ch 1 and even Qs are assigned to channel 0*/
+};
+
 #define THREADS_SET_CPU_AFFINITY 0
 
 struct io_info {
@@ -183,7 +190,7 @@ struct io_info {
 	unsigned int mm_chnl;
 	int keyhole_en;
 	unsigned int aperture_sz;
-	unsigned int offset;
+	unsigned long int offset;
 #ifdef DEBUG
 	unsigned long long total_nodes;
 	unsigned long long freed_nodes;
@@ -214,7 +221,10 @@ static unsigned int pkt_sz = 0;
 static unsigned int num_pkts;
 static int keyhole_en = 0;
 static unsigned int aperture_sz = 0;
-static unsigned int offset = 0;
+/* For MM Channel =0 or 1 , offset is used for both MM Channels */
+static unsigned long int offset = 0;
+/*In MM Channel interleaving offset_ch1 is the offset used for Channel 1*/
+static unsigned long int offset_ch1 = 0;
 static unsigned int tsecs = 0;
 struct io_info *info = NULL;
 static char cfg_name[20];
@@ -269,6 +279,17 @@ static int arg_read_int(char *s, uint32_t *v)
 
 
     *v = strtoul(s, &p, 0);
+    if (*p && (*p != '\n') && !isblank(*p)) {
+	printf("Error:something not right%s %s %s",s, p, isblank(*p)? "true": "false");
+        return -EINVAL;
+    }
+    return 0;
+}
+
+static int arg_read_long_uint(char *s, uint64_t *v)
+{
+    char *p = NULL;
+    *v = strtoull(s, &p, 0);
     if (*p && (*p != '\n') && !isblank(*p)) {
 	printf("Error:something not right%s %s %s",s, p, isblank(*p)? "true": "false");
         return -EINVAL;
@@ -623,7 +644,10 @@ static void create_thread_info(void)
 					_info[base].q_ctrl = q_ctrl;
 					_info[base].fd = last_fd;
 					_info[base].pkt_burst = num_pkts;
-					_info[base].mm_chnl = mm_chnl;
+					if(mm_chnl == MM_CHANNEL_INTERLEAVE)
+						_info[base].mm_chnl = _info[base].qid % 2;
+					else
+						_info[base].mm_chnl = mm_chnl;
 					_info[base].pkt_sz = pkt_sz;
 					if ((_info[base].mode == Q_MODE_ST) &&
 							(stm_mode)) {
@@ -638,7 +662,10 @@ static void create_thread_info(void)
 							keyhole_en) {
 						_info[base].aperture_sz = aperture_sz;
 					}
-					_info[base].offset = offset;
+					if(mm_chnl == MM_CHANNEL_INTERLEAVE && _info[base].mm_chnl )
+						_info[base].offset = offset_ch1;
+					else
+						_info[base].offset = offset;
 #if THREADS_SET_CPU_AFFINITY
 					_info[base].cpu = h2c_cpu;
 #endif
@@ -664,7 +691,15 @@ static void create_thread_info(void)
 					_info[base].qid = q_start + i;
 					_info[base].q_ctrl = q_ctrl;
 					_info[base].pkt_burst = num_pkts;
-					_info[base].mm_chnl = mm_chnl;
+					if(mm_chnl == MM_CHANNEL_INTERLEAVE)
+						_info[base].mm_chnl = _info[base].qid % 2;
+					else
+						_info[base].mm_chnl = mm_chnl;
+					if(mm_chnl == MM_CHANNEL_INTERLEAVE && _info[base].mm_chnl )
+						_info[base].offset = offset_ch1;
+					else
+						_info[base].offset = offset;
+
 					_info[base].pkt_sz = pkt_sz;
 #if THREADS_SET_CPU_AFFINITY
 					_info[base].cpu = c2h_cpu;
@@ -861,12 +896,17 @@ static void parse_config_file(const char *cfg_fname)
 				printf("Error: Invalid aperture size:%s\n", value);
 				goto prase_cleanup;
 			}
-		} else if (!strncmp(config, "offset", 6)) {
-			if (arg_read_int(value, &offset)) {
+		} else if (!strncmp(config, "offset_ch1", 10)) {
+			if (arg_read_long_uint(value, &offset_ch1)) {
 				printf("Error: Invalid aperture offset:%s\n", value);
 				goto prase_cleanup;
 			}
-		}else if (!strncmp(config, "keyhole_en", 7)) {
+		} else if (!strncmp(config, "offset", 6)) {
+			if (arg_read_long_uint(value, &offset)) {
+				printf("Error: Invalid aperture offset:%s\n", value);
+				goto prase_cleanup;
+			}
+		} else if (!strncmp(config, "keyhole_en", 7)) {
 
 			if (arg_read_int(value, &keyhole_en)) {
 				printf("Error: Invalid keyhole option:%s\n", value);
@@ -1460,7 +1500,7 @@ static int qdma_prepare_q_start(struct xcmd_info *xcmd,
 			qparm->flags |= XNL_F_PFETCH_EN;
 	}
 
-	if (info->dir == Q_MODE_MM) {
+	if (info->mode == Q_MODE_MM) {
 		qparm->mm_channel = info->mm_chnl;
 		f_arg_set |= 1 <<QPARM_MM_CHANNEL;
 	}
@@ -1867,13 +1907,13 @@ static void *io_thread(void *argp)
 					       _info->fd,
 					       iov,
 					       iovcnt,
-						  offset);
+					       _info->offset);
 			} else {
 				io_prep_preadv(io_list[0],
 					       _info->fd,
 					       iov,
 					       iovcnt,
-						  offset);
+					       _info->offset);
 			}
 
 			ret = io_submit(node->ctxt, 1, io_list);

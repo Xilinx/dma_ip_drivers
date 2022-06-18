@@ -1,7 +1,7 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2021 Xilinx, Inc. All rights reserved.
+ * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1160,8 +1160,11 @@ int rte_pmd_qdma_get_device_capabilities(int port_id,
 	case QDMA_DEVICE_SOFT:
 		dev_attr->device_type = RTE_PMD_QDMA_DEVICE_SOFT;
 		break;
-	case QDMA_DEVICE_VERSAL:
-		dev_attr->device_type = RTE_PMD_QDMA_DEVICE_VERSAL;
+	case QDMA_DEVICE_VERSAL_CPM4:
+		dev_attr->device_type = RTE_PMD_QDMA_DEVICE_VERSAL_CPM4;
+		break;
+	case QDMA_DEVICE_VERSAL_CPM5:
+		dev_attr->device_type = RTE_PMD_QDMA_DEVICE_VERSAL_CPM5;
 		break;
 	default:
 		PMD_DRV_LOG(ERR, "%s: Invalid device type "

@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@
 #include <linux/sched.h>
 
 #ifdef __QDMA_VF__
-int xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id)
+int xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u16 func_id)
 {
 	int rv;
 	struct mbox_msg *m = qdma_mbox_msg_alloc();
@@ -64,7 +64,7 @@ int xdev_sriov_vf_reset_offline(struct xlnx_dma_dev *xdev)
 	qdma_mbox_msg_free(m);
 	return rv;
 }
-int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
+int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u16 func_id)
 {
 	int rv;
 	int qbase = -1;
@@ -213,7 +213,7 @@ int qdma_device_sriov_config(struct pci_dev *pdev, unsigned long dev_hndl,
 	return xdev->vf_count;
 }
 
-void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id)
+void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u16 func_id)
 {
 	struct qdma_vf_info *vf = (struct qdma_vf_info *)xdev->vf_info;
 	int i;
@@ -236,7 +236,7 @@ void xdev_sriov_vf_offline(struct xlnx_dma_dev *xdev, u8 func_id)
 	qdma_waitq_wakeup(&xdev->wq);
 }
 
-int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
+int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u16 func_id)
 {
 	struct qdma_vf_info *vf = (struct qdma_vf_info *)xdev->vf_info;
 	int i;
@@ -258,7 +258,7 @@ int xdev_sriov_vf_online(struct xlnx_dma_dev *xdev, u8 func_id)
 		return 0;
 }
 
-int xdev_sriov_vf_fmap(struct xlnx_dma_dev *xdev, u8 func_id,
+int xdev_sriov_vf_fmap(struct xlnx_dma_dev *xdev, u16 func_id,
 			unsigned short qbase, unsigned short qmax)
 {
 	struct qdma_vf_info *vf = (struct qdma_vf_info *)xdev->vf_info;

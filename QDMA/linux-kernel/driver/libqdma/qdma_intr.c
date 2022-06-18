@@ -1,7 +1,7 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2020,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -193,7 +193,9 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 	}
 
 	do {
-		if (xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) {
+		if ((xdev->version_info.ip_type == QDMA_VERSAL_HARD_IP) &&
+				(xdev->version_info.device_type ==
+				 QDMA_DEVICE_VERSAL_CPM4)) {
 			color = ring_entry->ring_cpm.coal_color;
 			intr_type = ring_entry->ring_cpm.intr_type;
 			qid = ring_entry->ring_cpm.qid;
@@ -596,8 +598,7 @@ int intr_setup(struct xlnx_dma_dev *xdev)
 
 #ifndef MBOX_INTERRUPT_DISABLE
 	/** Dedicate 1 vector for mailbox interrupts */
-	if ((xdev->version_info.device_type == QDMA_DEVICE_SOFT) &&
-	(xdev->version_info.vivado_release >= QDMA_VIVADO_2019_1))
+	if (qdma_mbox_is_irq_availabe(xdev))
 		num_vecs_req++;
 #endif
 
@@ -653,8 +654,7 @@ int intr_setup(struct xlnx_dma_dev *xdev)
 	i = 0; /* This is mandatory, do not delete */
 
 #ifndef MBOX_INTERRUPT_DISABLE
-	if ((xdev->version_info.device_type == QDMA_DEVICE_SOFT) &&
-	(xdev->version_info.vivado_release >= QDMA_VIVADO_2019_1)) {
+	if (qdma_mbox_is_irq_availabe(xdev)) {
 		/* Mail box interrupt */
 		rv = intr_vector_setup(xdev, i, INTR_TYPE_MBOX,
 				mbox_intr_handler);

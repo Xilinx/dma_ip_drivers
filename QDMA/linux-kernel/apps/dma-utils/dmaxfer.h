@@ -2,7 +2,7 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2019 - 2020,  Xilinx, Inc.
+ * Copyright (c) 2019 - 2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -28,7 +28,7 @@ struct dmaxfer_io_info {
 	int num_jobs;
 	int pkt_sz;
 	int pkt_burst;
-	int runtime;  
+	int runtime;
 	unsigned int max_req_outstanding;
 	unsigned long long int pps;
 	int (*app_env_init)(unsigned long *handle);

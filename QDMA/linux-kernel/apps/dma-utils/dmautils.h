@@ -603,4 +603,17 @@ int qdmautils_sync_xfer(char *filename, enum qdmautils_io_dir dir, void *buf,
 int qdmautils_async_xfer(char *filename, enum qdmautils_io_dir dir, void *buf,
 		   unsigned int xfer_len);
 
+#ifdef TANDEM_BOOT_SUPPORTED
+/*****************************************************************************/
+/**
+ * qdma_en_st() - Enable Streaming
+ *
+ * @cmd:	command information
+ *
+ * Return:	>=0 for success and <0 for error
+ *
+ *****************************************************************************/
+int qdma_en_st(struct xcmd_info *cmd);
+#endif
+
 #endif /* QDMAUTILS_H */

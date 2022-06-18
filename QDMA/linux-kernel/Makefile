@@ -1,3 +1,23 @@
+#/*
+# * This file is part of the Xilinx DMA IP Core driver for Linux
+# *
+# * Copyright (c) 2017-2022,  Xilinx, Inc.
+# * All rights reserved.
+# *
+# * This source code is free software; you can redistribute it and/or modify it
+# * under the terms and conditions of the GNU General Public License,
+# * version 2, as published by the Free Software Foundation.
+# *
+# * This program is distributed in the hope that it will be useful, but WITHOUT
+# * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# * more details.
+# *
+# * The full GNU General Public License is included in this distribution in
+# * the file called "COPYING".
+# */
+
+
 SHELL = /bin/bash
 
 #
@@ -114,7 +134,7 @@ install-apps:
 	@install -v -m 755 bin/dma-latency $(apps_install_path)
 	@echo "MAN PAGES:"
 	@mkdir -p -m 755 $(docs_install_path)
-	@install -v -m 644 docs/dmactl.8.gz $(docs_install_path)
+	@install -v -m 644 docs/dma-ctl.8.gz $(docs_install_path)
 
 .PHONY: install-dev
 install-dev:
