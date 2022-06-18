@@ -16,7 +16,8 @@ QDMA Hardware Features
 * Supports MSI-X Interrupts
 
    * 2048 MSI-X vectors.
-   * Up to 32 MSI-X per function.
+   * Up to 32 MSI-X per PF (Minimum 8 MSI-x Per PF)
+   * Up to 8  MSI-X per VF (Minimum 8 MSI-x Per VF)
    * Interrupt Aggregation
    * User Interrupts
    * Error Interrupts
@@ -53,6 +54,25 @@ Features Supported only in QDMA4.0 Design
 
 * Debug mode, with extra registers for debug purposes
 * Descriptor Engine can be configured in Internal Mode only
+
+Features Supported only in Versal CPM5 Design
+=============================================
+
+* SRIOV with 4 Physical Functions (PF) and 240 Virtual Functions (VF)
+* Debug mode, with extra registers for debug purposes
+* Descriptor Engine can be configured in Internal Mode only
+* Supports 4096 queue sets for Physical Functions
+
+   * 4096 H2C (Host-to-Card) descriptor rings
+   * 4096 C2H (Card-to-Host) descriptor rings
+   * 4096 completion rings
+* Supports 256 queue sets for Virtual Functions
+
+   * 256 H2C (Host-to-Card) descriptor rings
+   * 256 C2H (Card-to-Host) descriptor rings
+   * 256 Completion Rings
+* Tandem boot support
+   
 
 For details on Hardware Features refer to QDMA_Product_Guide_.
 

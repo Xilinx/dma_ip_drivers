@@ -39,11 +39,21 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2022.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -306,7 +316,7 @@
             
             
               <div class="version">
-                2020.2
+                2022.1
               </div>
             
           
@@ -428,13 +438,13 @@
 <p>dma-to-device is a user application tool provided along with QDMA Linux driver to perform the Host to Card data transfers.</p>
 <div class="section" id="note">
 <h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
-<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code>. If user installed <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> application aleady in <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dma_to_device</span></code>. If user installed <code class="docutils literal"><span class="pre">dma_to_device</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dma_to_device</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
 <p>usage:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-to-device [OPTIONS]
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-to-device [OPTIONS]
 </pre></div>
 </div>
 <p><strong>OPTIONS</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-d (--device) device path from /dev. Device name is formed as qdmabbddf-&lt;mode&gt;-&lt;queue_number&gt;. Ex: /dev/qdma01000-MM-0
+<div class="highlight-none"><div class="highlight"><pre><span></span>-d (--device) device path from /dev. Device name is formed as qdmabbddf-&lt;mode&gt;-&lt;queue_number&gt;. Ex: /dev/qdma01000-MM-0
 -a (--address) the start address on the AXI bus
 -s (--size) size of a single transfer in bytes, default 32 bytes
 -o (--offset) page offset of transfer
@@ -446,7 +456,7 @@
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-to-device -d /dev/qdma06000-MM-0 -s 64
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-to-device -d /dev/qdma06000-MM-0 -s 64
 size=64 Average BW = 375.194937 KB/sec
 </pre></div>
 </div>
@@ -483,7 +493,7 @@ size=64 Average BW = 375.194937 KB/sec
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 03, 2021.
+        Last updated on June 18, 2022.
       </span>
 
     </p>
@@ -561,7 +571,7 @@ size=64 Average BW = 375.194937 KB/sec
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

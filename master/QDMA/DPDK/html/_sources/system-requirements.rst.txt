@@ -8,12 +8,13 @@ Xilinx Accelerator Card
 
 1. VCU1525
 2. U200
+3. Versal CPM5 XCVP1202
 
 Host System
 -----------
 
-x86_64 host system with at least one Gen 3 x16 PCIe slot and minimum 32GB RAM
-on same CPU node for 2K queues.
+x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 64GB RAM
+on same CPU node for 2K queues. For accomodating 4K queues in Versal CPM5 ~256GB RAM would be required.
 For VM testing, host system must support virtualization and it must be enabled in the BIOS.
 
 
@@ -39,6 +40,14 @@ QDMA DPDK driver latest release is verified on following host system configurati
 +--------------------------+-------------------------------------------------------------+
 | Vivado Version           | 2020.1                                                      |
 +--------------------------+-------------------------------------------------------------+
+
+**Notes**: 
+
+- When assigning the 2048 queues to PFs users shall make sure the host system configuration meets the requirement given above. If users want to enable iommu(iommu=on), make sure suffiecient Huge pages are available to support the 2048 queues.
+
+- Versal CPM5 design supports 4096 queues. Users shall make sure the host system configuration meets the memory requirements to accomodate 4096 queues.
+
+- QEMU is a hosted virtual machine monitor which emulates the machine's processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.
 
 .. _guest_system_cfg:
 

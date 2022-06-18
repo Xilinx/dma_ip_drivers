@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.2.1',
+              VERSION:'2022.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.2.1
+                2022.1
               </div>
             
           
@@ -347,6 +347,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#hardware-features">Hardware Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features-supported-for-qdma3-1">Features Supported for QDMA3.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features-supported-for-qdma4-0">Features Supported for QDMA4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#features-supported-only-in-versal-cpm5-design">Features Supported only in Versal CPM5 Design</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#software-features">Software Features</a></li>
 </ul>
 </li>
@@ -485,7 +486,36 @@
 <li>Support for more than 256 functions</li>
 <li>Support multiple bus number on single card</li>
 </ul>
-<p>For details on Hardware Features refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
+</div>
+<div class="section" id="features-supported-only-in-versal-cpm5-design">
+<h2>Features Supported only in Versal CPM5 Design<a class="headerlink" href="#features-supported-only-in-versal-cpm5-design" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">SRIOV with 4 Physical Functions (PF) and 240 Virtual Functions (VF)</p>
+</li>
+<li><p class="first">Debug mode, with extra registers for debug purposes</p>
+</li>
+<li><p class="first">Descriptor Engine can be configured in Internal Mode only</p>
+</li>
+<li><p class="first">Supports 4096 queue sets for Physical Functions</p>
+<blockquote>
+<div><ul class="simple">
+<li>4096 H2C (Host-to-Card) descriptor rings</li>
+<li>4096 C2H (Card-to-Host) descriptor rings</li>
+<li>4096 completion rings</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Supports 256 queue sets for Virtual Functions</p>
+<blockquote>
+<div><ul class="simple">
+<li>256 H2C (Host-to-Card) descriptor rings</li>
+<li>256 C2H (Card-to-Host) descriptor rings</li>
+<li>256 Completion Rings</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>For details on Hardware Features refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
 </div>
 <div class="section" id="software-features">
 <h2>Software Features<a class="headerlink" href="#software-features" title="Permalink to this headline">¶</a></h2>
@@ -534,7 +564,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 02, 2021.
+        Last updated on June 18, 2022.
       </span>
 
     </p>
@@ -612,7 +642,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2021, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2020.2.1',
+              VERSION:'2022.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2020.2.1
+                2022.1
               </div>
             
           
@@ -433,12 +433,13 @@
 <ol class="arabic simple">
 <li>VCU1525</li>
 <li>U200</li>
+<li>Versal CPM5 XCVP1202</li>
 </ol>
 </div>
 <div class="section" id="host-system">
 <h2>Host System<a class="headerlink" href="#host-system" title="Permalink to this headline">¶</a></h2>
-<p>x86_64 host system with at least one Gen 3 x16 PCIe slot and minimum 32GB RAM
-on same CPU node for 2K queues.
+<p>x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 64GB RAM
+on same CPU node for 2K queues. For accomodating 4K queues in Versal CPM5 ~256GB RAM would be required.
 For VM testing, host system must support virtualization and it must be enabled in the BIOS.</p>
 </div>
 <div class="section" id="host-system-configuration">
@@ -478,6 +479,12 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tr>
 </tbody>
 </table>
+<p><strong>Notes</strong>:</p>
+<ul class="simple">
+<li>When assigning the 2048 queues to PFs users shall make sure the host system configuration meets the requirement given above. If users want to enable iommu(iommu=on), make sure suffiecient Huge pages are available to support the 2048 queues.</li>
+<li>Versal CPM5 design supports 4096 queues. Users shall make sure the host system configuration meets the memory requirements to accomodate 4096 queues.</li>
+<li>QEMU is a hosted virtual machine monitor which emulates the machine’s processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.</li>
+</ul>
 </div>
 <div class="section" id="guest-system-configuration">
 <span id="guest-system-cfg"></span><h2>Guest System Configuration<a class="headerlink" href="#guest-system-configuration" title="Permalink to this headline">¶</a></h2>
@@ -571,7 +578,7 @@ For VM testing, host system must support virtualization and it must be enabled i
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 02, 2021.
+        Last updated on June 18, 2022.
       </span>
 
     </p>
@@ -649,7 +656,7 @@ For VM testing, host system must support virtualization and it must be enabled i
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2021, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

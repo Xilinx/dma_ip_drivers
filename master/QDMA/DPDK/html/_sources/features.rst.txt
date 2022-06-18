@@ -37,9 +37,25 @@ Features Supported for QDMA4.0
 * Support for more than 256 functions
 * Support multiple bus number on single card
 
+Features Supported only in Versal CPM5 Design
+-------------------------------------------------
+* SRIOV with 4 Physical Functions (PF) and 240 Virtual Functions (VF)
+* Debug mode, with extra registers for debug purposes
+* Descriptor Engine can be configured in Internal Mode only
+* Supports 4096 queue sets for Physical Functions
+
+   - 4096 H2C (Host-to-Card) descriptor rings
+   - 4096 C2H (Card-to-Host) descriptor rings
+   - 4096 completion rings
+* Supports 256 queue sets for Virtual Functions
+
+   - 256 H2C (Host-to-Card) descriptor rings
+   - 256 C2H (Card-to-Host) descriptor rings
+   - 256 Completion Rings
+
 For details on Hardware Features refer to QDMA_Product_Guide_.
 
-.. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf
+.. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf
 
 Software Features
 ---------------------

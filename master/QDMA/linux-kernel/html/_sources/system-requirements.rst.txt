@@ -8,12 +8,13 @@ Xilinx Accelerator Card
 
 1. VCU1525
 2. U200
+3. Versal CPM5 XCVP1202
 
 Host Platform
 -------------
 
 x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 64GB RAM
-on same CPU node for 2K queues.
+on same CPU node for 2K queues. For accomodating 4K queues in Versal CPM5 ~256GB RAM would be required.
 For VM testing, host system must support virtualization and it must be enabled in the BIOS.
 
 
@@ -39,7 +40,9 @@ Linux QDMA Driver release is verified on following Host system configuration for
 **Notes**: 
 
 - When assigning the 2048 queues to PFs users shall make sure the host system configuration meets the requirement given above. If users want to enable iommu(iommu=on), make sure suffiecient memory available to support the 2048 queues. If the memory is not sufficient, ``dma_alloc_coherent`` kernel call may fail and driver might not work.
- 
+
+- Versal CPM5 design supports 4096 queues. Users shall make sure the host system configuration meets the memory requirements to accomodate 4096 queues.
+
 - QEMU is a hosted virtual machine monitor which emulates the machine's processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.
 
 Guest System Configuration
@@ -52,8 +55,8 @@ Guest System(VM)          Configuration Details
 ========================= ==================================
 Operating System          Ubuntu 18.04 LTS
 Linux Kernel              4.15.1-20-generic
-RAM 			  4GB
-Cores              	  4
+RAM 			          4GB
+Cores              	      4
 ========================= ==================================
 
 
@@ -69,6 +72,8 @@ Linux QDMA Driver is supported on the following linux distributions
 | CentOS                  |7.6-1810 (RHEL 7.6)  |3.10.0-957      |
 |                         +---------------------+----------------+
 |                         |7.7-1908 (RHEL 7.7)  |3.10.0-1062     |
+|                         +---------------------+----------------+
+|                         |8.1-1911 (RHEL 8.1)  |4.18.0-348      |
 +-------------------------+---------------------+----------------+
 |Fedora                   |30                   |5.0.9-301       |
 |                         +---------------------+----------------+
@@ -101,6 +106,10 @@ Linux QDMA Driver is verified on following kernel.org Linux kernel versions
 |                         | 4.14.117        |
 |                         +-----------------+
 |                         | 5.4             |
+|                         +-----------------+
+|                         | 5.13            |
+|                         +-----------------+
+|                         | 5.17            |
 +-------------------------+-----------------+
 
 The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.

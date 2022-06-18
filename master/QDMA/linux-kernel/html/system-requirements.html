@@ -39,11 +39,21 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2022.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -306,7 +316,7 @@
             
             
               <div class="version">
-                2020.2
+                2022.1
               </div>
             
           
@@ -424,78 +434,80 @@
 <div class="section" id="xilinx-accelerator-card">
 <h2>Xilinx Accelerator Card<a class="headerlink" href="#xilinx-accelerator-card" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li><p>VCU1525</p></li>
-<li><p>U200</p></li>
+<li>VCU1525</li>
+<li>U200</li>
+<li>Versal CPM5 XCVP1202</li>
 </ol>
 </div>
 <div class="section" id="host-platform">
 <h2>Host Platform<a class="headerlink" href="#host-platform" title="Permalink to this headline">¶</a></h2>
 <p>x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 64GB RAM
-on same CPU node for 2K queues.
+on same CPU node for 2K queues. For accomodating 4K queues in Versal CPM5 ~256GB RAM would be required.
 For VM testing, host system must support virtualization and it must be enabled in the BIOS.</p>
 </div>
 <div class="section" id="host-system-configuration">
 <h2>Host System Configuration<a class="headerlink" href="#host-system-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Linux QDMA Driver release is verified on following Host system configuration for PF and VF functionality</p>
-<table class="docutils align-default">
+<table border="1" class="docutils">
 <colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
+<col width="30%" />
+<col width="70%" />
 </colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Host System</p></th>
-<th class="head"><p>Configuration Details</p></th>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Host System</th>
+<th class="head">Configuration Details</th>
 </tr>
 </thead>
-<tbody>
-<tr class="row-even"><td><p>Operating System</p></td>
-<td><p>Ubuntu 18.04 LTS</p></td>
+<tbody valign="top">
+<tr class="row-even"><td>Operating System</td>
+<td>Ubuntu 18.04 LTS</td>
 </tr>
-<tr class="row-odd"><td><p>Linux Kernel</p></td>
-<td><p>4.15.0-23-generic</p></td>
+<tr class="row-odd"><td>Linux Kernel</td>
+<td>4.15.0-23-generic</td>
 </tr>
-<tr class="row-even"><td><p>RAM</p></td>
-<td><p>64GB on local NUMA node</p></td>
+<tr class="row-even"><td>RAM</td>
+<td>64GB on local NUMA node</td>
 </tr>
-<tr class="row-odd"><td><p>Hypervisor</p></td>
-<td><p>KVM</p></td>
+<tr class="row-odd"><td>Hypervisor</td>
+<td>KVM</td>
 </tr>
-<tr class="row-even"><td><p>Qemu Version</p></td>
-<td><p>QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.15)</p></td>
+<tr class="row-even"><td>Qemu Version</td>
+<td>QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.15)</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Notes</strong>:</p>
 <ul class="simple">
-<li><p>When assigning the 2048 queues to PFs users shall make sure the host system configuration meets the requirement given above. If users want to enable iommu(iommu=on), make sure suffiecient memory available to support the 2048 queues. If the memory is not sufficient, <code class="docutils literal notranslate"><span class="pre">dma_alloc_coherent</span></code> kernel call may fail and driver might not work.</p></li>
-<li><p>QEMU is a hosted virtual machine monitor which emulates the machine’s processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.</p></li>
+<li>When assigning the 2048 queues to PFs users shall make sure the host system configuration meets the requirement given above. If users want to enable iommu(iommu=on), make sure suffiecient memory available to support the 2048 queues. If the memory is not sufficient, <code class="docutils literal"><span class="pre">dma_alloc_coherent</span></code> kernel call may fail and driver might not work.</li>
+<li>Versal CPM5 design supports 4096 queues. Users shall make sure the host system configuration meets the memory requirements to accomodate 4096 queues.</li>
+<li>QEMU is a hosted virtual machine monitor which emulates the machine’s processor through dynamic binary translation and provides a set of different hardware and device models for the machine, enabling it to run a variety of guest operating systems.This is used to emulate the virtual machines and enables the users to attach virtual functions to virtual machines.</li>
 </ul>
 </div>
 <div class="section" id="guest-system-configuration">
 <h2>Guest System Configuration<a class="headerlink" href="#guest-system-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Linux QDMA VF Driver release is verified on following Guest system configuration for VF functionality</p>
-<table class="docutils align-default">
+<table border="1" class="docutils">
 <colgroup>
-<col style="width: 42%" />
-<col style="width: 58%" />
+<col width="42%" />
+<col width="58%" />
 </colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Guest System(VM)</p></th>
-<th class="head"><p>Configuration Details</p></th>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Guest System(VM)</th>
+<th class="head">Configuration Details</th>
 </tr>
 </thead>
-<tbody>
-<tr class="row-even"><td><p>Operating System</p></td>
-<td><p>Ubuntu 18.04 LTS</p></td>
+<tbody valign="top">
+<tr class="row-even"><td>Operating System</td>
+<td>Ubuntu 18.04 LTS</td>
 </tr>
-<tr class="row-odd"><td><p>Linux Kernel</p></td>
-<td><p>4.15.1-20-generic</p></td>
+<tr class="row-odd"><td>Linux Kernel</td>
+<td>4.15.1-20-generic</td>
 </tr>
-<tr class="row-even"><td><p>RAM</p></td>
-<td><p>4GB</p></td>
+<tr class="row-even"><td>RAM</td>
+<td>4GB</td>
 </tr>
-<tr class="row-odd"><td><p>Cores</p></td>
-<td><p>4</p></td>
+<tr class="row-odd"><td>Cores</td>
+<td>4</td>
 </tr>
 </tbody>
 </table>
@@ -503,45 +515,48 @@ For VM testing, host system must support virtualization and it must be enabled i
 <div class="section" id="supported-linux-distributions">
 <h2>Supported Linux Distributions<a class="headerlink" href="#supported-linux-distributions" title="Permalink to this headline">¶</a></h2>
 <p>Linux QDMA Driver is supported on the following linux distributions</p>
-<table class="docutils align-default">
+<table border="1" class="docutils">
 <colgroup>
-<col style="width: 40%" />
-<col style="width: 34%" />
-<col style="width: 26%" />
+<col width="40%" />
+<col width="34%" />
+<col width="26%" />
 </colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Linux Distribution</p></th>
-<th class="head"><p>Version</p></th>
-<th class="head"><p>Kernel Version</p></th>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Linux Distribution</th>
+<th class="head">Version</th>
+<th class="head">Kernel Version</th>
 </tr>
 </thead>
-<tbody>
-<tr class="row-even"><td rowspan="2"><p>CentOS</p></td>
-<td><p>7.6-1810 (RHEL 7.6)</p></td>
-<td><p>3.10.0-957</p></td>
+<tbody valign="top">
+<tr class="row-even"><td rowspan="3">CentOS</td>
+<td>7.6-1810 (RHEL 7.6)</td>
+<td>3.10.0-957</td>
 </tr>
-<tr class="row-odd"><td><p>7.7-1908 (RHEL 7.7)</p></td>
-<td><p>3.10.0-1062</p></td>
+<tr class="row-odd"><td>7.7-1908 (RHEL 7.7)</td>
+<td>3.10.0-1062</td>
 </tr>
-<tr class="row-even"><td rowspan="3"><p>Fedora</p></td>
-<td><p>30</p></td>
-<td><p>5.0.9-301</p></td>
+<tr class="row-even"><td>8.1-1911 (RHEL 8.1)</td>
+<td>4.18.0-348</td>
 </tr>
-<tr class="row-odd"><td><p>31</p></td>
-<td><p>5.3.7-301</p></td>
+<tr class="row-odd"><td rowspan="3">Fedora</td>
+<td>30</td>
+<td>5.0.9-301</td>
 </tr>
-<tr class="row-even"><td><p>33</p></td>
-<td><p>5.8.15-301</p></td>
+<tr class="row-even"><td>31</td>
+<td>5.3.7-301</td>
 </tr>
-<tr class="row-odd"><td rowspan="3"><p>Ubuntu</p></td>
-<td><p>16.04</p></td>
-<td><p>4.15.0-101</p></td>
+<tr class="row-odd"><td>33</td>
+<td>5.8.15-301</td>
 </tr>
-<tr class="row-even"><td><p>18.04</p></td>
-<td><p>4.15.0-20</p></td>
+<tr class="row-even"><td rowspan="3">Ubuntu</td>
+<td>16.04</td>
+<td>4.15.0-101</td>
 </tr>
-<tr class="row-odd"><td><p>20.04</p></td>
-<td><p>5.4.0-31</p></td>
+<tr class="row-odd"><td>18.04</td>
+<td>4.15.0-20</td>
+</tr>
+<tr class="row-even"><td>20.04</td>
+<td>5.4.0-31</td>
 </tr>
 </tbody>
 </table>
@@ -549,36 +564,40 @@ For VM testing, host system must support virtualization and it must be enabled i
 <div class="section" id="supported-kernel-versions">
 <h2>Supported Kernel Versions<a class="headerlink" href="#supported-kernel-versions" title="Permalink to this headline">¶</a></h2>
 <p>Linux QDMA Driver is verified on following kernel.org Linux kernel versions</p>
-<table class="docutils align-default">
+<table border="1" class="docutils">
 <colgroup>
-<col style="width: 60%" />
-<col style="width: 40%" />
+<col width="60%" />
+<col width="40%" />
 </colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Kernel.org</p></th>
-<th class="head"><p>Kernel Version</p></th>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Kernel.org</th>
+<th class="head">Kernel Version</th>
 </tr>
 </thead>
-<tbody>
-<tr class="row-even"><td rowspan="5"></td>
-<td><p>3.16.66</p></td>
+<tbody valign="top">
+<tr class="row-even"><td rowspan="7">&#160;</td>
+<td>3.16.66</td>
 </tr>
-<tr class="row-odd"><td><p>4.4.196</p></td>
+<tr class="row-odd"><td>4.4.196</td>
 </tr>
-<tr class="row-even"><td><p>4.9.174</p></td>
+<tr class="row-even"><td>4.9.174</td>
 </tr>
-<tr class="row-odd"><td><p>4.14.117</p></td>
+<tr class="row-odd"><td>4.14.117</td>
 </tr>
-<tr class="row-even"><td><p>5.4</p></td>
+<tr class="row-even"><td>5.4</td>
+</tr>
+<tr class="row-odd"><td>5.13</td>
+</tr>
+<tr class="row-even"><td>5.17</td>
 </tr>
 </tbody>
 </table>
 <p>The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.</p>
 <ul class="simple">
-<li><p>Timer Functions</p></li>
-<li><p>PCIe Functions</p></li>
-<li><p>Kernel Memory functions</p></li>
-<li><p>Memory and GFP Functions</p></li>
+<li>Timer Functions</li>
+<li>PCIe Functions</li>
+<li>Kernel Memory functions</li>
+<li>Memory and GFP Functions</li>
 </ul>
 </div>
 <div class="section" id="notes-about-gcc-versions">
@@ -626,7 +645,7 @@ in the supported kernels list above or if the Kernel Source doesn’t have the f
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 03, 2021.
+        Last updated on June 18, 2022.
       </span>
 
     </p>
@@ -704,7 +723,7 @@ in the supported kernels list above or if the Kernel Source doesn’t have the f
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

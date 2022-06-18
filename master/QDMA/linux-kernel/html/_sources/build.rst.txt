@@ -13,7 +13,7 @@ If the PCIe Device ID is modified during IP customization, one needs to modify Q
 
 User can also remove PCIe Device IDs that are not be used in their solution.
 
-To modify the PCIe Device ID in the driver, open the ``drv/pci_ids.h`` file from the driver source and search for the pcie_device_id struct. 
+To modify the PCIe Device ID in the driver, open the ``driver/src/pci_ids.h`` file from the driver source and search for the ``pci_device_id`` struct. 
 This struct defines the PCIe Device IDs that are recognized by the driver in the following format: 
 
 {PCI_DEVICE (0x10ee, 0x9034),}, 

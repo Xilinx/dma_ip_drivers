@@ -22,7 +22,7 @@ Based on the above lspci output, traverse to ``/sys/bus/pci/devices/<device node
 1. **Instantiate the Virtual Functions**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QDMA IP supports 252 Virtual Functions (VFs). ``/sys/bus/pci/devices/<device node>`` provides two configurable entries
+``/sys/bus/pci/devices/<device node>`` provides two configurable entries
 
 - ``sriov_totalvfs`` : Indicates the maximum number of VFs supported for PF. This is a read only entry having the value the that was configured during bit stream generation.
 
@@ -47,7 +47,7 @@ Once the VFS are instantiated, required number of queues can be allocated the VF
 2. **Allocate the Queues to a function**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QDMA IP supports maximum of 2048 queues. By default, all functions have 0 queues assigned. 
+By default, all functions have 0 queues assigned. 
 
 ``qmax`` configuration parameter enables the user to update the number of queues for a PF. This configuration parameter indicates "Maximum number of queues associated for the current pf".
 
@@ -96,7 +96,7 @@ To set 1770 as qmax for PF0, 8 as q max for PF1, PF2, PF3:
 3. **Reserve the Queues for VFs**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-QDMA IP supports 2048 queues and from the set of 2048 queues, use the ``qmax`` sysfs entry to allocate queues to VFs similar to PFs.
+Use the ``qmax`` sysfs entry to allocate queues to VFs similar to PFs.
 
 
 Display the current value:

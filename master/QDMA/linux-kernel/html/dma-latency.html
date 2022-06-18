@@ -39,11 +39,21 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2022.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -306,7 +316,7 @@
             
             
               <div class="version">
-                2020.2
+                2022.1
               </div>
             
           
@@ -422,14 +432,14 @@
             
   <div class="section" id="dma-latency-application-dma-latency">
 <h1>DMA Latency Application (dma-latency)<a class="headerlink" href="#dma-latency-application-dma-latency" title="Permalink to this headline">¶</a></h1>
-<p>Xilinx-developed custom tool <code class="docutils literal notranslate"><span class="pre">dma-latency</span></code> is used to collect the latency metrics for unidirectional and bidirectional traffic.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>usage: dma-latency [OPTIONS
+<p>Xilinx-developed custom tool <code class="docutils literal"><span class="pre">dma-latency</span></code> is used to collect the latency metrics for unidirectional and bidirectional traffic.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>usage: dma-latency [OPTIONS
 
   -c (--config) config file that has configuration for IO
 </pre></div>
 </div>
 <p>dma-latency tool takes a configuration file as input. The configuration file format is as below.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>name=mm_1_1
+<div class="highlight-none"><div class="highlight"><pre><span></span>name=mm_1_1
 mode=mm #mode
 dir=bi #dir
 pf_range=0:0 #no spaces
@@ -449,22 +459,22 @@ pkt_sz=64
 </div>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
-<li><p>name : name of the configuration</p></li>
-<li><p>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</p></li>
-<li><p>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi).</p></li>
-<li><p>pf_range : Range of the PFs from 0-3 on which the performance metrics are to be collected.</p></li>
-<li><p>q_range : Range of the Queues from 0-2047 on which the performance metrics are to be collected.</p></li>
-<li><p>flags : queue flags</p></li>
-<li><p>wb_acc : write back accumulation index from CSR register ( 0 - 15 )</p></li>
-<li><p>tmr_idx : timer index from CSR register ( 0 - 15 )</p></li>
-<li><p>cntr_idx : Counter index from CSR register ( 0 - 15 )</p></li>
-<li><p>trig_mode : trigger mode (every, usr_cnt, usr, usr_tmr, dis)</p></li>
-<li><p>rngidx : Ring index from CSR register ( 0 - 15 )</p></li>
-<li><p>runtime : Duration of the performance runs, time in seconds.</p></li>
-<li><p>num_threads : number of threads to be used in dma-perf application to pump the traffic to queues</p></li>
-<li><p>bidir_en : Enable or Disable the bi-direction mode ( 0: Disable, 1: Enable )</p></li>
-<li><p>num_pkt : number of packets</p></li>
-<li><p>pkt_sz : Packet size</p></li>
+<li>name : name of the configuration</li>
+<li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
+<li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi).</li>
+<li>pf_range : Range of the PFs from 0-3 on which the performance metrics are to be collected.</li>
+<li>q_range : Range of the Queues from 0-2047 on which the performance metrics are to be collected.</li>
+<li>flags : queue flags</li>
+<li>wb_acc : write back accumulation index from CSR register ( 0 - 15 )</li>
+<li>tmr_idx : timer index from CSR register ( 0 - 15 )</li>
+<li>cntr_idx : Counter index from CSR register ( 0 - 15 )</li>
+<li>trig_mode : trigger mode (every, usr_cnt, usr, usr_tmr, dis)</li>
+<li>rngidx : Ring index from CSR register ( 0 - 15 )</li>
+<li>runtime : Duration of the performance runs, time in seconds.</li>
+<li>num_threads : number of threads to be used in dma-perf application to pump the traffic to queues</li>
+<li>bidir_en : Enable or Disable the bi-direction mode ( 0: Disable, 1: Enable )</li>
+<li>num_pkt : number of packets</li>
+<li>pkt_sz : Packet size</li>
 </ul>
 </div>
 
@@ -498,7 +508,7 @@ pkt_sz=64
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 03, 2021.
+        Last updated on June 18, 2022.
       </span>
 
     </p>
@@ -576,7 +586,7 @@ pkt_sz=64
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

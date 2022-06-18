@@ -67,8 +67,8 @@
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PF/VF Shutdown" href="pf_vf_shutdown.html" />
-    <link rel="prev" title="QDMA Queue Resource Management" href="qdma_resmgmt.html" /> 
+    <link rel="next" title="QDMA Linux Driver UseCases" href="qdma_usecases.html" />
+    <link rel="prev" title="Linux Driver Interop with DPDK Driver" href="linux_dpdk_interop.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -306,7 +306,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> QDMA DPDK Driver
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> QDMA Linux Driver
           
 
           
@@ -345,32 +345,43 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="build.html">Building QDMA DPDK Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="dev-guide.html">Developers Guide</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="driver-design.html">Driver Design</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#driver-interfaces-and-callbacks">Driver interfaces and callbacks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#resource-management">Resource Management</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="driver-design.html#mailbox-communication-for-vf-configuration">Mailbox Communication for VF configuration</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">QDMA Mailbox</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export.html">QDMA Linux Driver Exported APIs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="qdma_design.html">QDMA Linux Driver Design Flow</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#driver-initialization">Driver Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#driver-de-initialization">Driver De-Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#qdma-driver-data-structures">QDMA Driver Data Structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#device-initialization">Device Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#device-de-initialization">Device De-Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#configure-the-queues-for-pf-vf">Configure the Queues for PF/VF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#add-a-queue">Add a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#start-a-queue">Start a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#stop-a-queue">Stop a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#delete-a-queue">Delete a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#read-write-from-a-queue">Read/Write from a Queue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#funtion-level-reset">Funtion Level Reset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#qdma-debug-support">QDMA Debug Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#linux-driver-interop-with-dpdk-driver">Linux Driver Interop with DPDK Driver</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="qdma_design.html#tandem-boot-support">Tandem Boot Support</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Tandem Boot Support</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-interop-with-linux-driver">DPDK Driver Interop with Linux Driver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
-<li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-debug">DPDK Driver debug</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA DPDK Driver UseCases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="perf.html">QDMA DPDK Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
 </ul>
 
             
 			<p class="caption"><span class="caption-text">This Page</span></p>
 				<ul class="current">
-				  <li class="toctree-l1"><a href="_sources/qdma_mailbox.rst.txt"
+				  <li class="toctree-l1"><a href="_sources/tandem_boot_support.rst.txt"
 						rel="nofollow">Show Source</a></li>						
 				</ul>
           
@@ -385,7 +396,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">QDMA DPDK Driver</a>
+          <a href="index.html">QDMA Linux Driver</a>
         
       </nav>
 
@@ -416,17 +427,17 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="dev-guide.html">Developers Guide</a> &raquo;</li>
+          <li><a href="devguide.html">Developers Guide</a> &raquo;</li>
         
-          <li><a href="driver-design.html">Driver Design</a> &raquo;</li>
+          <li><a href="qdma_design.html">QDMA Linux Driver Design Flow</a> &raquo;</li>
         
-      <li>QDMA Mailbox</li>
+      <li>Tandem Boot Support</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/qdma_mailbox.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/tandem_boot_support.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -439,118 +450,77 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="qdma-mailbox">
-<h1>QDMA Mailbox<a class="headerlink" href="#qdma-mailbox" title="Permalink to this headline">¶</a></h1>
-<p>The QDMA Subsystem for PCIe provides an optional feature to support the Single Root I/O
-Virtualization (SR-IOV). SR-IOV classifies the functions as:</p>
+  <div class="section" id="tandem-boot-support">
+<h1>Tandem Boot Support<a class="headerlink" href="#tandem-boot-support" title="Permalink to this headline">¶</a></h1>
+<p>Xilinx devices can meet 120 ms link training requirement by using Tandem Configuration, a solution that splits the programming image into two stages. The first stage quickly configures the
+PCIe endpoint(s) so the endpoint is ready for link training within 120 ms. The second stage then configures the rest of the device. QDMA Linux Driver supports this feature for CPM5 designs</p>
+<p>For more details on Tandem Configuration  refer to <a class="reference external" href="https://docs.xilinx.com/v/u/2.1-English/pg347-cpm-dma-bridge">CMP5_QDMA_Product_Guide</a>.</p>
+<p>Note: Sample instructions are provided below to excercise the Tandem Boot support</p>
+<div class="section" id="step-1">
+<h2>Step#1:<a class="headerlink" href="#step-1" title="Permalink to this headline">¶</a></h2>
+<p>Program the stage 1 bitstream to device (JTAG or PROM) and reboot host system</p>
+</div>
+<div class="section" id="step-2-get-the-driver-and-application-ready">
+<h2>Step#2: Get the driver and application ready<a class="headerlink" href="#step-2-get-the-driver-and-application-ready" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>Get the latest driver code base</li>
 <li><dl class="first docutils">
-<dt>Physical Functions (PF) :</dt>
-<dd>Full featured PCIe functions which include SR-IOV capabilities among others.</dd>
+<dt>Remove old module from kernel (if already exist)</dt>
+<dd>$&gt; rmmod qdma-pf</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>Virtual Functions (VF):</dt>
-<dd>PCIe functions featuring configuration space with Base Address
-Registers (BARs) but lacking the full configuration resources and are controlled by the PF
-configuration. The main role of the VF is data transfer.</dd>
+<dt>Compile driver and applications</dt>
+<dd>$&gt; make -DTANDEM_BOOT_SUPPORTED</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Install (copy) driver and apps to standard locations</dt>
+<dd>$&gt; make install</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Load the kernel module</dt>
+<dd>$&gt; modprobe qdma-pf</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Enable streaming</dt>
+<dd>$&gt; dma-ctl qdma41000 en_st</dd>
 </dl>
 </li>
 </ul>
-<p>VF can communicate to a PF through mailbox for its queue configuration. Each function implements one 128B inbox and 128B outbox message buffer.
-These mailboxes are accessible to the driver via PCIe BAR of its own function.
-HW also provides ability to interrupt the driver for an incoming mailbox message to a PCIe function.
-For further details on the mailbox internals and mailbox registers, refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
-<p>Physical function (PF) is privileged with full access to QDMA registers and resources, but VFs updates only data handling registers and interrupts.
-VF drivers must communicate with the driver attached to the PF through the mailbox for configuration and resource allocation.
-The PF and VF drivers define the message formatting to be exchanged between the driver.</p>
-<p>The driver enables mailbox interrupt and registers a Rx handler for notification of incoming mailbox message.
-It also creates a Tx thread to send a message and poll for its response from the peer driver.</p>
-<p>Following are the list of messages supported between PF and VF driver</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>enum mbox_msg_op {
-        /** @MBOX_OP_BYE: vf offline */
-        MBOX_OP_BYE,
-        /** @MBOX_OP_HELLO: vf online */
-        MBOX_OP_HELLO,
-        /** @: FMAP programming request */
-        MBOX_OP_FMAP,
-        /** @MBOX_OP_CSR: global CSR registers request */
-        MBOX_OP_CSR,
-        /** @MBOX_OP_QREQ: request queues */
-        MBOX_OP_QREQ,
-        /** @MBOX_OP_QNOTIFY_ADD: notify of queue addition */
-        MBOX_OP_QNOTIFY_ADD,
-        /** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
-        MBOX_OP_QNOTIFY_DEL,
-        /** @MBOX_OP_QACTIVE_CNT: get active q count */
-        MBOX_OP_GET_QACTIVE_CNT,
-        /** @MBOX_OP_QCTXT_WRT: queue context write */
-        MBOX_OP_QCTXT_WRT,
-        /** @MBOX_OP_QCTXT_RD: queue context read */
-        MBOX_OP_QCTXT_RD,
-        /** @MBOX_OP_QCTXT_CLR: queue context clear */
-        MBOX_OP_QCTXT_CLR,
-        /** @MBOX_OP_QCTXT_INV: queue context invalidate */
-        MBOX_OP_QCTXT_INV,
-        /** @MBOX_OP_INTR_CTXT_WRT: interrupt context write */
-        MBOX_OP_INTR_CTXT_WRT,
-        /** @MBOX_OP_INTR_CTXT_RD: interrupt context read */
-        MBOX_OP_INTR_CTXT_RD,
-        /** @MBOX_OP_INTR_CTXT_CLR: interrupt context clear */
-        MBOX_OP_INTR_CTXT_CLR,
-        /** @MBOX_OP_INTR_CTXT_INV: interrupt context invalidate */
-        MBOX_OP_INTR_CTXT_INV,
-        /** @MBOX_OP_RESET_PREPARE: PF to VF message for VF reset*/
-        MBOX_OP_RESET_PREPARE,
-        /** @MBOX_OP_RESET_DONE: PF reset done */
-        MBOX_OP_RESET_DONE,
-        /** @MBOX_OP_PF_BYE: pf offline */
-        MBOX_OP_PF_BYE,
-
-        /** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
-        MBOX_OP_HELLO_RESP = 0x81,
-        /** @MBOX_OP_FMAP_RESP: response to @MBOX_OP_FMAP */
-        MBOX_OP_FMAP_RESP,
-        /** @MBOX_OP_CSR_RESP: response to @MBOX_OP_CSR */
-        MBOX_OP_CSR_RESP,
-        /** @MBOX_OP_QREQ_RESP: response to @MBOX_OP_QREQ */
-        MBOX_OP_QREQ_RESP,
-        /** @MBOX_OP_QADD: notify of queue addition */
-        MBOX_OP_QNOTIFY_ADD_RESP,
-        /** @MBOX_OP_QNOTIFY_DEL: notify of queue deletion */
-        MBOX_OP_QNOTIFY_DEL_RESP,
-        /** @MBOX_OP_QACTIVE_CNT_RESP: get active q count */
-        MBOX_OP_GET_QACTIVE_CNT_RESP,
-        /** @MBOX_OP_QCTXT_WRT_RESP: response to @MBOX_OP_QCTXT_WRT */
-        MBOX_OP_QCTXT_WRT_RESP,
-        /** @MBOX_OP_QCTXT_RD_RESP: response to @MBOX_OP_QCTXT_RD */
-        MBOX_OP_QCTXT_RD_RESP,
-        /** @MBOX_OP_QCTXT_CLR_RESP: response to @MBOX_OP_QCTXT_CLR */
-        MBOX_OP_QCTXT_CLR_RESP,
-        /** @MBOX_OP_QCTXT_INV_RESP: response to @MBOX_OP_QCTXT_INV */
-        MBOX_OP_QCTXT_INV_RESP,
-        /** @MBOX_OP_INTR_CTXT_WRT_RESP: response to @MBOX_OP_INTR_CTXT_WRT */
-        MBOX_OP_INTR_CTXT_WRT_RESP,
-        /** @MBOX_OP_INTR_CTXT_RD_RESP: response to @MBOX_OP_INTR_CTXT_RD */
-        MBOX_OP_INTR_CTXT_RD_RESP,
-        /** @MBOX_OP_INTR_CTXT_CLR_RESP: response to @MBOX_OP_INTR_CTXT_CLR */
-        MBOX_OP_INTR_CTXT_CLR_RESP,
-        /** @MBOX_OP_INTR_CTXT_INV_RESP: response to @MBOX_OP_INTR_CTXT_INV */
-        MBOX_OP_INTR_CTXT_INV_RESP,
-        /** @MBOX_OP_RESET_PREPARE_RESP: response to @MBOX_OP_RESET_PREPARE */
-        MBOX_OP_RESET_PREPARE_RESP,
-        /** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
-        MBOX_OP_RESET_DONE_RESP,
-        /** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
-        MBOX_OP_PF_BYE_RESP,
-
-        /** @MBOX_OP_MAX: total mbox opcodes*/
-        MBOX_OP_MAX
-};
-</pre></div>
 </div>
-<p>The following sequence diagrams shows the mailbox communication between PF and VF for VF configuration.</p>
-<img alt="_images/mailbox_communication.png" class="align-center" src="_images/mailbox_communication.png" />
+<div class="section" id="step-3-add-and-start-queues">
+<h2>Step#3: Add and start queues<a class="headerlink" href="#step-3-add-and-start-queues" title="Permalink to this headline">¶</a></h2>
+<p>Note: Only as a sample to show that MM and ST queues can be added and started</p>
+<ul class="simple">
+<li>$&gt;dma-ctl qdma41000 q add idx 0 mode mm dir h2c</li>
+<li>$&gt;dma-ctl qdma41000 q add idx 1 mode mm dir c2h</li>
+<li>$&gt;dma-ctl qdma41000 q add idx 2 mode st dir h2c</li>
+<li>$&gt;dma-ctl qdma41000 q start idx 0 dir h2c aperture_sz 4096 //for SBI loads</li>
+<li>$&gt;dma-ctl qdma41000 q start idx 1 dir c2h</li>
+<li>$&gt;dma-ctl qdma41000 q start idx 2 dir h2c</li>
+</ul>
+</div>
+<div class="section" id="step-4-dma-stage-2-to-sbi">
+<h2>Step#4: DMA Stage 2 to SBI<a class="headerlink" href="#step-4-dma-stage-2-to-sbi" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Enable the slave-boot interface for TandemPROM or DFX designs. This is enabled automatically for TandemPCIe designs.</dt>
+<dd>– Write 0x29 to the SBI control register 0xF122_0000 (aliased to 0x1_0122_0000 for transactions from the NOC).
+- $&gt; dma-to-device -d /dev/qdma41000-MM-0 -f &lt;st2.pdi&gt; -s &lt;size&gt; -a 0x102100000</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="step-5-mm-dma-to-and-from-pl-bram-to-test">
+<h2>Step#5: MM DMA to and from PL BRAM to test<a class="headerlink" href="#step-5-mm-dma-to-and-from-pl-bram-to-test" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>$&gt; dma-to-device -d /dev/qdma41000-MM-0 -f /dev/urandom -s 32 -a 0x0</li>
+<li>$&gt; dma-from-device -d /dev/qdma41000-MM-0 -f frombram.txt -s 32 -a 0x0</li>
+</ul>
+</div>
 </div>
 
 
@@ -570,10 +540,10 @@ It also creates a Tx thread to send a message and poll for its response from the
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pf_vf_shutdown.html" class="btn btn-neutral float-right" title="PF/VF Shutdown" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="qdma_usecases.html" class="btn btn-neutral float-right" title="QDMA Linux Driver UseCases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="qdma_resmgmt.html" class="btn btn-neutral float-left" title="QDMA Queue Resource Management" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="linux_dpdk_interop.html" class="btn btn-neutral float-left" title="Linux Driver Interop with DPDK Driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

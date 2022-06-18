@@ -321,3 +321,15 @@ Linux Driver Interop with DPDK Driver
    :maxdepth: 1
 
    linux_dpdk_interop.rst
+
+
+====================
+Tandem Boot Support
+====================
+
+.. toctree::
+   :maxdepth: 1
+
+   tandem_boot_support.rst
+
+   

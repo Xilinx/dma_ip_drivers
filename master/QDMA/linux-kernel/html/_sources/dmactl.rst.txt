@@ -103,12 +103,12 @@ This command lists hardware and software version details and device capabilities
 	=============Hardware Version============
 
 	RTL Version         : RTL Patch
-	Vivado ReleaseID    : vivado 2019.2
+	Vivado ReleaseID    : vivado 2020.2
 	QDMA Device Type    : Soft IP
-	QDMA IP Type    : QDMA Soft IP
+	QDMA IP Type        : QDMA Soft IP
 	============Software Version============
 
-	qdma driver version : 2020.2.0.0.
+	qdma driver version : 2020.2.0.0
 
 	=============Hardware Capabilities============
 
