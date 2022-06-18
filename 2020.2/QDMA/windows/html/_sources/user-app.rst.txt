@@ -1,0 +1,10 @@
+*****************
+User Applications
+*****************
+
+.. toctree::
+   :maxdepth: 1
+
+   dma-ctl.rst
+   dma-rw.rst
+   dma-arw.rst

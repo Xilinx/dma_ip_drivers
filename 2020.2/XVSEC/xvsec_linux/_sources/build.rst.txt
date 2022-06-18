@@ -1,0 +1,94 @@
+Building and Installing the XVSEC Driver Software
+=================================================
+
+For building the Linux XVSEC Driver, make sure the :ref:`sys_req` are satisfied.
+
+Building the XVSEC Driver Software
+----------------------------------
+
+In order to compile the Xilinx XVSEC software, configured and compiled Linux kernel source tree is required.
+The source tree may contain only header files, or a complete tree. The source tree needs to be configured and the header files need to be compiled.
+The Linux kernel must be configured to use modules.
+
+Linux XVSEC Driver software can be found on the Xilinx github https://github.com/Xilinx/dma_ip_drivers/tree/master/XVSEC/linux-kernel
+Below is the directory structure of the Linux XVSEC Driver software.
+
++--------------------------+-------------------------------------------------------------+
+| **Directory**            | **Description**                                             |
++==========================+=============================================================+
+| drv/                     | Provides interfaces to manage the PCIe device VSEC          |
+|                          | capabilities and exposes character driver interface         |
+|                          | to perform VSEC operations                                  |
++--------------------------+-------------------------------------------------------------+
+| libxvsec                 | XVSEC userspace library to access XVSEC driver              |
++--------------------------+-------------------------------------------------------------+
+| tools/                   | XVSEC userspace tools                                       |
++--------------------------+-------------------------------------------------------------+
+| Makefile                 | Makefile to compile the driver                              |
++--------------------------+-------------------------------------------------------------+
+| RELEASE                  | Release Notes                                               |
++--------------------------+-------------------------------------------------------------+
+
+
+Once driver sources are downloaded, compile the XVSEC Driver software
+
+::
+
+	[xilinx@]# make clean all
+
+Upon executing make, A sub-directory ``build`` is created in ``linux-kernel`` with the list of executable listed in below tables.
+Individual executables can also be built with commands listed against each component in below tables.
+
+**Kernel modules:**
+
++-------------------+--------------------+---------------+
+| Executable        | Description        | Command       |
++===================+====================+===============+
+| xvsec.ko          | XVSEC Driver       | make drv      |
++-------------------+--------------------+---------------+
+
+
+**Libraries:**
+
++-------------------+-------------------------------+---------------+
+| Executable        | Description                   | Command       |
++===================+===============================+===============+
+| libxvsec.a        | XVSEC user space library      | make libxvsec |
++-------------------+-------------------------------+---------------+
+
+**Applications:**
+
++-------------------+----------------------------------------------+--------------+
+| Executable        | Description                                  | Command      |
++===================+==============================================+==============+
+| xvsecctl          | Application to enable XVSEC operations       | make tool    |
++-------------------+----------------------------------------------+--------------+
+
+
+Install built artifacts by running "make install"
+
+-   The ``xvsecctl`` tool is installed in ``/user/local/sbin``.
+
+-   The XVSEC module is installed in ``/lib/modules/<linux_kernel_version>/updates/kernel/drivers/xvsec``.
+
+
+Loading the XVSEC Driver Module
+-------------------------------
+
+Before loading the XVSEC driver, make sure that the target board is connected to the Host System and required bit stream is loaded on to the board.
+
+
+The XVSEC driver does not have any module parameters and hence can be loaded directly as shown below
+
+::
+
+	[xilinx@]# insmod xvsec.ko
+
+Unloading the XVSEC Driver Module
+---------------------------------
+
+The driver can be unloaded directly as shown below
+
+::
+
+	[xilinx@]# rmmod xvsec.ko

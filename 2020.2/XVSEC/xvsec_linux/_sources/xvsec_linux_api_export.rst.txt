@@ -1,0 +1,13 @@
+***************************
+XVSEC Linux User Space APIs
+***************************
+
+.. toctree::
+   :maxdepth: 3
+
+   xvsec_linux_api_export_defines
+   xvsec_linux_api_export_enums
+   xvsec_linux_api_export_var
+   xvsec_linux_api_export_structs
+   xvsec_linux_api_export_union
+   xvsec_linux_api_export_functions
