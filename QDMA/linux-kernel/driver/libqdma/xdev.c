@@ -1199,8 +1199,8 @@ disable_device:
 	pci_disable_relaxed_ordering(pdev);
 	pci_disable_device(pdev);
 
-#ifndef _XRT_
 release_regions:
+#ifndef _XRT_
 	pci_release_regions(pdev);
 #endif
 
