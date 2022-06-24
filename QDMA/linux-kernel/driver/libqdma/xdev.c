@@ -202,17 +202,18 @@ static void xdev_reset_work(struct work_struct *work)
 		pci_release_regions(pdev);
 		pci_disable_device(pdev);
 
+#ifndef _XRT_
 		rv = pci_request_regions(pdev, "qdma-vf");
 		if (rv) {
 			pr_err("cannot obtain PCI resources\n");
 			return;
 		}
+#endif
 
 		rv = pci_enable_device(pdev);
 		if (rv) {
 			pr_err("cannot enable PCI device\n");
-			pci_release_regions(pdev);
-			return;
+			goto release_regions;
 		}
 
 		/* enable relaxed ordering */
@@ -237,6 +238,13 @@ static void xdev_reset_work(struct work_struct *work)
 							XDEV_FLR_INACTIVE);
 	}
 
+	return;
+
+release_regions:
+#ifndef _XRT_
+	pci_release_regions(pdev);
+#endif
+	return;
 }
 #endif
 
@@ -594,7 +602,7 @@ static int xdev_identify_bars(struct xlnx_dma_dev *xdev, struct pci_dev *pdev)
 
 /*****************************************************************************/
 /**
- * xdev_map_bars() - allocate the dma device
+ * xdev_alloc() - allocate the dma device
  *
  * @param[in]	conf:	qdma device configuration
  *
@@ -997,12 +1005,14 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 		return -EINVAL;
 	}
 
+#ifndef _XRT_
 	rv = pci_request_regions(pdev, mod_name);
 	if (rv) {
 		/* Just info, some other driver may have claimed the device. */
 		dev_info(&pdev->dev, "cannot obtain PCI resources\n");
 		return rv;
 	}
+#endif
 
 	rv = pci_enable_device(pdev);
 	if (rv) {
@@ -1189,8 +1199,10 @@ disable_device:
 	pci_disable_relaxed_ordering(pdev);
 	pci_disable_device(pdev);
 
+#ifndef _XRT_
 release_regions:
 	pci_release_regions(pdev);
+#endif
 
 	return rv;
 }
@@ -1240,7 +1252,9 @@ int qdma_device_close(struct pci_dev *pdev, unsigned long dev_hndl)
 
 	pci_disable_relaxed_ordering(pdev);
 	pci_disable_extended_tag(pdev);
+#ifndef _XRT_
 	pci_release_regions(pdev);
+#endif
 	pci_disable_device(pdev);
 
 	xdev_list_remove(xdev);

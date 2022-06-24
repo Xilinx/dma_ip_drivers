@@ -18,9 +18,9 @@
 #include "qdma_platform.h"
 #include "qdma_soft_reg.h"
 #include "qdma_soft_access.h"
-#include "qdma_cpm4_access.h"
+#include "qdma_cpm4_access/qdma_cpm4_access.h"
 #include "eqdma_soft_access.h"
-#include "eqdma_cpm5_access.h"
+#include "eqdma_cpm5_access/eqdma_cpm5_access.h"
 #include "qdma_reg_dump.h"
 
 #ifdef ENABLE_WPP_TRACING
