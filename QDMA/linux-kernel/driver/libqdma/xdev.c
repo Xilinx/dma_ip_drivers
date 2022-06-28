@@ -213,7 +213,10 @@ static void xdev_reset_work(struct work_struct *work)
 		rv = pci_enable_device(pdev);
 		if (rv) {
 			pr_err("cannot enable PCI device\n");
-			goto release_regions;
+#ifndef _XRT_
+			pci_release_regions(pdev);
+#endif
+			return;
 		}
 
 		/* enable relaxed ordering */
@@ -237,13 +240,6 @@ static void xdev_reset_work(struct work_struct *work)
 		qdma_device_offline(pdev, (unsigned long)xdev,
 							XDEV_FLR_INACTIVE);
 	}
-
-	return;
-
-release_regions:
-#ifndef _XRT_
-	pci_release_regions(pdev);
-#endif
 }
 #endif
 
