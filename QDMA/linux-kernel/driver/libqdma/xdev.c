@@ -202,7 +202,7 @@ static void xdev_reset_work(struct work_struct *work)
 		pci_release_regions(pdev);
 		pci_disable_device(pdev);
 
-#ifndef _XRT_
+#ifndef __XRT__
 		rv = pci_request_regions(pdev, "qdma-vf");
 		if (rv) {
 			pr_err("cannot obtain PCI resources\n");
@@ -213,7 +213,7 @@ static void xdev_reset_work(struct work_struct *work)
 		rv = pci_enable_device(pdev);
 		if (rv) {
 			pr_err("cannot enable PCI device\n");
-#ifndef _XRT_
+#ifndef __XRT__
 			pci_release_regions(pdev);
 #endif
 			return;
@@ -1000,7 +1000,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 		return -EINVAL;
 	}
 
-#ifndef _XRT_
+#ifndef __XRT__
 	rv = pci_request_regions(pdev, mod_name);
 	if (rv) {
 		/* Just info, some other driver may have claimed the device. */
@@ -1195,7 +1195,7 @@ disable_device:
 	pci_disable_device(pdev);
 
 release_regions:
-#ifndef _XRT_
+#ifndef __XRT__
 	pci_release_regions(pdev);
 #endif
 
@@ -1247,7 +1247,7 @@ int qdma_device_close(struct pci_dev *pdev, unsigned long dev_hndl)
 
 	pci_disable_relaxed_ordering(pdev);
 	pci_disable_extended_tag(pdev);
-#ifndef _XRT_
+#ifndef __XRT__
 	pci_release_regions(pdev);
 #endif
 	pci_disable_device(pdev);
