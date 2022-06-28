@@ -244,7 +244,6 @@ release_regions:
 #ifndef _XRT_
 	pci_release_regions(pdev);
 #endif
-	return;
 }
 #endif
 
