@@ -1,5 +1,5 @@
-RELEASE: 2022.1
-===============
+RELEASE: 2022.1 Patch 
+=====================
 
 This release is validated for
 	- QDMA4.0 2020.1 Patch based example design
@@ -103,6 +103,11 @@ CPM5
 	- FMAP context dump
 	- Debug register dump for ST and MM Errors
 	- Dual Instance support
+
+2022.1 Patch Updates
+--------------------
+- Ported changes from pull request https://github.com/Xilinx/dma_ip_drivers/pull/167 to fix XRT build issues while integrating qdma linux driver in to XRT stack
+
 
 KNOWN ISSUES:
 =============
