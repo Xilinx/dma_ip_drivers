@@ -1,5 +1,5 @@
-RELEASE: 2022.1
-===============
+RELEASE: 2022.1.1
+=================
 
 This release is based on DPDK v20.11 and contains QDMA poll mode driver and
 QDMA test application.
@@ -97,11 +97,16 @@ CPM5
 	- Debug register dump for ST and MM Errors
 	- Dual Instance support
 
+2022.1.1 Patch Updates
+----------------------
+- Added VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
+
 KNOWN ISSUE:
 ============
 - CPM5 Only
-	- Sufficient host memory is required to accommodate 4K queues. Tested only upto 2048 queues with our test environment though driver supports 4K queues.
+	- Sufficient host memory is required to accommodate 4K queues. Tested only upto 2048 queues for PFs with our test environment though driver supports 4K queues.
 	- Tandem Boot support not available completely
+	- VF 4K queue support is not fully verified due to pdi issues
 
 - All Designs
 	- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure

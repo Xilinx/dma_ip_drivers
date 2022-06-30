@@ -233,11 +233,16 @@ struct eqdma_cpm5_hw_err_info {
 	void (*eqdma_cpm5_hw_err_process)(void *dev_hndl);
 };
 
-#define EQDMA_CPM5_OFFSET_VF_VERSION          0x5014
-#define EQDMA_CPM5_OFFSET_VF_USER_BAR         0x5018
+#ifdef EQDMA_CPM5_VF_GT_256Q_SUPPORTED
+#define EQDMA_CPM5_OFFSET_VF_VERSION          0x21014
+#define EQDMA_CPM5_OFFSET_MBOX_BASE_VF        0x21000
+#else
+#define EQDMA_CPM5_OFFSET_VF_VERSION           0x5014
+#define EQDMA_CPM5_OFFSET_MBOX_BASE_VF         0x5000
+#endif
 
 #define EQDMA_CPM5_OFFSET_MBOX_BASE_PF         0x42400
-#define EQDMA_CPM5_OFFSET_MBOX_BASE_VF         0x5000
+#define EQDMA_CPM5_OFFSET_VF_USER_BAR          0x5018
 
 #define EQDMA_CPM5_COMPL_CTXT_BADDR_HIGH_H_MASK         GENMASK_ULL(63, 38)
 #define EQDMA_CPM5_COMPL_CTXT_BADDR_HIGH_L_MASK         GENMASK_ULL(37, 6)

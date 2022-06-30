@@ -34,9 +34,9 @@
 #include "qdma_platform.h"
 #include "qdma_soft_reg.h"
 #include "qdma_soft_access.h"
-#include "qdma_cpm4_access.h"
+#include "qdma_cpm4_access/qdma_cpm4_access.h"
 #include "eqdma_soft_access.h"
-#include "eqdma_cpm5_access.h"
+#include "eqdma_cpm5_access/eqdma_cpm5_access.h"
 #include "qdma_reg_dump.h"
 
 #ifdef ENABLE_WPP_TRACING
@@ -52,7 +52,8 @@
  */
 enum qdma_ip {
 	QDMA_OR_VERSAL_IP,
-	EQDMA_IP
+	EQDMA_IP,
+	EQDMA_CPM5_IP
 };
 
 
@@ -575,8 +576,14 @@ static int qdma_is_config_bar(void *dev_hndl, uint8_t is_vf, enum qdma_ip *ip)
 		if (FIELD_GET(QDMA_GLBL2_VF_UNIQUE_ID_MASK, reg_val)
 				!= QDMA_MAGIC_NUMBER) {
 			/* Its either QDMA or Versal */
+
+#ifdef EQDMA_CPM5_VF_GT_256Q_SUPPORTED
+			*ip = EQDMA_CPM5_IP;
+			reg_addr = EQDMA_CPM5_OFFSET_VF_VERSION;
+#else
 			*ip = EQDMA_IP;
 			reg_addr = EQDMA_OFFSET_VF_VERSION;
+#endif
 			reg_val = qdma_reg_read(dev_hndl, reg_addr);
 		} else {
 			*ip = QDMA_OR_VERSAL_IP;
@@ -1282,8 +1289,11 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 
 	if (ip == EQDMA_IP)
 		hw_access->qdma_get_version = &eqdma_get_version;
+	else if (ip == EQDMA_CPM5_IP)
+		hw_access->qdma_get_version = &eqdma_cpm5_get_version;
 	else
 		hw_access->qdma_get_version = &qdma_get_version;
+
 	hw_access->qdma_init_ctxt_memory = &qdma_init_ctxt_memory;
 	hw_access->qdma_fmap_conf = &qdma_fmap_conf;
 	hw_access->qdma_sw_ctx_conf = &qdma_sw_ctx_conf;

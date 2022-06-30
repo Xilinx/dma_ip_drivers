@@ -1463,6 +1463,15 @@ static struct eqdma_cpm5_hw_err_info
 		&eqdma_cpm5_mm_h2c0_err_process
 	},
 	{
+		EQDMA_CPM5_MM_H2C0_RD_HDR_ADR_ERR,
+		"MM H2C0 Read cmpt hdr address mismatch Error",
+		EQDMA_CPM5_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
+		EQDMA_CPM5_H2C_MM_STATUS_ADDR,
+		H2C_MM_ERR_CODE_ENABLE_RD_HDR_ADR_ERR_MASK,
+		GLBL_ERR_STAT_ERR_H2C_MM_0_MASK,
+		&eqdma_cpm5_mm_h2c0_err_process
+	},
+	{
 		EQDMA_CPM5_MM_H2C0_RD_FLR_ERR,
 		"MM H2C0 Read flr Error",
 		EQDMA_CPM5_H2C_MM_ERR_CODE_ENABLE_MASK_ADDR,
