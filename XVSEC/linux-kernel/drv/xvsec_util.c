@@ -65,11 +65,18 @@ struct file *xvsec_util_fopen(const char *path, int flags, int rights)
 	struct file *filep;
 	mm_segment_t oldfs;
 	int err = 0;
-
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	oldfs = get_fs();
 	set_fs(get_ds());
+#else
+    oldfs = force_uaccess_begin();
+#endif
 	filep = filp_open(path, (flags | O_LARGEFILE), rights);
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	set_fs(oldfs);
+#else
+    force_uaccess_end(oldfs);
+#endif
 	if (IS_ERR(filep) != 0) {
 		err = PTR_ERR(filep);
 		pr_err("%s : filp_open failed, err : 0x%X\n", __func__, err);
@@ -89,11 +96,21 @@ int xvsec_util_fread(struct file *filep, uint64_t offset,
 	int ret = 0;
 	mm_segment_t oldfs;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	oldfs = get_fs();
 	set_fs(get_ds());
+#else
+    oldfs = force_uaccess_begin();
+#endif
+
 	ret = vfs_read(filep, (char __user *)data, size, (loff_t *)&offset);
 	filep->f_pos = offset;
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	set_fs(oldfs);
+#else
+    force_uaccess_end(oldfs);
+#endif
 
 	if (ret < 0) {
 		pr_err("%s : vfs_read failed with error : %d\n", __func__, ret);
@@ -109,11 +126,20 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 	int ret = 0;
 	mm_segment_t oldfs;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	oldfs = get_fs();
 	set_fs(get_ds());
+#else
+    oldfs = force_uaccess_begin();
+#endif
 	ret = vfs_write(filep, (char __user *)data, size, (loff_t *)&offset);
 	filep->f_pos = offset;
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	set_fs(oldfs);
+#else
+    force_uaccess_end(oldfs);
+#endif
 
 	if (ret < 0) {
 		pr_err("%s : vfs_write failed, err : %d\n", __func__, ret);
@@ -135,12 +161,21 @@ int xvsec_util_get_file_size(const char *fname, loff_t *size)
 	mm_segment_t oldfs;
 	struct kstat stat;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	oldfs = get_fs();
 	set_fs(get_ds());
+#else
+    oldfs = force_uaccess_begin();
+#endif
 
 	memset(&stat, 0, sizeof(struct kstat));
 	ret = vfs_stat((char __user *)fname, &stat);
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 	set_fs(oldfs);
+#else
+    force_uaccess_end(oldfs);
+#endif
 	if (ret < 0) {
 		pr_err("%s : vfs_stat failed with error : %d\n", __func__, ret);
 		return -(EIO);
