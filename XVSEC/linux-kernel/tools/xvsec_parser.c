@@ -19,7 +19,6 @@
 #include "mcap_ops.h"
 #include "xvsec_parser.h"
 #include <libgen.h>
-#include <string.h>
 
 static const char options[] =	":b:F:c:lp:C:rmfdvHhDoa:s:t:x:q:";
 
@@ -157,7 +156,7 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args)
 	if (argc < MAX_NO_OF_P_ARGS_FOR_VERSAL) {
 		fprintf(stderr, "Invalid number of arguments passed "
 				"for -p option: %d\n"
-				"Please enter valid arguements!\n", argc);
+				"Please enter valid arguments!\n", argc);
 		return XVSEC_FAILURE;
 	}
 
@@ -232,9 +231,10 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args)
 		goto CLEANUP;
 	}
 
-	/*optional transfer mode parameters*/
+	/*optional transfer mode and sbi parameters*/
 	if((argv[optind + 5] == NULL)) {
 		args->download.tr_mode = XVSEC_MCAP_DATA_TR_MODE_FAST;
+		args->download.sbi_addr = 0xFFFFFFFF;
 		goto EXIT;
 	}
 
@@ -262,7 +262,30 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args)
 			goto CLEANUP;
 		}
 		fprintf(stdout, "tr_mode: %d\n", args->download.tr_mode);
+	} else if (strncmp(argv[optind + 5], "sbi", sizeof("sbi")) == 0) {
+		if(argv[optind + 6] == NULL) {
+			fprintf(stderr, "Please enter valid address for sbi reg block\n");
+			ret = XVSEC_FAILURE;
+			goto CLEANUP;
+		} else {
+	    args->download.sbi_addr = (uint32_t) strtoul(argv[optind + 6], NULL, 0);
+    }
+  }
+
+	if((argv[optind + 7] == NULL)) {
+		args->download.sbi_addr = 0xFFFFFFFF;
+		goto EXIT;
 	}
+
+	if (strncmp(argv[optind + 7], "sbi", sizeof("sbi")) == 0) {
+		if(argv[optind + 8] == NULL) {
+			fprintf(stderr, "Please enter valid address for sbi reg block\n");
+			ret = XVSEC_FAILURE;
+			goto CLEANUP;
+		} else {
+	    args->download.sbi_addr = (uint32_t) strtoul(argv[optind + 8], NULL, 0);
+    }
+	} 
 
 EXIT:
 	free(file);
@@ -282,7 +305,7 @@ int parse_arguments_for_us(int argc, char *argv[], struct args *args)
 	if (argc > MAX_NO_OF_P_ARGS_FOR_US) {
 		fprintf(stderr, "Invalid number of arguments passed "
 				"for -p option: %d\n"
-				"Please enter valid arguements!\n", argc);
+				"Please enter valid arguments!\n", argc);
 		return XVSEC_FAILURE;
 	}
 
@@ -421,7 +444,7 @@ CLEANUP:
 
 
 /*
- * retrieve arguement 
+ * retrieve argument 
  *
  */
 int parse_opt_t_arguments(int argc, char *argv[], struct args *args)
@@ -716,7 +739,7 @@ CLEANUP:
 
 /*
  *
- * mcap parser function for the arguements
+ * mcap parser function for the arguments
  * dependent on the MCAP version
  *
  */
