@@ -55,6 +55,14 @@ _____________________________________________________________________________
 	If only VF driver needs to be compiled:
   	[xilinx@]# make driver MODULE=mod_vf
 
+	Important Note for VF 4K queue support for CPM5 design only
+    -----------------------------------------------------------
+
+    To enable VF 4K queue driver support for CPM5 design, QDMA Linux driver need
+    to compile by enabling the EQDMA_CPM5_VF_GT_256Q_SUPPORTED macro
+
+    [xilinx@]# make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
+
   1.2 Installing the compiled binaries:
   -------------------------------------
 

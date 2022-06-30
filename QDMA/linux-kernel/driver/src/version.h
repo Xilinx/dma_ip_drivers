@@ -33,7 +33,7 @@
 
 #define DRV_MOD_MAJOR		2022
 #define DRV_MOD_MINOR		1
-#define DRV_MOD_PATCHLEVEL	1
+#define DRV_MOD_PATCHLEVEL	2
 
 #define DRV_MODULE_VERSION      \
 	__stringify(DRV_MOD_MAJOR) "." \

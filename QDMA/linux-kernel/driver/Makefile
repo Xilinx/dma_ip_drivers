@@ -120,6 +120,11 @@ ifeq ($(TANDEM_BOOT_SUPPORTED),1)
   export EXTRA_FLAGS
 endif
 
+ifeq ($(EQDMA_CPM5_VF_GT_256Q_SUPPORTED),1)
+  EXTRA_FLAGS += -DEQDMA_CPM5_VF_GT_256Q_SUPPORTED
+  export EXTRA_FLAGS
+endif
+
 # Don't allow ARCH to overwrite the modified variable when passed to
 # the sub-makes.
 MAKEOVERRIDES := $(filter-out ARCH=%,$(MAKEOVERRIDES))
