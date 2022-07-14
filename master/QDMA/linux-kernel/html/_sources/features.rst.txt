@@ -76,7 +76,7 @@ Features Supported only in Versal CPM5 Design
 
 For details on Hardware Features refer to QDMA_Product_Guide_.
 
-.. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf
+.. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf
 
 QDMA Software Features
 **********************
