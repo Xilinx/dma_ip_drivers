@@ -1,7 +1,7 @@
 /*
  *This file is part of the XVSEC driver for Linux
  *
- *Copyright (c) 2020  Xilinx, Inc.
+ *Copyright (c) 2020-2022  Xilinx, Inc.
  *All rights reserved.
  *
  *This source code is free software; you can redistribute it and/or modify it
@@ -209,7 +209,7 @@ int xvsec_mcapv2_axi_rd_addr(
 
 	xvsec_mcapv2_rd_enable(mcap_ctx);
 
-	/*Poll the MCAP Status Register MCAP Read Complete bit */
+	/* Poll the MCAP Status Register MCAP Read Complete bit */
 	wcnt = 0;
 	xvsec_mcapv2_read_status_reg(mcap_ctx, &sts);
 	while (XVSEC_MCAPV2_IS_RW_COMPLETE(sts) != true) {
@@ -222,7 +222,7 @@ int xvsec_mcapv2_axi_rd_addr(
 		xvsec_mcapv2_read_status_reg(mcap_ctx, &sts);
 	}
 
-	/*If the MCAP rw_status != OK, report the error to the user.*/
+	/* If the MCAP rw_status != OK, report the error to the user.*/
 	XVSEC_MCAPV2_GET_RW_STATUS(sts, rw_status);
 	if (rw_status != XVSEC_MCAPV2_RW_OK) {
 		pr_err("%s: AXI write transaction failed.\n", __func__);
@@ -304,7 +304,7 @@ int xvsec_mcapv2_axi_wr_addr(
 		goto CLEANUP;
 	}
 
-	/*If FIFO Overflow bit != set, report error to user */
+	/*If FIFO Overflow bit == set, report error to user */
 	if (XVSEC_MCAPV2_IS_FIFO_OVERFLOW(sts) == true) {
 		pr_err("%s: Write FIFO overflow error occured.\n", __func__);
 		ret = -(EIO);
@@ -336,6 +336,9 @@ int xvsec_mcapv2_file_download(
 	enum data_transfer_mode tr_mode;
 	uint8_t fifo_capacity = 0;
 	uint8_t min_len = 0;
+	union axi_reg_data sbi_ctrl;
+	uint32_t sbi_address;
+	uint32_t sbi_ctrl_data_restore = 0;
 
 	pr_debug("In %s\n", __func__);
 
@@ -350,7 +353,6 @@ int xvsec_mcapv2_file_download(
 			file_info->v2.tr_mode, file_info->v2.file_name);
 		return -(EINVAL);
 	}
-
 
 	if (file_info->v2.file_name != NULL) {
 		len = strnlen_user(
@@ -376,6 +378,7 @@ int xvsec_mcapv2_file_download(
 	dev_address = file_info->v2.address;
 	mode = file_info->v2.mode;
 	tr_mode = file_info->v2.tr_mode;
+	sbi_address = file_info->v2.sbi_address;
 
 	/** At present only PDI file format is implemented */
 	if (xvsec_util_find_file_type(fname, MCAPV2_PDI_FILE) < 0) {
@@ -397,7 +400,7 @@ int xvsec_mcapv2_file_download(
 		goto CLEANUP_EXIT;
 	}
 
-	/** Check the file size is proper (multiple of 128bit/16Bytes) */
+	/* Check the file size is proper (multiple of 128bit/16Bytes) */
 	if ((mode == MCAP_AXI_MODE_128B) && ((file_size % MIN_LEN_128B) != 0)) {
 		file_info->v2.op_status = FILE_OP_INVALID_FSIZE;
 		pr_err("%s: file size is not multiple of 128b/16B\n", __func__);
@@ -409,7 +412,21 @@ int xvsec_mcapv2_file_download(
 	if (ret != 0)
 		goto CLEANUP_EXIT;
 
-	/** FIXME: pprereps, does mcap needs a reset here? */
+	/* RdModWr SBI Control register to accept data from
+	 * MCAP datapath; restore later
+	 */
+	if (sbi_address != 0xFFFFFFFF) {
+		sbi_ctrl.v2.mode = MCAP_AXI_MODE_32B;
+		sbi_ctrl.v2.address = sbi_address + SLAVE_BOOT_CTRL_OFFSET;
+		xvsec_mcapv2_axi_rd_addr(mcap_ctx, &sbi_ctrl);
+		/* Storing in a tempeoray variable to retore in
+		 *  the control register while cleanup
+		 */
+		sbi_ctrl_data_restore = sbi_ctrl.v2.data[0];
+		sbi_ctrl.v2.data[0] &= ~SBI_CTRL_IF_MASK;
+		sbi_ctrl.v2.data[0] |= (SBI_CTRL_IF_AXI | SBI_CTRL_ENABLE);
+		xvsec_mcapv2_axi_wr_addr(mcap_ctx, &sbi_ctrl);
+	}
 
 	/** Enable write mode */
 	xvsec_mcapv2_wr_enable(mcap_ctx);
@@ -463,8 +480,8 @@ int xvsec_mcapv2_file_download(
 			}
 			/*slow download - Fifo should be empty*/
 			else if (tr_mode == DATA_TRANSFER_MODE_SLOW) {
-				/** Wait until the Write FIFO is empty */
-				/* for 128B, check after evry 4 dwords*/
+				/* Wait until the Write FIFO is empty */
+				/* for 128B, check after every 4 dwords*/
 				if ((index % min_len) == 0) {
 					ret =
 					xvsec_mcapv2_wait_for_write_FIFO_empty(
@@ -561,6 +578,12 @@ CLEANUP:
 		pr_debug("%s: MCAP Reset is issued.\n", __func__);
 	}
 
+	/** Restore SBI control reg to previous state */
+	if (sbi_address != 0xFFFFFFFF) {
+		sbi_ctrl.v2.data[0] = sbi_ctrl_data_restore;
+		xvsec_mcapv2_axi_wr_addr(mcap_ctx, &sbi_ctrl);
+	}
+
 CLEANUP_EXIT:
 	xvsec_util_fclose(filep);
 
@@ -632,7 +655,6 @@ int xvsec_mcapv2_file_upload(
 		pr_debug("%s: MCAP Reset is issued.\n", __func__);
 	}
 
-	/** FIXME : pprerepa, check for file permissions during testing */
 	filep = xvsec_util_fopen(fname, O_WRONLY|O_CREAT, 0);
 	if (filep == NULL)
 		return -(ENOENT);

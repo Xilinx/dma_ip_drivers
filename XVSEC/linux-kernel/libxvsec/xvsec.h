@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace library which provides the
  * userspace APIs to enable the XSEC driver functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -14,7 +14,7 @@
 #define __XVSEC_H__
 
 #ifdef __cplusplus
-}
+extern "C" {
 #endif
 
 #include <stdio.h>
@@ -483,7 +483,7 @@ typedef union _axi_reg_data{
 	}v2;
 }axi_reg_data_t;
 /**
- * @struct 	_axi_cache_attr
+ * @struct	_axi_cache_attr
  * @brief	AXI cache and protection settings
  *		V2 corresponds to Versal devices
  *
@@ -536,7 +536,7 @@ int xvsec_lib_deinit(void);
  *
  * @param[in]	bus_no		PCIe bus number on which device sits
  * @param[in]	dev_no		Device number in the PCIe bus
- * @param[in]	dev_str		string to append to create character device. 
+ * @param[in]	dev_str		string to append to create character device.
  * @param[out]	handle		Unique handle returned to access the device
  *
  * @return	XVSEC_SUCCESS				: Success
@@ -565,7 +565,7 @@ int xvsec_close(xvsec_handle_t *handle);
 /*****************************************************************************/
 /**
  * xvsec_get_cap_list() - Returns the supported VSEC capabilities
- * 			  of the given handle
+ *			  of the given handle
  *
  * @param[in]		handle		Unique handle to access the device
  * @param[out]		cap_list	Supported capability list
@@ -653,10 +653,10 @@ int xvsec_mcap_get_data_registers(xvsec_handle_t *handle, uint32_t data[4]);
 /*****************************************************************************/
 /**
  * xvsec_mcap_get_revision() - Returns the MCAP read data registers
- * 
+ *
  * @param[in]   handle          Unique handle to access the device
  * @param[out]  rev[]          MCAP read data register values
- *  
+ *
  * @return      XVSEC_SUCCESS                           : Success
  * @return      XVSEC_ERR_INVALID_PARAM                 : Failure
  * @return      XVSEC_ERR_OPERATION_NOT_SUPPORTED       : Failure
@@ -794,14 +794,15 @@ int xvsec_mcap_access_axi_reg(xvsec_handle_t *handle, uint32_t address,
  * xvsec_mcap_file_download() - Performs File download at specified address
  *
  *
- * @param[in]	handle		Unique handle to access the device
- * @param[in]	fixed_address	Address Type (is it fixed/incr)
- * @param[in]	mode_128_bit	Access Mode (128 bit or 32 bit)
- * @param[in]	file_name	File to download
- * @param[in]	dev_address	The address to download the file
- * @param[in]	tr_mode		Data transfer mode(slow/fast)
- * @param[out]	op_status	file download status
- * @param[out]	err_index	file download error index
+ * @param[in]	handle          Unique handle to access the device
+ * @param[in]	fixed_address   Address Type (is it fixed/incr)
+ * @param[in]	mode_128_bit    Access Mode (128 bit or 32 bit)
+ * @param[in]	file_name       File to download
+ * @param[in]	dev_address     The address to download the file
+ * @param[in]	tr_mode         Data transfer mode(slow/fast)
+ * @param[in]	sbi_address     SBI reg block address
+ * @param[out]	op_status       file download status
+ * @param[out]	err_index       file download error index
  *
  * @return	XVSEC_SUCCESS				: Success
  * @return	XVSEC_ERR_INVALID_PARAM			: Failure
@@ -812,7 +813,7 @@ int xvsec_mcap_access_axi_reg(xvsec_handle_t *handle, uint32_t address,
 int xvsec_mcap_file_download(xvsec_handle_t *handle,
 	bool fixed_address, bool mode_128_bit,
 	char *file_name, uint32_t dev_address,
-	data_transfer_mode_t tr_mode,
+	data_transfer_mode_t tr_mode, uint32_t sbi_address,
 	file_operation_status_t  *op_status, size_t *err_index);
 
 /*****************************************************************************/

@@ -58,6 +58,14 @@
 			val = (val / 16) * 16; \
 	} while (0)
 
+/* Versal SBI Control Register | Physical Addr: 0xF1220004 */
+/* Versal alias 0x1_0xxx_xxxx -> 0xFxxx_xxxx (128 MB)
+ * MCAP can only address 32b, must use NMU remaps in HW to reach 48b address */
+#define SLAVE_BOOT_CTRL_OFFSET (0x4) 
+#define SBI_CTRL_IF_MASK (0x7 << 2)
+#define SBI_CTRL_IF_AXI  (0x2 << 2)
+#define SBI_CTRL_ENABLE  (0x1 << 0)
+
 /* MCAP Versal Register Offsets */
 #define XVSEC_MCAPV2_EXTENDED_HEADER	(0x0000)
 #define XVSEC_MCAPV2_VENDOR_HEADER	(0x0004)

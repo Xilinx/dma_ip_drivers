@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2018-2020  Xilinx, Inc.
+ * Copyright (c) 2018-2022  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -91,6 +91,7 @@ struct mcap_file_download {
 	bool flag;
 	bool is_fixed_addr;
 	bool is_128b_mode;
+	uint32_t sbi_addr;
 	char *file_name;
 	uint32_t dev_addr;
 	data_transfer_mode_t tr_mode;

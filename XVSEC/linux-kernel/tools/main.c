@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2018-2020  Xilinx, Inc.
+ * Copyright (c) 2018-2022  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -126,12 +126,13 @@ static void versal_help(FILE *fp)
 			"VERSAL MCAP options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 2):\n"
 			"\t-m\t\t Performs Module Reset\n"
 			"\t-d\t\t Print the contents of the MCAP Registers\n"
-			"\t-p  mode <32b/128b> type <fixed/incr> <address> <file> [tr_mode <slow/fast>]   Download the specified File (.pdi) at given address\n"
+			"\t-p  mode <32b/128b> type <fixed/incr> <address> <file> [tr_mode <slow/fast>] [sbi <address>]   Download the specified File (.pdi) at given address\n"
 			"\t    \tmode <32b>   - 32-bit mode should be used\n"
 			"\t    \tmode <128b>  - 128-bit mode should be used\n"
 			"\t    \ttype <fixed> - Address is fixed\n"
 			"\t    \ttype <incr>  - Address should be incremented based on specified mode\n"
 			"\t    \ttr_mode      - optional slow/fast download mode option\n"
+			"\t    \tsbi <address>   - required if download target is SBI and the address must be provided\n"
 			"\t-t  type <fixed/incr> <address> <len> <file>   Read the contents at given address for the given len into given file\n"
 			"\t    \ttype <fixed> - Address is fixed\n"
 			"\t    \ttype <incr>  - Address should be incremented based on specified mode\n"

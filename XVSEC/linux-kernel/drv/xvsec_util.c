@@ -1,7 +1,7 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -67,7 +67,7 @@ struct file *xvsec_util_fopen(const char *path, int flags, int rights)
 	int err = 0;
 
 	oldfs = get_fs();
-	set_fs(get_ds());
+	set_fs(KERNEL_DS);
 	filep = filp_open(path, (flags | O_LARGEFILE), rights);
 	set_fs(oldfs);
 	if (IS_ERR(filep) != 0) {
@@ -90,13 +90,23 @@ int xvsec_util_fread(struct file *filep, uint64_t offset,
 	mm_segment_t oldfs;
 
 	oldfs = get_fs();
-	set_fs(get_ds());
+	set_fs(KERNEL_DS);
+#if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 	ret = vfs_read(filep, (char __user *)data, size, (loff_t *)&offset);
+#else
+	ret = kernel_read(filep, (void *)data, size, (loff_t *)&offset);
+#endif
 	filep->f_pos = offset;
 	set_fs(oldfs);
 
 	if (ret < 0) {
-		pr_err("%s : vfs_read failed with error : %d\n", __func__, ret);
+#if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
+		pr_err("%s : vfs_read failed with error : %d\n",
+			__func__, ret);
+#else
+		pr_err("%s : kernel_read failed with error : %d\n",
+			__func__, ret);
+#endif
 		return -(EIO);
 	}
 
@@ -110,13 +120,22 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 	mm_segment_t oldfs;
 
 	oldfs = get_fs();
-	set_fs(get_ds());
+	set_fs(KERNEL_DS);
+#if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 	ret = vfs_write(filep, (char __user *)data, size, (loff_t *)&offset);
+#else
+	ret = kernel_write(filep, (void *)data, size,
+				(loff_t *)&offset);
+#endif
 	filep->f_pos = offset;
 	set_fs(oldfs);
 
 	if (ret < 0) {
+#if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 		pr_err("%s : vfs_write failed, err : %d\n", __func__, ret);
+#else
+		pr_err("%s : kernel_write failed, err : %d\n", __func__, ret);
+#endif
 		return -(EIO);
 	}
 
@@ -136,7 +155,7 @@ int xvsec_util_get_file_size(const char *fname, loff_t *size)
 	struct kstat stat;
 
 	oldfs = get_fs();
-	set_fs(get_ds());
+	set_fs(KERNEL_DS);
 
 	memset(&stat, 0, sizeof(struct kstat));
 	ret = vfs_stat((char __user *)fname, &stat);

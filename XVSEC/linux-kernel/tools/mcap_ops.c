@@ -2,7 +2,7 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2020 Xilinx, Inc.
+ * Copyright (c) 2020-2022 Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -83,7 +83,7 @@ static const char *MCAPV2_reg_names[] = {
 	"VSEC Header",
 	"Status",
 	"Control",
-	"MCAP RW Adrr register",
+	"MCAP RW Addr Register",
 	"MCAP Write Data",
 	"MCAP Read Data",
 };
@@ -698,7 +698,7 @@ static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
 	ret = xvsec_mcap_file_download(xvsec_handle,
 		args->download.is_fixed_addr, args->download.is_128b_mode,
 		args->download.file_name, args->download.dev_addr,
-		args->download.tr_mode, &status, &err_index);
+		args->download.tr_mode, args->download.sbi_addr, &status, &err_index);
 	if(ret < 0)
 	{
 		fprintf(stderr, "xvsec_mcap_file_download "
@@ -710,7 +710,8 @@ static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,
 				 (status == XVSEC_MCAP_FILE_OP_HW_BUSY) ||
 				 (status == XVSEC_MCAP_FILE_OP_FAILED))) {
 			fprintf(stdout, "Please try PDI transfer using download "
-				        "option <tr_mode slow>\n");
+				        "option <tr_mode slow>, review option <sbi>, "
+        				"and/or check hardware address mapping is correct\n");
 		}
 
 	}

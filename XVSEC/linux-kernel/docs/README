@@ -14,7 +14,7 @@ Contents
      2.1 Using xvsecctl for Generic VSEC functionality
      2.2 US/US+ MCAP Specific Commands
      2.3 Versal MCAP Specific Commands
-	 
+
 _____________________________________________________________________________
 1. Installation:
 ================
@@ -32,7 +32,7 @@ _____________________________________________________________________________
   kernel
   (i.e. "make modules_install" has been run with the Linux kernel source tree).
 
-  a.    QDMA Linux Kernel Driver is available in Xilinx github at 
+  a.    QDMA Linux Kernel Driver is available in Xilinx github at
         https://github.com/Xilinx/dma_ip_drivers/tree/master/XVSEC/linux-kernel
 
   b.    Compile the Xilinx XVSEC Linux driver:
@@ -84,11 +84,11 @@ _____________________________________________________________________________
 
   The Xilinx XVSEC control tool, xvsecctl, is a Command Line utility
   which is installed in /usr/local/sbin/ and allows controlling of
-  Xilinx VSEC functionality. 
+  Xilinx VSEC functionality.
 
   For help run:
     xvsecctl -h
-  
+
   It can perform the following functions:
 
   - Generic VSEC functionality
@@ -132,37 +132,37 @@ _____________________________________________________________________________
         - Specify PCI bus no on which device sits.
       F <dev_no>:
         - Specify PCI device no on the bus.
-  
+
     2.1.1. List XVSEC Capabilities
     --------------------------
-  
+
     command: ./xvsecctl -b<bus_no> -F <dev_no> -l
 
     Description:
     Lists the supported VSECs
-  
+
     Example:
       [xilinx@]# ./xvsecctl -b 0x65 -F 0x0 -l
-	  
+
       No of Supported Extended capabilities : 3
       VSEC ID         VSEC Rev        VSEC Name       Driver Support
       -------         --------        ---------       --------------
       0x0001          0x0001          PCIe_MCAP_VSEC          Yes
       0x0000          0x0000          UNKNOWN                 No
       0x0008          0x0000          PCIe_XVC_DEBUG_VSEC     No
-  
-  
+
+
     2.1.2. Lists basic information about the device
     -------------------------------------------
 
     command: ./xvsecctl -b <bus_no> -F <dev_no> -v
-  
+
     Description:
     Prints Verbose Information of the given device.
-  
+
     Example:
       [xilinx@]# ./xvsecctl -b 0x65 -F 0x0 -v
-	  
+
       Xilinx VSEC Tool        : v2020.2.0
       Xilinx VSEC Library     : v2020.2.0
       -----------------------------------
@@ -179,61 +179,61 @@ _____________________________________________________________________________
 
   2.2 US/US+ MCAP Specific Options
   --------------------------------
-    
+
     2.2.1. MCAP Reset
     -----------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -r
-    
+
     Description:
     It Performs Simple Reset.
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -r
-	    
+
         MCAP version: 1
         Configuration Logic Reset Successful
-    
+
     2.2.2. MCAP Module Reset
     ------------------------
 
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -m
-    
+
     Description:
     Performs Module Reset.
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -m
-	    
+
         MCAP version: 1
         MCAP Module Reset Successful
-    
-    
+
+
     2.2.3. MCAP Full Reset
     ----------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -f
-    
+
     Description:
     This command Performs Full Reset. It is equivalent to MCAP Simpale Reset + MCAP Module Reset.
-    
+
       Example:
         [xilinx@]# sudo ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -f
-        
+
         MCAP version: 1
         Both Configuration Logic & MCAP Module Reset Successful
-    
+
     2.2.4. Lists Data register Contents
     -----------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -D
-    
+
     Description:
     Reads and prints MCAP Data Registers.
-    
+
       Example:
-        [xilinx@]# sudo ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -D 
-	    
+        [xilinx@]# sudo ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -D
+
         MCAP version: 1
         BYTE OFFSET     Register Name           Data Value
         -----------     ----------------        ----------
@@ -241,18 +241,18 @@ _____________________________________________________________________________
         0x0020          FPGA Read Data[1]       0x00000000
         0x0024          FPGA Read Data[2]       0x00000000
         0x0028          FPGA Read Data[3]       0x00000000
-    
+
     2.2.5. Lists MCAP Register Contents
     -----------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -d
-    
+
     Description:
     It Dumps all the MCAP config Registers.
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -d
-	    
+
         MCAP version: 1
         BYTE OFFSET     Register Name           Data Value
         -----------     ----------------        ----------
@@ -281,21 +281,21 @@ _____________________________________________________________________________
         0x0020          FPGA Read Data[1]       0x00000000
         0x0024          FPGA Read Data[2]       0x00000000
         0x0028          FPGA Read Data[3]       0x00000000
-    
+
     2.2.6. Lists FPGA Config Reg Dump
     ---------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -o
-    
+
     Description:
     Reads and prints all FPGA Config Registers.
-    
+
       Example:
          [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -o
-	     
+
          MCAP version: 1
          FPGA CFG Registers Dump (see Configuration User Guide for more details)
-         
+
          Register No     Register Name           Data Value
          -----------     ----------------        ----------
          0x0000          crc                     0x00000000
@@ -319,71 +319,71 @@ _____________________________________________________________________________
          0x0016          bootsts                 0x00000001
          0x0018          ctl1                    0x00000000
          0x001F          bspi                    0x0000000B
-    
+
     2.2.7. Access the MCAP Registers
     --------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -a <byte offset> [type [data]]
-    
+
     Description:
     This command is used to read/write the MCAP config Register.
-    
-    Parameters:    
-      <byte offset>: 
+
+    Parameters:
+      <byte offset>:
         - MCAP register offset
       [type[data]]:
         - Write operation with data
         - b for byte data [8 bits] read
         - h for half word data [16 bits] read
         - w for word data [32 bits] read
-    
+
       Examples:
         1) Read MCAP register
         ---------------------
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -a 0x4 w
-	    
+
         MCAP version: 1
         [XVSEC] : xvsec_mcap_access_config_reg : read operation completed
         BYTE OFFSET     Register Name           Data Value
         -----------     ----------------        ----------
         0x0004          VSEC Header             0x02C10001
-        
+
         2) Write MCAP register
         ----------------------
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -a 0x14 w 0x10000
-	    
+
         MCAP version: 1
         [XVSEC] : xvsec_mcap_access_config_reg : write operation completed
-        BYTE OFFSET	Register Name		Data Value
-        -----------	----------------	----------
-        0x0014		Control             	0x00010000  
-    
+        BYTE OFFSET Register Name       Data Value
+        ----------- ----------------    ----------
+        0x0014      Control                 0x00010000
+
     2.2.8. Access FPGA Config Registers
     -----------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -s <register no> [w [data]]
-    
+
     Description:
     This command is used to read/write the FPGA config Register.
-    
-    Parameters:    
-      <register no>: 
+
+    Parameters:
+      <register no>:
         - FPGA register offset
       [w [data]]:
         - Write operation with data
         - Read Operation if 'w' not given
-    
+
       Examples:
         1) Read FPGA config register
         ----------------------------
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -s 0x14
-	    
+
         MCAP version: 1
         [XVSEC] : xvsec_mcap_access_fpga_config_reg : read operation completed
         Register No     Register Name           Data Value
         -----------     ----------------        ----------
         0x0014          scratchpad              0x00000000
-	    
+
         2) Write FPGA config register
         ----------------------------
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -s 0x14 w 0xDEADBEEF
@@ -396,15 +396,15 @@ _____________________________________________________________________________
 
     2.2.9. Program Stage 2 Bit-stream(.bin/.bit/.rbt)
     -------------------------------------------------
-	
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p <file>
-    
+
     Description:
     Programs Stage 2 Bitstream into FPGA. Supported file extentions are *.bin, *.bit, *.rbt.
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x08 -F 0x0 -c 0x1 -p Tul_Des03_tfu_update_region_partial.bit
-	    
+
         MCAP version: 1
         [XVSEC] : xvsec_mcap_configure_fpga : Bitstream Program successful
         FPGA configuration successful
@@ -414,29 +414,29 @@ _____________________________________________________________________________
 
     2.3.1. MCAP Module Reset
     ------------------------
-	
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -m
-    
+
     Description:
     It Performs MCAP Module Reset.
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -m
-	    
+
         MCAP version: 2
         MCAP Module Reset Successful
-    
+
     2.3.2. Lists MCAP Register Contents
     -----------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -d
-    
+
     Description:
     It will print the contents of the MCAP Registers.
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -d
-        
+
         MCAP version: 2
         BYTE OFFSET     Register Name           Data Value
         -----------     ----------------        ----------
@@ -458,19 +458,19 @@ _____________________________________________________________________________
            bit  8       MCAP Reset                       0
            bit  19:16   MCAP AXI Cache                   0
            bit  22:20   MCAP AXI Protect                 0
-        0x0010          MCAP RW Adrr register   0x00000000
+        0x0010          MCAP RW Addr Register   0x00000000
         0x0014          MCAP Write Data         0x00000000
         0x0018          MCAP Read Data          0x00000000
-    
+
     2.3.3. PDI Download
     -------------------
-    
-    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p mode <32b/128b> type <fixed/incr> <Address> <PDI File> [tr_mode <slow/fast>]
-    
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p mode <32b/128b> type <fixed/incr> <Address> <PDI File> [tr_mode <slow/fast>] [sbi <SBI reg block addr>]
+
     Description:
     This command is used to Download the specified File (.pdi) at given address.
-    
-    Parameters:    
+
+    Parameters:
       mode
         - <32b>: 32-bit mode should be used
         - <128b>: 128-bit mode should be used
@@ -483,45 +483,54 @@ _____________________________________________________________________________
         - PDI file to be downloaded
       [tr_mode ]
         - optional slow/fast download mode option for data transfer
-        - If tr_mode is not specified, It will use Default(fast) mode
-    
+        - If tr_mode is not specified, it will use Default(fast) mode
+      [sbi ]
+        - required specifier if targeting PDI download to slave boot
+          interface (SBI) and the SBI_CTRL register has not been set to
+          accept data from the AXI interface (0xF1220004[4:2] != 3'b010)
+        - Can be specified without tr_mode or after tr_mode
+        - If targeting PDI download to SBI, both the SBI FIFO address
+          and the SBI reg block address must be mapped in hardware
+          from the CPM master to the PMC slave and there must be NMU remap(s)
+          in place to remap from a 32 bit address to a 48 bit address
+
       Examples:
         1) Slow mode example: 32b, incr mode with DDR at address 0x0
         ------------------------------------------------------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 32b type incr 0x0 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow
-	    
+
         MCAP version: 2
         tr_mode: 0
         [XVSEC] : xvsec_mcap_file_download : File Download successful
         File Download successful
-	    
+
         2) Fast mode example: 128b, incr mode with DDR at address 0x0
         -------------------------------------------------------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type incr 0x0 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode fast
-        
+
         MCAP version: 2
         tr_mode: 1
         [XVSEC] : xvsec_mcap_file_download : File Download successful
         File Download successful
-	    
+
         3) Slow mode example: 128b, fixed mode with SBI fixed address 0xF2100000
         ------------------------------------------------------------------------
-        [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type fixed 0xF2100000 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow
-	    
+        [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type fixed 0xF2100000 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow sbi 0x10000
+
         MCAP version: 2
         tr_mode: 1
         [XVSEC] : xvsec_mcap_file_download : File Download successful
-        File Download successful   
-    
+        File Download successful
+
     2.3.4. PDI Upload
     -----------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -t type <fixed/incr> <Address> <Length_2_Read> <PDI File>
-    
+
     Description:
     It Reads the contents at given address for the given length into given file
-    
-    Parameters:    
+
+    Parameters:
       type
         - <fixed>: Address is fixed
         - <incr>: Address should be incremented based on specified mode
@@ -531,63 +540,63 @@ _____________________________________________________________________________
         - Number of bytes to read
       <PDI File>
         - Read the contents and save in given file
-    
+
       Example:
         1) PDI upload with incr mode and DDR at address 0x0
         ------------------------------------------------------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -t type incr 0x0 843312 ./read_from_ddr_32bit_incr.pdi
-	    
+
         MCAP version: 2
         [XVSEC] : xvsec_mcap_file_upload : File Upload successful
         File Upload successful
-    
+
     2.3.5. Access MCAP Register
     ---------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -a <Reg Offset> <b/h/w> <Data>
-    
+
     Description:
     This command is used to read/write the MCAP config Register.
-    
-    Parameters:    
-      <byte offset>: 
+
+    Parameters:
+      <byte offset>:
         - MCAP register offset
       [type[data]]:
         - Write operation with data
         - b for byte data [8 bits] read
         - h for half word data [16 bits] read
         - w for word data [32 bits] read
-     
+
       Examples:
         1) Read MCAP register
         ---------------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -a 0xc w
-	    
+
         MCAP version: 2
         [XVSEC] : xvsec_mcap_access_config_reg : read operation completed
         BYTE OFFSET     Register Name           Data Value
         -----------     ----------------        ----------
         0x000C          Control                 0x00000000
-        
+
         2) Write MCAP register
         ----------------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -a 0xc w 0x0010
-	    
+
         MCAP version: 2
         [XVSEC] : xvsec_mcap_access_config_reg : write operation completed
         BYTE OFFSET     Register Name           Data Value
         -----------     ----------------        ----------
         0x000C          Control                 0x00000010
-    
+
     2.3.6. Access the AXI Registers
     -------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -x mode <32b/128b> <address> w <data>
-    
+
     Description:
     This command is used to read/write the 32b/128b AXI addresses.
-    
-    Parameters:    
+
+    Parameters:
       mode
         - <32b>: 32-bit mode should be used
         - <128b>: 128-bit mode should be used
@@ -597,32 +606,32 @@ _____________________________________________________________________________
       [w [data]]
         - Write operation with data
         - Read Operation if 'w' not given
-    
+
       Examples:
         1) 32bit AXI read
         -----------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -x 0xf11a0008
-	    
+
         MCAP version: 2
         [XVSEC] : xvsec_mcap_access_axi_reg : read operation completed
         axi address:    Data Value
         ------------    ----------
         0xF11A0008:     0x00000000
-        
+
         2) 32-bit AXI write
         -------------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -x mode 32b 0xf11a0008 w 0x00302021
-	    
+
         MCAP version: 2
         [XVSEC] : xvsec_mcap_access_axi_reg : write operation completed
         axi address:    Data Value
         ------------    ----------
         0xF11A0008:     0x00302021
-	    
+
         3) 128b AXI write
         -----------------
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -x mode 128b 0x0 w 0xA0000000 0xB1000000 0xC2000000 0xF10000FF
-	    
+
         MCAP version: 2
         [XVSEC] : xvsec_mcap_access_axi_reg : write operation completed
         axi address:    Data Value
@@ -631,23 +640,23 @@ _____________________________________________________________________________
         0x00000004:     0xB1000000
         0x00000008:     0xC2000000
         0x0000000C:     0xF10000FF
-    
+
     2.3.7. To set AXI cache and protection settings
     -----------------------------------------------
-    
+
     command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 [axi_cache <data> axi_prot <data>]
-    
+
     Description:
     It will configure the AXI cache and protections bits.
-    
+
     Parameters:
       [axi_cache <data>] - axi_cache valid range 0 to 15
       [axi_prot <data>]  - axi_prot valid range 0 to 7
-    
+
       Example:
         [xilinx@]# ./xvsecctl -b 0x01 -F 0 -c 1 -q axi_cache 0x1 axi_prot 0x2
-        
+
         MCAP version: 2
         axi_cache: 0x1
         axi_prot: 0x2
-    
+

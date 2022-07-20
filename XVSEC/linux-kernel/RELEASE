@@ -1,13 +1,25 @@
-Release: 2020.2
-============================
+Release: 2020.2.1
+=================
 
 NOTE:
-	This release is based on the 2020.2 XVSEC-MCAP Design.
+	This release is based on the 2020.2.1 XVSEC-MCAP Design.
 
 	XVSEC driver is implemented to support Ultrascale, Ultrascale+, and Versal devices.
 
 SUPPORTED FEATURES:
 ===================
+
+Release: 2020.2.1
+-----------------
+- Integrated the following pull requests in mainline
+	https://github.com/Xilinx/dma_ip_drivers/pull/134/commits/3a9351b0cc30f355a6d48a33b7b76aaae38434c0
+	https://github.com/Xilinx/dma_ip_drivers/pull/134/commits/cb1659b84021d449fc9388d3e04ebef7422932e7
+	https://github.com/Xilinx/dma_ip_drivers/pull/134/commits/12a076ad89094d297bbc8d88d42527b7b24723b8
+	https://github.com/Xilinx/dma_ip_drivers/pull/134/commits/3414e46e64c27dad5d6399429157f3038e439ae4
+	https://github.com/Xilinx/dma_ip_drivers/pull/134/commits/d1fe085fd931f66a8e5d4217414fc514e345534f
+	https://github.com/Xilinx/dma_ip_drivers/pull/134/commits/7805b271bee7344c02c311b01c918e1c43e3ebe5
+
+- Fixed the compilation issue for Ubuntu 20.04 LTS
 
 Release: 2020.2
 ---------------
@@ -59,7 +71,7 @@ Release: 2018.3
 	- Access(Read/Write) any FPGA configuration register by providing register number
 	- Program partial clear bitstream
 	- Program Stage-2/partial reconfigurable bitstream
-
+	
 DRIVER LIMITATIONS:
 ===================
 - Only MCAP VSEC is supported

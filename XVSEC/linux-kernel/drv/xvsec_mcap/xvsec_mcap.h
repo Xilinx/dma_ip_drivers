@@ -1,7 +1,7 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2020-2022,  Xilinx, Inc.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -379,6 +379,8 @@ union file_download_upload {
 		size_t length;
 		/** data transfer mode */
 		enum data_transfer_mode tr_mode;
+		/** SBI reg block address */
+		uint32_t sbi_address;
 		/** File Download/Upload Status */
 		enum file_operation_status op_status;
 		/** upload/download failed at byte index */
