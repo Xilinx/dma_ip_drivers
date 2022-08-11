@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,10 +57,12 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="XVSEC Linux User Space APIs" href="xvsec_linux_api_export.html" />
-    <link rel="prev" title="Structures for Generic VSEC" href="xvsec_linux_export_structs.html" /> 
+    <link rel="prev" title="Data Structures" href="xvsec_linux_export_structs.html" /> 
 	</head>
 	<body>
 		<div class="xilinx-bs3"/>
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -340,20 +344,20 @@
 <li class="toctree-l2 current"><a class="reference internal" href="xvsec_linux_export.html">XVSEC Linux Driver Exports</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_export_defines.html">Definitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_export_enums.html">Enumerations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="xvsec_linux_export_structs.html">Structures for Generic VSEC</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Unions for Generic VSEC</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#union-device-info">union device_info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="xvsec_linux_export_structs.html">Data Structures</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Data Structures</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#struct-device-info">struct device_info</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#unions-for-xvsec-mcap-vsec">Unions for MCAP VSEC</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#union-axi-cache-attr">union axi_cache_attr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-axi-reg-data">union axi_reg_data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-bitstream-file">union bitstream_file</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-cfg-data">union cfg_data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-file-download-upload">union file_download_upload</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-fpga-cfg-reg">union fpga_cfg_reg</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-fpga-cfg-regs">union fpga_cfg_regs</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-mcap-regs">union mcap_regs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cid-xvsec-mcap-union">Data Structures</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#struct-axi-cache-attr">struct axi_cache_attr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-axi-reg-data">struct axi_reg_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-bitstream-file">struct bitstream_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-cfg-data">struct cfg_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-file-download-upload">struct file_download_upload</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-fpga-cfg-reg">struct fpga_cfg_reg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-fpga-cfg-regs">struct fpga_cfg_regs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-mcap-regs">struct mcap_regs</a></li>
 </ul>
 </li>
 </ul>
@@ -417,7 +421,7 @@
         
           <li><a href="xvsec_linux_export.html">XVSEC Linux Driver Exports</a> &raquo;</li>
         
-      <li>Unions for Generic VSEC</li>
+      <li>Data Structures</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -436,220 +440,222 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="unions-for-generic-vsec">
-<span id="cid-xvsec-union"></span><span id="doxid-group-xvsec-union"></span><h1>Unions for Generic VSEC<a class="headerlink" href="#unions-for-generic-vsec" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="union-device-info">
-<span id="cid-device-info"></span><span id="doxid-uniondevice-info"></span><span id="index-0"></span><h2>union device_info<a class="headerlink" href="#union-device-info" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_drv.h&quot;</span></pre>
+  <section id="data-structures">
+<span id="cid-xvsec-union"></span><span id="doxid-group-xvsec-union"></span><h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">¶</a></h1>
+<section id="struct-device-info">
+<span id="cid-device-info"></span><span id="doxid-uniondevice-info"></span><span id="index-0"></span><h2>struct device_info<a class="headerlink" href="#struct-device-info" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_drv.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>PCIe device information for verbose option.</p>
 <span class="target" id="cid-device-info-1"><span id="doxid-uniondevice-info-1ac31b1ed19fc9ee243734db6f091f88b1"></span></span><p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-vendor-id"><span id="doxid-uniondevice-info-1ac274b5ab5c4a1f60b8b3b0454f9887ce"></span><span></span><span class="kt">uint16_t</span> <span class="n">vendor_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-vendor-id"><span id="doxid-uniondevice-info-1ac274b5ab5c4a1f60b8b3b0454f9887ce"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">vendor_id</span></pre>
 <p>PCIe Vendor Identifier</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-device-id"><span id="doxid-uniondevice-info-1ac1577453bb40a6ecb1e3cf39b1a33c8b"></span><span></span><span class="kt">uint16_t</span> <span class="n">device_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-device-id"><span id="doxid-uniondevice-info-1ac1577453bb40a6ecb1e3cf39b1a33c8b"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">device_id</span></pre>
 <p>PCIe Device Identifier</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-device-no"><span id="doxid-uniondevice-info-1a967edb8ed14ee44e60af7e57dd1aacd8"></span><span></span><span class="kt">uint16_t</span> <span class="n">device_no</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-device-no"><span id="doxid-uniondevice-info-1a967edb8ed14ee44e60af7e57dd1aacd8"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">device_no</span></pre>
 <p>PCIe Device number</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-device-fn"><span id="doxid-uniondevice-info-1a4190aec40a3765af1ababd23984b9a59"></span><span></span><span class="kt">uint16_t</span> <span class="n">device_fn</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-device-fn"><span id="doxid-uniondevice-info-1a4190aec40a3765af1ababd23984b9a59"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">device_fn</span></pre>
 <p>PCIe Device function</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-subsystem-vendor"><span id="doxid-uniondevice-info-1a049a0a5c94e12d98fef7c992b7758177"></span><span></span><span class="kt">uint16_t</span> <span class="n">subsystem_vendor</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-subsystem-vendor"><span id="doxid-uniondevice-info-1a049a0a5c94e12d98fef7c992b7758177"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">subsystem_vendor</span></pre>
 <p>PCIe Subsystem Vendor Identifier</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-subsystem-device"><span id="doxid-uniondevice-info-1a571630e6cd7001dc9b3177f403ba14a0"></span><span></span><span class="kt">uint16_t</span> <span class="n">subsystem_device</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-subsystem-device"><span id="doxid-uniondevice-info-1a571630e6cd7001dc9b3177f403ba14a0"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">subsystem_device</span></pre>
 <p>PCIe Subsystem Device Identifier</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-class-id"><span id="doxid-uniondevice-info-1af1698b27243971230a30747933d08b95"></span><span></span><span class="kt">uint16_t</span> <span class="n">class_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-class-id"><span id="doxid-uniondevice-info-1af1698b27243971230a30747933d08b95"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">class_id</span></pre>
 <p>PCIe Class Identifier</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-is-msi-enabled"><span id="doxid-uniondevice-info-1ab83da097502100b1722bfa9d3c08e128"></span><span></span><span class="kt">uint32_t</span> <span class="n">is_msi_enabled</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-is-msi-enabled"><span id="doxid-uniondevice-info-1ab83da097502100b1722bfa9d3c08e128"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">is_msi_enabled</span></pre>
 <p>Flag which indicates MSI enabled status</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-is-msix-enabled"><span id="doxid-uniondevice-info-1a27993965071506275ef0897985e1eecb"></span><span></span><span class="kt">uint32_t</span> <span class="n">is_msix_enabled</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-is-msix-enabled"><span id="doxid-uniondevice-info-1a27993965071506275ef0897985e1eecb"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">is_msix_enabled</span></pre>
 <p>Flag which indicates MSIx enabled status</p>
-<pre class="highlight title-code-block literal-block" id="cid-device-info-cfg-size"><span id="doxid-uniondevice-info-1ad524cee463ecf1eb1e3471496aaf6a6f"></span><span></span><span class="kt">int</span> <span class="n">cfg_size</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-device-info-cfg-size"><span id="doxid-uniondevice-info-1ad524cee463ecf1eb1e3471496aaf6a6f"></span><span></span><span class="kt">int</span><span class="w"> </span><span class="n">cfg_size</span></pre>
 <p>Size of the PCIe Device configuration space</p>
-</div>
-</div>
-<div class="section" id="unions-for-xvsec-mcap-vsec">
-<span id="cid-xvsec-mcap-union"></span><span id="doxid-group-xvsec-mcap-union"></span><h1>Unions for MCAP VSEC<a class="headerlink" href="#unions-for-xvsec-mcap-vsec" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="union-axi-cache-attr">
-<span id="cid-axi-cache-attr"></span><span id="doxid-unionaxi-cache-attr"></span><span id="index-1"></span><h2>union axi_cache_attr<a class="headerlink" href="#union-axi-cache-attr" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+</section>
+<section id="cid-xvsec-mcap-union">
+<span id="doxid-group-xvsec-mcap-union"></span><span id="id1"></span><h1>Data Structures<a class="headerlink" href="#cid-xvsec-mcap-union" title="Permalink to this heading">¶</a></h1>
+<section id="struct-axi-cache-attr">
+<span id="cid-axi-cache-attr"></span><span id="doxid-unionaxi-cache-attr"></span><span id="index-1"></span><h2>struct axi_cache_attr<a class="headerlink" href="#struct-axi-cache-attr" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>AXI cache and protection settings V2 corresponds to Versal devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-cache"><span id="doxid-unionaxi-cache-attr-1a2d739faa792e069a4f518eda4708fcd6"></span><span></span><span class="kt">uint8_t</span> <span class="n">axi_cache</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-cache"><span id="doxid-unionaxi-cache-attr-1a2d739faa792e069a4f518eda4708fcd6"></span><span></span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">axi_cache</span></pre>
 <p>AXI cache bits</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-prot"><span id="doxid-unionaxi-cache-attr-1a089a437b8c6aea77e5fb513a34a2a78d"></span><span></span><span class="kt">uint8_t</span> <span class="n">axi_prot</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-prot"><span id="doxid-unionaxi-cache-attr-1a089a437b8c6aea77e5fb513a34a2a78d"></span><span></span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">axi_prot</span></pre>
 <p>AXI protection bits</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-v2"><span id="doxid-unionaxi-cache-attr-1ac0f33e4e77cbeb4cb0969cb280ab9ff0"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v2</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-v2"><span id="doxid-unionaxi-cache-attr-1a3cff7b268099fc243399a913878b85bb"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
 <p>AXI cache attributes for Versal Devices</p>
-</div>
-<div class="section" id="union-axi-reg-data">
-<span id="cid-axi-reg-data"></span><span id="doxid-unionaxi-reg-data"></span><span id="index-2"></span><h2>union axi_reg_data<a class="headerlink" href="#union-axi-reg-data" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-axi-reg-data">
+<span id="cid-axi-reg-data"></span><span id="doxid-unionaxi-reg-data"></span><span id="index-2"></span><h2>struct axi_reg_data<a class="headerlink" href="#struct-axi-reg-data" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>AXI register access structure (for Read &amp; Writes) V2 corresponds to Versal devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-mode"><span id="doxid-unionaxi-reg-data-1a83523604e0940a62f23db67d9874a9d5"></span><span></span><span class="k">enum</span> <a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7"><span class="std std-ref">axi_access_mode</span></a><span></span> <span class="n">mode</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-mode"><span id="doxid-unionaxi-reg-data-1a83523604e0940a62f23db67d9874a9d5"></span><span></span><span class="k">enum</span><span class="w"> </span><a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7"><span class="std std-ref">axi_access_mode</span></a><span></span><span class="w"> </span><span class="n">mode</span></pre>
 <p>Holds AXI sub-device operating mode (32 bit /128 bit), 128 bit mode only supported for write operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-address"><span id="doxid-unionaxi-reg-data-1a10b3608ee3f81d1b9f6c8d4776cb7c8d"></span><span></span><span class="kt">uint32_t</span> <span class="n">address</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-address"><span id="doxid-unionaxi-reg-data-1a10b3608ee3f81d1b9f6c8d4776cb7c8d"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">address</span></pre>
 <p>AXI register address</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-data"><span id="doxid-unionaxi-reg-data-1a72c66cfb44bd288d5a248b9a71f55f16"></span><span></span><span class="kt">uint32_t</span> <span class="n">data</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-data"><span id="doxid-unionaxi-reg-data-1a72c66cfb44bd288d5a248b9a71f55f16"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
 <p>data field holds the data to write into the provided address for Write operation. Holds the data at the provided address for read operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-v2"><span id="doxid-unionaxi-reg-data-1ab75384613cd155aa44279efb77b4cc02"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v2</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-v2"><span id="doxid-unionaxi-reg-data-1a4695f30119716f311be9603f5f9783f6"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
 <p>AXI register access parameters for Versal Devices</p>
-</div>
-<div class="section" id="union-bitstream-file">
-<span id="cid-bitstream-file"></span><span id="doxid-unionbitstream-file"></span><span id="index-3"></span><h2>union bitstream_file<a class="headerlink" href="#union-bitstream-file" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-bitstream-file">
+<span id="cid-bitstream-file"></span><span id="doxid-unionbitstream-file"></span><span id="index-3"></span><h2>struct bitstream_file<a class="headerlink" href="#struct-bitstream-file" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>XVSEC-MCAP bitstream parameters for programming V1 corresponds to US/US+ devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-partial-clr-file"><span id="doxid-unionbitstream-file-1a9ac2e18ec60749075faa313f312ef429"></span><span></span><span class="kt">char</span><span class="o">*</span> <span class="n">partial_clr_file</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-partial-clr-file"><span id="doxid-unionbitstream-file-1a9ac2e18ec60749075faa313f312ef429"></span><span></span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">partial_clr_file</span></pre>
 <p>Partial clear bitstream file to program ultrascale devices</p>
-<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-bitstream-file"><span id="doxid-unionbitstream-file-1aa1f88653760f30e340a1f7e0cdde8d86"></span><span></span><span class="kt">char</span><span class="o">*</span> <span class="n">bitstream_file</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-bitstream-file"><span id="doxid-unionbitstream-file-1aa1f88653760f30e340a1f7e0cdde8d86"></span><span></span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">bitstream_file</span></pre>
 <p>bitstream file to program</p>
-<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-status"><span id="doxid-unionbitstream-file-1aa75d718d2192941c08d0f40658d2dfcf"></span><span></span><span class="k">enum</span> <a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ff"><span class="std std-ref">bitstream_program_status</span></a><span></span> <span class="n">status</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-status"><span id="doxid-unionbitstream-file-1aa75d718d2192941c08d0f40658d2dfcf"></span><span></span><span class="k">enum</span><span class="w"> </span><a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ff"><span class="std std-ref">bitstream_program_status</span></a><span></span><span class="w"> </span><span class="n">status</span></pre>
 <p>Status of the bitstream programming</p>
-<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-v1"><span id="doxid-unionbitstream-file-1a311433c3cd64371f6d592194c78311e9"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-bitstream-file-v1"><span id="doxid-unionbitstream-file-1a73149ef2d91c177e08636c539be23afd"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
 <p>MCAP bitstream parameters for US/US+</p>
-</div>
-<div class="section" id="union-cfg-data">
-<span id="cid-cfg-data"></span><span id="doxid-unioncfg-data"></span><span id="index-4"></span><h2>union cfg_data<a class="headerlink" href="#union-cfg-data" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-cfg-data">
+<span id="cid-cfg-data"></span><span id="doxid-unioncfg-data"></span><span id="index-4"></span><h2>struct cfg_data<a class="headerlink" href="#struct-cfg-data" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>Parameters needed to perform MCAP read and writes V1 corresponds to US/US+ devices V2 corresponds to Versal devices.</p>
-<span class="target" id="cid-cfg-data-v2"><span id="doxid-unioncfg-data-1aeee0b752b1b6591c79db06d84b5a90a6"></span></span><p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-access"><span id="doxid-unioncfg-data-1acf07a21c8299fa727f3baf428904619c"></span><span></span><span class="kt">char</span> <span class="n">access</span></pre>
+<span class="target" id="cid-cfg-data-v2"><span id="doxid-unioncfg-data-1a6c6e3156e29ef8f96fa085a91c9fb7fa"></span></span><p class="rubric">Fields</p>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-access"><span id="doxid-unioncfg-data-1acf07a21c8299fa727f3baf428904619c"></span><span></span><span class="kt">char</span><span class="w"> </span><span class="n">access</span></pre>
 <p>access field. ‘b’ for byte access, ‘h’for half word access, ‘w’ for word access</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-offset"><span id="doxid-unioncfg-data-1a5e1c818c93456d6f720011f4cfa7db3f"></span><span></span><span class="kt">uint16_t</span> <span class="n">offset</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-offset"><span id="doxid-unioncfg-data-1a5e1c818c93456d6f720011f4cfa7db3f"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">offset</span></pre>
 <p>VSEC address offset</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-data"><span id="doxid-unioncfg-data-1a00131c7d929fd70d325951b0044588c0"></span><span></span><span class="kt">uint32_t</span> <span class="n">data</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-data"><span id="doxid-unioncfg-data-1a00131c7d929fd70d325951b0044588c0"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span></pre>
 <p>data field holds the info to write into the provided offset for Write operation. Holds the info at the provided offset for read operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-v1"><span id="doxid-unioncfg-data-1ae25498845f83a9f9a9cda29804d9361c"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-v1"><span id="doxid-unioncfg-data-1a4904600079baa94568c251d657514a80"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
 <p>MCAP register read/write parameters for US/US+ and Versal</p>
-</div>
-<div class="section" id="union-file-download-upload">
-<span id="cid-file-download-upload"></span><span id="doxid-unionfile-download-upload"></span><span id="index-5"></span><h2>union file_download_upload<a class="headerlink" href="#union-file-download-upload" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-file-download-upload">
+<span id="cid-file-download-upload"></span><span id="doxid-unionfile-download-upload"></span><span id="index-5"></span><h2>struct file_download_upload<a class="headerlink" href="#struct-file-download-upload" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>File download &amp; upload parameters for sub-devices connected via NOC V2 corresponds to Versal devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-mode"><span id="doxid-unionfile-download-upload-1a9164dc7b0c2cf64b016c3365fbd707ad"></span><span></span><span class="k">enum</span> <a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7"><span class="std std-ref">axi_access_mode</span></a><span></span> <span class="n">mode</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-mode"><span id="doxid-unionfile-download-upload-1a9164dc7b0c2cf64b016c3365fbd707ad"></span><span></span><span class="k">enum</span><span class="w"> </span><a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7"><span class="std std-ref">axi_access_mode</span></a><span></span><span class="w"> </span><span class="n">mode</span></pre>
 <p>Holds AXI sub-device operating mode (32 bit / 128 bit), 128 bit mode only supported for write operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-addr-type"><span id="doxid-unionfile-download-upload-1adbacf076f6cd803300a2903e56797cf8"></span><span></span><span class="k">enum</span> <a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdb"><span class="std std-ref">axi_address_type</span></a><span></span> <span class="n">addr_type</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-addr-type"><span id="doxid-unionfile-download-upload-1adbacf076f6cd803300a2903e56797cf8"></span><span></span><span class="k">enum</span><span class="w"> </span><a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdb"><span class="std std-ref">axi_address_type</span></a><span></span><span class="w"> </span><span class="n">addr_type</span></pre>
 <p>Holds address type (fixed or increment )</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-address"><span id="doxid-unionfile-download-upload-1a2844205a76930d3501667eda0ceb36da"></span><span></span><span class="kt">uint32_t</span> <span class="n">address</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-address"><span id="doxid-unionfile-download-upload-1a2844205a76930d3501667eda0ceb36da"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">address</span></pre>
 <p>Holds address from where download/upload should happen</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-file-name"><span id="doxid-unionfile-download-upload-1a01f857dc5cbfd4236a019480111b7f93"></span><span></span><span class="kt">char</span><span class="o">*</span> <span class="n">file_name</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-file-name"><span id="doxid-unionfile-download-upload-1a01f857dc5cbfd4236a019480111b7f93"></span><span></span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">file_name</span></pre>
 <p>File to download/upload</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-length"><span id="doxid-unionfile-download-upload-1ad333f404705514a85cf86e4893ec0b27"></span><span></span><span class="kt">size_t</span> <span class="n">length</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-length"><span id="doxid-unionfile-download-upload-1ad333f404705514a85cf86e4893ec0b27"></span><span></span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span></pre>
 <p>Data length read in bytes (for upload option)</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-tr-mode"><span id="doxid-unionfile-download-upload-1a14c17b7085f1c8cb67b05db2bb9de4ed"></span><span></span><span class="k">enum</span> <a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2"><span class="std std-ref">data_transfer_mode</span></a><span></span> <span class="n">tr_mode</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-tr-mode"><span id="doxid-unionfile-download-upload-1a14c17b7085f1c8cb67b05db2bb9de4ed"></span><span></span><span class="k">enum</span><span class="w"> </span><a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2"><span class="std std-ref">data_transfer_mode</span></a><span></span><span class="w"> </span><span class="n">tr_mode</span></pre>
 <p>data transfer mode</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-op-status"><span id="doxid-unionfile-download-upload-1a03bbeaaf8642f69816ca1f9800a41d37"></span><span></span><span class="k">enum</span> <a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecc"><span class="std std-ref">file_operation_status</span></a><span></span> <span class="n">op_status</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-sbi-address"><span id="doxid-unionfile-download-upload-1ab472a1a636176296566d940a7f4101ac"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">sbi_address</span></pre>
+<p>SBI reg block address</p>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-op-status"><span id="doxid-unionfile-download-upload-1a03bbeaaf8642f69816ca1f9800a41d37"></span><span></span><span class="k">enum</span><span class="w"> </span><a class="reference internal" href="xvsec_linux_export_enums.html#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecc"><span class="std std-ref">file_operation_status</span></a><span></span><span class="w"> </span><span class="n">op_status</span></pre>
 <p>File Download/Upload Status</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-err-index"><span id="doxid-unionfile-download-upload-1ac155a235b2d53cd777ab72f0627dd459"></span><span></span><span class="kt">size_t</span> <span class="n">err_index</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-err-index"><span id="doxid-unionfile-download-upload-1ac155a235b2d53cd777ab72f0627dd459"></span><span></span><span class="kt">size_t</span><span class="w"> </span><span class="n">err_index</span></pre>
 <p>upload/download failed at byte index</p>
-<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-v2"><span id="doxid-unionfile-download-upload-1a8e0a6fddbec49b41f7b03f75f09cba97"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v2</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-file-download-upload-v2"><span id="doxid-unionfile-download-upload-1a62dec35e76c0052d79de151b140c10fe"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
 <p>File download &amp; upload parameters for Versal Devices</p>
-</div>
-<div class="section" id="union-fpga-cfg-reg">
-<span id="cid-fpga-cfg-reg"></span><span id="doxid-unionfpga-cfg-reg"></span><span id="index-6"></span><h2>union fpga_cfg_reg<a class="headerlink" href="#union-fpga-cfg-reg" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-fpga-cfg-reg">
+<span id="cid-fpga-cfg-reg"></span><span id="doxid-unionfpga-cfg-reg"></span><span id="index-6"></span><h2>struct fpga_cfg_reg<a class="headerlink" href="#struct-fpga-cfg-reg" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>FPGA configuration parameters to perform read and writes V1 corresponds to US/US+ devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-reg-offset"><span id="doxid-unionfpga-cfg-reg-1a00d86eec3e368bf25ceefbfcd2db0d7a"></span><span></span><span class="kt">uint16_t</span> <span class="n">offset</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-reg-offset"><span id="doxid-unionfpga-cfg-reg-1a00d86eec3e368bf25ceefbfcd2db0d7a"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">offset</span></pre>
 <p>FPGA configuration register number</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-reg-data"><span id="doxid-unionfpga-cfg-reg-1ae1c1c33955dcb112682360b79871081b"></span><span></span><span class="kt">uint32_t</span> <span class="n">data</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-reg-data"><span id="doxid-unionfpga-cfg-reg-1ae1c1c33955dcb112682360b79871081b"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span></pre>
 <p>data field holds the info to write into the provided offset for Write operation. Holds the info at the provided offset for read operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-reg-v1"><span id="doxid-unionfpga-cfg-reg-1aba9984f74dba592e9ae5770d21cbe140"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-reg-v1"><span id="doxid-unionfpga-cfg-reg-1ad86613d935859a4752f93a962a93a503"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
 <p>FPGA configuration parameters for US/US+ Devices</p>
-</div>
-<div class="section" id="union-fpga-cfg-regs">
-<span id="cid-fpga-cfg-regs"></span><span id="doxid-unionfpga-cfg-regs"></span><span id="index-7"></span><h2>union fpga_cfg_regs<a class="headerlink" href="#union-fpga-cfg-regs" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-fpga-cfg-regs">
+<span id="cid-fpga-cfg-regs"></span><span id="doxid-unionfpga-cfg-regs"></span><span id="index-7"></span><h2>struct fpga_cfg_regs<a class="headerlink" href="#struct-fpga-cfg-regs" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>FPGA configuration register set(See UG570 for more information) V1 corresponds to US/US+ devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-valid"><span id="doxid-unionfpga-cfg-regs-1af737ba49eb8cfe9e3b6c5ad8b1e8f231"></span><span></span><span class="kt">uint32_t</span> <span class="n">valid</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-valid"><span id="doxid-unionfpga-cfg-regs-1af737ba49eb8cfe9e3b6c5ad8b1e8f231"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">valid</span></pre>
 <p>Valid flag to indicate registers validity</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-crc"><span id="doxid-unionfpga-cfg-regs-1ae4a28853d6d457b1f1db5eacde8b1f25"></span><span></span><span class="kt">uint32_t</span> <span class="n">crc</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-crc"><span id="doxid-unionfpga-cfg-regs-1ae4a28853d6d457b1f1db5eacde8b1f25"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">crc</span></pre>
 <p>CRC Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-far"><span id="doxid-unionfpga-cfg-regs-1ab8eb54977a0a88e7c93219d1fd9d65c8"></span><span></span><span class="kt">uint32_t</span> <span class="n">far</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-far"><span id="doxid-unionfpga-cfg-regs-1ab8eb54977a0a88e7c93219d1fd9d65c8"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">far</span></pre>
 <p>Frame Address Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-fdri"><span id="doxid-unionfpga-cfg-regs-1a0aea5413df65c35b8890681da5c05ddc"></span><span></span><span class="kt">uint32_t</span> <span class="n">fdri</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-fdri"><span id="doxid-unionfpga-cfg-regs-1a0aea5413df65c35b8890681da5c05ddc"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fdri</span></pre>
 <p>Frame Data Register, Input Register (write configuration data)</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-fdro"><span id="doxid-unionfpga-cfg-regs-1a91f7dab8c6137b05c77081dc5894da39"></span><span></span><span class="kt">uint32_t</span> <span class="n">fdro</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-fdro"><span id="doxid-unionfpga-cfg-regs-1a91f7dab8c6137b05c77081dc5894da39"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fdro</span></pre>
 <p>Frame Data Register, Output Register (read configuration data)</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cmd"><span id="doxid-unionfpga-cfg-regs-1a2f77a127f4c1c980787269b29c3698d0"></span><span></span><span class="kt">uint32_t</span> <span class="n">cmd</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cmd"><span id="doxid-unionfpga-cfg-regs-1a2f77a127f4c1c980787269b29c3698d0"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cmd</span></pre>
 <p>Command Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-ctl0"><span id="doxid-unionfpga-cfg-regs-1a97b021df86a3af6b2d1b4e6ec68fe5f0"></span><span></span><span class="kt">uint32_t</span> <span class="n">ctl0</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-ctl0"><span id="doxid-unionfpga-cfg-regs-1a97b021df86a3af6b2d1b4e6ec68fe5f0"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ctl0</span></pre>
 <p>Control Register 0</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-mask"><span id="doxid-unionfpga-cfg-regs-1a3e602e0424c070cedc09f88dba025fe5"></span><span></span><span class="kt">uint32_t</span> <span class="n">mask</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-mask"><span id="doxid-unionfpga-cfg-regs-1a3e602e0424c070cedc09f88dba025fe5"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">mask</span></pre>
 <p>Mask Register for CTL0 and CTL1 Registers</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-stat"><span id="doxid-unionfpga-cfg-regs-1aab3936eadaa922db63e4368ffe0d9b13"></span><span></span><span class="kt">uint32_t</span> <span class="n">stat</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-stat"><span id="doxid-unionfpga-cfg-regs-1aab3936eadaa922db63e4368ffe0d9b13"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">stat</span></pre>
 <p>Status Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-lout"><span id="doxid-unionfpga-cfg-regs-1a0a7be5bfb2422bb34b3d7482d8f27781"></span><span></span><span class="kt">uint32_t</span> <span class="n">lout</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-lout"><span id="doxid-unionfpga-cfg-regs-1a0a7be5bfb2422bb34b3d7482d8f27781"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">lout</span></pre>
 <p>Legacy Output Register for Daisy Chain</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cor0"><span id="doxid-unionfpga-cfg-regs-1aedb96e9759196e4a6e5a6e4c57233e0b"></span><span></span><span class="kt">uint32_t</span> <span class="n">cor0</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cor0"><span id="doxid-unionfpga-cfg-regs-1aedb96e9759196e4a6e5a6e4c57233e0b"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cor0</span></pre>
 <p>Configuration Option Register 0</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-mfwr"><span id="doxid-unionfpga-cfg-regs-1a1aada7a62147aaa6a48c4d33d4d103ce"></span><span></span><span class="kt">uint32_t</span> <span class="n">mfwr</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-mfwr"><span id="doxid-unionfpga-cfg-regs-1a1aada7a62147aaa6a48c4d33d4d103ce"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">mfwr</span></pre>
 <p>Multi Frame Write Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cbc"><span id="doxid-unionfpga-cfg-regs-1ad50cac090ea3cf6b60f995f2ce40f8b7"></span><span></span><span class="kt">uint32_t</span> <span class="n">cbc</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cbc"><span id="doxid-unionfpga-cfg-regs-1ad50cac090ea3cf6b60f995f2ce40f8b7"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cbc</span></pre>
 <p>Initial CBC Value Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-idcode"><span id="doxid-unionfpga-cfg-regs-1adcb6934d04984f6e6c500943636f26db"></span><span></span><span class="kt">uint32_t</span> <span class="n">idcode</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-idcode"><span id="doxid-unionfpga-cfg-regs-1adcb6934d04984f6e6c500943636f26db"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">idcode</span></pre>
 <p>Device ID Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-axss"><span id="doxid-unionfpga-cfg-regs-1a61f7a1ce5e9231f09d84f84766b1a234"></span><span></span><span class="kt">uint32_t</span> <span class="n">axss</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-axss"><span id="doxid-unionfpga-cfg-regs-1a61f7a1ce5e9231f09d84f84766b1a234"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">axss</span></pre>
 <p>User Access Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cor1"><span id="doxid-unionfpga-cfg-regs-1a655c5058bd2caad09d87c3a25e938a0e"></span><span></span><span class="kt">uint32_t</span> <span class="n">cor1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-cor1"><span id="doxid-unionfpga-cfg-regs-1a655c5058bd2caad09d87c3a25e938a0e"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cor1</span></pre>
 <p>Configuration Option Register 1</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-wbstar"><span id="doxid-unionfpga-cfg-regs-1a03ea7340f63d0032cc111a515111ec98"></span><span></span><span class="kt">uint32_t</span> <span class="n">wbstar</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-wbstar"><span id="doxid-unionfpga-cfg-regs-1a03ea7340f63d0032cc111a515111ec98"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wbstar</span></pre>
 <p>Warm Boot Start Address Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-timer"><span id="doxid-unionfpga-cfg-regs-1a35808f6fde15bd1b6d2a943f0de20e59"></span><span></span><span class="kt">uint32_t</span> <span class="n">timer</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-timer"><span id="doxid-unionfpga-cfg-regs-1a35808f6fde15bd1b6d2a943f0de20e59"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">timer</span></pre>
 <p>Watchdog Timer Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-scratchpad"><span id="doxid-unionfpga-cfg-regs-1a0a47334c8b402f95a0f89c7803cbed93"></span><span></span><span class="kt">uint32_t</span> <span class="n">scratchpad</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-scratchpad"><span id="doxid-unionfpga-cfg-regs-1a0a47334c8b402f95a0f89c7803cbed93"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">scratchpad</span></pre>
 <p>Scratch Pad Register for Dummy Read and Writes</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-bootsts"><span id="doxid-unionfpga-cfg-regs-1a08978f394238d548c1e95647f3a578c4"></span><span></span><span class="kt">uint32_t</span> <span class="n">bootsts</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-bootsts"><span id="doxid-unionfpga-cfg-regs-1a08978f394238d548c1e95647f3a578c4"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">bootsts</span></pre>
 <p>Boot History Status Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-ctl1"><span id="doxid-unionfpga-cfg-regs-1a6ebe8fba8fb37c9ea194a99f5e9da318"></span><span></span><span class="kt">uint32_t</span> <span class="n">ctl1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-ctl1"><span id="doxid-unionfpga-cfg-regs-1a6ebe8fba8fb37c9ea194a99f5e9da318"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ctl1</span></pre>
 <p>Control Register 1</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-bspi"><span id="doxid-unionfpga-cfg-regs-1adddfc176f6478ddf0caa728ccdc2fc40"></span><span></span><span class="kt">uint32_t</span> <span class="n">bspi</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-bspi"><span id="doxid-unionfpga-cfg-regs-1adddfc176f6478ddf0caa728ccdc2fc40"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">bspi</span></pre>
 <p>BPI/SPI Configuration Options Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-v1"><span id="doxid-unionfpga-cfg-regs-1ab20a6687be721bb53a4589ee2d913984"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-fpga-cfg-regs-v1"><span id="doxid-unionfpga-cfg-regs-1a6c6338f592bba7d771dc978632150257"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
 <p>FPGA configuration register for US/US+ Devices</p>
-</div>
-<div class="section" id="union-mcap-regs">
-<span id="cid-mcap-regs"></span><span id="doxid-unionmcap-regs"></span><span id="index-8"></span><h2>union mcap_regs<a class="headerlink" href="#union-mcap-regs" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
+</section>
+<section id="struct-mcap-regs">
+<span id="cid-mcap-regs"></span><span id="doxid-unionmcap-regs"></span><span id="index-8"></span><h2>struct mcap_regs<a class="headerlink" href="#struct-mcap-regs" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_mcap.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>MCAP register set V1 corresponds to US/US+ devices V2 corresponds to Versal devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-valid"><span id="doxid-unionmcap-regs-1a9806ab3acfd772fd51b31832d594e35c"></span><span></span><span class="kt">uint32_t</span> <span class="n">valid</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-valid"><span id="doxid-unionmcap-regs-1a9806ab3acfd772fd51b31832d594e35c"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">valid</span></pre>
 <p>Valid flag to indicate registers validity</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-ext-cap-header"><span id="doxid-unionmcap-regs-1acd13e9bfdf2d5fa0b524a20ae49ae388"></span><span></span><span class="kt">uint32_t</span> <span class="n">ext_cap_header</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-ext-cap-header"><span id="doxid-unionmcap-regs-1acd13e9bfdf2d5fa0b524a20ae49ae388"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ext_cap_header</span></pre>
 <p>Extended capability header register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-vendor-header"><span id="doxid-unionmcap-regs-1a740de5103bd78df7e747037f326485c5"></span><span></span><span class="kt">uint32_t</span> <span class="n">vendor_header</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-vendor-header"><span id="doxid-unionmcap-regs-1a740de5103bd78df7e747037f326485c5"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">vendor_header</span></pre>
 <p>Vendor Specific header register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-fpga-jtag-id"><span id="doxid-unionmcap-regs-1a33917f7da219a4889cad20248e61d25d"></span><span></span><span class="kt">uint32_t</span> <span class="n">fpga_jtag_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-fpga-jtag-id"><span id="doxid-unionmcap-regs-1a33917f7da219a4889cad20248e61d25d"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fpga_jtag_id</span></pre>
 <p>FPGA JTAG ID register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-fpga-bit-ver"><span id="doxid-unionmcap-regs-1af2385718da8db0140a4fb77065cd814e"></span><span></span><span class="kt">uint32_t</span> <span class="n">fpga_bit_ver</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-fpga-bit-ver"><span id="doxid-unionmcap-regs-1af2385718da8db0140a4fb77065cd814e"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fpga_bit_ver</span></pre>
 <p>FPGA bit-stream version register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-status-reg"><span id="doxid-unionmcap-regs-1a713b277431b29db0aa6a2010bdd6de81"></span><span></span><span class="kt">uint32_t</span> <span class="n">status_reg</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-status-reg"><span id="doxid-unionmcap-regs-1a713b277431b29db0aa6a2010bdd6de81"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">status_reg</span></pre>
 <p>Status Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-control-reg"><span id="doxid-unionmcap-regs-1ab4a58eb80891e51688d1f2a2c53079e9"></span><span></span><span class="kt">uint32_t</span> <span class="n">control_reg</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-control-reg"><span id="doxid-unionmcap-regs-1ab4a58eb80891e51688d1f2a2c53079e9"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">control_reg</span></pre>
 <p>Control Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-wr-data-reg"><span id="doxid-unionmcap-regs-1ad0fe46b51e1fe638ba93caa99b511ccd"></span><span></span><span class="kt">uint32_t</span> <span class="n">wr_data_reg</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-wr-data-reg"><span id="doxid-unionmcap-regs-1ad0fe46b51e1fe638ba93caa99b511ccd"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_data_reg</span></pre>
 <p>Write Data Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-rd-data-reg"><span id="doxid-unionmcap-regs-1a6614f75b4e2221c781c4a21a889a0e98"></span><span></span><span class="kt">uint32_t</span> <span class="n">rd_data_reg</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-rd-data-reg"><span id="doxid-unionmcap-regs-1a6614f75b4e2221c781c4a21a889a0e98"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">rd_data_reg</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
 <p>Read Data Register: 4 data words</p>
 <p>Read Data Register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-v1"><span id="doxid-unionmcap-regs-1ab6d919823c6520deeb46e48962d0f006"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v1</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-v1"><span id="doxid-unionmcap-regs-1aef145cadcb1e46dbbec33168e06ea4ea"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
 <p>MCAP register sets for US/US+ device</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-address-reg"><span id="doxid-unionmcap-regs-1afc713cfa99f53d4ce2e076fcdfcef585"></span><span></span><span class="kt">uint32_t</span> <span class="n">address_reg</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-address-reg"><span id="doxid-unionmcap-regs-1afc713cfa99f53d4ce2e076fcdfcef585"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">address_reg</span></pre>
 <p>RW Address register</p>
-<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-v2"><span id="doxid-unionmcap-regs-1af29651e65dec3ef2fae8148260b781e4"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v2</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-mcap-regs-v2"><span id="doxid-unionmcap-regs-1a78bcb992e960693248cbedc3836298b7"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
 <p>MCAP register sets for Versal device</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -671,7 +677,7 @@
         <a href="xvsec_linux_api_export.html" class="btn btn-neutral float-right" title="XVSEC Linux User Space APIs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="xvsec_linux_export_structs.html" class="btn btn-neutral float-left" title="Structures for Generic VSEC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="xvsec_linux_export_structs.html" class="btn btn-neutral float-left" title="Data Structures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -681,7 +687,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 14, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -759,7 +765,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,6 +57,8 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="System Requirements" href="system-requirements.html" /> 
@@ -330,7 +334,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -407,68 +411,50 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="xilinx-xvsec-software">
-<h1>Xilinx XVSEC Software<a class="headerlink" href="#xilinx-xvsec-software" title="Permalink to this headline">¶</a></h1>
+  <section id="xilinx-xvsec-software">
+<h1>Xilinx XVSEC Software<a class="headerlink" href="#xilinx-xvsec-software" title="Permalink to this heading">¶</a></h1>
 <p>Xilinx Vendor Specific Capabilities(<strong>XVSEC</strong>) are extended features added to
 PCI Express configuration space. Some of these capabilities includes
 MCAP, ZERO VSEC, etc.,</p>
 <p><strong>Media Configuration Access Port(MCAP)</strong>:
 The Media Configuration Access Port (MCAP) is a new configuration interface
-available for UltraScale, UltraScale+ and Versal devices. This interface is integrated
+available for UltraScale and UltraScale+ devices. This interface is integrated
 into the PCI Express hard block and provides access to the FPGA configuration
 logic through the PCI Express hard block when enabled.</p>
-<dl class="simple">
-<dt><strong>The XVSEC kernel driver 2020.2.0 Supports</strong></dt><dd><ul class="simple">
-<li><p>US/US+ devices (MCAP Rev 0 and 1)</p></li>
-<li><p>Versal device (MCAP Rev 2)</p></li>
-</ul>
-</dd>
-</dl>
 <p>XVSEC(MCAP) driver can be used with XDMA,
 QDMA, AXI-Bridge and BASE Core configurations, but not dependent on any of them.
 The use of MCAP or other VSEC is typically independent of the DMA or bridge mode.
 In the Future other VSECs may be added by customers.</p>
-<p><strong>Xilinx XVSEC Solution consists of</strong>:</p>
-<dl class="simple">
-<dt><strong>User space utility</strong>:</dt><dd><ul class="simple">
-<li><p>XVSEC CLI tool to demonstrate vendor specific features and its functionality.</p></li>
-<li><p>This includes MCAP functionality.</p></li>
-<li><p>In future, the tool will be expanded with new extended vendor specific capabilities.</p></li>
-</ul>
-</dd>
-<dt><strong>Userspace Library</strong>:</dt><dd><ul class="simple">
-<li><p>This library provides APIs for all Xilinx PCIe Vendor specific capabilities (Ex: MCAP, Generic VSEC, etc.,).</p></li>
-</ul>
-</dd>
-<dt><strong>Driver Interface</strong>:</dt><dd><ul class="simple">
-<li><p>XVSEC character driver interface per PCIe device.</p></li>
-<li><p>XVSEC driver can be loaded independently.</p></li>
-<li><p>It is also possible to load XVSEC driver integrated with any other Kernel Driver (Ex: XDMA, QDMA, etc.,).</p></li>
-<li><p>XVSEC kernel driver will create by default one generic character device node, and if driver finds any VSECs supported by it,
-then it will create another character device node for that specific VSEC functionality.</p></li>
-<li><p>For eaxmple the system having VCU1525(US+) card connected on bus 0x03 and device number 0x00 will have char dev nodes as below :</p>
+<p>Xilinx XVSEC Solution consists of</p>
 <ul>
-<li><p>Default generic char device node - <strong>/dev/xvsec0300</strong></p></li>
-<li><p>For US+ MCAP specific functionalities - <strong>/dev/xvsec0300_mcap</strong>.</p></li>
+<li><p><strong>User space utility</strong>: XVSEC CLI tool to demonstrate vendor specific features and its functionality</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>This includes MCAP functionality</p></li>
+<li><p>In future, the tool will be expanded with new extended vendor specific capabilities</p></li>
 </ul>
+</div></blockquote>
 </li>
-<li><p>XVSEC kernel driver is able to load and create generic XVSEC device node even in the absense of any MCAP device.</p></li>
-<li><p>Generic XVSEC device node will provide functionalities like Listing the supported VSECs by HW and
-Verbose Information of the given device.</p></li>
-<li><p>XVSEC MCAP device node will provide MCAP related functionalties like to reset the MCAP, configure MCAP,
-Program the FPGA or upload/download PDI’s over AXI interface, etc…</p></li>
-<li><p>Supports Multiple VSECs on the same device</p></li>
-<li><p>Supports Multiple devices connected on the same host</p></li>
+<li><p><strong>Userspace Library</strong>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>This library provides APIs for all Xilinx PCIe Vendor specific capabilities (Ex: MCAP, Generic VSEC, etc.,)</p></li>
 </ul>
-</dd>
-</dl>
-<ul class="simple">
-<li><p>Refer to <a class="reference internal" href="userguide.html#userguide"><span class="std std-ref">User Guide</span></a> for more details on the list of supported functionalities.</p></li>
+</div></blockquote>
+</li>
+<li><p><strong>Driver Interface</strong>: XVSEC character driver interface per PCIe device</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>XVSEC driver can be loaded independently</p></li>
+<li><p>It is also possible to load XVSEC driver integrated with any other Kernel Driver (Ex: XDMA, QDMA, etc.,)</p></li>
+</ul>
+</div></blockquote>
+</li>
 </ul>
 <img alt="_images/xvsec_linux_driver_architecture.png" class="align-center" src="_images/xvsec_linux_driver_architecture.png" />
 <hr class="docutils" />
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Table of Contents</span></p>
+<p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -477,7 +463,7 @@ Program the FPGA or upload/download PDI’s over AXI interface, etc…</p></li>
 <li class="toctree-l1"><a class="reference internal" href="user_app.html">User Application</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -507,7 +493,7 @@ Program the FPGA or upload/download PDI’s over AXI interface, etc…</p></li>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 21, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -585,7 +571,7 @@ Program the FPGA or upload/download PDI’s over AXI interface, etc…</p></li>
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

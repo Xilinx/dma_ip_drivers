@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,9 +57,11 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Unions" href="xvsec_linux_api_export_union.html" />
+    <link rel="next" title="Data Structures" href="xvsec_linux_api_export_union.html" />
     <link rel="prev" title="Exported Variables" href="xvsec_linux_api_export_var.html" /> 
 	</head>
 	<body>
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -346,9 +350,13 @@
 <li class="toctree-l4"><a class="reference internal" href="#struct-cfg-data">struct _cfg_data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xvsec-cap-list-t">struct xvsec_cap_list_t</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#struct-xvsec-cap-t">struct xvsec_cap_t</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-xvsec-fpga-cfg-regs-t">struct xvsec_fpga_cfg_regs_t</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-xvsec-mcap-ctl-reg-t">struct xvsec_mcap_ctl_reg_t</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-xvsec-mcap-regs-t">struct xvsec_mcap_regs_t</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-xvsec-mcap-sts-reg-t">struct xvsec_mcap_sts_reg_t</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_union.html">Unions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_union.html">Data Structures</a></li>
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_functions.html">Functions</a></li>
 </ul>
 </li>
@@ -429,48 +437,216 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="data-structures">
-<span id="cid-xvsec-api-struct"></span><span id="doxid-group-xvsec-api-struct"></span><h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="struct-cfg-data">
-<span id="cid-cfg-data"></span><span id="doxid-struct-cfg-data"></span><span id="index-0"></span><h2>struct _cfg_data<a class="headerlink" href="#struct-cfg-data" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec.h&quot;</span></pre>
+  <section id="data-structures">
+<span id="cid-xvsec-api-struct"></span><span id="doxid-group-xvsec-api-struct"></span><h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">¶</a></h1>
+<section id="struct-cfg-data">
+<span id="cid-cfg-data"></span><span id="doxid-struct-cfg-data"></span><span id="index-0"></span><h2>struct _cfg_data<a class="headerlink" href="#struct-cfg-data" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>Parameters for accessing MCAP Registers(Read/Write)</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-access"><span id="doxid-struct-cfg-data-1a071db18994d6e7a9f217512c49781b6e"></span><span></span><span class="kt">char</span> <span class="n">access</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-access"><span id="doxid-struct-cfg-data-1a071db18994d6e7a9f217512c49781b6e"></span><span></span><span class="kt">char</span><span class="w"> </span><span class="n">access</span></pre>
 <p>access field. ‘b’ for byte access, ‘h’for half word access, ‘w’ for word access</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-offset"><span id="doxid-struct-cfg-data-1a7c6cd1b20ac75ee7244717ef5dd914a8"></span><span></span><span class="kt">uint16_t</span> <span class="n">offset</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-offset"><span id="doxid-struct-cfg-data-1a7c6cd1b20ac75ee7244717ef5dd914a8"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">offset</span></pre>
 <p>VSEC address offset</p>
-<pre class="highlight title-code-block literal-block" id="cid-cfg-data-data"><span id="doxid-struct-cfg-data-1aba3cf361ae31b7e936b0497d39d876b3"></span><span></span><span class="kt">uint32_t</span> <span class="n">data</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-cfg-data-data"><span id="doxid-struct-cfg-data-1aba3cf361ae31b7e936b0497d39d876b3"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span></pre>
 <p>data field holds the information to write into the provided offset for Write operation. Holds the information at the provided offset for read operation</p>
-</div>
-<div class="section" id="struct-xvsec-cap-list-t">
-<span id="cid-xvsec-cap-list-t"></span><span id="doxid-structxvsec-cap-list-t"></span><span id="index-1"></span><h2>struct xvsec_cap_list_t<a class="headerlink" href="#struct-xvsec-cap-list-t" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec.h&quot;</span></pre>
+</section>
+<section id="struct-xvsec-cap-list-t">
+<span id="cid-xvsec-cap-list-t"></span><span id="doxid-structxvsec-cap-list-t"></span><span id="index-1"></span><h2>struct xvsec_cap_list_t<a class="headerlink" href="#struct-xvsec-cap-list-t" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>Capability List.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-list-t-no-of-caps"><span id="doxid-structxvsec-cap-list-t-1ab90a7bbfd047587fe8ac11c3075ead2a"></span><span></span><span class="kt">uint16_t</span> <span class="n">no_of_caps</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-list-t-no-of-caps"><span id="doxid-structxvsec-cap-list-t-1ab90a7bbfd047587fe8ac11c3075ead2a"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">no_of_caps</span></pre>
 <p>No of capabilities supported</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-list-t-cap-info"><span id="doxid-structxvsec-cap-list-t-1a8a8bfeffab8c5b57ae2df712bc769fd2"></span><a class="reference internal" href="#doxid-structxvsec-cap-t"><span class="std std-ref">xvsec_cap_t</span></a><span></span> <span class="n">cap_info</span> <span class="p">[</span><span class="n">MAX_CAPS_SUPPORTED</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-list-t-cap-info"><span id="doxid-structxvsec-cap-list-t-1a8a8bfeffab8c5b57ae2df712bc769fd2"></span><a class="reference internal" href="#doxid-structxvsec-cap-t"><span class="std std-ref">xvsec_cap_t</span></a><span></span><span class="w"> </span><span class="n">cap_info</span><span class="w"> </span><span class="p">[</span><span class="n">MAX_CAPS_SUPPORTED</span><span class="p">]</span></pre>
 <p>Capabilities Information</p>
-</div>
-<div class="section" id="struct-xvsec-cap-t">
-<span id="cid-xvsec-cap-t"></span><span id="doxid-structxvsec-cap-t"></span><span id="index-2"></span><h2>struct xvsec_cap_t<a class="headerlink" href="#struct-xvsec-cap-t" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec.h&quot;</span></pre>
+</section>
+<section id="struct-xvsec-cap-t">
+<span id="cid-xvsec-cap-t"></span><span id="doxid-structxvsec-cap-t"></span><span id="index-2"></span><h2>struct xvsec_cap_t<a class="headerlink" href="#struct-xvsec-cap-t" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>Capability Information.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-cap-id"><span id="doxid-structxvsec-cap-t-1ae46ba4dc2013defbe87e99bff019d47f"></span><span></span><span class="kt">uint16_t</span> <span class="n">cap_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-cap-id"><span id="doxid-structxvsec-cap-t-1ae46ba4dc2013defbe87e99bff019d47f"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">cap_id</span></pre>
 <p>Capability Identifier</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-rev-id"><span id="doxid-structxvsec-cap-t-1adde6ab58631e0bd0624bcbaae5ea6309"></span><span></span><span class="kt">uint16_t</span> <span class="n">rev_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-rev-id"><span id="doxid-structxvsec-cap-t-1adde6ab58631e0bd0624bcbaae5ea6309"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">rev_id</span></pre>
 <p>MCAP Revision info</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-cap-name"><span id="doxid-structxvsec-cap-t-1aefd94d4970a36873333d170cb7d246f7"></span><span></span><span class="kt">char</span> <span class="n">cap_name</span> <span class="p">[</span><span class="n">XVSEC_MAX_VSEC_STR_LEN</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-cap-name"><span id="doxid-structxvsec-cap-t-1aefd94d4970a36873333d170cb7d246f7"></span><span></span><span class="kt">char</span><span class="w"> </span><span class="n">cap_name</span><span class="w"> </span><span class="p">[</span><span class="n">XVSEC_MAX_VSEC_STR_LEN</span><span class="p">]</span></pre>
 <p>Capability Name</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-is-supported"><span id="doxid-structxvsec-cap-t-1afbad273f25e67e3c31559de1ef7db30c"></span><span></span><span class="kt">bool</span> <span class="n">is_supported</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-cap-t-is-supported"><span id="doxid-structxvsec-cap-t-1afbad273f25e67e3c31559de1ef7db30c"></span><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">is_supported</span></pre>
 <p>info to check capability supported by this drv or not</p>
-</div>
-</div>
+</section>
+<section id="struct-xvsec-fpga-cfg-regs-t">
+<span id="cid-xvsec-fpga-cfg-regs-t"></span><span id="doxid-unionxvsec-fpga-cfg-regs-t"></span><span id="index-3"></span><h2>struct xvsec_fpga_cfg_regs_t<a class="headerlink" href="#struct-xvsec-fpga-cfg-regs-t" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
+<p class="rubric">Overview</p>
+<p>FPGA Configuration Register set.</p>
+<p class="rubric">Fields</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-crc"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1aed078b67b7803d8b709e0063c235944a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">crc</span></pre>
+<p>CRC Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-far"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a1559b8f66d2a05275e91f8211e31de28"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">far</span></pre>
+<p>Frame Address Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-fdri"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a2184f43df68fd13b47ada381e866135c"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fdri</span></pre>
+<p>Frame Data Register, Input Register (write configuration data)</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-fdro"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a5c269dec6a35064aae213748ac418738"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fdro</span></pre>
+<p>Frame Data Register, Output Register (read configuration data)</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-cmd"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a356daca6d9f6e424ebe821a5455d51b3"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cmd</span></pre>
+<p>Command Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-ctl0"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a398f415f5c42c6455fb3260d44d875e3"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ctl0</span></pre>
+<p>Control Register 0</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-mask"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a3f5f2a3512e78c36f39d732fc83578c0"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">mask</span></pre>
+<p>Mask Register for CTL0 and CTL1 Registers</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-stat"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1aefddd7ad7e1089e08f4b71b68d58fbef"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">stat</span></pre>
+<p>Status Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-lout"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a91445f215ca9c7909cc8f8b9c7214a81"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">lout</span></pre>
+<p>Legacy Output Register for Daisy Chain</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-cor0"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a9b323ef8f1fb1c2f32283c4f85a785f6"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cor0</span></pre>
+<p>Configuration Option Register 0</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-mfwr"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1af788e0bc112fca99823d2b20d88022a6"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">mfwr</span></pre>
+<p>Multi Frame Write Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-cbc"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a49db72737730c9c170bc1427b0f8052e"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cbc</span></pre>
+<p>Initial CBC Value Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-idcode"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a8bd50b0498a94d7d301316abb3cf6531"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">idcode</span></pre>
+<p>Device ID Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-axss"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1af88686afb62eaa4f017f9c1583442a4a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">axss</span></pre>
+<p>User Access Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-cor1"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a27363f9e31fdf2a038662f72b6ecb91b"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cor1</span></pre>
+<p>Configuration Option Register 1</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-wbstar"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1aab88c2d72f320ad6c506a7d52dd63173"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wbstar</span></pre>
+<p>Warm Boot Start Address Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-timer"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a8246f8dcafbaca899abb215905879ebf"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">timer</span></pre>
+<p>Watchdog Timer Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-scratchpad"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a5e57c6329c58a76d55903829851f24a2"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">scratchpad</span></pre>
+<p>Scratch Pad Register for Dummy Read and Writes</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-bootsts"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a5e2cc2945f0b44c45e5c03ce8cce1bc3"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">bootsts</span></pre>
+<p>Boot History Status Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-ctl1"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a8167c6eb26bb33c3f568b73eed0ac98c"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ctl1</span></pre>
+<p>Control Register 1</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-bspi"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a23042a9471dfff9140d64b1819f9afad"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">bspi</span></pre>
+<p>BPI/SPI Configuration Options Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-fpga-cfg-regs-t-v1"><span id="doxid-unionxvsec-fpga-cfg-regs-t-1a1ae42b1ca78620be7ece73b9b1f3d154"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
+<p>FPGA Configuration Register set for US/US+ devices</p>
+</section>
+<section id="struct-xvsec-mcap-ctl-reg-t">
+<span id="cid-xvsec-mcap-ctl-reg-t"></span><span id="doxid-unionxvsec-mcap-ctl-reg-t"></span><span id="index-4"></span><h2>struct xvsec_mcap_ctl_reg_t<a class="headerlink" href="#struct-xvsec-mcap-ctl-reg-t" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
+<p class="rubric">Overview</p>
+<p>MCAP Control Register Fields.</p>
+<span class="target" id="cid-xvsec-mcap-ctl-reg-t-reserved05"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a03eb0e11c7cca6e8eb2e3b9370bf47e8"></span><span id="cid-xvsec-mcap-ctl-reg-t-reserved04"></span><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a3aac1afef2b1bd543f0c2830f91d321f"></span><span id="cid-xvsec-mcap-ctl-reg-t-reserved03"></span><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a526cda89adbf4441b845d6493cc07341"></span><span id="cid-xvsec-mcap-ctl-reg-t-reserved02"></span><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a8112ff89b45bff456bb6e19700f24e8e"></span><span id="cid-xvsec-mcap-ctl-reg-t-reserved01"></span><span id="doxid-unionxvsec-mcap-ctl-reg-t-1aaca815ed8f01d05d69fdd658010cf38c"></span></span><p class="rubric">Fields</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-enable"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a48e2bf171ddd0868d9ecb92ca50a734a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">enable</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Module Enable</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-rd-enable"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a4d53ea1c4376e7d22729868f508ab1ba"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">rd_enable</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Read Enable to perform FPGA CFG Read operation</p>
+<p>MCAP Read Enable</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-reset"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a6fe869886a1b36466a1f567fa39f1fde"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">reset</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Configurable Region Reset</p>
+<p>MCAP Module Reset</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-module-reset"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a2ee29422e860db501ac0edf761a29699"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">module_reset</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Module Reset</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-req4mcap-pcie"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a6f5df387693183088d38745d7e1a0e76"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">req4mcap_pcie</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>Request for gaining access to configurable region</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-cfg-desgn-sw"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a7c242e27919f1b43ed811656014d1541"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cfg_desgn_sw</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Design Switch : Must be SET after loading bitstream</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-wr-reg-enable"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a5f747f5d05357aa27ca7cc3f0b5b734c"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_reg_enable</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Write Register Enable</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-v1"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a495a204e8b57e4e0b92cbef2bb818c57"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
+<p>MCAP ctrl bits for US/US+</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-wr-enable"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1adb2af0fbc0374fd86f3ba9895a98d095"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_enable</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Write Enable</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-mode"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1af769799f449f5f291cb233494fd04929"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP 128-bit Mode</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-axi-cache"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1a79e914428b6c1d26bfe58539339f7103"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">axi_cache</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span></pre>
+<p>MCAP AXI Cache</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-axi-protect"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1ae0619efcc7198ed802199bf99d734f1a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">axi_protect</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span></pre>
+<p>MCAP AXI Protect</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-ctl-reg-t-v2"><span id="doxid-unionxvsec-mcap-ctl-reg-t-1adfa31dff226820a3d21ac8ca8e41a649"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
+<p>MCAP ctrl bits for Versal</p>
+</section>
+<section id="struct-xvsec-mcap-regs-t">
+<span id="cid-xvsec-mcap-regs-t"></span><span id="doxid-unionxvsec-mcap-regs-t"></span><span id="index-5"></span><h2>struct xvsec_mcap_regs_t<a class="headerlink" href="#struct-xvsec-mcap-regs-t" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
+<p class="rubric">Overview</p>
+<p>MCAP Register set.</p>
+<p class="rubric">Fields</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-cap-header"><span id="doxid-unionxvsec-mcap-regs-t-1a6a8eb2026df5921a76e01e6a736a3584"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cap_header</span></pre>
+<p>Extended capability header register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-vendor-header"><span id="doxid-unionxvsec-mcap-regs-t-1a31a607fdd5963ee8f687ab54b7249655"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">vendor_header</span></pre>
+<p>Vendor Specific header register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-fpga-jtag-id"><span id="doxid-unionxvsec-mcap-regs-t-1ab7f48e3e2251eb321a9a32acbfc483ce"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fpga_jtag_id</span></pre>
+<p>FPGA JTAG ID register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-fpga-bitstream-ver"><span id="doxid-unionxvsec-mcap-regs-t-1ad864025e396f5169b94731a837a8bfc1"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fpga_bitstream_ver</span></pre>
+<p>FPGA bit-stream version register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-status-reg"><span id="doxid-unionxvsec-mcap-regs-t-1a6fa5b91bae67fd6a177acd461d572976"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">status_reg</span></pre>
+<p>Status Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-control-reg"><span id="doxid-unionxvsec-mcap-regs-t-1a6b124545767b9cf2ed28f9035139c28a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">control_reg</span></pre>
+<p>Control Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-write-data-reg"><span id="doxid-unionxvsec-mcap-regs-t-1a113d152d3c698758470ad182d22bf204"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">write_data_reg</span></pre>
+<p>Write Data Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-read-data-reg"><span id="doxid-unionxvsec-mcap-regs-t-1a8a88122c36c80fb65c5e75c301cc6575"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">read_data_reg</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
+<p>Read Data Register: 4 data words</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-v1"><span id="doxid-unionxvsec-mcap-regs-t-1ad59aff520f1fad5056f2543570395705"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
+<p>MCAP cfg register set for US/US+</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-ext-cap-header"><span id="doxid-unionxvsec-mcap-regs-t-1ab2a60113849a00958c2f7988e1b0ff3e"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ext_cap_header</span></pre>
+<p>Extended capability header register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-address-reg"><span id="doxid-unionxvsec-mcap-regs-t-1a763d076577dfd0c4ac9a250aafafe866"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">address_reg</span></pre>
+<p>RW Address register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-wr-data-reg"><span id="doxid-unionxvsec-mcap-regs-t-1a12bb48727db3e1eb53b293a25ad83324"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_data_reg</span></pre>
+<p>Write Data Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-rd-data-reg"><span id="doxid-unionxvsec-mcap-regs-t-1aa5d2393fb622c41073198e771466d036"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">rd_data_reg</span></pre>
+<p>Read Data Register</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-regs-t-v2"><span id="doxid-unionxvsec-mcap-regs-t-1a155aaaff6fcf9faf5df95fb7527855f7"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
+<p>MCAP cfg register set for Versal devices</p>
+</section>
+<section id="struct-xvsec-mcap-sts-reg-t">
+<span id="cid-xvsec-mcap-sts-reg-t"></span><span id="doxid-unionxvsec-mcap-sts-reg-t"></span><span id="index-6"></span><h2>struct xvsec_mcap_sts_reg_t<a class="headerlink" href="#struct-xvsec-mcap-sts-reg-t" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
+<p class="rubric">Overview</p>
+<p>MCAP Status Register Fields.</p>
+<span class="target" id="cid-xvsec-mcap-sts-reg-t-wr-fifo-empty"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a461249033e73401ebe5e94397474857a"></span></span><p class="rubric">Fields</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-err"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a5fa3a89792a8948ea56f5fb7ddae7c6a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>Error</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-eos"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a46e154b7728c4d43d3897ad88457835e"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">eos</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>End of Startup Signal</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-reserved01"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a18cdc60735de9222568267c1d0e3f5ed"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">reserved01</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span></pre>
+<p>Reserved</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-read-complete"><span id="doxid-unionxvsec-mcap-sts-reg-t-1ac4c1652217b5d205ffbbe3c75eb2def3"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">read_complete</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Read complete flag</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-read-count"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a9f3f3b1b1fd5850998e4251166730bf8"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">read_count</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span></pre>
+<p>MCAP Read word count</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-fifo-ovfl"><span id="doxid-unionxvsec-mcap-sts-reg-t-1aebb383d008cbcc15708f59907319139e"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fifo_ovfl</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Write Buffer FIFO overflow</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-reserved02"><span id="doxid-unionxvsec-mcap-sts-reg-t-1adafe48cbb8766004a63151972b55b18a"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">reserved02</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">3</span></pre>
+<p>Reserved</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-fifo-occu"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a6ed84a8572da650d8adb951078c13fea"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fifo_occu</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">4</span></pre>
+<p>MCAP Write Buffer FIFO Occupency</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-reserved03"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a23dcfe121ae8169eef0a86be3f7f29c0"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">reserved03</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">8</span></pre>
+<p>Reserved</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-req4mcap-rel"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a935d7e3d18d8ced1e7c0bacd14ac1d4b"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">req4mcap_rel</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Request for Release Flag</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-reserved04"><span id="doxid-unionxvsec-mcap-sts-reg-t-1af5ea06d00b09d9b2f2577ee8b868f9e5"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">reserved04</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">7</span></pre>
+<p>Reserved</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-v1"><span id="doxid-unionxvsec-mcap-sts-reg-t-1acf74e54a3edd7d7049e8677f7e73ccc2"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v1</span></pre>
+<p>MCAP sts bits for US/US+ Devices</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-rw-status"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a30b36653bea0eebac7b467f3eaeeb776"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">rw_status</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span></pre>
+<p>MCAP Read/Write Status</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-rd-complete"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a4cdfe8f975ca1fc10091ec80ae529a98"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">rd_complete</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Read Complete</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-fifo-occupancy"><span id="doxid-unionxvsec-mcap-sts-reg-t-1aa14fb0340d1a5b1a7366cbbec0f7b745"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">fifo_occupancy</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">5</span></pre>
+<p>MCAP FIFO Occupancy</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-wr-fifo-full"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a60fba0855f5d65a37a58a88e6c32944d"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_fifo_full</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>MCAP Write FIFO Full</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-wr-fifo-almost-full"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a30f15fe4ff0659dba2883d386b99e802"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_fifo_almost_full</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>Write FIFO Almost Full</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-wr-fifo-almost-empty"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a77afb70e3b4d281098d405a5a7073941"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_fifo_almost_empty</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>Write FIFO Almost Empty</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-wr-fifo-overflow"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a27b56242b8008239ee522effa5e7c2ca"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">wr_fifo_overflow</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span></pre>
+<p>Write FIFO Overflow</p>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-mcap-sts-reg-t-v2"><span id="doxid-unionxvsec-mcap-sts-reg-t-1a70f5bbf955ab791ea97ac368a839022a"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
+<p>MCAP sts bits for Versal Devices</p>
+</section>
+</section>
 
 
            </div>
@@ -489,7 +665,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="xvsec_linux_api_export_union.html" class="btn btn-neutral float-right" title="Unions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="xvsec_linux_api_export_union.html" class="btn btn-neutral float-right" title="Data Structures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="xvsec_linux_api_export_var.html" class="btn btn-neutral float-left" title="Exported Variables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -502,7 +678,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 14, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -580,7 +756,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>
