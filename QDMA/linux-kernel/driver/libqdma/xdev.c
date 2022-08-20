@@ -91,12 +91,12 @@ struct qdma_resource_lock {
 static int pci_dma_mask_set(struct pci_dev *pdev)
 {
 	/** 64-bit addressing capability for XDMA? */
-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))) {
+	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64))) {
 		/** use 64-bit DMA for descriptors */
-		pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
+		dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
 		/** use 64-bit DMA, 32-bit for consistent */
-	} else if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
-		pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
+	} else if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(32))) {
+		dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
 		/** use 32-bit DMA */
 		dev_info(&pdev->dev, "Using a 32-bit DMA mask.\n");
 	} else {
