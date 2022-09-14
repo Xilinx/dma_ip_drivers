@@ -162,7 +162,7 @@ union qdma_ind_ctxt_cmd {
 		uint32_t busy:1;
 		uint32_t sel:4;
 		uint32_t op:2;
-		uint32_t qid:11;
+		uint32_t qid:12;
 		uint32_t rsvd:14;
 	} bits;
 };

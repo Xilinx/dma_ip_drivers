@@ -1114,10 +1114,10 @@ int xpdev_queue_delete(struct xlnx_pci_dev *xpdev, unsigned int qidx, u8 q_type,
 	if (q_type != Q_CMPT) {
 		spin_lock(&xpdev->cdev_lock);
 		qdata->xcdev->dir_init &= ~(1 << (q_type ? 1 : 0));
+		spin_unlock(&xpdev->cdev_lock);
 
 		if (!qdata->xcdev->dir_init)
 			qdma_cdev_destroy(qdata->xcdev);
-		spin_unlock(&xpdev->cdev_lock);
 	}
 
 	memset(qdata, 0, sizeof(*qdata));
@@ -1644,7 +1644,6 @@ static void xpdev_device_cleanup(struct xlnx_pci_dev *xpdev)
 	struct xlnx_qdata *qdata = xpdev->qdata;
 	struct xlnx_qdata *qmax = qdata + (xpdev->qmax * 2); /* h2c and c2h */
 
-	spin_lock(&xpdev->cdev_lock);
 	for (; qdata != qmax; qdata++) {
 		if (qdata->xcdev) {
 			/* if either h2c(1) or c2h(2) bit set, but not both */
@@ -1652,12 +1651,13 @@ static void xpdev_device_cleanup(struct xlnx_pci_dev *xpdev)
 				qdata->xcdev->dir_init == 2) {
 				qdma_cdev_destroy(qdata->xcdev);
 			} else { /* both bits are set so remove one */
+				spin_lock(&xpdev->cdev_lock);
 				qdata->xcdev->dir_init >>= 1;
+				spin_unlock(&xpdev->cdev_lock);
 			}
 		}
 		memset(qdata, 0, sizeof(*qdata));
 	}
-	spin_unlock(&xpdev->cdev_lock);
 }
 
 static void remove_one(struct pci_dev *pdev)

@@ -1051,7 +1051,7 @@ static void parse_config_file(const char *cfg_fname)
 		printf("Could not open %s\n", rng_sz_path);
 		exit(1);
 	}
-	ret = read(rng_sz_fd, &rng_sz[1], 100);
+	ret = read(rng_sz_fd, &rng_sz[1], 99);
 	if (ret < 0) {
 		printf("Error: Could not read the file\n");
 		exit(1);

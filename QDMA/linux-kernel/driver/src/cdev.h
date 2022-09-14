@@ -33,8 +33,8 @@
 
 /** QDMA character device class name */
 #define QDMA_CDEV_CLASS_NAME  DRV_MODULE_NAME
-/** QDMA character device max minor number*/
-#define QDMA_MINOR_MAX (2048)
+/** QDMA character device max minor number to support 4k queues */
+#define QDMA_MINOR_MAX (4096)
 
 /* per pci device control */
 /**

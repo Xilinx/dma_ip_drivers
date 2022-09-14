@@ -1481,7 +1481,9 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 	qcnt = qdma_get_device_active_queue_count(xdev->dma_device_index,
 			xdev->func_id, qconf->q_type);
 #else
+	spin_unlock(&qdev->lock);
 	qdma_dev_get_active_qcnt(xdev, &h2c_qcnt, &c2h_qcnt, &cmpt_qcnt);
+	spin_lock(&qdev->lock);
 	if (qconf->q_type == Q_H2C)
 		qcnt = h2c_qcnt;
 	else if (qconf->q_type == Q_C2H)

@@ -204,8 +204,6 @@ int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
 	struct qdma_dev *qdev = xdev_2_qdev(xdev);
 	int rv = 0;
 
-	spin_lock(&qdev->lock);
-
 	if (qdev->init_qrange)
 		goto done;
 
@@ -217,8 +215,6 @@ int qdma_device_prep_q_resource(struct xlnx_dma_dev *xdev)
 	if (rv < 0)
 		goto done;
 done:
-	spin_unlock(&qdev->lock);
-
 	return rv;
 }
 
