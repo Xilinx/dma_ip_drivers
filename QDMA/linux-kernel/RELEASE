@@ -1,4 +1,4 @@
-RELEASE: 2022.1.3 Patch
+RELEASE: 2022.1.4 Patch
 =======================
 
 This release is validated for
@@ -115,6 +115,11 @@ CPM5
 2022.1.3 Patch Updates
 ----------------------
 - Ported changes from pull request https://github.com/Xilinx/dma_ip_drivers/pull/170 to fix coverity issues
+
+2022.1.4 Patch Updates
+----------------------
+- Added support for more than 2K queues for PF/VF
+- Added support for Fedora36
 
 KNOWN ISSUES:
 =============
