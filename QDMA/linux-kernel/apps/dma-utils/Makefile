@@ -12,7 +12,6 @@
 
 CC ?= gcc
 
-CFLAGS += -g
 #CFLAGS += -O2 -fno-inline -Wall -Wstrict-prototypes
 CFLAGS += -I. -I../include
 CFLAGS += $(EXTRA_FLAGS)
