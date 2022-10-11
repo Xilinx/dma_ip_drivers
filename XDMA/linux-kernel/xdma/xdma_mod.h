@@ -111,7 +111,9 @@ struct cdev_async_io {
 	struct work_struct wrk_itm;
 	struct cdev_async_io *next;
 	ssize_t res;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
 	ssize_t res2;
+#endif
 	int err_cnt;
 };
 
