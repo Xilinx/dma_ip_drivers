@@ -470,6 +470,7 @@ struct qdma_dev_conf {
 	u32 bdf;
 	/** index of device in device list */
 	u32 idx;
+#ifndef __XRT__
 	/**
 	 *  @brief  user interrupt, if null, default libqdma handler is used
 	 *
@@ -477,7 +478,16 @@ struct qdma_dev_conf {
 	 *  @param uld		upper layer data, i.e. callback data
 	 */
 	void (*fp_user_isr_handler)(unsigned long dev_hndl, unsigned long uld);
-
+#else
+	/**
+	 *  @brief  user interrupt, if null, default libqdma handler is used
+	 *
+	 *  @param dev_hndl	Device Handler
+	 *  @param irq_index    Interrupt index
+	 *  @param uld		upper layer data, i.e. callback data
+	 */
+	void (*fp_user_isr_handler)(unsigned long dev_hndl,int irq_index, unsigned long uld);
+#endif
 	/**
 	 *  @brief  Q interrupt top,
 	 *  per-device addtional handling code
