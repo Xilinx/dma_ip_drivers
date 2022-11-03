@@ -53,6 +53,12 @@
 #	define HAS_SWAKE_UP (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0))
 #endif
 
+#if defined(RHEL_RELEASE_CODE)
+#	define PCI_AER_NAMECHANGE (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8, 3))
+#else
+#	define PCI_AER_NAMECHANGE (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0))
+#endif
+
 #if	HAS_SWAKE_UP
 #include <linux/swait.h>
 #endif
@@ -62,9 +68,6 @@
  *  all of the bars
  */
 //#define XDMA_CONFIG_BAR_NUM	1
-
-/* Switch debug printing on/off */
-#define XDMA_DEBUG 0
 
 /* SECTION: Preprocessor macros/constants */
 #define XDMA_BAR_NUM (6)
@@ -90,7 +93,8 @@
 #define XDMA_OFS_CONFIG		(0x3000UL)
 
 /* maximum number of desc per transfer request */
-#define XDMA_TRANSFER_MAX_DESC (2048)
+#define XDMA_ENGINE_XFER_MAX_DESC		0x800
+#define XDMA_ENGINE_CREDIT_XFER_MAX_DESC	0x3FF
 
 /* maximum size of a single DMA transfer descriptor */
 #define XDMA_DESC_BLEN_BITS	28
@@ -462,8 +466,15 @@ struct xdma_transfer {
 
 struct xdma_request_cb {
 	struct sg_table *sgt;
-	unsigned int total_len;
 	u64 ep_addr;
+	unsigned int aperture;
+
+	unsigned int total_len;
+	unsigned int offset;
+
+	struct scatterlist *sg;
+	unsigned int sg_idx;
+	unsigned int sg_offset;
 
 	/* Use two transfers in case single request needs to be split */
 	struct xdma_transfer tfer[2];
@@ -502,6 +513,7 @@ struct xdma_engine {
 
 	int max_extra_adj;	/* descriptor prefetch capability */
 	int desc_dequeued;	/* num descriptors of completed transfers */
+	u32 desc_max;		/* max # descriptors per xfer */
 	u32 status;		/* last known status of device */
 	/* only used for MSIX mode to store per-engine interrupt mask value */
 	u32 interrupt_enable_mask_value;
@@ -676,4 +688,8 @@ void get_perf_stats(struct xdma_engine *engine);
 
 int engine_addrmode_set(struct xdma_engine *engine, unsigned long arg);
 int engine_service_poll(struct xdma_engine *engine, u32 expected_desc_count);
+
+ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
+			unsigned int aperture, struct sg_table *sgt,
+			bool dma_mapped, int timeout_ms);
 #endif /* XDMA_LIB_H */

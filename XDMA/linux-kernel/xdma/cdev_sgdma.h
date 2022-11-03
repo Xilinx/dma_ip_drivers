@@ -37,7 +37,7 @@
  *
  * _IO(type,nr)		    no arguments
  * _IOR(type,nr,datatype)   read data from driver
- * _IOW(type,nr.datatype)   write data to driver
+ * _IOW(type,nr,datatype)   write data to driver
  * _IORW(type,nr,datatype)  read/write data
  *
  * _IOC_DIR(nr)		    returns direction
@@ -58,6 +58,14 @@ struct xdma_performance_ioctl {
 	uint64_t pending_count;
 };
 
+struct xdma_aperture_ioctl {
+	uint64_t ep_addr;
+	unsigned int aperture;
+	unsigned long buffer;
+	unsigned long len;
+	int error;
+	unsigned long done;
+};
 
 
 /* IOCTL codes */
@@ -68,5 +76,7 @@ struct xdma_performance_ioctl {
 #define IOCTL_XDMA_ADDRMODE_SET _IOW('q', 4, int)
 #define IOCTL_XDMA_ADDRMODE_GET _IOR('q', 5, int)
 #define IOCTL_XDMA_ALIGN_GET    _IOR('q', 6, int)
+#define IOCTL_XDMA_APERTURE_R   _IOW('q', 7, struct xdma_aperture_ioctl *)
+#define IOCTL_XDMA_APERTURE_W   _IOW('q', 8, struct xdma_aperture_ioctl *)
 
 #endif /* _XDMA_IOCALLS_POSIX_H_ */

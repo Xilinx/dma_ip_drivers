@@ -1,4 +1,11 @@
 SHELL = /bin/bash
+#
+# optional makefile parameters:
+# - DEBUG=<0|1>,	enable verbose debug print-out in the driver
+# - config_bar_num=,	xdma pci config bar number
+# - xvc_bar_num=,	xvc pci bar #
+# - xvc_bar_offset=,	xvc register base offset
+# 
 ifneq ($(xvc_bar_num),)
 	XVC_FLAGS += -D__XVC_BAR_NUM__=$(xvc_bar_num)
 endif
@@ -14,7 +21,12 @@ topdir := $(shell cd $(src)/.. && pwd)
 TARGET_MODULE:=xdma
 
 EXTRA_CFLAGS := -I$(topdir)/include $(XVC_FLAGS)
-#EXTRA_CFLAGS += -D__LIBXDMA_DEBUG__
+ifeq ($(DEBUG),1)
+	EXTRA_CFLAGS += -D__LIBXDMA_DEBUG__
+endif
+ifneq ($(config_bar_num),)
+	EXTRA_CFLAGS += -DXDMA_CONFIG_BAR_NUM=$(config_bar_num)
+endif
 #EXTRA_CFLAGS += -DINTERNAL_TESTING
 
 ifneq ($(KERNELRELEASE),)

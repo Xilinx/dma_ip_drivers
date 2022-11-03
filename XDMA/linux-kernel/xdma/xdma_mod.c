@@ -45,7 +45,6 @@ MODULE_LICENSE("Dual BSD/GPL");
 static int xpdev_cnt;
 
 static const struct pci_device_id pci_ids[] = {
-
 	{ PCI_DEVICE(0x10ee, 0x7011), },
 	{ PCI_DEVICE(0x10ee, 0x7012), },
 	{ PCI_DEVICE(0x10ee, 0x7014), },
@@ -58,6 +57,7 @@ static const struct pci_device_id pci_ids[] = {
 	{ PCI_DEVICE(0x10ee, 0x7032), },
 	{ PCI_DEVICE(0x10ee, 0x7034), },
 	{ PCI_DEVICE(0x10ee, 0x7038), },
+
 
 #ifdef INTERNAL_TESTING
 	{ PCI_DEVICE(0x1d0f, 0x1042), 0},
@@ -247,11 +247,12 @@ static void xdma_error_resume(struct pci_dev *pdev)
 	struct xdma_pci_dev *xpdev = dev_get_drvdata(&pdev->dev);
 
 	pr_info("dev 0x%p,0x%p.\n", pdev, xpdev);
-#if KERNEL_VERSION(5, 7, 0) <= LINUX_VERSION_CODE
+#if PCI_AER_NAMECHANGE
 	pci_aer_clear_nonfatal_status(pdev);
 #else
 	pci_cleanup_aer_uncorrect_error_status(pdev);
 #endif
+
 }
 
 #if KERNEL_VERSION(4, 13, 0) <= LINUX_VERSION_CODE
