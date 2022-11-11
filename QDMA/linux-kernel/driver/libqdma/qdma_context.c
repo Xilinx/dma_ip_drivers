@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -90,9 +90,11 @@ static int make_sw_context(struct qdma_descq *descq,
 			(descq->conf.sw_desc_sz == DESC_SZ_64B)) {
 		sw_ctxt->desc_sz = descq->conf.sw_desc_sz;
 	} else {
+		sw_ctxt->fetch_max = FETCH_MAX_NUM;
 		if (!descq->conf.st) { /* mm h2c/c2h */
 			sw_ctxt->desc_sz = DESC_SZ_32B;
 			sw_ctxt->mm_chn = descq->channel;
+			sw_ctxt->host_id = descq->channel;
 		} else if (descq->conf.q_type == Q_C2H) {  /* st c2h */
 			sw_ctxt->frcd_en = descq->conf.fetch_credit;
 			sw_ctxt->desc_sz = DESC_SZ_8B;

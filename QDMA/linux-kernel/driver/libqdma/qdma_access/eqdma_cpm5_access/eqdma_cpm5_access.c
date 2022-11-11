@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -2776,7 +2777,7 @@ int eqdma_cpm5_get_version(void *dev_hndl, uint8_t is_vf,
 
 	reg_val = qdma_reg_read(dev_hndl, reg_addr);
 
-	qdma_fetch_version_details(is_vf, reg_val, version_info);
+	qdma_fetch_version_details(dev_hndl, is_vf, reg_val, version_info);
 
 	return QDMA_SUCCESS;
 }

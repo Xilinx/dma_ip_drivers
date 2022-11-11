@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -908,9 +909,8 @@ int qdma_get_error_code(int acc_err_code);
  *
  * Return:	Nothing
  *****************************************************************************/
-void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
-		struct qdma_hw_version_info *version_info);
-
+void qdma_fetch_version_details(void *dev_hndl, uint8_t is_vf,
+	uint32_t version_reg_val, struct qdma_hw_version_info *version_info);
 
 #ifdef __cplusplus
 }

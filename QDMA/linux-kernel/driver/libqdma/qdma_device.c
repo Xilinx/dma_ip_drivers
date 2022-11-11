@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -232,8 +232,8 @@ int qdma_device_init(struct xlnx_dma_dev *xdev)
 
 	memset(&fmap, 0, sizeof(struct qdma_fmap_cfg));
 
-	qdev = kzalloc(sizeof(struct qdma_dev) +
-			sizeof(struct qdma_descq) * qmax * 3, GFP_KERNEL);
+	qdev = kzalloc(sizeof(struct qdma_dev), GFP_KERNEL);
+
 	if (!qdev) {
 		pr_err("dev %s qmax %d OOM.\n",
 			dev_name(&xdev->conf.pdev->dev), qmax);
@@ -254,9 +254,10 @@ int qdma_device_init(struct xlnx_dma_dev *xdev)
 #endif
 
 	descq = (struct qdma_descq *)(qdev + 1);
-	qdev->h2c_descq = descq;
-	qdev->c2h_descq = descq + qmax;
-	qdev->cmpt_descq = descq + (2 * qmax);
+	qdev->h2c_descq = kmalloc(sizeof(struct qdma_descq) * qmax, GFP_KERNEL);
+	qdev->c2h_descq = kmalloc(sizeof(struct qdma_descq) * qmax, GFP_KERNEL);
+	qdev->cmpt_descq = kmalloc(sizeof(struct qdma_descq) * qmax,
+					GFP_KERNEL);
 
 	qdev->qmax = qmax;
 	qdev->init_qrange = 0;
@@ -316,6 +317,10 @@ void qdma_device_cleanup(struct xlnx_dma_dev *xdev)
 			qdma_queue_remove((unsigned long int)xdev,
 					  i + qdev->qmax, buf, QDMA_BUF_LEN);
 	}
+
+	kfree(qdev->h2c_descq);
+	kfree(qdev->c2h_descq);
+	kfree(qdev->cmpt_descq);
 	xdev->dev_priv = NULL;
 	kfree(qdev);
 }

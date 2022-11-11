@@ -1,9 +1,11 @@
-RELEASE: 2022.1.4 Patch
+RELEASE: 2022.1.5 Patch
 =======================
 
-This release is validated for
-	- QDMA4.0 2020.1 Patch based example design
-	- XCVP1202 for CPM5 2022.1 example design
+This release is validated
+	- On VCU1525 for QDMA5.0 2022.1 example design
+	- On VCU1525 for QDMA4.0 2020.2 example design
+	- On VCU1525 for QDMA3.1 2019.2 example design
+	- On XCVP1202 for CPM5 2022.1 example design
 
 SUPPORTED FEATURES:
 ===================
@@ -121,11 +123,14 @@ CPM5
 - Added support for more than 2K queues for PF/VF
 - Added support for Fedora36
 
+2022.1.5 Patch Updates
+----------------------
+- Added PF/VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
+
 KNOWN ISSUES:
 =============
 - CPM5 Only
-	- Sufficient host memory is required to accommodate 4K queues. Tested only upto 2099 queues for PFs with our test environment though driver supports 4K queues.
-	- VF 4K queue support is not fully verified due to pdi issues
+	- Adding >3000 queues using dma-ctl application throwing an error message even though the queues are added successfully. For now error message can be ignored and this will be fixed in subsequent releases.
 
 - All Designs
 	- In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
@@ -151,8 +156,8 @@ DRIVER LIMITATIONS:
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,

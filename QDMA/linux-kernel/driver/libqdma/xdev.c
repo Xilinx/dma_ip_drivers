@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -53,6 +53,11 @@
 #define QDMA_QBASE 0
 #endif
 #ifndef QDMA_TOTAL_Q
+/**
+ * CPM5 supports 4095 Qs & all other designs supports 2048 Qs.
+ * Though the number here is given as 2K Qs,
+ * actual qmax is extracted from dev cap.
+ */
 #define QDMA_TOTAL_Q 2048
 #endif
 #endif

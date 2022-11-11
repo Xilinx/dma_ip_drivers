@@ -2,8 +2,8 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2018-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -871,7 +871,7 @@ static void parse_config_file(const char *cfg_fname)
 		printf("Could not open %s\n", rng_sz_path);
 		exit(1);
 	}
-	ret = read(rng_sz_fd, &rng_sz[1], 99);
+	ret = read(rng_sz_fd, &rng_sz[1], 100);
 	if (ret < 0) {
 		printf("Error: Could not read the file\n");
 		exit(1);

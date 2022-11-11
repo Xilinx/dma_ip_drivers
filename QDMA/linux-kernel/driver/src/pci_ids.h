@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -244,6 +244,13 @@ static const struct pci_device_id pci_ids[] = {
 	{ PCI_DEVICE(0x10ee, 0xc148), },	/** VF on PF 1 */
 	{ PCI_DEVICE(0x10ee, 0xc248), },	/** VF on PF 2 */
 	{ PCI_DEVICE(0x10ee, 0xc348), },	/** VF on PF 3 */
+
+	/** Gen 5 VF */
+	/** PCIe lane width x8 */
+	{ PCI_DEVICE(0x10ee, 0xc058), },	/** VF on PF 0 */
+	{ PCI_DEVICE(0x10ee, 0xc158), },	/** VF on PF 1 */
+	{ PCI_DEVICE(0x10ee, 0xc258), },	/** VF on PF 2 */
+	{ PCI_DEVICE(0x10ee, 0xc358), },	/** VF on PF 3 */
 #else
 	/** Gen 1 PF */
 	/** PCIe lane width x1 */
@@ -452,6 +459,13 @@ static const struct pci_device_id pci_ids[] = {
 	{ PCI_DEVICE(0x10ee, 0xb148), },	/** PF 1 */
 	{ PCI_DEVICE(0x10ee, 0xb248), },	/** PF 2 */
 	{ PCI_DEVICE(0x10ee, 0xb348), },	/** PF 3 */
+
+	/** Gen 5 PF */
+	/** PCIe lane width x8 */
+	{ PCI_DEVICE(0x10ee, 0xb058), },	/** PF 0 */
+	{ PCI_DEVICE(0x10ee, 0xb158), },	/** PF 1 */
+	{ PCI_DEVICE(0x10ee, 0xb258), },	/** PF 2 */
+	{ PCI_DEVICE(0x10ee, 0xb358), },	/** PF 3 */
 #endif
 
 	{0,}

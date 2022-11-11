@@ -2,8 +2,8 @@
  * This file is part of the QDMA userspace application
  * to enable the user to execute the QDMA functionality
  *
- * Copyright (c) 2018-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2018-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -331,7 +331,7 @@ static int validate_regcmd(enum xnl_op_t qcmd, struct xcmd_reg	*regcmd)
 		case XNL_CMD_REG_RD:
 		case XNL_CMD_REG_INFO_READ:
 		case XNL_CMD_REG_WRT:
-			if ((regcmd->bar != 0) && (regcmd->bar != 2)) {
+			if ((regcmd->bar != 0) && (regcmd->bar != 2) && (regcmd->bar != 4)) {
 				printf("dmactl: bar %u number out of range\n",
 				       regcmd->bar);
 				invalid = -EINVAL;

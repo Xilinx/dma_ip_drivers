@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -260,10 +260,10 @@ static void data_intr_aggregate(struct xlnx_dma_dev *xdev, int vidx, int irq,
 		queue_intr_cidx_update(descq->xdev,
 			descq->conf.qidx, &coal_entry->intr_cidx_info);
 	} else if (num_entries_processed == 0) {
-		pr_warn("No entries processed\n");
+		pr_debug("No entries processed\n");
 		descq = xdev->prev_descq;
 		if (descq) {
-			pr_warn("Doing stale update\n");
+			pr_debug("Doing stale update\n");
 			queue_intr_cidx_update(descq->xdev,
 				descq->conf.qidx, &coal_entry->intr_cidx_info);
 		}
