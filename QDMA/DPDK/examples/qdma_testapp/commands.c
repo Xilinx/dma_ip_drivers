@@ -1,7 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -33,7 +34,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2014 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2010-2014 Intel Corporation. All rights reserved.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -612,9 +613,10 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 	int ld_size = 0, loop = 0, ret, j, zbyte = 0, user_bar_idx;
 	off_t ret_val;
 	int port_id = 0, num_queues = 0, input_size = 0, num_loops = 0;
-	int dst_addr = 0;
+	uint64_t dst_addr = 0;
 	uint32_t regval = 0;
 	unsigned int q_data_size = 0;
+	char *p = NULL;
 
 	cmdline_printf(cl, "xmit on Port:%s, filename:%s, num-queues:%s\n\n",
 				res->port_id, res->filename, res->queues);
@@ -651,15 +653,18 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 			return;
 		}
 		user_bar_idx = pinfo[port_id].user_bar_idx;
+
+#if !defined(TANDEM_BOOT_SUPPORTED)
 		regval = PciRead(user_bar_idx, C2H_CONTROL_REG, port_id);
+#endif
 
 		input_size = atoi(res->size);
 		num_loops = atoi(res->loops);
-		dst_addr = atoi(res->dst_addr);
+		dst_addr = strtoull(res->dst_addr, &p, 0);
 
-#ifndef PERF_BENCHMARK
+#if !defined(PERF_BENCHMARK) && !defined(TANDEM_BOOT_SUPPORTED)
 		if (dst_addr + input_size > BRAM_SIZE) {
-			cmdline_printf(cl, "Error: (dst_addr %d + input size "
+			cmdline_printf(cl, "Error: (dst_addr %ld + input size "
 					"%d) shall be less than "
 					"BRAM_SIZE %d.\n", dst_addr,
 					input_size, BRAM_SIZE);
@@ -691,14 +696,17 @@ static void cmd_obj_dma_to_device_parsed(void *parsed_result,
 
 		do {
 			total_size = input_size;
-			dst_addr = atoi(res->dst_addr);
+			dst_addr = strtoull(res->dst_addr, &p, 0);
 			q_data_size = 0;
 			/* transmit data on the number of Queues configured
 			 * from the input file
 			 */
 			for (i = 0, j = 0; i < num_queues; i++, j++) {
 				dst_addr += q_data_size;
+
+#ifndef TANDEM_BOOT_SUPPORTED
 				dst_addr %= BRAM_SIZE;
+#endif
 
 				if ((unsigned int)i >=
 						pinfo[port_id].st_queues) {
@@ -839,7 +847,7 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 	int loop = 0, ret, j;
 	off_t ret_val;
 	int port_id = 0, num_queues = 0, input_size = 0, num_loops = 0;
-	int src_addr = 0;
+	uint64_t src_addr = 0;
 	unsigned int q_data_size = 0;
 
 	cmdline_printf(cl, "recv on Port:%s, filename:%s\n",
@@ -881,7 +889,7 @@ static void cmd_obj_dma_from_device_parsed(void *parsed_result,
 		src_addr = atoi(res->src_addr);
 #ifndef PERF_BENCHMARK
 		if (src_addr + input_size > BRAM_SIZE) {
-			cmdline_printf(cl, "Error: (src_addr %d + input "
+			cmdline_printf(cl, "Error: (src_addr %ld + input "
 					"size %d) shall be less than "
 					"BRAM_SIZE %d.\n", src_addr,
 					input_size, BRAM_SIZE);

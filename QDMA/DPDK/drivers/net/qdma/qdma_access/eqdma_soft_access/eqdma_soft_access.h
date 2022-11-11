@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -233,6 +234,13 @@ struct eqdma_hw_err_info {
 	void (*eqdma_hw_err_process)(void *dev_hndl);
 };
 
+/* In QDMA_GLBL2_MISC_CAP(0x134) register,
+ * Bits [23:20] gives QDMA IP version.
+ * 0: QDMA3.1, 1: QDMA4.0, 2: QDMA5.0
+ */
+#define EQDMA_IP_VERSION_4                1
+#define EQDMA_IP_VERSION_5                2
+
 #define EQDMA_OFFSET_VF_VERSION           0x5014
 #define EQDMA_OFFSET_VF_USER_BAR		  0x5018
 
@@ -247,6 +255,9 @@ int eqdma_init_ctxt_memory(void *dev_hndl);
 
 int eqdma_get_version(void *dev_hndl, uint8_t is_vf,
 		struct qdma_hw_version_info *version_info);
+
+int eqdma_get_ip_version(void *dev_hndl, uint8_t is_vf,
+			uint32_t *ip_version);
 
 int eqdma_sw_ctx_conf(void *dev_hndl, uint8_t c2h, uint16_t hw_qid,
 			struct qdma_descq_sw_ctxt *ctxt,

@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -65,11 +66,22 @@
 #define EQDMA_MM_C2H_ERR_ALL_MASK			0X70000003
 #define EQDMA_MM_H2C0_ERR_ALL_MASK		    0X3041013E
 
-/* H2C Throttle settings */
+/* H2C Throttle settings for QDMA 4.0 */
 #define EQDMA_H2C_THROT_DATA_THRESH       0x5000
 #define EQDMA_THROT_EN_DATA               1
 #define EQDMA_THROT_EN_REQ                0
 #define EQDMA_H2C_THROT_REQ_THRESH        0xC0
+
+/* H2C Throttle settings for QDMA 5.0 */
+#define EQDMA5_H2C_THROT_DATA_THRESH       0x5000
+#define EQDMA5_THROT_EN_DATA               1
+#define EQDMA5_THROT_EN_REQ                1
+#define EQDMA5_H2C_THROT_REQ_THRESH        0xC0
+
+/* CSR Default values for QDMA 5.0 */
+#define EQDMA5_DEFAULT_H2C_UODSC_LIMIT     4
+#define EQDMA5_DEFAULT_MAX_DSC_FETCH       3
+#define EQDMA5_DEFAULT_WRB_INT             QDMA_WRB_INTERVAL_128
 
 /** Auxillary Bitmasks for fields spanning multiple words */
 #define EQDMA_SW_CTXT_PASID_GET_H_MASK              GENMASK(21, 12)
@@ -99,6 +111,9 @@
 /** EQDMA_IND_REG_SEL_FMAP */
 #define EQDMA_FMAP_CTXT_W1_QID_MAX_MASK         GENMASK(11, 0)
 #define EQDMA_FMAP_CTXT_W0_QID_MASK             GENMASK(10, 0)
+
+#define EQDMA_GLBL2_IP_VERSION_MASK             GENMASK(23, 20)
+#define EQDMA_GLBL2_VF_IP_VERSION_MASK          GENMASK(7, 4)
 
 static void eqdma_hw_st_h2c_err_process(void *dev_hndl);
 static void eqdma_hw_st_c2h_err_process(void *dev_hndl);
@@ -1893,6 +1908,34 @@ static int eqdma_indirect_reg_write(void *dev_hndl, enum ind_ctxt_cmd_sel sel,
 	return QDMA_SUCCESS;
 }
 
+int eqdma_get_ip_version(void *dev_hndl, uint8_t is_vf,
+			uint32_t *ip_version)
+{
+	uint32_t ver_reg_val = 0;
+	uint32_t reg_addr = (is_vf) ? EQDMA_OFFSET_VF_VERSION :
+			EQDMA_GLBL2_MISC_CAP_ADDR;
+
+	if (!dev_hndl) {
+		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
+				__func__, -QDMA_ERR_INV_PARAM);
+		return -QDMA_ERR_INV_PARAM;
+	}
+
+	ver_reg_val = qdma_reg_read(dev_hndl, reg_addr);
+
+	if (!is_vf) {
+		*ip_version =
+			FIELD_GET(EQDMA_GLBL2_IP_VERSION_MASK,
+				ver_reg_val);
+	} else {
+		*ip_version =
+			FIELD_GET(EQDMA_GLBL2_VF_IP_VERSION_MASK,
+					ver_reg_val);
+	}
+
+	return QDMA_SUCCESS;
+}
+
 /*
  * eqdma_fill_sw_ctxt() - Helper function to fill sw context into structure
  *
@@ -2072,6 +2115,8 @@ static void eqdma_fill_intr_ctxt(struct qdma_indirect_intr_ctxt *intr_ctxt)
  *****************************************************************************/
 int eqdma_set_default_global_csr(void *dev_hndl)
 {
+	int rv = QDMA_SUCCESS;
+
 	/* Default values */
 	uint32_t cfg_val = 0, reg_val = 0;
 	uint32_t rng_sz[QDMA_NUM_RING_SIZES] = {2049, 65, 129, 193, 257, 385,
@@ -2084,6 +2129,7 @@ int eqdma_set_default_global_csr(void *dev_hndl)
 		2048, 3968, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 8192,
 		9018, 16384};
 	struct qdma_dev_attributes dev_cap;
+	uint32_t eqdma_ip_version;
 
 	if (!dev_hndl) {
 		qdma_log_error("%s: dev_handle is NULL, err:%d\n", __func__,
@@ -2092,6 +2138,10 @@ int eqdma_set_default_global_csr(void *dev_hndl)
 	}
 
 	eqdma_get_device_attributes(dev_hndl, &dev_cap);
+
+	rv = eqdma_get_ip_version(dev_hndl, 0, &eqdma_ip_version);
+	if (rv != QDMA_SUCCESS)
+		return rv;
 
 	/* Configuring CSR registers */
 	/* Global ring sizes */
@@ -2107,13 +2157,30 @@ int eqdma_set_default_global_csr(void *dev_hndl)
 		qdma_write_csr_values(dev_hndl, EQDMA_C2H_TIMER_CNT_ADDR, 0,
 				QDMA_NUM_C2H_TIMERS, tmr_cnt);
 
-
 		/* Writeback Interval */
-		reg_val =
-			FIELD_SET(GLBL_DSC_CFG_MAXFETCH_MASK,
-					DEFAULT_MAX_DSC_FETCH) |
-			FIELD_SET(GLBL_DSC_CFG_WB_ACC_INT_MASK,
-					DEFAULT_WRB_INT);
+		if (eqdma_ip_version == EQDMA_IP_VERSION_4) {
+			reg_val =
+				FIELD_SET(GLBL_DSC_CFG_MAXFETCH_MASK,
+						DEFAULT_MAX_DSC_FETCH) |
+				FIELD_SET(GLBL_DSC_CFG_WB_ACC_INT_MASK,
+						DEFAULT_WRB_INT);
+		} else if (eqdma_ip_version == EQDMA_IP_VERSION_5) {
+			/* For QDMA4.0 and QDMA5.0, HW design and register map
+			 * is same except some performance optimizations
+			 */
+			reg_val =
+				FIELD_SET(GLBL_DSC_CFG_H2C_UODSC_LIMIT_MASK,
+					EQDMA5_DEFAULT_H2C_UODSC_LIMIT) |
+				FIELD_SET(GLBL_DSC_CFG_MAXFETCH_MASK,
+					EQDMA5_DEFAULT_MAX_DSC_FETCH) |
+				FIELD_SET(GLBL_DSC_CFG_WB_ACC_INT_MASK,
+					EQDMA5_DEFAULT_WRB_INT);
+		} else {
+			qdma_log_error("%s: ip_type = %d is invalid, err:%d\n",
+				__func__, eqdma_ip_version,
+				-QDMA_ERR_INV_PARAM);
+			return -QDMA_ERR_INV_PARAM;
+		}
 		qdma_reg_write(dev_hndl, EQDMA_GLBL_DSC_CFG_ADDR, reg_val);
 	}
 
@@ -2151,16 +2218,35 @@ int eqdma_set_default_global_csr(void *dev_hndl)
 		qdma_reg_write(dev_hndl, EQDMA_C2H_WRB_COAL_CFG_ADDR, reg_val);
 
 		/* H2C throttle Configuration*/
-
-		reg_val =
-			FIELD_SET(H2C_REQ_THROT_PCIE_DATA_THRESH_MASK,
-					EQDMA_H2C_THROT_DATA_THRESH) |
-			FIELD_SET(H2C_REQ_THROT_PCIE_EN_DATA_MASK,
-					EQDMA_THROT_EN_DATA) |
-			FIELD_SET(H2C_REQ_THROT_PCIE_MASK,
-					EQDMA_H2C_THROT_REQ_THRESH) |
-			FIELD_SET(H2C_REQ_THROT_PCIE_EN_REQ_MASK,
-					EQDMA_THROT_EN_REQ);
+		if (eqdma_ip_version == EQDMA_IP_VERSION_4) {
+			reg_val =
+				FIELD_SET(H2C_REQ_THROT_PCIE_DATA_THRESH_MASK,
+						EQDMA_H2C_THROT_DATA_THRESH) |
+				FIELD_SET(H2C_REQ_THROT_PCIE_EN_DATA_MASK,
+						EQDMA_THROT_EN_DATA) |
+				FIELD_SET(H2C_REQ_THROT_PCIE_MASK,
+						EQDMA_H2C_THROT_REQ_THRESH) |
+				FIELD_SET(H2C_REQ_THROT_PCIE_EN_REQ_MASK,
+						EQDMA_THROT_EN_REQ);
+		} else if (eqdma_ip_version == EQDMA_IP_VERSION_5) {
+			/* For QDMA4.0 and QDMA5.0, HW design and register map
+			 * is same except some performance optimizations
+			 */
+			reg_val =
+				FIELD_SET(H2C_REQ_THROT_PCIE_DATA_THRESH_MASK,
+						EQDMA5_H2C_THROT_DATA_THRESH) |
+				FIELD_SET(H2C_REQ_THROT_PCIE_EN_DATA_MASK,
+						EQDMA5_THROT_EN_DATA) |
+				FIELD_SET(H2C_REQ_THROT_PCIE_MASK,
+						EQDMA5_H2C_THROT_REQ_THRESH) |
+				FIELD_SET(H2C_REQ_THROT_PCIE_EN_REQ_MASK,
+						EQDMA5_THROT_EN_REQ);
+		} else {
+			qdma_log_error("%s: ip_type = %d is invalid, err:%d\n",
+						__func__, eqdma_ip_version,
+					   -QDMA_ERR_INV_PARAM);
+			return -QDMA_ERR_INV_PARAM;
+		}
 		qdma_reg_write(dev_hndl, EQDMA_H2C_REQ_THROT_PCIE_ADDR,
 			reg_val);
 	}
@@ -2762,7 +2848,7 @@ int eqdma_get_version(void *dev_hndl, uint8_t is_vf,
 
 	reg_val = qdma_reg_read(dev_hndl, reg_addr);
 
-	qdma_fetch_version_details(is_vf, reg_val, version_info);
+	qdma_fetch_version_details(dev_hndl, is_vf, reg_val, version_info);
 
 	return QDMA_SUCCESS;
 }

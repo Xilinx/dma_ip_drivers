@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -178,7 +179,7 @@ union qdma_ind_ctxt_cmd {
 		uint32_t busy:1;
 		uint32_t sel:4;
 		uint32_t op:2;
-		uint32_t qid:11;
+		uint32_t qid:12;
 		uint32_t rsvd:14;
 	} bits;
 };
@@ -924,9 +925,8 @@ int qdma_get_error_code(int acc_err_code);
  *
  * Return:	Nothing
  *****************************************************************************/
-void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
-		struct qdma_hw_version_info *version_info);
-
+void qdma_fetch_version_details(void *dev_hndl, uint8_t is_vf,
+	uint32_t version_reg_val, struct qdma_hw_version_info *version_info);
 
 #ifdef __cplusplus
 }

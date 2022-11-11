@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -74,7 +75,12 @@ uint32_t qdma_pci_read_reg(struct rte_eth_dev *dev, uint32_t bar, uint32_t reg)
 		printf("Error: PCI BAR number:%u not mapped\n", bar);
 		return -1;
 	}
+
+#ifdef TANDEM_BOOT_SUPPORTED
+	val = *((volatile uint64_t *)(baseaddr + reg));
+#else
 	val = *((volatile uint32_t *)(baseaddr + reg));
+#endif
 
 	return val;
 }
@@ -96,7 +102,12 @@ void qdma_pci_write_reg(struct rte_eth_dev *dev, uint32_t bar,
 		printf("Error: PCI BAR number:%u not mapped\n", bar);
 		return;
 	}
+
+#ifdef TANDEM_BOOT_SUPPORTED
+	*((volatile uint64_t *)(baseaddr + reg)) = val;
+#else
 	*((volatile uint32_t *)(baseaddr + reg)) = val;
+#endif
 }
 
 void qdma_reset_rx_queue(struct qdma_rx_queue *rxq)

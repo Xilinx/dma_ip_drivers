@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -120,12 +121,24 @@ static const char *qdma_get_rtl_version(enum qdma_rtl_version rtl_version)
 /**
  * qdma_get_ip_type() - Function to get the ip type in string format
  *
- * @ip_type: IP Type
+ * @dev_hndl:  device handle
+ * @is_vf:	   Whether PF or VF
+ * @ip_type:   IP Type
  *
  * Return: string - success and NULL on failure
  *****************************************************************************/
-static const char *qdma_get_ip_type(enum qdma_ip_type ip_type)
+static const char *qdma_get_ip_type(void *dev_hndl, uint8_t is_vf,
+		enum qdma_ip_type ip_type)
 {
+	uint32_t ip_version;
+	int rv = QDMA_SUCCESS;
+
+	if (!dev_hndl) {
+		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
+				__func__, -QDMA_ERR_INV_PARAM);
+		return NULL;
+	}
+
 	switch (ip_type) {
 	case QDMA_VERSAL_HARD_IP:
 		return "Versal Hard IP";
@@ -134,7 +147,18 @@ static const char *qdma_get_ip_type(enum qdma_ip_type ip_type)
 	case QDMA_SOFT_IP:
 		return "QDMA Soft IP";
 	case EQDMA_SOFT_IP:
-		return "EQDMA Soft IP";
+		rv = eqdma_get_ip_version(dev_hndl, is_vf, &ip_version);
+		if (rv != QDMA_SUCCESS)
+			return NULL;
+
+		if (ip_version == EQDMA_IP_VERSION_4)
+			return "EQDMA4.0 Soft IP";
+		else if (ip_version == EQDMA_IP_VERSION_5)
+			return "EQDMA5.0 Soft IP";
+
+		qdma_log_error("%s: invalid eqdma ip version(%d), err:%d\n",
+				__func__, ip_version, -QDMA_ERR_INV_PARAM);
+		return NULL;
 	default:
 		qdma_log_error("%s: invalid ip type(%d), err:%d\n",
 				__func__, ip_type, -QDMA_ERR_INV_PARAM);
@@ -227,11 +251,17 @@ void qdma_read_csr_values(void *dev_hndl, uint32_t reg_offst,
 	}
 }
 
-void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
-		struct qdma_hw_version_info *version_info)
+void qdma_fetch_version_details(void *dev_hndl, uint8_t is_vf,
+	uint32_t version_reg_val, struct qdma_hw_version_info *version_info)
 {
 	uint32_t rtl_version, vivado_release_id, ip_type, device_type;
 	const char *version_str;
+
+	if (!dev_hndl) {
+		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
+				__func__, -QDMA_ERR_INV_PARAM);
+		return;
+	}
 
 	if (!is_vf) {
 		rtl_version = FIELD_GET(QDMA_GLBL2_RTL_VERSION_MASK,
@@ -303,6 +333,11 @@ void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
 			version_info->ip_type = QDMA_SOFT_IP;
 			break;
 		case 1:
+		case 2:
+			/* For QDMA4.0 and QDMA5.0, HW design and
+			 * register map is same except some
+			 * performance optimizations
+			 */
 			version_info->ip_type = EQDMA_SOFT_IP;
 			break;
 		default:
@@ -321,7 +356,7 @@ void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
 		}
 	}
 
-	version_str = qdma_get_ip_type(version_info->ip_type);
+	version_str = qdma_get_ip_type(dev_hndl, is_vf, version_info->ip_type);
 	if (version_str != NULL)
 		qdma_strncpy(version_info->qdma_ip_type_str,
 			version_str,
@@ -1346,7 +1381,7 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 			qdma_get_device_type(version_info.device_type));
 
 	qdma_log_info("IP Type: %s\n",
-			qdma_get_ip_type(version_info.ip_type));
+		qdma_get_ip_type(dev_hndl, is_vf, version_info.ip_type));
 
 	qdma_log_info("Vivado Release: %s\n",
 		qdma_get_vivado_release_id(version_info.vivado_release));

@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -233,6 +234,13 @@ static struct rte_pci_id qdma_vf_pci_id_tbl[] = {
 	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc148)	/* VF on PF 1 */
 	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc248)	/* VF on PF 2 */
 	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc348)	/* VF on PF 3 */
+
+	/** Gen 5 VF */
+	/** PCIe lane width x8 */
+	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc058)	/* VF on PF 0 */
+	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc158)	/* VF on PF 1 */
+	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc258)	/* VF on PF 2 */
+	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0xc358)	/* VF on PF 3 */
 
 	{ .vendor_id = 0, /* sentinel */ },
 };

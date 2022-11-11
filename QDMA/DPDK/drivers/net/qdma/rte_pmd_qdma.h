@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -587,7 +588,7 @@ int rte_pmd_qdma_set_c2h_descriptor_prefetch(int port_id, uint32_t qid,
  * @ingroup rte_pmd_qdma_func
  *****************************************************************************/
 int rte_pmd_qdma_set_mm_endpoint_addr(int port_id, uint32_t qid,
-			enum rte_pmd_qdma_dir_type dir, uint32_t addr);
+			enum rte_pmd_qdma_dir_type dir, uint64_t addr);
 
 /******************************************************************************/
 /**

@@ -1,11 +1,13 @@
-RELEASE: 2022.1.1
+RELEASE: 2022.1.3
 =================
 
 This release is based on DPDK v20.11 and contains QDMA poll mode driver and
 QDMA test application.
 
-This release is validated for 
+This release is validated for
+	- On VCU1525 for QDMA5.0 2022.1 example design
 	- On VCU1525 for QDMA4.0 2020.2 example design
+	- On VCU1525 for QDMA3.1 2019.2 example design
 	- On XCVP1202 for CPM5 2022.1 example design
 
 This release includes a patch file for dpdk-pktgen v20.12.0 that extends
@@ -101,13 +103,16 @@ CPM5
 ----------------------
 - Added VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
 
+2022.1.2 Patch Updates
+----------------------
+- Added support for QDMA5.0 which has some performance optimization changes compared to QDMA4.0
+
+2022.1.3 Patch Updates
+----------------------
+- Added PF/VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
+
 KNOWN ISSUE:
 ============
-- CPM5 Only
-	- Sufficient host memory is required to accommodate 4K queues. Tested only upto 2048 queues for PFs with our test environment though driver supports 4K queues.
-	- Tandem Boot support not available completely
-	- VF 4K queue support is not fully verified due to pdi issues
-
 - All Designs
 	- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
 	- DPDK C2H and Forwarding performance values for 8 queue is lesser compared to 4 queue case for both PF and VF.
@@ -127,7 +132,8 @@ DRIVER LIMITATIONS:
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions

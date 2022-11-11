@@ -1,7 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -33,7 +34,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2014 Intel Corporation. All rights reserved.
+ *   Copyright (c) 2010-2014 Intel Corporation. All rights reserved.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without

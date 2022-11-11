@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -1183,42 +1184,6 @@ static struct regfield_info
 
 
 static struct regfield_info
-	glbl_req_err_sts_field_info[] = {
-	{"GLBL_REQ_ERR_STS_RSVD_1",
-		GLBL_REQ_ERR_STS_RSVD_1_MASK},
-	{"GLBL_REQ_ERR_STS_RC_DISCONTINUE",
-		GLBL_REQ_ERR_STS_RC_DISCONTINUE_MASK},
-	{"GLBL_REQ_ERR_STS_RC_PRTY",
-		GLBL_REQ_ERR_STS_RC_PRTY_MASK},
-	{"GLBL_REQ_ERR_STS_RC_FLR",
-		GLBL_REQ_ERR_STS_RC_FLR_MASK},
-	{"GLBL_REQ_ERR_STS_RC_TIMEOUT",
-		GLBL_REQ_ERR_STS_RC_TIMEOUT_MASK},
-	{"GLBL_REQ_ERR_STS_RC_INV_BCNT",
-		GLBL_REQ_ERR_STS_RC_INV_BCNT_MASK},
-	{"GLBL_REQ_ERR_STS_RC_INV_TAG",
-		GLBL_REQ_ERR_STS_RC_INV_TAG_MASK},
-	{"GLBL_REQ_ERR_STS_RC_START_ADDR_MISMCH",
-		GLBL_REQ_ERR_STS_RC_START_ADDR_MISMCH_MASK},
-	{"GLBL_REQ_ERR_STS_RC_RID_TC_ATTR_MISMCH",
-		GLBL_REQ_ERR_STS_RC_RID_TC_ATTR_MISMCH_MASK},
-	{"GLBL_REQ_ERR_STS_RC_NO_DATA",
-		GLBL_REQ_ERR_STS_RC_NO_DATA_MASK},
-	{"GLBL_REQ_ERR_STS_RC_UR_CA_CRS",
-		GLBL_REQ_ERR_STS_RC_UR_CA_CRS_MASK},
-	{"GLBL_REQ_ERR_STS_RC_POISONED",
-		GLBL_REQ_ERR_STS_RC_POISONED_MASK},
-};
-
-
-static struct regfield_info
-	glbl_req_err_msk_field_info[] = {
-	{"GLBL_REQ_ERR_MSK",
-		GLBL_REQ_ERR_MSK_MASK},
-};
-
-
-static struct regfield_info
 	ind_ctxt_data_field_info[] = {
 	{"IND_CTXT_DATA_DATA",
 		IND_CTXT_DATA_DATA_MASK},
@@ -1267,6 +1232,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_s_axis_c2h_accepted_field_info[] = {
+	{"C2H_STAT_S_AXIS_C2H_ACCEPTED_RSVD_1",
+		C2H_STAT_S_AXIS_C2H_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_S_AXIS_C2H_ACCEPTED",
 		C2H_STAT_S_AXIS_C2H_ACCEPTED_MASK},
 };
@@ -1274,6 +1241,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_s_axis_wrb_accepted_field_info[] = {
+	{"C2H_STAT_S_AXIS_WRB_ACCEPTED_RSVD_1",
+		C2H_STAT_S_AXIS_WRB_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_S_AXIS_WRB_ACCEPTED",
 		C2H_STAT_S_AXIS_WRB_ACCEPTED_MASK},
 };
@@ -1281,6 +1250,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_desc_rsp_pkt_accepted_field_info[] = {
+	{"C2H_STAT_DESC_RSP_PKT_ACCEPTED_RSVD_1",
+		C2H_STAT_DESC_RSP_PKT_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_DESC_RSP_PKT_ACCEPTED_D",
 		C2H_STAT_DESC_RSP_PKT_ACCEPTED_D_MASK},
 };
@@ -1288,6 +1259,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_axis_pkg_cmp_field_info[] = {
+	{"C2H_STAT_AXIS_PKG_CMP_RSVD_1",
+		C2H_STAT_AXIS_PKG_CMP_RSVD_1_MASK},
 	{"C2H_STAT_AXIS_PKG_CMP",
 		C2H_STAT_AXIS_PKG_CMP_MASK},
 };
@@ -1295,6 +1268,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_desc_rsp_accepted_field_info[] = {
+	{"C2H_STAT_DESC_RSP_ACCEPTED_RSVD_1",
+		C2H_STAT_DESC_RSP_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_DESC_RSP_ACCEPTED_D",
 		C2H_STAT_DESC_RSP_ACCEPTED_D_MASK},
 };
@@ -1302,6 +1277,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_desc_rsp_cmp_field_info[] = {
+	{"C2H_STAT_DESC_RSP_CMP_RSVD_1",
+		C2H_STAT_DESC_RSP_CMP_RSVD_1_MASK},
 	{"C2H_STAT_DESC_RSP_CMP_D",
 		C2H_STAT_DESC_RSP_CMP_D_MASK},
 };
@@ -1309,6 +1286,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_wrq_out_field_info[] = {
+	{"C2H_STAT_WRQ_OUT_RSVD_1",
+		C2H_STAT_WRQ_OUT_RSVD_1_MASK},
 	{"C2H_STAT_WRQ_OUT",
 		C2H_STAT_WRQ_OUT_MASK},
 };
@@ -1316,6 +1295,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_wpl_ren_accepted_field_info[] = {
+	{"C2H_STAT_WPL_REN_ACCEPTED_RSVD_1",
+		C2H_STAT_WPL_REN_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_WPL_REN_ACCEPTED",
 		C2H_STAT_WPL_REN_ACCEPTED_MASK},
 };
@@ -1323,6 +1304,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_total_wrq_len_field_info[] = {
+	{"C2H_STAT_TOTAL_WRQ_LEN_RSVD_1",
+		C2H_STAT_TOTAL_WRQ_LEN_RSVD_1_MASK},
 	{"C2H_STAT_TOTAL_WRQ_LEN",
 		C2H_STAT_TOTAL_WRQ_LEN_MASK},
 };
@@ -1330,6 +1313,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_total_wpl_len_field_info[] = {
+	{"C2H_STAT_TOTAL_WPL_LEN_RSVD_1",
+		C2H_STAT_TOTAL_WPL_LEN_RSVD_1_MASK},
 	{"C2H_STAT_TOTAL_WPL_LEN",
 		C2H_STAT_TOTAL_WPL_LEN_MASK},
 };
@@ -1522,6 +1507,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_desc_rsp_drop_accepted_field_info[] = {
+	{"C2H_STAT_DESC_RSP_DROP_ACCEPTED_RSVD_1",
+		C2H_STAT_DESC_RSP_DROP_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_DESC_RSP_DROP_ACCEPTED_D",
 		C2H_STAT_DESC_RSP_DROP_ACCEPTED_D_MASK},
 };
@@ -1529,6 +1516,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_desc_rsp_err_accepted_field_info[] = {
+	{"C2H_STAT_DESC_RSP_ERR_ACCEPTED_RSVD_1",
+		C2H_STAT_DESC_RSP_ERR_ACCEPTED_RSVD_1_MASK},
 	{"C2H_STAT_DESC_RSP_ERR_ACCEPTED_D",
 		C2H_STAT_DESC_RSP_ERR_ACCEPTED_D_MASK},
 };
@@ -1536,6 +1525,8 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_desc_req_field_info[] = {
+	{"C2H_STAT_DESC_REQ_RSVD_1",
+		C2H_STAT_DESC_REQ_RSVD_1_MASK},
 	{"C2H_STAT_DESC_REQ",
 		C2H_STAT_DESC_REQ_MASK},
 };
@@ -2706,6 +2697,57 @@ static struct regfield_info
 		C2H_WATER_MARK_LOW_WM_MASK},
 };
 
+
+static struct regfield_info
+	c2h_notify_empty_field_info[] = {
+	{"C2H_NOTIFY_EMPTY_RSVD_1",
+		C2H_NOTIFY_EMPTY_RSVD_1_MASK},
+	{"C2H_NOTIFY_EMPTY_NOE",
+		C2H_NOTIFY_EMPTY_NOE_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_s_axis_c2h_accepted_1_field_info[] = {
+	{"C2H_STAT_S_AXIS_C2H_ACCEPTED_1",
+		C2H_STAT_S_AXIS_C2H_ACCEPTED_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_s_axis_wrb_accepted_1_field_info[] = {
+	{"C2H_STAT_S_AXIS_WRB_ACCEPTED_1",
+		C2H_STAT_S_AXIS_WRB_ACCEPTED_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_desc_rsp_pkt_accepted_1_field_info[] = {
+	{"C2H_STAT_DESC_RSP_PKT_ACCEPTED_1_D",
+		C2H_STAT_DESC_RSP_PKT_ACCEPTED_1_D_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_axis_pkg_cmp_1_field_info[] = {
+	{"C2H_STAT_AXIS_PKG_CMP_1",
+		C2H_STAT_AXIS_PKG_CMP_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_s_axis_wrb_accepted_2_field_info[] = {
+	{"C2H_STAT_S_AXIS_WRB_ACCEPTED_2",
+		C2H_STAT_S_AXIS_WRB_ACCEPTED_2_MASK},
+};
+
+
+static struct regfield_info
+	c2h_st_pld_fifo_depth_field_info[] = {
+	{"C2H_ST_PLD_FIFO_DEPTH",
+		C2H_ST_PLD_FIFO_DEPTH_MASK},
+};
+
 static struct xreg_info eqdma_cpm5_config_regs[] = {
 {"CFG_BLK_IDENTIFIER", 0x00,
 	1, 0, 0, 0,
@@ -3163,18 +3205,6 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 	ARRAY_SIZE(fab_err_log_field_info),
 	fab_err_log_field_info
 },
-{"GLBL_REQ_ERR_STS", 0x318,
-	1, 0, 0, 0,
-	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
-	ARRAY_SIZE(glbl_req_err_sts_field_info),
-	glbl_req_err_sts_field_info
-},
-{"GLBL_REQ_ERR_MSK", 0x31c,
-	1, 0, 0, 0,
-	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
-	ARRAY_SIZE(glbl_req_err_msk_field_info),
-	glbl_req_err_msk_field_info
-},
 {"IND_CTXT_DATA", 0x804,
 	1, 0, 0, 0,
 	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
@@ -3207,61 +3237,61 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"C2H_STAT_S_AXIS_C2H_ACCEPTED", 0xa88,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_stat_s_axis_c2h_accepted_field_info),
 	c2h_stat_s_axis_c2h_accepted_field_info
 },
 {"C2H_STAT_S_AXIS_WRB_ACCEPTED", 0xa8c,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_stat_s_axis_wrb_accepted_field_info),
 	c2h_stat_s_axis_wrb_accepted_field_info
 },
 {"C2H_STAT_DESC_RSP_PKT_ACCEPTED", 0xa90,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_stat_desc_rsp_pkt_accepted_field_info),
 	c2h_stat_desc_rsp_pkt_accepted_field_info
 },
 {"C2H_STAT_AXIS_PKG_CMP", 0xa94,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_stat_axis_pkg_cmp_field_info),
 	c2h_stat_axis_pkg_cmp_field_info
 },
 {"C2H_STAT_DESC_RSP_ACCEPTED", 0xa98,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_desc_rsp_accepted_field_info),
 	c2h_stat_desc_rsp_accepted_field_info
 },
 {"C2H_STAT_DESC_RSP_CMP", 0xa9c,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_desc_rsp_cmp_field_info),
 	c2h_stat_desc_rsp_cmp_field_info
 },
 {"C2H_STAT_WRQ_OUT", 0xaa0,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_wrq_out_field_info),
 	c2h_stat_wrq_out_field_info
 },
 {"C2H_STAT_WPL_REN_ACCEPTED", 0xaa4,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_wpl_ren_accepted_field_info),
 	c2h_stat_wpl_ren_accepted_field_info
 },
 {"C2H_STAT_TOTAL_WRQ_LEN", 0xaa8,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_total_wrq_len_field_info),
 	c2h_stat_total_wrq_len_field_info
 },
 {"C2H_STAT_TOTAL_WPL_LEN", 0xaac,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_total_wpl_len_field_info),
 	c2h_stat_total_wpl_len_field_info
 },
@@ -3315,13 +3345,13 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"C2H_PFCH_CFG_1", 0xa80,
 	1, 0, 0, 0,
-	0, QDMA_COMPLETION_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_pfch_cfg_1_field_info),
 	c2h_pfch_cfg_1_field_info
 },
 {"C2H_PFCH_CFG_2", 0xa84,
 	1, 0, 0, 0,
-	0, QDMA_COMPLETION_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_pfch_cfg_2_field_info),
 	c2h_pfch_cfg_2_field_info
 },
@@ -3333,43 +3363,43 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"C2H_STAT_DESC_RSP_DROP_ACCEPTED", 0xb10,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_stat_desc_rsp_drop_accepted_field_info),
 	c2h_stat_desc_rsp_drop_accepted_field_info
 },
 {"C2H_STAT_DESC_RSP_ERR_ACCEPTED", 0xb14,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
 	ARRAY_SIZE(c2h_stat_desc_rsp_err_accepted_field_info),
 	c2h_stat_desc_rsp_err_accepted_field_info
 },
 {"C2H_STAT_DESC_REQ", 0xb18,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_desc_req_field_info),
 	c2h_stat_desc_req_field_info
 },
 {"C2H_STAT_DBG_DMA_ENG_0", 0xb1c,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_dbg_dma_eng_0_field_info),
 	c2h_stat_dbg_dma_eng_0_field_info
 },
 {"C2H_STAT_DBG_DMA_ENG_1", 0xb20,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_dbg_dma_eng_1_field_info),
 	c2h_stat_dbg_dma_eng_1_field_info
 },
 {"C2H_STAT_DBG_DMA_ENG_2", 0xb24,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_dbg_dma_eng_2_field_info),
 	c2h_stat_dbg_dma_eng_2_field_info
 },
 {"C2H_STAT_DBG_DMA_ENG_3", 0xb28,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_dbg_dma_eng_3_field_info),
 	c2h_stat_dbg_dma_eng_3_field_info
 },
@@ -3387,25 +3417,25 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"STAT_NUM_WRB_IN", 0xb34,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(stat_num_wrb_in_field_info),
 	stat_num_wrb_in_field_info
 },
 {"STAT_NUM_WRB_OUT", 0xb38,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(stat_num_wrb_out_field_info),
 	stat_num_wrb_out_field_info
 },
 {"STAT_NUM_WRB_DRP", 0xb3c,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(stat_num_wrb_drp_field_info),
 	stat_num_wrb_drp_field_info
 },
 {"STAT_NUM_STAT_DESC_OUT", 0xb40,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(stat_num_stat_desc_out_field_info),
 	stat_num_stat_desc_out_field_info
 },
@@ -3663,13 +3693,13 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"C2H_STAT_HAS_CMPT_ACCEPTED", 0xbec,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_has_cmpt_accepted_field_info),
 	c2h_stat_has_cmpt_accepted_field_info
 },
 {"C2H_STAT_HAS_PLD_ACCEPTED", 0xbf0,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_stat_has_pld_accepted_field_info),
 	c2h_stat_has_pld_accepted_field_info
 },
@@ -3711,31 +3741,31 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"H2C_DBG_REG0", 0xe0c,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(h2c_dbg_reg0_field_info),
 	h2c_dbg_reg0_field_info
 },
 {"H2C_DBG_REG1", 0xe10,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(h2c_dbg_reg1_field_info),
 	h2c_dbg_reg1_field_info
 },
 {"H2C_DBG_REG2", 0xe14,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(h2c_dbg_reg2_field_info),
 	h2c_dbg_reg2_field_info
 },
 {"H2C_DBG_REG3", 0xe18,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(h2c_dbg_reg3_field_info),
 	h2c_dbg_reg3_field_info
 },
 {"H2C_DBG_REG4", 0xe1c,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(h2c_dbg_reg4_field_info),
 	h2c_dbg_reg4_field_info
 },
@@ -3753,7 +3783,7 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 },
 {"H2C_ALN_DBG_REG0", 0xe28,
 	1, 0, 0, 0,
-	1, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(h2c_aln_dbg_reg0_field_info),
 	h2c_aln_dbg_reg0_field_info
 },
@@ -3936,6 +3966,48 @@ static struct xreg_info eqdma_cpm5_config_regs[] = {
 	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_water_mark_field_info),
 	c2h_water_mark_field_info
+},
+{"C2H_NOTIFY_EMPTY", 0x1800,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_notify_empty_field_info),
+	c2h_notify_empty_field_info
+},
+{"C2H_STAT_S_AXIS_C2H_ACCEPTED_1", 0x1804,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_s_axis_c2h_accepted_1_field_info),
+	c2h_stat_s_axis_c2h_accepted_1_field_info
+},
+{"C2H_STAT_S_AXIS_WRB_ACCEPTED_1", 0x1808,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_s_axis_wrb_accepted_1_field_info),
+	c2h_stat_s_axis_wrb_accepted_1_field_info
+},
+{"C2H_STAT_DESC_RSP_PKT_ACCEPTED_1", 0x180c,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_desc_rsp_pkt_accepted_1_field_info),
+	c2h_stat_desc_rsp_pkt_accepted_1_field_info
+},
+{"C2H_STAT_AXIS_PKG_CMP_1", 0x1810,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_axis_pkg_cmp_1_field_info),
+	c2h_stat_axis_pkg_cmp_1_field_info
+},
+{"C2H_STAT_S_AXIS_WRB_ACCEPTED_2", 0x1814,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_s_axis_wrb_accepted_2_field_info),
+	c2h_stat_s_axis_wrb_accepted_2_field_info
+},
+{"C2H_ST_PLD_FIFO_DEPTH", 0x1818,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_st_pld_fifo_depth_field_info),
+	c2h_st_pld_fifo_depth_field_info
 },
 
 };
