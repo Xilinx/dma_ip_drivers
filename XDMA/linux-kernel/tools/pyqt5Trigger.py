@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # vim: sta:et:sw=4:ts=4:sts=4
+"""
+Plot/Control Esther Trigger System
+"""
 #
 # https://www.pythonguis.com/tutorials/qprocess-external-programs/
 # https://stackoverflow.com/questions/35056635/how-to-update-a-realtime-plot-and-use-buttons-to-interact-in-pyqtgraph
 # https://stackoverflow.com/questions/56918912/how-to-enable-legends-and-change-style-in-pyqtgraph
 import sys
-import re
 
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtWidgets
@@ -19,6 +21,7 @@ from PyQt5.QtGui import QIcon
 import numpy as np
 import pyqtgraph as pg
 
+import re
 # A regular expression, to extract the % complete.
 #progress_re = re.compile("Total complete: (\d+)%")
 #progress_re = re.compile("Delay:\s+[+-]?([0-9]*[.])?[0-9]+ us")
@@ -83,7 +86,11 @@ class estherTrig(QWidget):
         #    title='ADC FMC data', bottom='Sample', left='LSB', right='Count')
         # self.pw.setYRange(-32768, 32768, padding=0.01)
         self.p1.setYRange(-32768, 32768, padding=0.01)
-        self.curveCnt = pg.PlotCurveItem(
+        self.crvAFPRE = pg.PlotDataItem(
+            [], [], pen=pg.mkPen(color='#8A2BE2', width=3), name="afpre") #'blueviolet':
+        self.crvAF = pg.PlotDataItem(
+            [], [], pen=pg.mkPen(color='#00FFFF', width=3), name="af") # 'aqua'
+        self.curveCnt = pg.PlotDataItem(
             [], [], pen=pg.mkPen(color='#025b94', width=3), name="count")
 
         # Add  infinite line with labels
@@ -93,6 +100,8 @@ class estherTrig(QWidget):
         inf1.setPos([65536, 2])
         self.p1.addItem(inf1)
         self.p2.addItem(self.curveCnt)
+        self.p2.addItem(self.crvAFPRE)
+        self.p2.addItem(self.crvAF)
 
         vbox2.addWidget(self.pw)
         self.clearbutton = QPushButton("Clear Plots")
@@ -126,24 +135,24 @@ class estherTrig(QWidget):
         vbox1.addWidget(self.textErr)
         vbox1.addItem(verticalSpacer)
         fbox = QtWidgets.QFormLayout()
-        self.atlevelHigh = QLineEdit("4000")
-        self.atlevelLow = QLineEdit("-9000")
+        self.atlevelHigh = QLineEdit("9000")
+        self.atlevelLow = QLineEdit("-500")
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.atlevelHigh)
         vbox.addWidget(self.atlevelLow)
         fbox.addRow(QLabel("A Level"), vbox)
         # vbox1.addLayout(fbox)
 
-        self.btlevelHigh = QLineEdit("9000")
-        self.btlevelLow = QLineEdit("-4000")
+        self.btlevelHigh = QLineEdit("500")
+        self.btlevelLow = QLineEdit("-9000")
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.btlevelHigh)
         vbox.addWidget(self.btlevelLow)
         fbox.addRow(QLabel("B Level"), vbox)
         # vbox1.addLayout(fbox)
 
-        self.ctlevelHigh = QLineEdit("4000")
-        self.ctlevelLow = QLineEdit("-9000")
+        self.ctlevelHigh = QLineEdit("9000")
+        self.ctlevelLow = QLineEdit("-500")
         # fbox = QtWidgets.QFormLayout()
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.ctlevelHigh)
@@ -153,12 +162,13 @@ class estherTrig(QWidget):
         fbox.addRow(QLabel("Mult Param"), self.multParamFloat)
         self.offParam = QLineEdit("0x0000")
         fbox.addRow(QLabel("Off Param"), self.offParam)
-        self.acqSize = QLineEdit("0x3F0000")
+        self.acqSize = QLineEdit("0x400000")
         fbox.addRow(QLabel("Acq Size"), self.acqSize)
         self.line_editDec = QLineEdit("10", self)
         fbox.addRow(QLabel("Decimation"), self.line_editDec)
-        self.line_Delay = QLineEdit("10.0", self)
-        self.line_Delay.setReadOnly(True)
+        # self.line_Delay = QLineEdit("10.0", self)
+        self.line_Delay = QLabel("0.0", self)
+        #self.line_Delay.setReadOnly(True)
         fbox.addRow(QLabel("Delay:"), self.line_Delay)
         vbox1.addLayout(fbox)
         self.chB = QCheckBox("Soft trigger")
@@ -240,7 +250,7 @@ class estherTrig(QWidget):
 
             argm = self.toHex(int(float(self.multParamFloat.text()) * 2**16), 32)
 
-            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize+ ' -m ' + argm
+            command ='./estherdaq  ' '-a ' + arga + ' -b '+ argb + ' -c '+  argc + ' -s ' + acqsize + ' -m ' + argm
             # 0x{:04X}{:04X}'.format(High, Low)
             print(command)
             if self.chB.isChecked() == True:
@@ -272,7 +282,7 @@ class estherTrig(QWidget):
             tu = m.groups()
             # print( 'found ' + pc_complete)
             valf = float(m.group(1))
-            print("Fval: {:.3f}, Vel: {:.3f}:".format(valf,0.10/(valf *8e-9)))
+            print("Fval: {:.3f}, Vel: {:.3f}:".format(valf,0.30/(valf *8e-9)))
             self.line_Delay.setText(str(8e-3*valf))
             # print( valf )
         else:
@@ -298,7 +308,8 @@ class estherTrig(QWidget):
         self.updateplot()
 
     def updateplot(self):
-        print("Update")
+        pass
+#        print("Update")
         # data1 = self.amplitude*np.sin(np.linspace(0,30,121)+self.t)
         # self.plotcurve.setData(data1)
 
@@ -330,7 +341,7 @@ class estherTrig(QWidget):
 # ‘F’ means to readthe elements using Fortran-like index order,
 # with the first index changing fastest, 
         data_mat = np.reshape(data, (8, - 1), order='F')
-        data_cnt = np.reshape(dataC, (4, -1), order='F')
+        data_cnt64 = np.reshape(dataC, (4, -1), order='F')
         x = np.arange(data_mat.shape[1])
         self.p1.setYRange(-9000, 9000, padding=0.01)
         # self.pw.setYRange(-9000, 9000, padding=0.01)
@@ -342,14 +353,21 @@ class estherTrig(QWidget):
             self.plotCurves[i].setData(x*2, data_mat[i*2])
             self.plotCurves[i].setDownsampling(
                 ds=DECIMATION, auto=None, method='subsample')
+        self.p2.setYRange(-32768, 32768, padding=0.01)
         self.curveCnt.clear()
         #self.p2.setYRange(-161310185, 161509684, padding=0.01)
-        x = np.arange(data_cnt.shape[1])
-        self.curveCnt.setData(x*2, data_cnt[3])
+#        x = np.arange(data_cnt64.shape[1])
+        #self.curveCnt.setData(x*2, data_cnt64[3])
+        self.curveCnt.setData(x*2, data_mat[7])
+        AFPRE = (data_mat[7] & 0x0001) * 5000 # .astype('int16')
+        AF = (data_mat[7] & 0x0002) * 5000 # .astype('int16')
+
+        self.crvAFPRE.setData(x*2, AFPRE )
+        self.crvAF.setData(x*2, AF)
         # print("Shape = {0}".format(data_mat.shape[1]))
         # print(data_cnt.shape[1])
-        # self.curveCnt.setDownsampling(
-            # ds=DECIMATION, auto=None, method='subsample')
+        self.curveCnt.setDownsampling(
+                ds=DECIMATION, auto=None, method='subsample')
         self.updateViews()
 
 # Handle view resizing
@@ -370,7 +388,8 @@ def main():
     app.setApplicationName('Esther Data 16 bit')
     myapp = estherTrig()
     # myapp.show()
-    sys.exit(app.exec_())
+    app.exec_()
+#    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':

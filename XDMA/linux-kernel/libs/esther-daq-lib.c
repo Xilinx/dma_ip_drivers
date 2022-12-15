@@ -49,7 +49,7 @@
 
 #define MAP_SIZE (32*1024UL) 
 #define MAP_MASK (MAP_SIZE - 1)
-
+/*
 void save_to_disk2(int nrOfReads, short *acqData){
     FILE *stream_out;
     char file_name[40];
@@ -94,7 +94,7 @@ void save_to_disk2(int nrOfReads, short *acqData){
     printf("Saving data to disk finished\n");
 
 }
-
+*/
 int init_device_c2h_1(unsigned int dev_num){
     char devname[80];
     uint32_t control_reg = 0;
@@ -153,60 +153,10 @@ void * init_device(unsigned int dev_num, int chopped, unsigned int chopper_perio
         return MAP_FAILED; //(*void) -1;
     }
     write_control_reg(map_base, control_reg);
-    for (i=0; i < ADC_CHANNELS ; i++)
-        write_fpga_reg(map_base, EO_REGS_OFF + i*sizeof(uint32_t), 0);
-    for (i=0; i < INT_CHANNELS; i++)
-        write_fpga_reg(map_base, WO_REGS_OFF + i*sizeof(uint32_t), 0);
-    for (i=0; i < N_ILOCK_PARAMS ; i++)
-        write_fpga_reg(map_base, ILCK_REGS_OFF + i*sizeof(uint32_t), 0);
-
-    if (chopped > 0)   {      //Set the Chop off as default
-        write_chopp_period(map_base, chopper_period);
-        control_reg |= (1<<CHOP_EN_BIT);
-    }
-    control_reg |= (1<<ACQE_BIT);
-    write_control_reg(map_base, control_reg);
 
     return map_base;
 }
 
-int write_use_data32(void *map_base, int use32bit){
-    uint32_t control_reg = read_control_reg(map_base);
-    if(use32bit)
-        control_reg |= (1<<DMA_DATA32_BIT);
-    else
-        control_reg &= ~(1<<DMA_DATA32_BIT);
-    return write_control_reg(map_base, control_reg);
-}
-
-int write_eo_offsets(void *map_base, struct atca_eo_config * pConfig){
-    int i, rc;
-    for (i=0; i < ADC_CHANNELS; i++)
-        rc = write_fpga_reg(map_base,
-                EO_REGS_OFF + i*sizeof(uint32_t), pConfig->offset[i]);
-    return rc;
-}
-int write_wo_offsets(void *map_base, struct atca_wo_config * pConfig){
-    int i, rc;
-    for (i=0; i < INT_CHANNELS; i++)
-        rc = write_fpga_reg(map_base,
-                WO_REGS_OFF + i*sizeof(uint32_t), pConfig->offset[i]);
-    return rc;
-}
-int write_ilck_params(void *map_base, union atca_ilck_params * pConfig){
-    int i, rc;
-    for (i=0; i < N_ILOCK_PARAMS ; i++)
-        rc = write_fpga_reg(map_base,
-                ILCK_REGS_OFF + i*sizeof(uint32_t), pConfig->val_uint[i]);
-    return rc;
-}
-int write_chopp_period(void *map_base, uint16_t period){
-    uint32_t val;
-    val = period/2; // Duty cycle 50%
-    val |= ( (int) period)<<16;
-    write_fpga_reg(map_base, CHOPP_PERIOD_REG_OFF, val);
-    return 0;
-}
 int write_control_reg(void *map_base, uint32_t val){
          write_fpga_reg(map_base, CONTROL_REG_OFF, val);
         return 0;

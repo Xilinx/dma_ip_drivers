@@ -50,9 +50,10 @@
 #include "esther-daq.h"
 #include "esther-daq-lib.h"
 
-   // int dmasize= 1048576*3; // 0x100000   maxx ~ 132k Samples
-#define SIZE_DEFAULT (1048576*3) // 3Mbytes ~25 ms
-#define TRIG_DEFAULT 0x7D0F830 // 9000,  -9000
+#define SIZE_DEFAULT 0x800000 // 8Mbytes ~ 8ms
+#define TRIGA_DEFAULT 0x2328FE0C // 9000,  -500
+#define TRIGB_DEFAULT 0x01F4DCD8  // 500,  -9000
+#define TRIGC_DEFAULT 0x2328FE0C // 9000,  -500
 #define MULT_DEFAULT 0x00030000
 #define OFF_DEFAULT 0x00
 
@@ -177,7 +178,7 @@ int main(int argc, char *argv[])
     int digit_optind = 0, swtrigger=0;
     int dopt=0;
     uint32_t sizeopt = SIZE_DEFAULT;
-    uint32_t aopt = TRIG_DEFAULT, bopt = TRIG_DEFAULT, copt = TRIG_DEFAULT;
+    uint32_t aopt = TRIGA_DEFAULT, bopt = TRIGB_DEFAULT, copt = TRIGC_DEFAULT;
     uint32_t mopt = MULT_DEFAULT, offopt = OFF_DEFAULT;
 
     /*char *dopt = 0;*/
@@ -342,6 +343,7 @@ FPGA Status: 0x01630011
     rc = read(fd_bar_1, acqData, sizeopt); // loop until there is something to read.
     usleep(10);
     dly = read_fpga_reg(map_base, PULSE_DLY_REG_OFF);
+    printf("Read end - FPGA Status: 0x%.8X\n", read_status_reg(map_base));
     write_control_reg(map_base, 0);  // stop board
     if (close(fd_bar_1)) {
 

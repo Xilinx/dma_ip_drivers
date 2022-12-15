@@ -7,6 +7,6 @@ xirq=$(echo $xirqline | cut -d ":" -f1)
 
 echo $xirq
 
-tuna --irqs=* --cpus=0-6 --move
-tuna --irqs=$xirq --cpus=7 --move
+tuna --irqs=* --cpus=0-2 --move
+tuna --irqs=$xirq --cpus=3 --move
 tuna --show_irqs

@@ -33,36 +33,12 @@
 /*---------------------------------------------------------------------------*/
 #include "esther-daq.h"
 
-#define DMA_SIZE 2097152 // 2MB 4194304 // 4Mb 
+//#define DMA_SIZE 2097152 // 2MB 4194304 // 4Mb 
 //#define DMA_SIZE  4194304 // 4Mb 
 //#define DMA_SIZE  0x003FF000 // 4190208 B
-#define NUM_CHAN 32      // nr of 16bit data fields per sample. Can be 32 channels or 2 counters and 30 channels, etc.
-#define TIMERVALUE 1000000
-#define N_AQS DMA_SIZE/(NUM_CHAN*2)  // nr samples per buffer (IRQ mode)
-
-/**
- * @brief Writes the WO Offset parameters
- * @param[in] map_base virtual address return from mmap function
- * @param[in] pointer to a sctruc
- * @retur o if OK
- */
-int write_wo_offsets(void *map_base, struct atca_wo_config * pConfig);
-
-/**
- * @brief Writes the EO Offset parameters
- * @param[in] map_base virtual address return from mmap function
- * @param[in] pointer to a sctruc
- * @retur o if OK
- */
-int write_eo_offsets(void *map_base, struct atca_eo_config *  pConfig);
-
-/**
- * @brief Writes the Interlock parameters
- * @param[in] map_base virtual address return from mmap function
- * @param[in] pointer to a sctruc with parameter values
- * @retur o if OK
- */
-int write_ilck_params(void *map_base, union atca_ilck_params *  pConfig);
+//#define NUM_CHAN 32      // nr of 16bit data fields per sample. Can be 32 channels or 2 counters and 30 channels, etc.
+//#define TIMERVALUE 1000000
+//#define N_AQS DMA_SIZE/(NUM_CHAN*2)  // nr samples per buffer (IRQ mode)
 
 /**
  * @brief Writes the 
@@ -70,9 +46,9 @@ int write_ilck_params(void *map_base, union atca_ilck_params *  pConfig);
  * @param[in] 
  * @retur o if OK
  */
-void save_to_disk2(int nrOfReads, short *acqData);
+//void save_to_disk2(int nrOfReads, short *acqData);
 
-int init_device_c2h_1(unsigned int dev_num);
+//int init_device_c2h_1(unsigned int dev_num);
 
 /**
  * @brief reset ATCA board and prepare acquisition
@@ -100,13 +76,6 @@ int write_use_data32(void *map_base, int use32bit);
  */
 void  fpga_soft_trigger(void *map_base );
 
-/**
- * @brief Writes the chop Period
- * @param[in] map_base virtual address return from mmap function
- * @param[in] val 16-bit value of the period in (0.5 us) 
- * @return
- */
-int write_chopp_period(void *map_base, uint16_t freq);
 
 /**
  * @brief Reads a 32 bit value on the control_reg register in BAR0 space

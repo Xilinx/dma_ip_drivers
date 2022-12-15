@@ -44,5 +44,5 @@ clean:
 
 install: all
 	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) modules_install
-
+# you may need to run depmod manualy
 endif

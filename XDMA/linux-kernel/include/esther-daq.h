@@ -111,6 +111,7 @@ typedef struct shapi_module_info shapi_module_info;
 #define TRIG2_REG_OFF   0x90
 #define PARAM_M_REG_OFF  0x94
 #define PARAM_OFF_REG_OFF  0x98
+#define IDELAY_OFF_REG_OFF  0x9C
 
 #define PULSE_DLY_REG_OFF  0xC0
 
@@ -122,14 +123,8 @@ typedef struct shapi_module_info shapi_module_info;
 /*
 
  //#### CONTROL  REG BITS definitions ######//
-//#define OFFSET_CALC = 13; //
-//#define INT_CALC            = 14; // Output Integral Values
-//#define DAC_SHFT_BITS       = 15; // DAC MUX command (4 bits)
 
 #define DMA_DATA_32_BIT       15  // 0 : 16 bit , 1:32 Bit data
-//parameter ACQS = 5'd20; // Aquisitio Source: 0- shared ATCA clocks, 1-internal clocks
-//parameter ACQT = 5'd21;
-//parameter ACQK = 5'd22;
 
 //`define FWUSTAR_BIT 19
 
@@ -145,10 +140,10 @@ typedef struct shapi_module_info shapi_module_info;
 #define STREAME_BIT     20 // Streaming enable
 #define ACQE_BIT 		23
 #define STRG_BIT 		24 // Soft Trigger
-#define DMAE_BIT 		27
-#define DMA_RST_BIT		28
-#define DMAiE_BIT 		30 // DMA end Interrup Enable
-
+//#define DMAE_BIT 		27
+//#define DMA_RST_BIT		28
+//#define DMAiE_BIT 		30 // DMA end Interrup Enable
+/*
 struct atca_eo_config {
   int32_t offset[ADC_CHANNELS];
 };
@@ -161,8 +156,7 @@ union atca_ilck_params {
   uint32_t val_uint[N_ILOCK_PARAMS];
   float val_f[N_ILOCK_PARAMS];
 };
-
-//#define DMA_MAX_BYTES 2048 // Difeine in FPGA
+*/
 
 // TODO : to be used.
 #ifdef __BIG_ENDIAN_BTFLD
