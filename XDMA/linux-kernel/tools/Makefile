@@ -18,8 +18,8 @@ CFLAGS =  -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -D_LARGE_FILE_SOURCE
 CFLAGS += -I../include
 
 estherdaq: estherdaq.o $(COMMON_OBJS)
-	echo $(COMMON_OBJS)
-	$(CC) $(CFLAGS) -lrt -o $@ $^
+#	echo $(COMMON_OBJS)
+	$(CC) $(CFLAGS) -lrt -pthread -o $@ $^
 
 
 #$(CC) $(CFLAGS) -lrt -o $@ $< -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -D_LARGE_FILE_SOURCE

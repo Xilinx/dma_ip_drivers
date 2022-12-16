@@ -49,6 +49,7 @@
 #include "dma_utils.c"
 #include "esther-daq.h"
 #include "esther-daq-lib.h"
+#include <pthread.h>
 
 #define SIZE_DEFAULT 0x800000 // 8Mbytes ~ 8ms
 #define TRIGA_DEFAULT 0x2328FE0C // 9000,  -500
@@ -62,29 +63,64 @@
 //int run=1;
 // https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html
 /* Flag set by ‘--verbose’. */
+
+int ret1, ret2;
+void * th_soft_trig (void * ptr) {
+    void* m_base = ptr;
+    printf("FPGA Status: 0x%.8X\n", read_status_reg(m_base));
+    printf("Software trigger mode active\n");
+    sleep(1);
+    fpga_soft_trigger(m_base);
+    printf("CR: 0x%08X\t", read_control_reg(m_base));
+    printf("FPGA Status: 0x%.8X\n", read_status_reg(m_base));
+    ret1 = 0;
+    pthread_exit(&ret1);
+    //return __VOID(0); /* Not needed, but this makes the compiler smile */
+}
+
 static int verbose_flag;
 static struct option long_options[] = {
     /*   NAME       ARGUMENT           FLAG  SHORTNAME */
-        {"atrigger",    required_argument, NULL, 'a'},
-        {"btrigger",    required_argument, NULL, 'b'},
-        {"ctrigger",    required_argument, NULL, 'c'},
-        {"device",      required_argument, NULL, 'd'},
-        {"size",        required_argument, NULL, 's'},
-        {"mult",        required_argument, NULL, 'm'},
-        {"offset",      required_argument, NULL, 'o'},
-        {"soft_trigger", no_argument,       NULL, 't'},
-        {"user_trigger", no_argument,       NULL, 'u'},
-        //{"delete",  required_argument, NULL, 0},
-        {"verbose", no_argument        ,&verbose_flag, 1},
-        //{"create",  required_argument, NULL, 'c'},
-        {"file",    required_argument, NULL, 0},
-        {NULL,      0,                 NULL, 0}
-    };
+    {"atrigger",    required_argument, NULL, 'a'},
+    {"btrigger",    required_argument, NULL, 'b'},
+    {"ctrigger",    required_argument, NULL, 'c'},
+    {"device",      required_argument, NULL, 'd'},
+    {"size",        required_argument, NULL, 's'},
+    {"mult",        required_argument, NULL, 'm'},
+    {"offset",      required_argument, NULL, 'o'},
+    {"soft_trigger", no_argument,       NULL, 't'},
+    {"user_trigger", no_argument,       NULL, 'u'},
+    //{"delete",  required_argument, NULL, 0},
+    {"verbose", no_argument        ,&verbose_flag, 1},
+    //{"create",  required_argument, NULL, 'c'},
+    {"file",    required_argument, NULL, 0},
+    {NULL,      0,                 NULL, 0}
+};
 
 void getkey()
 {
     printf("Press Return to continue ...\n");
     getchar();
+}
+void check_count16(short *acqData, int dmaSize){
+    uint16_t * pCount = (uint16_t *) acqData;
+    uint16_t lastCount, cnt;
+    uint32_t firstMiss =0, misses =0;
+    lastCount = pCount[7] +1;
+    for (int i=1; i< dmaSize/16; i++){
+        cnt = pCount[i*8 + 7];
+        if(cnt != lastCount){
+            if(i > 1 && firstMiss == 0)
+                firstMiss = i;
+            //misses++;
+            if(misses++ < 10)
+                fprintf(stderr, "ce : %d %u %u\n", i, lastCount, cnt);
+        }
+        lastCount = cnt + 1;
+    }
+    if(misses != 0)
+        fprintf(stderr, "First Miss %d, Misses:%d\n", firstMiss, misses);
+
 }
 void check_count(short *acqData, int dmaSize){
     uint32_t * pCount = (uint32_t *) acqData;
@@ -94,10 +130,11 @@ void check_count(short *acqData, int dmaSize){
     for (i=1; i< dmaSize/16; i++){
         cnt = pCount[i*4 + 3];
         if(cnt != lastCount){
-            if(firstMiss==0)
+            if(i > 1)
                 firstMiss = i;
-            misses++;
-            /*fprintf(stderr, "ce : %d %d %d\n", i, lastCount, cnt);*/
+            //misses++;
+            if(misses++ < 10)
+                fprintf(stderr, "ce : %d %u %u\n", i, lastCount, cnt);
         }
         lastCount = cnt + 1;
     }
@@ -112,7 +149,7 @@ void save_to_bin(short *acqData, int dmasize){
     sprintf(path_name,"data/out_fmc.bin");
     stream_out = fopen(path_name,"wb");
     fwrite(acqData, 1, dmasize, stream_out);
-//    fflush(stream_out);
+    //    fflush(stream_out);
     fclose(stream_out);
 }
 void save_to_disk(int dmasize, short *acqData){
@@ -150,24 +187,20 @@ void save_to_disk(int dmasize, short *acqData){
             fprintf(stream_out, "%.4hd ",acqData[(nsample*4 )+ numchan]);
             fprintf(stream_out, "\n");
         }
-		fflush(stream_out);
-		fclose(stream_out);
-//        printf("%d values for channel %d saved\n", nrOfReads*N_AQS, numchan+1);
+        fflush(stream_out);
+        fclose(stream_out);
+        //        printf("%d values for channel %d saved\n", nrOfReads*N_AQS, numchan+1);
     }
-
 
     printf("Saving data to disk finished\n");
 
 }
 
-
 int main(int argc, char *argv[])
 {
-    //int dev_num = 0;
-    int i,  k , c;  					// loop iterators i
+    int i,  k , c; 	// loop iterators 
     int rc;
-    void *map_base;//, *virt_addr;
-    int fd_bar_0, fd_bar_1;   // file descriptor of device2
+    int fd_bar_0, fd_bar_1;   // file descriptor of device
     short * acqData; 
     uint32_t control_reg;
     shapi_device_info * pDevice;
@@ -180,68 +213,70 @@ int main(int argc, char *argv[])
     uint32_t sizeopt = SIZE_DEFAULT;
     uint32_t aopt = TRIGA_DEFAULT, bopt = TRIGB_DEFAULT, copt = TRIGC_DEFAULT;
     uint32_t mopt = MULT_DEFAULT, offopt = OFF_DEFAULT;
+    pthread_t thrd_strg;
+    void* map_base;
 
     /*char *dopt = 0;*/
     int option_index = 0;
     while ((c = getopt_long(argc, argv, "a:b:c:d:s:m:o:tu012",
-                 long_options, &option_index)) != -1) {
+                    long_options, &option_index)) != -1) {
         int this_option_optind = optind ? optind : 1;
         switch (c) {
-        case 0:
-            printf ("Goption %s", long_options[option_index].name);
-            if (optarg)
-                printf (" with arg %s", optarg);
-            printf ("\n");
-            break;
-        case '1':
-        case '2':
-            if (digit_optind != 0 && digit_optind != this_option_optind)
-              printf ("digits occur in two different argv-elements.\n");
-            digit_optind = this_option_optind;
-            /*printf ("option %c\n", c);*/
-            break;
-        case 'a':
-            aopt = getopt_integer(optarg);
-            /*printf ("option a 0x%08X\n", aopt);*/
-            break;
-        case 'b':
-            bopt = getopt_integer(optarg);
-            /*fprintf(stderr, "option b 0x%08X\n", bopt);*/
-            break;
-        case 'c':
-            copt = getopt_integer(optarg);
-            /*printf ("option c 0x%08X\n", copt);*/
-            break;
-        case 'd':
-            dopt = atoi(optarg);
-            /*printf ("option d %d\n", dopt);*/
-            break;
-        case 's':
-            sizeopt = getopt_integer(optarg);
-            /*printf ("option size '%d'\n", sizeopt);*/
-            break;
-        case 'm':
-            mopt = getopt_integer(optarg);
-            break;
-        case 'o':
-            offopt = getopt_integer(optarg);
-            break;
-        case 't':
-            swtrigger = 1;
-            break;
-        case 'u':
-            swtrigger = 2;
-            break;
-/*        case 'd':
-            //printfLY ("option d with value '%s'\n", optarg);
-            dopt = strdup(optarg);
-            printf ("option d with value '%s'\n", dopt);
-            break;
-*/
-        case '?':
-            break;
-        default:
-            printf ("?? getopt returned character code 0%o ??\n", c);
+            case 0:
+                printf ("Goption %s", long_options[option_index].name);
+                if (optarg)
+                    printf (" with arg %s", optarg);
+                printf ("\n");
+                break;
+            case '1':
+            case '2':
+                if (digit_optind != 0 && digit_optind != this_option_optind)
+                    printf ("digits occur in two different argv-elements.\n");
+                digit_optind = this_option_optind;
+                /*printf ("option %c\n", c);*/
+                break;
+            case 'a':
+                aopt = getopt_integer(optarg);
+                /*printf ("option a 0x%08X\n", aopt);*/
+                break;
+            case 'b':
+                bopt = getopt_integer(optarg);
+                /*fprintf(stderr, "option b 0x%08X\n", bopt);*/
+                break;
+            case 'c':
+                copt = getopt_integer(optarg);
+                /*printf ("option c 0x%08X\n", copt);*/
+                break;
+            case 'd':
+                dopt = atoi(optarg);
+                /*printf ("option d %d\n", dopt);*/
+                break;
+            case 's':
+                sizeopt = getopt_integer(optarg);
+                /*printf ("option size '%d'\n", sizeopt);*/
+                break;
+            case 'm':
+                mopt = getopt_integer(optarg);
+                break;
+            case 'o':
+                offopt = getopt_integer(optarg);
+                break;
+            case 't':
+                swtrigger = 1;
+                break;
+            case 'u':
+                swtrigger = 2;
+                break;
+                /*        case 'd':
+                //printfLY ("option d with value '%s'\n", optarg);
+                dopt = strdup(optarg);
+                printf ("option d with value '%s'\n", dopt);
+                break;
+                */
+            case '?':
+                break;
+            default:
+                printf ("?? getopt returned character code 0%o ??\n", c);
         }
     }
     if (optind < argc) {
@@ -251,18 +286,18 @@ int main(int argc, char *argv[])
         printf ("\n");
     }
 
-	posix_memalign((void **)&acqData, 4096 /*alignment */ , sizeopt + 4096);
-	if (!acqData) {
-		fprintf(stderr, "OOM %lu.\n", sizeopt + 4096);
-		rc = -ENOMEM;
+    posix_memalign((void **)&acqData, 4096 /*alignment */ , sizeopt + 4096);
+    if (!acqData) {
+        fprintf(stderr, "OOM %lu.\n", sizeopt + 4096);
+        rc = -ENOMEM;
         exit(-1);
-		/*goto out;*/
-	}
+        /*goto out;*/
+    }
 
 
-    map_base=init_device(dopt, 0, 0, &fd_bar_0, &fd_bar_1);
+    map_base = init_device(dopt, 0, 0, &fd_bar_0, &fd_bar_1);
     if (fd_bar_1   < 0)  {
-        //if (map_base == MAP_FAILED){ //  (void *) -1
+        //if (map_base == MAP_FAILED) //  (void *) -1
         fprintf (stderr,"Error: cannot open device %d \t", dopt);
         fprintf (stderr," errno = %i\n",errno);
         printf ("open error : %s\n", strerror(errno));
@@ -277,8 +312,7 @@ int main(int argc, char *argv[])
     /*printf("SHAPI MOD VER: 0x%X\n", pModule->SHAPI_VERSION);*/
     printf("TS %d\n", read_fpga_reg(map_base,TIME_STAMP_REG_OFF));
     printf("FW 0x%08X\n", read_fpga_reg(map_base, FW_VERSION_REG_OFF));
-//    int read_fw_version(void *map_base){
-//    uint32_t val;
+    //    uint32_t val;
 
     write_control_reg(map_base, 0);
     /*printf("TRIG0: 0x%0X\n",trigOff32 );*/
@@ -294,7 +328,7 @@ int main(int argc, char *argv[])
     write_fpga_reg(map_base, PARAM_OFF_REG_OFF, offopt);
     /*write_fpga_reg(map_base, PARAM_OFF_REG_OFF, 0x0A290001);*/
     /**
-option size with value '3145728'
+      option size with value '3145728'
 CR: 0x800000
 SHAPI VER: 0x53480100
 SHAPI MOD VER: 0x534D0100
@@ -308,34 +342,22 @@ CR: 0x1800000, mb:0x7f2a66add000
 FPGA Status: 0x01630011
 */
     //acqData = (short *) malloc(sizeopt);
-//    i = 0;
+    //    i = 0;
     control_reg = read_control_reg(map_base);
     control_reg |= (1<<ACQE_BIT);
 
     write_control_reg(map_base, control_reg);
     //loss_hits = 0;
 
-        /*printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);*/
+    /*printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);*/
     // ADC board is armed and waiting for trigger (hardware or software)
     if (swtrigger == 2) {  // option '-u'
-        printf("FPGA Status: 0x%.8X\t", read_status_reg(map_base));
-        fprintf(stderr, "User software trigger mode active\n");
         getkey(); // Press any key to start the acquisition
-        // Start the dacq with a software trigger
-        fpga_soft_trigger(map_base);
-        //	    rc = ioctl(fd, PCIE_ADC_IOCG_STATUS, &tmp);
-        printf("CR: 0x%0X, mb:%p\t", read_control_reg(map_base), map_base);
-        printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
-        // Check status to see if everything is okay (optional)
+        pthread_create( &thrd_strg, NULL, th_soft_trig, (void*) map_base);
     }
-    else if (swtrigger == 1) {  // option '-u'
-        printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
-        printf("Software trigger mode active\n");
+    else if (swtrigger == 1) {  // option '-t'
         // Start the dacq with a software trigger
-        fpga_soft_trigger(map_base);
-        //	    rc = ioctl(fd, PCIE_ADC_IOCG_STATUS, &tmp);
-        printf("CR: 0x%0X, mb:%p\n", read_control_reg(map_base), map_base);
-        printf("FPGA Status: 0x%.8X\n", read_status_reg(map_base));
+        pthread_create( &thrd_strg, NULL, th_soft_trig, (void*) map_base);
     }
     else
         printf("hardware trigger mode active\n");
@@ -345,22 +367,20 @@ FPGA Status: 0x01630011
     rc = 0;
 
     rc = read(fd_bar_1, acqData, sizeopt); // loop until there is something to read.
-    usleep(10);
+    //usleep(10);
+    if (swtrigger > 0)
+        pthread_join(thrd_strg, NULL);
     dly = read_fpga_reg(map_base, PULSE_DLY_REG_OFF);
     printf("Read end - FPGA Status: 0x%.8X\n", read_status_reg(map_base));
     write_control_reg(map_base, 0);  // stop board
-    if (close(fd_bar_1)) {
-
+    if (close(fd_bar_1))
         printf("Error closing : %s\n", strerror(errno));
-    }
     // Check status to see if everything is okay (optional)
-    /*rc = ioctl(fd, PCIE_ADC_IOCG_STATUS, &tmp);*/
     rc = read_status_reg(map_base);
 
-//    save_to_disk(dmasize, acqData);
+    //    save_to_disk(dmasize, acqData);
     save_to_bin(acqData, sizeopt);
-    check_count(acqData, sizeopt);
-    /*save_to_bin(sizeopt, acqData);*/
+    check_count16(acqData, sizeopt);
 
     printf("Streaming off - FPGA Status: 0x%.8X\n", rc );
     /*
@@ -373,4 +393,4 @@ FPGA Status: 0x01630011
     close(fd_bar_1);
     free(acqData);
     return 0;
-    }
+}

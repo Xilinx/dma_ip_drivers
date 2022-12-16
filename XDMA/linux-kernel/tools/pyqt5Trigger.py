@@ -34,8 +34,15 @@ progress_re = re.compile("Delay:\s+(\d+)")
 FILENAME = 'data/out_fmc.bin'
 NUMCHANNELS = 3
 
-SCALE_32 = 1
-DECIMATION = 20
+ACQ_SIZE    = "0x200000"
+DECIMATION = 100
+
+A_LVL_HIGH = "9000"
+A_LVL_LOW = "-300"
+B_LVL_HIGH = "9000"
+B_LVL_LOW = "-500"
+C_LVL_HIGH = "9000"
+C_LVL_LOW = "-500"
 
 class estherTrig(QWidget):
     def __init__(self):
@@ -46,7 +53,6 @@ class estherTrig(QWidget):
         self.proc = None
         self.qt_connections()
 
-        # self.amplitude = 10
         self.t = 0
         self.updateplot()
 
@@ -135,8 +141,8 @@ class estherTrig(QWidget):
         vbox1.addWidget(self.textErr)
         vbox1.addItem(verticalSpacer)
         fbox = QtWidgets.QFormLayout()
-        self.atlevelHigh = QLineEdit("9000")
-        self.atlevelLow = QLineEdit("-500")
+        self.atlevelHigh = QLineEdit(A_LVL_HIGH)
+        self.atlevelLow = QLineEdit(A_LVL_LOW)
         vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.atlevelHigh)
         vbox.addWidget(self.atlevelLow)
@@ -162,9 +168,9 @@ class estherTrig(QWidget):
         fbox.addRow(QLabel("Mult Param"), self.multParamFloat)
         self.offParam = QLineEdit("0x0000")
         fbox.addRow(QLabel("Off Param"), self.offParam)
-        self.acqSize = QLineEdit("0x400000")
+        self.acqSize = QLineEdit(ACQ_SIZE)
         fbox.addRow(QLabel("Acq Size"), self.acqSize)
-        self.line_editDec = QLineEdit("10", self)
+        self.line_editDec = QLineEdit(str(DECIMATION), self)
         fbox.addRow(QLabel("Decimation"), self.line_editDec)
         # self.line_Delay = QLineEdit("10.0", self)
         self.line_Delay = QLabel("0.0", self)
@@ -359,15 +365,19 @@ class estherTrig(QWidget):
 #        x = np.arange(data_cnt64.shape[1])
         #self.curveCnt.setData(x*2, data_cnt64[3])
         self.curveCnt.setData(x*2, data_mat[7])
-        AFPRE = (data_mat[7] & 0x0001) * 5000 # .astype('int16')
-        AF = (data_mat[7] & 0x0002) * 5000 # .astype('int16')
-
-        self.crvAFPRE.setData(x*2, AFPRE )
-        self.crvAF.setData(x*2, AF)
-        # print("Shape = {0}".format(data_mat.shape[1]))
-        # print(data_cnt.shape[1])
         self.curveCnt.setDownsampling(
                 ds=DECIMATION, auto=None, method='subsample')
+        AFPRE = (data_mat[6] & 0x0001) * 5000 # .astype('int16')
+        AF = (data_mat[6] & 0x0002) * 5000 # .astype('int16')
+
+        self.crvAFPRE.setData(x*2, AFPRE )
+        self.crvAFPRE.setDownsampling(
+                ds=DECIMATION, auto=None, method='subsample')
+        self.crvAF.setData(x*2, AF)
+        self.crvAF.setDownsampling(
+                ds=DECIMATION, auto=None, method='subsample')
+        # print("Shape = {0}".format(data_mat.shape[1]))
+        # print(data_cnt.shape[1])
         self.updateViews()
 
 # Handle view resizing
