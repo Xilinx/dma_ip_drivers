@@ -2304,7 +2304,7 @@ void sgl_unmap(struct pci_dev *pdev, struct qdma_sw_sg *sg, unsigned int sgcnt,
 		if (!sg->pg)
 			break;
 		if (sg->dma_addr) {
-			pci_unmap_page(pdev, sg->dma_addr - sg->offset,
+			dma_unmap_page(&pdev->dev, sg->dma_addr - sg->offset,
 							PAGE_SIZE, dir);
 			sg->dma_addr = 0UL;
 		}
@@ -2336,8 +2336,8 @@ int sgl_map(struct pci_dev *pdev, struct qdma_sw_sg *sgl, unsigned int sgcnt,
 	 */
 	for (i = 0; i < sgcnt; i++, sg++) {
 		/* !! TODO  page size !! */
-		sg->dma_addr = pci_map_page(pdev, sg->pg, 0, PAGE_SIZE, dir);
-		if (unlikely(pci_dma_mapping_error(pdev, sg->dma_addr))) {
+		sg->dma_addr = dma_map_page(&pdev->dev, sg->pg, 0, PAGE_SIZE, dir);
+		if (unlikely(dma_mapping_error(&pdev->dev, sg->dma_addr))) {
 			pr_err("map sgl failed, sg %d, %u.\n", i, sg->len);
 			if (i)
 				sgl_unmap(pdev, sgl, i, dir);
