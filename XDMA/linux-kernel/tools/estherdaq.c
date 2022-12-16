@@ -276,6 +276,10 @@ int main(int argc, char *argv[])
             pDevice->SHAPI_FIRST_MODULE_ADDRESS);
     /*printf("SHAPI MOD VER: 0x%X\n", pModule->SHAPI_VERSION);*/
     printf("TS %d\n", read_fpga_reg(map_base,TIME_STAMP_REG_OFF));
+    printf("FW 0x%08X\n", read_fpga_reg(map_base, FW_VERSION_REG_OFF));
+//    int read_fw_version(void *map_base){
+//    uint32_t val;
+
     write_control_reg(map_base, 0);
     /*printf("TRIG0: 0x%0X\n",trigOff32 );*/
     write_fpga_reg(map_base, TRIG0_REG_OFF, aopt);

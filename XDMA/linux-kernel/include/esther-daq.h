@@ -103,15 +103,16 @@ typedef struct shapi_module_info shapi_module_info;
 
 
 /*      Regiters addres offset in BAR0 space */
-#define TIME_STAMP_REG_OFF   0x14
-#define STATUS_REG_OFF   0x80
-#define CONTROL_REG_OFF  0x84
-#define TRIG0_REG_OFF   0x88
-#define TRIG1_REG_OFF   0x8C
-#define TRIG2_REG_OFF   0x90
-#define PARAM_M_REG_OFF  0x94
-#define PARAM_OFF_REG_OFF  0x98
-#define IDELAY_OFF_REG_OFF  0x9C
+#define FW_VERSION_REG_OFF      0x10
+#define TIME_STAMP_REG_OFF      0x14
+#define STATUS_REG_OFF          0x80
+#define CONTROL_REG_OFF         0x84
+#define TRIG0_REG_OFF           0x88
+#define TRIG1_REG_OFF           0x8C
+#define TRIG2_REG_OFF           0x90
+#define PARAM_M_REG_OFF         0x94
+#define PARAM_OFF_REG_OFF       0x98
+#define IDELAY_OFF_REG_OFF      0x9C
 
 #define PULSE_DLY_REG_OFF  0xC0
 
