@@ -253,7 +253,6 @@ int qdma_device_init(struct xlnx_dma_dev *xdev)
 	}
 #endif
 
-	descq = (struct qdma_descq *)(qdev + 1);
 	qdev->h2c_descq = kmalloc(sizeof(struct qdma_descq) * qmax, GFP_KERNEL);
 	qdev->c2h_descq = kmalloc(sizeof(struct qdma_descq) * qmax, GFP_KERNEL);
 	qdev->cmpt_descq = kmalloc(sizeof(struct qdma_descq) * qmax,

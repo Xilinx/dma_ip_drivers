@@ -3,7 +3,7 @@
  * to enable the user to execute the QDMA functionality
  *
  * Copyright (c) 2019-2022,  Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022,  Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023,  Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -301,17 +301,15 @@ static int get_cmd_resp_buf_len(enum xnl_op_t op, struct xcmd_info *xcmd)
         case XNL_CMD_Q_STOP:
         case XNL_CMD_Q_DEL:
         case XNL_CMD_GLOBAL_CSR:
-        	return buf_len;
+            return buf_len;
         case XNL_CMD_Q_ADD:
         case XNL_CMD_Q_DUMP:
-        case XNL_CMD_Q_CMPT_READ:
-        	break;
         case XNL_CMD_Q_LIST:
-        	buf_len = XNL_RESP_BUFLEN_MAX * 10;
-        	break;
+        case XNL_CMD_Q_CMPT_READ:
+            break;
         case XNL_CMD_REG_DUMP:
 		case XNL_CMD_REG_INFO_READ:
-        	buf_len = XNL_RESP_BUFLEN_MAX * 6;
+            buf_len = XNL_RESP_BUFLEN_MAX * 6;
         break;
 		case XNL_CMD_DEV_STAT:
 			buf_len = XNL_RESP_BUFLEN_MAX;
@@ -411,9 +409,11 @@ static int xnl_send_cmd(struct xnl_cb *cb, struct xnl_hdr *hdr,
         case XNL_CMD_DEV_INFO:
         case XNL_CMD_DEV_STAT:
         case XNL_CMD_DEV_STAT_CLEAR:
-        case XNL_CMD_Q_LIST:
 		/* no parameter */
 		break;
+        case XNL_CMD_Q_LIST:
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_QIDX, xcmd->req.qparm.idx);
+		xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_Q, xcmd->req.qparm.num_q);
         case XNL_CMD_Q_ADD:
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_QIDX, xcmd->req.qparm.idx);
 		xnl_msg_add_int_attr(hdr, XNL_ATTR_NUM_Q, xcmd->req.qparm.num_q);

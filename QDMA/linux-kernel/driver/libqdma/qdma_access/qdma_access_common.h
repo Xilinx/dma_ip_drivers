@@ -82,9 +82,16 @@ static inline uint32_t get_trailing_zeros(uint64_t value)
 #define DEFAULT_PFCH_NUM_ENTRIES_PER_Q      8
 #define DEFAULT_PFCH_MAX_Q_CNT              16
 #define DEFAULT_C2H_INTR_TIMER_TICK         25
-#define DEFAULT_CMPT_COAL_TIMER_CNT         5
 #define DEFAULT_CMPT_COAL_TIMER_TICK        25
 #define DEFAULT_CMPT_COAL_MAX_BUF_SZ        32
+
+#ifdef THROUGHPUT_MEASUREMENT
+/* Update WRB coalesce timer count for throughput measurement */
+#define DEFAULT_CMPT_COAL_TIMER_CNT         10
+#else
+/* Update WRB coalesce timer count for low latency measurement */
+#define DEFAULT_CMPT_COAL_TIMER_CNT         5
+#endif
 
 #define QDMA_BAR_NUM                        6
 

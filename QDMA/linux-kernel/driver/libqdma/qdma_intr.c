@@ -116,7 +116,7 @@ static irqreturn_t user_intr_handler(int irq_index, int irq, void *dev_id)
 {
 	struct xlnx_dma_dev *xdev = dev_id;
 
-	pr_info("User IRQ fired on Funtion#%d: index=%d, vector=%d\n",
+	pr_debug("User IRQ fired on Funtion#%d: index=%d, vector=%d\n",
 		xdev->func_id, irq_index, irq);
 
 	if (xdev->conf.fp_user_isr_handler) {

@@ -162,6 +162,14 @@ void qdma_strncpy(char *dest, const char *src, size_t n);
  *****************************************************************************/
 int qdma_get_err_code(int acc_err_code);
 
+/*****************************************************************************/
+/**
+ * qdma_io_wmb() - Write memory barrier for IO device
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+int qdma_io_wmb(void);
+
 #ifdef __cplusplus
 }
 #endif

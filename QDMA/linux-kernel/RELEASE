@@ -1,5 +1,5 @@
-RELEASE: 2022.1.5 Patch
-=======================
+RELEASE: 2023.1.0
+=================
 
 This release is validated
 	- On VCU1525 for QDMA5.0 2022.1 example design
@@ -127,10 +127,19 @@ CPM5
 ----------------------
 - Added PF/VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
 
+2023.1 Updates
+--------------
+- Updated the queue list command for >2048 Q's.
+- Added support to accomodate H2C & C2H Q's offset with fixed intervals for dma-perf application.
+
 KNOWN ISSUES:
 =============
 - CPM5 Only
-	- Adding >3000 queues using dma-ctl application throwing an error message even though the queues are added successfully. For now error message can be ignored and this will be fixed in subsequent releases.
+	- Data transfers are not happening when FLR is triggered with 10 VFs created on each PF.
+    - Performace optimizations are not finalized yet.
+
+- QDAM5.0
+    - Performace optimizations are not finalized yet.
 
 - All Designs
 	- In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
@@ -157,7 +166,7 @@ DRIVER LIMITATIONS:
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,

@@ -83,9 +83,11 @@
 #define EQDMA_CPM5_GLBL2_FLR_PRESENT_MASK			BIT(1)
 #define EQDMA_CPM5_GLBL2_MAILBOX_EN_MASK			BIT(0)
 
+
+/* TODO: This is work around and this needs to be auto generated from ODS */
 /** EQDMA_CPM5_IND_REG_SEL_FMAP */
-#define EQDMA_CPM5_FMAP_CTXT_W1_QID_MAX_MASK         GENMASK(11, 0)
-#define EQDMA_CPM5_FMAP_CTXT_W0_QID_MASK             GENMASK(10, 0)
+#define EQDMA_CPM5_FMAP_CTXT_W1_QID_MAX_MASK         GENMASK(12, 0)
+#define EQDMA_CPM5_FMAP_CTXT_W0_QID_MASK             GENMASK(11, 0)
 
 static void eqdma_cpm5_hw_st_h2c_err_process(void *dev_hndl);
 static void eqdma_cpm5_hw_st_c2h_err_process(void *dev_hndl);

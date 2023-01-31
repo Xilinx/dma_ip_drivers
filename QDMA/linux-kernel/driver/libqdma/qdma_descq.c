@@ -1876,6 +1876,8 @@ int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long id,
 		return -EINVAL;
 	}
 
+	memset(cb, 0, QDMA_REQ_OPAQUE_SIZE);
+	qdma_waitq_init(&cb->wq);
 	qdma_work_queue_add(descq, cb);
 
 	if (!req->dma_mapped) {

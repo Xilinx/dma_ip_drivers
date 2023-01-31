@@ -1352,7 +1352,8 @@ int qdma_queue_get_config(unsigned long dev_hndl, unsigned long id,
  *	 otherwise QDMA_OPERATION_SUCCESSFUL and <0 for error
  *
  *****************************************************************************/
-int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen);
+int qdma_queue_list(unsigned long dev_hndl, int qidx, int num_q, char *buf,
+		int buflen);
 
 /*****************************************************************************/
 /**

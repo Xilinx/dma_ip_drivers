@@ -1131,6 +1131,8 @@ int qdma_queue_config(unsigned long dev_hndl, unsigned long qid,
  * qdma_queue_list() - display all configured queues in a string buffer
  *
  * @param[in]	dev_hndl:	dev_hndl returned from qdma_device_open()
+ * @param[in]	qidx:		Queue index
+ * @param[in]	num_q:		Number of Queues to list
  * @param[in]	buflen:		length of the input buffer
  * @param[out]	buf:		message buffer
  *
@@ -1138,7 +1140,8 @@ int qdma_queue_config(unsigned long dev_hndl, unsigned long qid,
  *	otherwise 0
  * @return	<0: error
  *****************************************************************************/
-int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
+int qdma_queue_list(unsigned long dev_hndl, int qidx, int num_q, char *buf,
+			int buflen)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
 	struct qdma_dev *qdev;
@@ -1202,7 +1205,8 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 	 */
 	if (h2c_qcnt) {
 		descq = qdev->h2c_descq;
-		for (i = 0; i < h2c_qcnt; i++, descq++) {
+		descq =  descq + qidx;
+		for (i = qidx; i < (qidx + num_q); i++, descq++) {
 			lock_descq(descq);
 			if (descq->q_state != Q_STATE_DISABLED)
 				cur +=
@@ -1216,7 +1220,8 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 
 	if (c2h_qcnt) {
 		descq = qdev->c2h_descq;
-		for (i = 0; i < c2h_qcnt; i++, descq++) {
+		descq =  descq + qidx;
+		for (i = qidx; i < (qidx + num_q); i++, descq++) {
 			lock_descq(descq);
 			if (descq->q_state != Q_STATE_DISABLED)
 				cur +=
@@ -1230,7 +1235,8 @@ int qdma_queue_list(unsigned long dev_hndl, char *buf, int buflen)
 
 	if (cmpt_qcnt) {
 		descq = qdev->cmpt_descq;
-		for (i = 0; i < cmpt_qcnt; i++, descq++) {
+		descq =  descq + qidx;
+		for (i = qidx; i < (qidx + num_q); i++, descq++) {
 			lock_descq(descq);
 			if (descq->q_state != Q_STATE_DISABLED)
 				cur +=
@@ -2304,7 +2310,7 @@ void sgl_unmap(struct pci_dev *pdev, struct qdma_sw_sg *sg, unsigned int sgcnt,
 		if (!sg->pg)
 			break;
 		if (sg->dma_addr) {
-			pci_unmap_page(pdev, sg->dma_addr - sg->offset,
+			dma_unmap_page(&pdev->dev, sg->dma_addr - sg->offset,
 							PAGE_SIZE, dir);
 			sg->dma_addr = 0UL;
 		}
@@ -2336,8 +2342,9 @@ int sgl_map(struct pci_dev *pdev, struct qdma_sw_sg *sgl, unsigned int sgcnt,
 	 */
 	for (i = 0; i < sgcnt; i++, sg++) {
 		/* !! TODO  page size !! */
-		sg->dma_addr = pci_map_page(pdev, sg->pg, 0, PAGE_SIZE, dir);
-		if (unlikely(pci_dma_mapping_error(pdev, sg->dma_addr))) {
+		sg->dma_addr = dma_map_page(&pdev->dev, sg->pg, 0, PAGE_SIZE,
+				dir);
+		if (unlikely(dma_mapping_error(&pdev->dev, sg->dma_addr))) {
 			pr_err("map sgl failed, sg %d, %u.\n", i, sg->len);
 			if (i)
 				sgl_unmap(pdev, sgl, i, dir);

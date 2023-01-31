@@ -3,7 +3,7 @@
  * to enable the user to execute the QDMA functionality
  *
  * Copyright (c) 2018-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -205,7 +205,7 @@ static void __attribute__((noreturn)) usage(FILE *fp)
 		"\t\tstat                    statistics of qdma[N] device\n"
 		"\t\tstat clear              clear all statistics data of qdma[N} device\n"
 		"\t\tglobal_csr              dump the Global CSR of qdma[N} device\n"
-		"\t\tq list                  list all queues\n"
+		"\t\tq list <start_idx> <num_Qs>  - List <num_Qs> queues from idx <start_idx>\n"
 		"\t\tq add idx <N> [mode <mm|st>] [dir <h2c|c2h|bi|cmpt>] - add a queue\n"
 		"\t\t                                                  *mode default to mm\n"
 		"\t\t                                                  *dir default to h2c\n"
@@ -996,6 +996,8 @@ static int read_qparm(int argc, char *argv[], int i, struct xcmd_q_parm *qparm,
 static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 {
 	struct xcmd_q_parm *qparm = &xcmd->req.qparm;
+	uint32_t v1;
+	unsigned int f_arg_set = 0;
 	int rv;
 	int args_valid;
 
@@ -1013,6 +1015,15 @@ static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 
 	if (!strcmp(argv[i], "list")) {
 		xcmd->op = XNL_CMD_Q_LIST;
+		rv = next_arg_read_int(argc, argv, &i, &v1);
+		if (rv < 0)
+			return rv;
+		qparm->idx = v1;
+		f_arg_set |= 1 << QPARM_IDX;
+		rv = next_arg_read_int(argc, argv, &i, &v1);
+		if (rv < 0)
+			return rv;
+		qparm->num_q = v1;
 		return ++i;
 	} else if (!strcmp(argv[i], "add")) {
 		unsigned int mask;
@@ -1104,6 +1115,7 @@ static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 
 	args_valid = validate_qcmd(xcmd->op, qparm);
 
+	qparm->sflags = f_arg_set;
 	return (args_valid == 0) ? i : args_valid;
 }
 

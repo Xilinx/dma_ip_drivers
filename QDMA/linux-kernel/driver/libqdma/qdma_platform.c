@@ -130,3 +130,16 @@ int qdma_get_err_code(int acc_err_code)
 	acc_err_code *= -1;
 	return -(error_code_map_list[acc_err_code].err_code);
 }
+
+int qdma_io_wmb(void)
+{
+	/*
+	 * TODO: Write memory barrier(wmb) calls are happening differently
+	 * for DPDK and Linux drivers. DPDK driver is calling wmb() before
+	 * pidx/cmpt_cidx updates, where as linux driver calls wmb() after
+	 * pidx/cmpt_cidx updates. As linux driver performance numbers
+	 * are good with current changes, so keeping this function
+	 * as place holder for furure changes related to memory barriers.
+	 */
+	return 0;
+}

@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -1548,9 +1548,14 @@ static int xnl_q_list(struct sk_buff *skb2, struct genl_info *info)
 	struct xlnx_pci_dev *xpdev;
 	char *buf;
 	int rv = 0;
+	char ebuf[XNL_RESP_BUFLEN_MIN];
+	struct qdma_queue_conf qconf;
+	unsigned char is_qp;
 	uint32_t qmax = 0;
 	uint32_t buflen = 0, max_buflen = 0;
 	struct qdma_queue_count q_count;
+	unsigned int qidx, num_q;
+	struct xlnx_qdata *qdata;
 
 	if (info == NULL)
 		return -EINVAL;
@@ -1565,6 +1570,12 @@ static int xnl_q_list(struct sk_buff *skb2, struct genl_info *info)
 	if (!buf)
 		return -ENOMEM;
 	buflen = XNL_RESP_BUFLEN_MIN;
+	rv = qconf_get(&qconf, info, ebuf, XNL_RESP_BUFLEN_MIN, &is_qp);
+	if (rv < 0)
+		return rv;
+
+	qidx = qconf.qidx;
+	num_q = nla_get_u32(info->attrs[XNL_ATTR_NUM_Q]);
 
 	rv = qdma_get_queue_count(xpdev->dev_hndl, &q_count, buf, buflen);
 	if (rv < 0) {
@@ -1574,20 +1585,33 @@ static int xnl_q_list(struct sk_buff *skb2, struct genl_info *info)
 	}
 
 	qmax = q_count.h2c_qcnt + q_count.c2h_qcnt;
-
 	if (!qmax) {
 		rv += snprintf(buf, 8, "Zero Qs\n\n");
 		goto send_rsp;
 	}
 
-	max_buflen = (qmax * QDMA_Q_LIST_LINE_SZ);
+	qdata = xnl_rcv_check_qidx(info, xpdev, &qconf, buf, buflen);
+	if (!qdata)
+		goto send_rsp;
+
+	num_q = nla_get_u32(info->attrs[XNL_ATTR_NUM_Q]);
+
+	if (num_q > QDMA_Q_DUMP_MAX_QUEUES) {
+		pr_err("Can not dump more than %d queues\n",
+			   QDMA_Q_DUMP_MAX_QUEUES);
+		rv += snprintf(buf, 40, "Can not dump more than %d queues\n",
+				QDMA_Q_DUMP_MAX_QUEUES);
+		goto send_rsp;
+	}
+
 	kfree(buf);
+	max_buflen = (num_q * 2 * QDMA_Q_LIST_LINE_SZ);
 	buf = xnl_mem_alloc(max_buflen, info);
 	if (!buf)
 		return -ENOMEM;
 
 	buflen = max_buflen;
-	rv = qdma_queue_list(xpdev->dev_hndl, buf, buflen);
+	rv = qdma_queue_list(xpdev->dev_hndl, qidx, num_q, buf, buflen);
 	if (rv < 0) {
 		pr_err("qdma_queue_list() failed: %d", rv);
 		goto send_rsp;
@@ -1673,8 +1697,16 @@ add_q:
 			}
 		}
 	}
-
-	cur += snprintf(cur, end - cur, "Added %u Queues.\n", i);
+/* Suppress Q additions prints if num_q's greater than 2048.
+ * And print only consolidated Q's added, to overcome attr failure.
+ * TODO: This is a workaround. Need to comeup with proper fix.
+ */
+	if (num_q > 2048) {
+		memset(buf, 0, strlen(buf) + 1);
+		snprintf(buf, 25, "Added %u Queues.\n", i);
+	} else {
+		cur += snprintf(cur, end - cur, "Added %u Queues.\n", i);
+	}
 
 send_resp:
 	rv2 = xnl_respond_buffer(info, buf, strlen(buf), rv);
