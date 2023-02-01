@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2022.1',
+              VERSION:'2023.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2022.1
+                2023.1
               </div>
             
           
@@ -464,6 +464,11 @@ num_threads=8
 bidir_en=1
 num_pkt=64
 pkt_sz=64
+offset_q_en=1
+h2c_q_start_offset=0x100
+h2c_q_offset_intvl=10
+c2h_q_start_offset=0x200
+c2h_q_offset_intvl=20
 </pre></div>
 </div>
 <p><strong>Parameters</strong></p>
@@ -488,6 +493,11 @@ pkt_sz=64
 <li>keyhole_en :  Enable the Keyhole feature</li>
 <li>offset : Offset to be written to for MM Performance Use cases</li>
 <li>aperture_sz : Size of aperture when using the keyhole feature</li>
+<li>offset_q_en : Offset queue enable (0-1) to enable H2C/C2H queues offsets.</li>
+<li>h2c_q_start_offset : Start address of H2C queue.</li>
+<li>h2c_q_offset_intvl : Fixed interval for subsequent H2C queues offsets.</li>
+<li>c2h_q_start_offset : Start address of C2H queue.</li>
+<li>c2h_q_offset_intvl : Fixed interval for subsequent C2H queues offsets.</li>
 </ul>
 </div>
 </div>
@@ -522,7 +532,7 @@ pkt_sz=64
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2022.
+        Last updated on February 01, 2023.
       </span>
 
     </p>
@@ -600,7 +610,7 @@ pkt_sz=64
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2022-2023 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

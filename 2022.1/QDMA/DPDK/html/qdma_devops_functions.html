@@ -1,0 +1,1506 @@
+
+
+
+<!DOCTYPE HTML>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+	<head>
+		<meta charset="utf-8">
+		
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="description"/>
+		<meta name="keywords"/>
+		<meta property="og:title" content=""/>
+		<meta property="og:description"/>
+		<!-- favicon -->
+		<link rel="icon" type="image/vnd.microsoft.icon" href="_static/favicon.ico"/>
+		<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="_static/favicon.ico"/>
+		<!-- Fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css"/>
+
+  
+  
+  
+  
+
+  
+      <script type="text/javascript" src="_static/js/jquery.min.js"></script>	
+	  <script type="text/javascript" src="_static/js/gtm.js"></script>
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+    <script type="text/javascript" src="_static/js/d3dd8c60ed.js"></script>
+    <script type="text/javascript" src="_static/js/common-ui-all.min.js"></script>		
+    <script type="text/javascript" src="_static/js/header-footer.min.js"></script>	
+    <script type="text/javascript" src="_static/js/jquery-ui.min.js"></script>	
+    <script type="text/javascript" src="_static/js/CoveoJsSearch.Lazy.min.js"></script>	
+    <script type="text/javascript" src="_static/js/linkid.js"></script>		
+    <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'2022.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="QDMA DPDK PMD Exported APIs" href="qdma_pmd_export.html" />
+    <link rel="prev" title="DPDK Callback APIs" href="dpdk-callbacks.html" /> 
+	</head>
+	<body>
+		<div class="xilinx-bs3"/>
+		<div class="root responsivegrid">
+			<div class="aem-Grid aem-Grid--16 aem-Grid--default--16 aem-Grid--large--16 aem-Grid--xlarge--16 aem-Grid--xxlarge--16 aem-Grid--xxxlarge--16 ">
+				<div class="xilinxExperienceFragments experiencefragment aem-GridColumn aem-GridColumn--default--12">
+					<div class="xf-content-height">
+						<div class="aem-Grid aem-Grid--16 aem-Grid--default--16 ">
+							<div class="header parbase aem-GridColumn aem-GridColumn--default--12">
+								<noindex>
+									<header data-component="header">
+										<nav class="navbar navbar-default aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid main-nav">
+													<div class="row">
+														<div class="col-xs-12">
+															<div class="logo-column">
+																<div class="logo">
+																	<a href="https://www.xilinx.com/">
+																	<img src="https://www.xilinx.com/etc.clientlibs/site/clientlibs/xilinx/all/resources/imgs/header/xilinx-header-logo.svg" title="Xilinx Inc"/>
+																	</a>
+																</div>
+															</div>
+															<div class="navbar-column">
+																<div class="navbar navbar-collapse collapse" id="xilinx-main-menu">
+																	<div class="mobile-search-container">
+																		<div id="headerSearchBox" class="headerSearch"
+																			data-component="header-search" 
+																			data-redirect-if-empty="false"
+																			data-coveo-access-token="xxa237d4dd-f0aa-47fc-9baa-af9121851b33"
+																			data-coveo-organization-id="xilinxcomprode2rjoqok">
+																			<div class='coveo-search-section'>
+																				<div class="CoveoAnalytics" data-search-hub="Site"></div>
+																				<ul class="dropdown-menu options">
+																					<li class="option" data-label="All" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-search-hub="Site">
+																						<a href="#">
+																						All</a>
+																					</li>
+																					<li data-label="Silicon Devices" data-action-link="https://www.xilinx.com//products/silicon-devices/si-keyword-search.html" data-search-hub="Product">
+																						<a href="#">
+																						Silicon Devices</a>
+																					</li>
+																					<li data-label="Boards and Kits" data-action-link="https://www.xilinx.com//products/boards-and-kits/bk-keyword-search.html" data-search-hub="Product">
+																						<a href="#">
+																						Boards and Kits</a>
+																					</li>
+																					<li data-label="Intellectual Property" data-action-link="https://www.xilinx.com//products/intellectual-property/ip-keyword-search.html" data-search-hub="Product">
+																						<a href="#">
+																						Intellectual Property</a>
+																					</li>
+																					<li data-label="Support" class="option" data-action-link="https://www.xilinx.com/search/support-keyword-search.html" data-search-hub="Support">
+																						<a href="#">
+																						Support</a>
+																						<ul>
+																							<li data-label="Documentation" data-action-link="https://www.xilinx.com//support/documentation-navigation/documentation-keyword-search.html" data-search-hub="Document">
+																								<a href="#">
+																								Documentation</a>
+																							</li>
+																							<li data-label="Knowledge Base" data-action-link="https://www.xilinx.com//support/answer-navigation/answer-keyword-search.html" data-search-hub="AnswerRecord">
+																								<a href="#">
+																								Knowledge Base</a>
+																							</li>
+																							<li data-label="Community Forums" data-action-link="https://www.xilinx.com/search/forums-keyword-search.html" data-search-hub="Forums">
+																								<a href="#">
+																								Community Forums</a>
+																							</li>
+																						</ul>
+																					</li>
+																					<li data-label="Partners" data-action-link="https://www.xilinx.com//alliance/member-keyword-search.html" data-search-hub="Partner">
+																						<a href="#">
+																						Partners</a>
+																					</li>
+																					<li data-label="Videos" data-action-link="https://www.xilinx.com/video/video-keyword-search.html" data-search-hub="Video">
+																						<a href="#">
+																						Videos</a>
+																					</li>
+																					<li data-label="Press" data-action-link="https://www.xilinx.com/search/press-keyword-search.html" data-search-hub="Press">
+																						<a href="#">
+																						Press</a>
+																					</li>
+																				</ul>
+																				<a href="#" class="btn dropdown-toggle value" data-toggle="dropdown"></a>
+																				<div class="CoveoSearchbox" data-id="coveosearchbox" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-placeholder="Search Xilinx"></div>
+																			</div>
+																		</div>
+																	</div>
+																	<ul class="nav navbar-nav nav-justified">
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/applications.html">
+																			Applications</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/products/silicon-devices.html">
+																			Products</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://developer.xilinx.com/">
+																			Developers</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/support.html">
+																			Support</a> 
+																		</li>
+																		<li class="accordion-toggle-icons" data-component="toggle-dropdown">
+																			<a href="https://www.xilinx.com/about/company-overview.html">
+																			About</a> 
+																		</li>
+																	</ul>
+																</div>
+															</div>
+															<script type="text/javascript" src="_static/js/gtm.js"></script>
+															<!--<div class="mini-nav">
+																<button type="button" data-function="xilinx-mobile-menu" id="nav-toggle" class="navbar-toggle collapsed visible-xs-block" aria-expanded="false">
+																<span></span>
+																<span></span>
+																<span></span>
+																<span></span>
+																</button>
+																<ul class="list-inline">
+																	<li class="dropdown user-menu">
+																		<button data-toggle="dropdown">
+																		<span class="sr-only">Account</span>
+																		<span class="fas fa-user"></span>
+																		</button>
+																		<ul class="dropdown-menu">
+																			<li>
+																				<a href="https://www.xilinx.com/myprofile/subscriptions.html">
+																				My Account</a>
+																			</li>
+																			<li>
+																				<a href="https://www.xilinx.com/registration/create-account.html">
+																				Create Account</a>
+																			</li>
+																			<li>
+																				<a href="https://www.xilinx.com/bin/protected/en/signout">
+																				Sign Out</a>
+																			</li>
+																		</ul>
+																	</li>
+																	<li class="hidden-xs">
+																		<button data-function="search-toggle">
+																		<span class="sr-only">Search</span>
+																		<span class="far fa-search"></span>
+																		</button>
+																	</li>
+																</ul>
+															</div>
+															-->
+															<div class="search-container">
+																<div id="headerSearchBox" class="headerSearch"
+																	data-component="header-search" 
+																	data-redirect-if-empty="false"
+																	data-coveo-access-token="xxa237d4dd-f0aa-47fc-9baa-af9121851b33"
+																	data-coveo-organization-id="xilinxcomprode2rjoqok">
+																	<div class='coveo-search-section'>
+																		<div class="CoveoAnalytics" data-search-hub="Site"></div>
+																		<ul class="dropdown-menu options">
+																			<li class="option" data-label="All" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-search-hub="Site">
+																				<a href="#">
+																				All</a>
+																			</li>
+																			<li data-label="Silicon Devices" data-action-link="https://www.xilinx.com/products/silicon-devices/si-keyword-search.html" data-search-hub="Product">
+																				<a href="#">
+																				Silicon Devices</a>
+																			</li>
+																			<li data-label="Boards and Kits" data-action-link="https://www.xilinx.com/products/boards-and-kits/bk-keyword-search.html" data-search-hub="Product">
+																				<a href="#">
+																				Boards and Kits</a>
+																			</li>
+																			<li data-label="Intellectual Property" data-action-link="https://www.xilinx.com/products/intellectual-property/ip-keyword-search.html" data-search-hub="Product">
+																				<a href="#">
+																				Intellectual Property</a>
+																			</li>
+																			<li data-label="Support" class="option" data-action-link="https://www.xilinx.com/search/support-keyword-search.html" data-search-hub="Support">
+																				<a href="#">
+																				Support</a>
+																				<ul>
+																					<li data-label="Documentation" data-action-link="https://www.xilinx.com/support/documentation-navigation/documentation-keyword-search.html" data-search-hub="Document">
+																						<a href="#">
+																						Documentation</a>
+																					</li>
+																					<li data-label="Knowledge Base" data-action-link="https://www.xilinx.com/support/answer-navigation/answer-keyword-search.html" data-search-hub="AnswerRecord">
+																						<a href="#">
+																						Knowledge Base</a>
+																					</li>
+																					<li data-label="Community Forums" data-action-link="https://www.xilinx.com/search/forums-keyword-search.html" data-search-hub="Forums">
+																						<a href="#">
+																						Community Forums</a>
+																					</li>
+																				</ul>
+																			</li>
+																			<li data-label="Partners" data-action-link="https://www.xilinx.com/alliance/member-keyword-search.html" data-search-hub="Partner">
+																				<a href="#">
+																				Partners</a>
+																			</li>
+																			<li data-label="Videos" data-action-link="https://www.xilinx.com/video/video-keyword-search.html" data-search-hub="Video">
+																				<a href="#">
+																				Videos</a>
+																			</li>
+																			<li data-label="Press" data-action-link="https://www.xilinx.com/search/press-keyword-search.html" data-search-hub="Press">
+																				<a href="#">
+																				Press</a>
+																			</li>
+																		</ul>
+																		<a href="#" class="btn dropdown-toggle value" data-toggle="dropdown"></a>
+																		<div class="CoveoSearchbox" data-id="coveosearchbox" data-action-link="https://www.xilinx.com/search/site-keyword-search.html" data-placeholder="Search Xilinx"></div>
+																	</div>
+																</div>
+																<button data-function="search-toggle">
+																<span class="sr-only">Search</span>
+																<span class="far fa-times"></span>
+																</button>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</nav>
+									</header>
+								</noindex>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="parsys aem-GridColumn--xxxlarge--none aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+						<div class="container-fluid">
+							<div class="row">
+							<div class="col-xs-12">
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> QDMA DPDK Driver
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2022.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building QDMA DPDK Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dev-guide.html">Developers Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="driver-design.html">Driver Design</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="driver-design.html#driver-interfaces-and-callbacks">Driver interfaces and callbacks</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="dpdk-callbacks.html">DPDK Callback APIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="qdma_pmd_export.html">QDMA DPDK PMD Exported APIs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#resource-management">Resource Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#mailbox-communication-for-vf-configuration">Mailbox Communication for VF configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#pf-vf-shutdown">PF/VF Shutdown</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-interop-with-linux-driver">DPDK Driver Interop with Linux Driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#qdma-hardware-error-monitoring">QDMA Hardware Error Monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="driver-design.html#dpdk-driver-debug">DPDK Driver debug</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA DPDK Driver UseCases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="perf.html">QDMA DPDK Performance</a></li>
+</ul>
+
+            
+			<p class="caption"><span class="caption-text">This Page</span></p>
+				<ul class="current">
+				  <li class="toctree-l1"><a href="_sources/qdma_devops_functions.rst.txt"
+						rel="nofollow">Show Source</a></li>						
+				</ul>
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QDMA DPDK Driver</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="dev-guide.html">Developers Guide</a> &raquo;</li>
+        
+          <li><a href="driver-design.html">Driver Design</a> &raquo;</li>
+        
+          <li><a href="dpdk-callbacks.html">DPDK Callback APIs</a> &raquo;</li>
+        
+      <li>Functions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/qdma_devops_functions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="qdma-eth-dev-init">
+<span id="cid-qdma-eth-dev-init"></span><span id="doxid-group-dpdk-devops-func-1gadf6ce0773d54811aafd87d6d888621d5"></span><h2>qdma_eth_dev_init<a class="headerlink" href="#qdma-eth-dev-init" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_eth_dev_init</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to register an Ethernet PCIe device.</p>
+<p>The Following actions are performed by this function:</p>
+<ul class="simple">
+<li>Parse and validate device arguments</li>
+<li>Identify PCIe BARs present in the device</li>
+<li>Register device operations</li>
+<li>Enable MM C2H and H2C channels</li>
+<li>Register PCIe device with Queue Resource Manager</li>
+<li>Program the QDMA IP global registers (by 1st PF that was probed)</li>
+<li>Enable HW errors and launch QDMA HW error monitoring thread (by 1st PF that was probed)</li>
+<li>If VF is enabled, then enable Mailbox interrupt and register Rx message handling function as interrupt handler</li>
+</ul>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-configure">
+<span id="cid-qdma-dev-configure"></span><span id="doxid-group-dpdk-devops-func-1gadc894ab8586271383bddbdcb99e0b7c7"></span><h2>qdma_dev_configure<a class="headerlink" href="#qdma-dev-configure" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_configure</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback for Ethernet device configuration.</p>
+<p>This API requests the queue base from Queue Resource Manager and programs the queue base and queue count in function map (FMAP)</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-infos-get">
+<span id="cid-qdma-dev-infos-get"></span><span id="doxid-group-dpdk-devops-func-1ga8e8fd7f4f5642701fc1df503569857f0"></span><h2>qdma_dev_infos_get<a class="headerlink" href="#qdma-dev-infos-get" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_infos_get</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev_info</span><span class="o">*</span> <span class="n">dev_info</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to get information about the device</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>dev_info</td>
+<td>Pointer to Device information structure</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-link-update">
+<span id="cid-qdma-dev-link-update"></span><span id="doxid-group-dpdk-devops-func-1ga1e22f4147fe12290878f20c79da2a029"></span><h2>qdma_dev_link_update<a class="headerlink" href="#qdma-dev-link-update" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_link_update</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="n">__rte_unused</span> <span class="kt">int</span> <span class="n">wait_to_complete</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to retrieve the physical link information</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>wait_to_complete</td>
+<td>wait_to_complete field is ignored</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-rx-queue-setup">
+<span id="cid-qdma-dev-rx-queue-setup"></span><span id="doxid-group-dpdk-devops-func-1ga2f09eebdab3737265d06b4aa21d54efb"></span><h2>qdma_dev_rx_queue_setup<a class="headerlink" href="#qdma-dev-rx-queue-setup" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_rx_queue_setup</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">rx_queue_id</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">nb_rx_desc</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">socket_id</span><span class="p">,</span>
+    <span class="k">const</span> <span class="k">struct</span> <span class="n">rte_eth_rxconf</span><span class="o">*</span> <span class="n">rx_conf</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_mempool</span><span class="o">*</span> <span class="n">mb_pool</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to configure a RX queue.</p>
+<p>This API validates queue parameters and allocates C2H ring and Streaming CMPT ring from the DPDK reserved hugepage memory zones</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure.</td>
+</tr>
+<tr class="row-even"><td>rx_queue_id</td>
+<td>RX queue index relative to the PCIe function pointed by dev</td>
+</tr>
+<tr class="row-odd"><td>nb_rx_desc</td>
+<td>Number of C2H descriptors to configure for this queue</td>
+</tr>
+<tr class="row-even"><td>socket_id</td>
+<td>NUMA socket on which memory must be allocated</td>
+</tr>
+<tr class="row-odd"><td>rx_conf</td>
+<td>Rx queue configuration parameters</td>
+</tr>
+<tr class="row-even"><td>mb_pool</td>
+<td>Memory pool to use for buffer allocations on this queue</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-tx-queue-setup">
+<span id="cid-qdma-dev-tx-queue-setup"></span><span id="doxid-group-dpdk-devops-func-1gae75e5fc77190ec05865b014554f6538a"></span><h2>qdma_dev_tx_queue_setup<a class="headerlink" href="#qdma-dev-tx-queue-setup" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_tx_queue_setup</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">tx_queue_id</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">nb_tx_desc</span><span class="p">,</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">socket_id</span><span class="p">,</span>
+    <span class="k">const</span> <span class="k">struct</span> <span class="n">rte_eth_txconf</span><span class="o">*</span> <span class="n">tx_conf</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to configure a TX queue.</p>
+<p>This API validates queue parameters and allocates H2C ring from the DPDK reserved hugepage memory zone</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>tx_queue_id</td>
+<td>TX queue index</td>
+</tr>
+<tr class="row-odd"><td>nb_tx_desc</td>
+<td>Number of descriptors to configure in queue</td>
+</tr>
+<tr class="row-even"><td>socket_id</td>
+<td>NUMA socket on which memory must be allocated</td>
+</tr>
+<tr class="row-odd"><td>tx_conf</td>
+<td>Tx queue configuration parameters</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-rxq-info-get">
+<span id="cid-qdma-dev-rxq-info-get"></span><span id="doxid-group-dpdk-devops-func-1ga225724fa38274c4d55462ce3e79ed69a"></span><h2>qdma_dev_rxq_info_get<a class="headerlink" href="#qdma-dev-rxq-info-get" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">void</span> <span class="n">qdma_dev_rxq_info_get</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">rx_queue_id</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_eth_rxq_info</span><span class="o">*</span> <span class="n">qinfo</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to get Rx queue info of an Ethernet device</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>rx_queue_id</td>
+<td>The RX queue on the Ethernet device for which information will be retrieved</td>
+</tr>
+<tr class="row-odd"><td>qinfo</td>
+<td>A pointer to a structure of type rte_eth_rxq_info_info to be filled with the information of given Rx queue</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-txq-info-get">
+<span id="cid-qdma-dev-txq-info-get"></span><span id="doxid-group-dpdk-devops-func-1ga26d488f58a9b0e7e0e1d7e07c5ffedef"></span><h2>qdma_dev_txq_info_get<a class="headerlink" href="#qdma-dev-txq-info-get" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">void</span> <span class="n">qdma_dev_txq_info_get</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">tx_queue_id</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_eth_txq_info</span><span class="o">*</span> <span class="n">qinfo</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to get Tx queue info of an Ethernet device</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>tx_queue_id</td>
+<td>The TX queue on the Ethernet device for which information will be retrieved</td>
+</tr>
+<tr class="row-odd"><td>qinfo</td>
+<td>A pointer to a structure of type rte_eth_txq_info_info to be filled with the information of given Tx queue</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-start">
+<span id="cid-qdma-dev-start"></span><span id="doxid-group-dpdk-devops-func-1gaf2133b221eb89d4dfa0d59b0cd2b5b41"></span><h2>qdma_dev_start<a class="headerlink" href="#qdma-dev-start" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_start</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to start the device.</p>
+<p>This API starts the Ethernet device by initializing Rx, Tx descriptors and device registers. For the Port queues whose start is not deferred, it calls qdma_dev_tx_queue_start and qdma_dev_rx_queue_start to start the queues for packet processing.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-rx-queue-start">
+<span id="cid-qdma-dev-rx-queue-start"></span><span id="doxid-group-dpdk-devops-func-1ga71515c2ba7e7efa0dc6734d7cb8694c8"></span><h2>qdma_dev_rx_queue_start<a class="headerlink" href="#qdma-dev-rx-queue-start" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_rx_queue_start</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">qid</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to start a C2H queue which has been deferred start.</p>
+<p>This API clears and then programs the Software, Prefetch and Completion context of the C2H queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>qid</td>
+<td>Rx queue index</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-tx-queue-start">
+<span id="cid-qdma-dev-tx-queue-start"></span><span id="doxid-group-dpdk-devops-func-1ga800dcab5e32b0203b03456d9a3129de1"></span><h2>qdma_dev_tx_queue_start<a class="headerlink" href="#qdma-dev-tx-queue-start" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_tx_queue_start</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">qid</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to start a H2C queue which has been deferred start.</p>
+<p>This API clears and then programs the Software context of the H2C queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>qid</td>
+<td>Tx queue index</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-recv-pkts">
+<span id="cid-qdma-recv-pkts"></span><span id="doxid-group-dpdk-devops-func-1ga1314c3f66e92939dc2bda7ee924d6703"></span><h2>qdma_recv_pkts<a class="headerlink" href="#qdma-recv-pkts" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">uint16_t</span> <span class="n">qdma_recv_pkts</span> <span class="p">(</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">rx_queue</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_mbuf</span><span class="o">**</span> <span class="n">rx_pkts</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">nb_pkts</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback for receiving packets in burst.</p>
+<p>This API does following operations:</p>
+<ul class="simple">
+<li>Process the Completion ring to determine and store packet information</li>
+<li>Update CMPT CIDX</li>
+<li>Process C2H ring to retrieve rte_mbuf pointers corresponding to received packets and store in rx_pkts array.</li>
+<li>Populate C2H ring with new pointers for packet buffers</li>
+<li>Update C2H ring PIDX</li>
+</ul>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>rx_queue</td>
+<td>Generic pointer to Rx queue structure</td>
+</tr>
+<tr class="row-even"><td>rx_pkts</td>
+<td>The address of an array of pointers to rte_mbuf structures that must be large enough to store nb_pkts pointers in it</td>
+</tr>
+<tr class="row-odd"><td>nb_pkts</td>
+<td>Maximum number of packets to retrieve</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>Number of packets successfully received (&lt;= nb_pkts)</p>
+</div>
+<div class="section" id="qdma-xmit-pkts">
+<span id="cid-qdma-xmit-pkts"></span><span id="doxid-group-dpdk-devops-func-1gac3732971b68acf64268ec83459f99c7c"></span><h2>qdma_xmit_pkts<a class="headerlink" href="#qdma-xmit-pkts" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">uint16_t</span> <span class="n">qdma_xmit_pkts</span> <span class="p">(</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">tx_queue</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_mbuf</span><span class="o">**</span> <span class="n">tx_pkts</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">nb_pkts</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback for transmitting packets in burst.</p>
+<p>This API does following operations:</p>
+<ul class="simple">
+<li>Free rte_mbuf pointers to previous transmitted packets, back to the memory pool</li>
+<li>Retrieve packet buffer pointer from tx_pkts and populate H2C ring with pointers to new packet buffers.</li>
+<li>Update H2C ring PIDX</li>
+</ul>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>tx_queue</td>
+<td>Generic pointer to Tx queue structure</td>
+</tr>
+<tr class="row-even"><td>tx_pkts</td>
+<td>The address of an array of nb_pkts pointers to rte_mbuf structures which contain the output packets</td>
+</tr>
+<tr class="row-odd"><td>nb_pkts</td>
+<td>The maximum number of packets to transmit</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>Number of packets successfully transmitted (&lt;= nb_pkts)</p>
+</div>
+<div class="section" id="qdma-dev-stats-get">
+<span id="cid-qdma-dev-stats-get"></span><span id="doxid-group-dpdk-devops-func-1gae94853ca2a4f45fcf6bcc1fdb31371a2"></span><h2>qdma_dev_stats_get<a class="headerlink" href="#qdma-dev-stats-get" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_stats_get</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_eth_stats</span><span class="o">*</span> <span class="n">eth_stats</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback for retrieving Port statistics.</p>
+<p>This API updates Port statistics in rte_eth_stats structure parameters</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>eth_stats</td>
+<td>Pointer to structure containing statistics</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-stats-reset">
+<span id="cid-qdma-dev-stats-reset"></span><span id="doxid-group-dpdk-devops-func-1gab188fd4868736ad2b80e117ab163345b"></span><h2>qdma_dev_stats_reset<a class="headerlink" href="#qdma-dev-stats-reset" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_stats_reset</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to reset Port statistics.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-queue-stats-mapping">
+<span id="cid-qdma-dev-queue-stats-mapping"></span><span id="doxid-group-dpdk-devops-func-1gaaa69ee4e6a5b87e36c263d2367436c90"></span><h2>qdma_dev_queue_stats_mapping<a class="headerlink" href="#qdma-dev-queue-stats-mapping" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_queue_stats_mapping</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">queue_id</span><span class="p">,</span>
+    <span class="kt">uint8_t</span> <span class="n">stat_idx</span><span class="p">,</span>
+    <span class="kt">uint8_t</span> <span class="n">is_rx</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to set a queue statistics mapping for a tx/rx queue of an Ethernet device.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>queue_id</td>
+<td>Index of the queue for which a queue stats mapping is required</td>
+</tr>
+<tr class="row-odd"><td>stat_idx</td>
+<td>The per-queue packet statistics functionality number that the queue_id is to be assigned</td>
+</tr>
+<tr class="row-even"><td>is_rx</td>
+<td>Whether queue is a Rx or a Tx queue</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, -EINVAL on failure</p>
+</div>
+<div class="section" id="qdma-dev-rx-queue-count">
+<span id="cid-qdma-dev-rx-queue-count"></span><span id="doxid-group-dpdk-devops-func-1ga31d1accd675598cbf46aba9f9c9a6bf3"></span><h2>qdma_dev_rx_queue_count<a class="headerlink" href="#qdma-dev-rx-queue-count" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">uint32_t</span> <span class="n">qdma_dev_rx_queue_count</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">rx_queue_id</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to get the number of used descriptors of a rx queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>rx_queue_id</td>
+<td>The RX queue on the Ethernet device for which information will be retrieved</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>The number of used descriptors in the specific queue</p>
+</div>
+<div class="section" id="qdma-dev-rx-descriptor-status">
+<span id="cid-qdma-dev-rx-descriptor-status"></span><span id="doxid-group-dpdk-devops-func-1gab8a834a5f484b0e840567a943a8bf535"></span><h2>qdma_dev_rx_descriptor_status<a class="headerlink" href="#qdma-dev-rx-descriptor-status" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_rx_descriptor_status</span> <span class="p">(</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">rx_queue</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">offset</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to check the status of a Rx descriptor in the queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>rx_queue</td>
+<td>Pointer to Rx queue specific data structure</td>
+</tr>
+<tr class="row-even"><td>offset</td>
+<td>The offset of the descriptor starting from tail (0 is the next packet to be received by the driver)</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<ul class="simple">
+<li>(RTE_ETH_RX_DESC_AVAIL): Descriptor is available for the hardware to receive a packet.</li>
+<li>(RTE_ETH_RX_DESC_DONE): Descriptor is done, it is filled by hw, but not yet processed by the driver (i.e. in the receive queue).</li>
+<li>(RTE_ETH_RX_DESC_UNAVAIL): Descriptor is unavailable, either hold by the driver and not yet returned to hw, or reserved by the hw.</li>
+<li>(-EINVAL) bad descriptor offset.</li>
+</ul>
+</div>
+<div class="section" id="qdma-dev-tx-descriptor-status">
+<span id="cid-qdma-dev-tx-descriptor-status"></span><span id="doxid-group-dpdk-devops-func-1ga0c591aac0fce89362d227c7de8e85206"></span><h2>qdma_dev_tx_descriptor_status<a class="headerlink" href="#qdma-dev-tx-descriptor-status" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_tx_descriptor_status</span> <span class="p">(</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">tx_queue</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">offset</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to check the status of a Tx descriptor in the queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>tx_queue</td>
+<td>Pointer to Tx queue specific data structure</td>
+</tr>
+<tr class="row-even"><td>offset</td>
+<td>The offset of the descriptor starting from tail (0 is the place where the next packet will be send)</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<ul class="simple">
+<li>(RTE_ETH_TX_DESC_FULL) Descriptor is being processed by the hw, i.e. in the transmit queue.</li>
+<li>(RTE_ETH_TX_DESC_DONE) Hardware is done with this descriptor, it can be reused by the driver.</li>
+<li>(RTE_ETH_TX_DESC_UNAVAIL): Descriptor is unavailable, reserved by the driver or the hardware.</li>
+<li>(-EINVAL) bad descriptor offset.</li>
+</ul>
+</div>
+<div class="section" id="qdma-dev-tx-done-cleanup">
+<span id="cid-qdma-dev-tx-done-cleanup"></span><span id="doxid-group-dpdk-devops-func-1ga4edd99f38884352690dbf639b2d2b06a"></span><h2>qdma_dev_tx_done_cleanup<a class="headerlink" href="#qdma-dev-tx-done-cleanup" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_tx_done_cleanup</span> <span class="p">(</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">tx_queue</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">free_cnt</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to request the driver to free mbufs currently cached by the driver</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>tx_queue</td>
+<td>Pointer to Tx queue specific data structure</td>
+</tr>
+<tr class="row-even"><td>free_cnt</td>
+<td>Maximum number of packets to free. Use 0 to indicate all possible packets should be freed. Note that a packet may be using multiple mbufs.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<ul class="simple">
+<li>Failure: &lt; 0</li>
+<li>Success: &gt;= 0 0-n: Number of packets freed. More packets may still remain in ring that are in use.</li>
+</ul>
+</div>
+<div class="section" id="qdma-dev-get-regs">
+<span id="cid-qdma-dev-get-regs"></span><span id="doxid-group-dpdk-devops-func-1gafed7169cd0ba28890b1017eaffc6daf8"></span><h2>qdma_dev_get_regs<a class="headerlink" href="#qdma-dev-get-regs" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_get_regs</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="k">struct</span> <span class="n">rte_dev_reg_info</span><span class="o">*</span> <span class="n">regs</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to retrieve device registers and register attributes (number of registers and register size)</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>regs</td>
+<td>Pointer to rte_dev_reg_info structure to fill in. If regs-&gt;data is NULL the function fills in the width and length fields. If non-NULL the registers are put into the buffer pointed at by the data field.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, -ENOTSUP on failure</p>
+</div>
+<div class="section" id="qdma-dev-rx-queue-stop">
+<span id="cid-qdma-dev-rx-queue-stop"></span><span id="doxid-group-dpdk-devops-func-1ga68cebe84871bd1dceb8691d5b5367e0f"></span><h2>qdma_dev_rx_queue_stop<a class="headerlink" href="#qdma-dev-rx-queue-stop" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_rx_queue_stop</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">qid</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to stop a C2H queue</p>
+<p>This API invalidates Hardware, Software, Prefetch and completion contexts of C2H queue. It also free the rte_mbuf pointers assigned to descriptors prepared for packet reception.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>qid</td>
+<td>Rx queue index</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-tx-queue-stop">
+<span id="cid-qdma-dev-tx-queue-stop"></span><span id="doxid-group-dpdk-devops-func-1ga331b80836ae76c029c874d072ca43fea"></span><h2>qdma_dev_tx_queue_stop<a class="headerlink" href="#qdma-dev-tx-queue-stop" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_tx_queue_stop</span> <span class="p">(</span>
+    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">qid</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p><a class="reference internal" href="#doxid-group-dpdk-devops-func-1ga331b80836ae76c029c874d072ca43fea"><span class="std std-ref">qdma_dev_tx_queue_stop()</span></a> - DPDK callback to stop a queue in H2C direction</p>
+<p>This API invalidates Hardware, Software contexts of H2C queue. It also free the rte_mbuf pointers assigned to descriptors that are pending transmission.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+<tr class="row-even"><td>qid</td>
+<td>TX queue index</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+<div class="section" id="qdma-dev-stop">
+<span id="cid-qdma-dev-stop"></span><span id="doxid-group-dpdk-devops-func-1ga33b59d17fcc07971504946a53178a766"></span><h2>qdma_dev_stop<a class="headerlink" href="#qdma-dev-stop" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_stop</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to stop the device.</p>
+<p>This API stops the device by invalidating all the contexts of all the queues belonging to the port by calling <a class="reference internal" href="#doxid-group-dpdk-devops-func-1ga331b80836ae76c029c874d072ca43fea"><span class="std std-ref">qdma_dev_tx_queue_stop()</span></a> and <a class="reference internal" href="#doxid-group-dpdk-devops-func-1ga68cebe84871bd1dceb8691d5b5367e0f"><span class="std std-ref">qdma_dev_rx_queue_stop()</span></a> for all the queues of the port.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-rx-queue-release">
+<span id="cid-qdma-dev-rx-queue-release"></span><span id="doxid-group-dpdk-devops-func-1ga988a722c0fb5aa55ddeb456c3443b1ca"></span><h2>qdma_dev_rx_queue_release<a class="headerlink" href="#qdma-dev-rx-queue-release" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">void</span> <span class="n">qdma_dev_rx_queue_release</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">rqueue</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to release a Rx queue.</p>
+<p>This API releases the descriptor rings and any additional memory allocated for given C2H queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>rqueue</td>
+<td>Generic Rx queue pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-tx-queue-release">
+<span id="cid-qdma-dev-tx-queue-release"></span><span id="doxid-group-dpdk-devops-func-1ga48957c76f42977f6068325b0d6d6df53"></span><h2>qdma_dev_tx_queue_release<a class="headerlink" href="#qdma-dev-tx-queue-release" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">void</span> <span class="n">qdma_dev_tx_queue_release</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">tqueue</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to release a Tx queue.</p>
+<p>This API releases the descriptor rings and any additional memory allocated for given H2C queue</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>tqueue</td>
+<td>Generic Tx queue pointer</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-close">
+<span id="cid-qdma-dev-close"></span><span id="doxid-group-dpdk-devops-func-1gab47a75fea9395f7e40a9f3e562b928b3"></span><h2>qdma_dev_close<a class="headerlink" href="#qdma-dev-close" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_close</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to close the device.</p>
+<p>This API frees the descriptor rings and objects beonging to all the queues of the given port. It also clears the FMAP.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-vf-dev-close">
+<span id="cid-qdma-vf-dev-close"></span><span id="doxid-group-dpdk-devops-func-1ga561391f1379aa1f99d1618238ed37fe4"></span><h2>qdma_vf_dev_close<a class="headerlink" href="#qdma-vf-dev-close" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_vf_dev_close</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to close the VF device.</p>
+<p>This API frees the descriptor rings and objects beonging to all the queues of the given port. It also clears the FMAP.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="qdma-dev-reset">
+<span id="cid-qdma-dev-reset"></span><span id="doxid-group-dpdk-devops-func-1gaf84e372728ea044347ff74cabac22880"></span><h2>qdma_dev_reset<a class="headerlink" href="#qdma-dev-reset" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_dev_reset</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to reset the device.</p>
+<p>This callback is invoked when applcation calls rte_eth_dev_reset() API to reset a device. This callback uninitialzes PF device after waiting for all its VFs to shutdown. It initialize back PF device and then send Reset done mailbox message to all its VFs to come online again.</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, negative errno value on failure</p>
+</div>
+<div class="section" id="qdma-eth-dev-uninit">
+<span id="cid-qdma-eth-dev-uninit"></span><span id="doxid-group-dpdk-devops-func-1ga2ca469953a8a51321bae3c38a82fd150"></span><h2>qdma_eth_dev_uninit<a class="headerlink" href="#qdma-eth-dev-uninit" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">qdma_eth_dev_uninit</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>DPDK callback to deregister a PCI device.</p>
+<p>The Following actions are performed by this function:</p>
+<ul class="simple">
+<li>Flushes out pending actions from the Tx Mailbox List</li>
+<li>Terminate Tx Mailbox thread</li>
+<li>Disable Mailbox interrupt and unregister interrupt handler</li>
+<li>Unregister PCIe device from Queue Resource Manager</li>
+<li>Cancel QDMA HW error monitoring thread if created by this device</li>
+<li>Disable MM C2H and H2C channels</li>
+</ul>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>dev</td>
+<td>Pointer to Ethernet device structure</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>0 on success, &lt; 0 on failure</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+<!-- Atalwar: Moved the footer code to layout.html to resolve conflict with the Xilinx template -->
+
+</footer>
+
+        </div>
+      </div>
+	  
+	  
+	  <!-- Sphinx Page Footer block -->
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="qdma_pmd_export.html" class="btn btn-neutral float-right" title="QDMA DPDK PMD Exported APIs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dpdk-callbacks.html" class="btn btn-neutral float-left" title="DPDK Callback APIs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo" class="copyright">
+    <p class="footerinfo">
+      <span class="lastupdated">
+        Last updated on June 18, 2022.
+      </span>
+
+    </p>
+  </div>	  
+      </div>
+    </section>
+
+
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+  
+
+  
+  <!--  Xilinx template footer block -->
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="xilinxExperienceFragments experiencefragment aem-GridColumn--default--none aem-GridColumn aem-GridColumn--offset--default--0 aem-GridColumn--default--16">
+					<div class="xf-content-height">
+						<div class="aem-Grid aem-Grid--16 aem-Grid--default--16 ">
+							<div class="footer parbase aem-GridColumn--default--none aem-GridColumn aem-GridColumn--offset--default--0 aem-GridColumn--default--16">
+								<noindex>
+									<footer>
+										<div class="aem-Grid aem-Grid--16">
+											<div class="aem-GridColumn aem-GridColumn--xxxlarge--none aem-GridColumn--xsmall--16 aem-GridColumn--offset--xsmall--0 aem-GridColumn--xlarge--none aem-GridColumn--xxlarge--none aem-GridColumn--default--none aem-GridColumn--offset--large--1 aem-GridColumn--xlarge--12 aem-GridColumn--offset--default--0 aem-GridColumn--xxlarge--10 aem-GridColumn--offset--xlarge--2 aem-GridColumn--offset--xxlarge--3 aem-GridColumn--offset--xxxlarge--4 aem-GridColumn--xsmall--none aem-GridColumn--large--none aem-GridColumn aem-GridColumn--large--14 aem-GridColumn--xxxlarge--8 aem-GridColumn--default--16">
+												<div class="container-fluid sub-footer">
+													<div class="row">
+														<div class="footerSocial parbase">
+															<div class="col-md-push-6 col-lg-push-6 col-md-6 col-lg-6">
+																<ul class="list-inline pull-right social-menu">
+																	<li>
+																		<a href="https://www.linkedin.com/company/xilinx">
+																		<span class="linkedin icon"></span>
+																		<span class="sr-only">Connect on LinkedIn</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.twitter.com/XilinxInc">
+																		<span class="twitter icon"></span>
+																		<span class="sr-only">Follow us on Twitter</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.facebook.com/XilinxInc">
+																		<span class="facebook icon"></span>
+																		<span class="sr-only">Connect on Facebook</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.youtube.com/XilinxInc">
+																		<span class="youtube icon"></span>
+																		<span class="sr-only">Watch us on YouTube</span>
+																		</a>
+																	</li>
+																	<li>
+																		<a href="https://www.xilinx.com/registration/subscriber-signup.html">
+																		<span class="newsletter icon"></span>
+																		<span class="sr-only">Subscribe to Newsletter</span>
+																		</a>
+																	</li>
+																</ul>
+															</div>
+														</div>
+														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
+															<span class="copyright">
+                                  
+                                  &copy; 2018-2022, Xilinx, Inc
+                              </span>
+															<ul class="list-inline sub-menu">
+																<li>
+																	<a href="https://www.xilinx.com/about/privacy-policy.html">Privacy</a>
+																</li>
+																<li>
+																	<a href="https://www.xilinx.com/about/legal.html">Legal</a>
+																</li>
+																<li>
+																	<a href="https://www.xilinx.com/about/contact.html">Contact</a>
+																</li>
+															</ul>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</footer>
+								</noindex>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="quicklinks parbase aem-GridColumn--default--none aem-GridColumn aem-GridColumn--offset--default--0 aem-GridColumn--default--16">
+					<noindex>
+						<span class="quickLinks">
+							<ul>
+								<li>
+									<a href="#top" class="btn backToTop">
+									<span class="fas fa-angle-up" aria-hidden="true"></span>
+									</a>
+								</li>
+							</ul>
+						</span>
+					</noindex>
+				</div>
+			</div>
+		</div>
+		<script>window.CQ = window.CQ || {}</script>
+		<script src="https://static.cloud.coveo.com/searchui/v2.4382/js/CoveoJsSearch.Lazy.min.js"></script>
+		<script>
+			var underscoreSetup = function () {
+			  _.templateSettings.interpolate = /\{\{=([^-][\S\s]+?)\}\}/g;
+			  _.templateSettings.evaluate = /\{\{([^-=][\S\s]+?)\}\}/g;
+			  _.templateSettings.escape = /\{\{-([^=][\S\s]+?)\}\}/g;
+			}
+			
+			underscoreSetup();
+		</script>
+	</body>
+</html>

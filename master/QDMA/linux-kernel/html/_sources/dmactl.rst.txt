@@ -278,7 +278,32 @@ This command allows the user to start a list of queues.
    [xilinx@]# dma-ctl qdma01000 q start list 1 4 dir h2c
 
    Started Queues 1 -> 4.
-   
+
+List of Queues added
+--------------------
+
+command: ``dma-ctl qdma<bbddf> q list <start_idx> <num_Qs>``
+
+This command allows user to list queues added/configured.
+
+**Parameter**
+
+- <start_idx> : Starting queue number
+- <num_Qs> : Number of queues to list
+
+::
+
+   [xilinx@]# dma-ctl qdma01000 q list 1 4
+   H2C Q: 4, C2H Q: 0, CMPT Q 0.
+   qdma06000-MM-1 H2C online
+           hw_ID 1, thp ?, desc 0x0000000050bf1609/0xfffc0000, 2048
+   qdma06000-MM-2 H2C online
+           hw_ID 2, thp ?, desc 0x00000000e4e32bca/0xfffa0000, 2048
+   qdma06000-MM-3 H2C online
+           hw_ID 3, thp ?, desc 0x00000000a84d8d83/0xfff80000, 2048
+   qdma06000-MM-4 H2C online
+           hw_ID 4, thp ?, desc 0x00000000ddf89665/0xfff60000, 2048
+
 Stop a Queue
 ------------
 

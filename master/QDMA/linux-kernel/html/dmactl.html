@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2022.1',
+              VERSION:'2023.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2022.1
+                2023.1
               </div>
             
           
@@ -361,6 +361,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#add-a-list-of-queues">Add a List of Queues</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#start-a-queue">Start a Queue</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#start-a-list-of-queues">Start a List of Queues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#list-of-queues-added">List of Queues added</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stop-a-queue">Stop a Queue</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stop-a-list-of-queues">Stop a List of Queues</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#delete-a-queue">Delete a Queue</a></li>
@@ -717,6 +718,28 @@ dma-ctl: Info: Default ring size set to 2048
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start list 1 4 dir h2c
 
 Started Queues 1 -&gt; 4.
+</pre></div>
+</div>
+</div>
+<div class="section" id="list-of-queues-added">
+<h3>List of Queues added<a class="headerlink" href="#list-of-queues-added" title="Permalink to this headline">¶</a></h3>
+<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;num_Qs&gt;</span></code></p>
+<p>This command allows user to list queues added/configured.</p>
+<p><strong>Parameter</strong></p>
+<ul class="simple">
+<li>&lt;start_idx&gt; : Starting queue number</li>
+<li>&lt;num_Qs&gt; : Number of queues to list</li>
+</ul>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q list 1 4
+H2C Q: 4, C2H Q: 0, CMPT Q 0.
+qdma06000-MM-1 H2C online
+        hw_ID 1, thp ?, desc 0x0000000050bf1609/0xfffc0000, 2048
+qdma06000-MM-2 H2C online
+        hw_ID 2, thp ?, desc 0x00000000e4e32bca/0xfffa0000, 2048
+qdma06000-MM-3 H2C online
+        hw_ID 3, thp ?, desc 0x00000000a84d8d83/0xfff80000, 2048
+qdma06000-MM-4 H2C online
+        hw_ID 4, thp ?, desc 0x00000000ddf89665/0xfff60000, 2048
 </pre></div>
 </div>
 </div>
@@ -1893,7 +1916,7 @@ CFG_BLK_IDENTIFIER                       [31, 0]   0xf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 15, 2022.
+        Last updated on February 01, 2023.
       </span>
 
     </p>
@@ -1971,7 +1994,7 @@ CFG_BLK_IDENTIFIER                       [31, 0]   0xf
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2022-2023 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

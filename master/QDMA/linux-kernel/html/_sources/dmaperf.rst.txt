@@ -42,6 +42,11 @@ dma-perf tool takes a configuration file as input. The configuration file format
 	bidir_en=1
 	num_pkt=64
 	pkt_sz=64
+	offset_q_en=1
+	h2c_q_start_offset=0x100
+	h2c_q_offset_intvl=10
+	c2h_q_start_offset=0x200
+	c2h_q_offset_intvl=20
 
 
 **Parameters**
@@ -65,4 +70,9 @@ dma-perf tool takes a configuration file as input. The configuration file format
 - mm_chnl : MM Channel \( 0 - 1 \) for Versal devices
 - keyhole_en :  Enable the Keyhole feature
 - offset : Offset to be written to for MM Performance Use cases
-- aperture_sz : Size of aperture when using the keyhole feature  
+- aperture_sz : Size of aperture when using the keyhole feature
+- offset_q_en : Offset queue enable (0-1) to enable H2C/C2H queues offsets.
+- h2c_q_start_offset : Start address of H2C queue.
+- h2c_q_offset_intvl : Fixed interval for subsequent H2C queues offsets.
+- c2h_q_start_offset : Start address of C2H queue.
+- c2h_q_offset_intvl : Fixed interval for subsequent C2H queues offsets.
