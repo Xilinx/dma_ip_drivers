@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,9 +37,9 @@
 #define qdma_stringify1(x...)	#x
 #define qdma_stringify(x...)	qdma_stringify1(x)
 
-#define QDMA_PMD_MAJOR		2022
+#define QDMA_PMD_MAJOR		2023
 #define QDMA_PMD_MINOR		1
-#define QDMA_PMD_PATCHLEVEL	3
+#define QDMA_PMD_PATCHLEVEL	0
 
 #define QDMA_PMD_VERSION      \
 	qdma_stringify(QDMA_PMD_MAJOR) "." \

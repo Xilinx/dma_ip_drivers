@@ -4049,6 +4049,11 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 			  FIELD_SET(QDMA_DMA_SEL_IRQ_EN_MASK,
 			  reg_info->irq_en);
 
+	/* Make sure writes to the H2C/C2H descriptors are synchronized
+	 * before updating PIDX
+	 */
+	qdma_io_wmb();
+
 	qdma_reg_write(dev_hndl, reg_addr, reg_val);
 
 	return QDMA_SUCCESS;
@@ -4100,6 +4105,11 @@ int qdma_queue_cmpt_cidx_update(void *dev_hndl, uint8_t is_vf,
 		FIELD_SET(QDMA_DMAP_SEL_CMPT_STS_DESC_EN_MASK,
 				reg_info->wrb_en) |
 		FIELD_SET(QDMA_DMAP_SEL_CMPT_IRQ_EN_MASK, reg_info->irq_en);
+
+	/* Make sure writes to the CMPT ring are synchronized
+	 * before updating CIDX
+	 */
+	qdma_io_wmb();
 
 	qdma_reg_write(dev_hndl, reg_addr, reg_val);
 

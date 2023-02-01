@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,5 +45,7 @@ struct qdma_ul_mm_desc *get_mm_h2c_desc(void *queue_hndl);
 uint64_t get_mm_c2h_ep_addr(void *queue_hndl);
 uint64_t get_mm_h2c_ep_addr(void *queue_hndl);
 uint32_t get_mm_buff_size(void *queue_hndl);
+
+uint32_t rx_queue_count(void *rx_queue);
 
 #endif /* QDMA_DPDK_RXTX_H_ */

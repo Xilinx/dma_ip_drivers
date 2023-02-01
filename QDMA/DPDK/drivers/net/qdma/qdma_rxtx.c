@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -237,6 +237,10 @@ static int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 
 	id = txq->tx_fl_tail;
 	fl_desc = (int)cidx - id;
+
+	if (fl_desc == 0)
+		return 0;
+
 	if (fl_desc < 0)
 		fl_desc += (txq->nb_tx_desc - 1);
 
@@ -633,7 +637,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 	return 0;
 }
 
-static uint32_t rx_queue_count(void *rx_queue)
+uint32_t rx_queue_count(void *rx_queue)
 {
 	struct qdma_rx_queue *rxq = rx_queue;
 	struct wb_status *wb_status;
@@ -683,24 +687,6 @@ static uint32_t rx_queue_count(void *rx_queue)
 	PMD_DRV_LOG(DEBUG, "%s: nb_desc_used = %d",
 			__func__, nb_desc_used);
 	return nb_desc_used;
-}
-
-/**
- * DPDK callback to get the number of used descriptors of a rx queue.
- *
- * @param dev
- *   Pointer to Ethernet device structure.
- * @param rx_queue_id
- *   The RX queue on the Ethernet device for which information will be
- *   retrieved
- *
- * @return
- *   The number of used descriptors in the specific queue.
- */
-uint32_t
-qdma_dev_rx_queue_count(struct rte_eth_dev *dev, uint16_t rx_queue_id)
-{
-	return rx_queue_count(dev->data->rx_queues[rx_queue_id]);
 }
 
 /**
@@ -1467,6 +1453,12 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 #endif
 
 	id = txq->q_pidx_info.pidx;
+
+	/* Make sure reads to Tx ring are synchronized before
+	 * accessing the status descriptor.
+	 */
+	rte_rmb();
+
 	cidx = txq->wb_status->cidx;
 	PMD_DRV_LOG(DEBUG, "Xmit start on tx queue-id:%d, tail index:%d\n",
 			txq->queue_id, id);
@@ -1515,11 +1507,6 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 
 	txq->stats.pkts += count;
 	txq->stats.bytes += pkt_len;
-
-	/* Make sure writes to the H2C descriptors are synchronized
-	 * before updating PIDX
-	 */
-	rte_wmb();
 
 #if (MIN_TX_PIDX_UPDATE_THRESHOLD > 1)
 	rte_spinlock_lock(&txq->pidx_update_lock);
@@ -1640,7 +1627,7 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
  * DPDK callback for transmitting packets in burst.
  *
  * @param tx_queue
- G*   Generic pointer to TX queue structure.
+ *   Generic pointer to TX queue structure.
  * @param[in] tx_pkts
  *   Packets to transmit.
  * @param nb_pkts

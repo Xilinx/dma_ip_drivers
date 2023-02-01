@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +31,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rte_ethdev_pci.h>
 #include "qdma.h"
 #include "qdma_mbox.h"
 #include <rte_malloc.h>
@@ -358,7 +357,7 @@ int qdma_mbox_init(struct rte_eth_dev *dev)
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct rte_pci_device *pci_dev = RTE_ETH_DEV_TO_PCI(dev);
 	uint32_t raw_data[MBOX_MSG_REG_MAX] = {0};
-	struct rte_intr_handle *intr_handle = &pci_dev->intr_handle;
+	struct rte_intr_handle *intr_handle = pci_dev_intr_handle;
 
 	if (!qdma_dev->is_vf) {
 		int i;
@@ -395,7 +394,7 @@ void qdma_mbox_uninit(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct rte_pci_device *pci_dev = RTE_ETH_DEV_TO_PCI(dev);
-	struct rte_intr_handle *intr_handle = &pci_dev->intr_handle;
+	struct rte_intr_handle *intr_handle = pci_dev_intr_handle;
 
 	do {
 		rte_spinlock_lock(&qdma_dev->mbox.list_lock);

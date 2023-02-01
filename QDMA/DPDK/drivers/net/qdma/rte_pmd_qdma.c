@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,7 +37,6 @@
 #include <sys/fcntl.h>
 #include <rte_memzone.h>
 #include <rte_string_fns.h>
-#include <rte_ethdev_pci.h>
 #include <rte_malloc.h>
 #include <rte_dev.h>
 #include <rte_pci.h>
@@ -1796,7 +1795,8 @@ int rte_pmd_qdma_dev_close(uint16_t port_id)
 	struct qdma_pci_dev *qdma_dev;
 
 	if (port_id >= rte_eth_dev_count_avail()) {
-		PMD_DRV_LOG(ERR, "Wrong port id %d\n", port_id);
+		PMD_DRV_LOG(ERR, "%s:%d Wrong port id %d\n", __func__, __LINE__,
+			port_id);
 		return -ENOTSUP;
 	}
 	dev = &rte_eth_devices[port_id];
@@ -1818,3 +1818,4 @@ int rte_pmd_qdma_dev_close(uint16_t port_id)
 
 	return 0;
 }
+

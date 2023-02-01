@@ -1,7 +1,7 @@
 #   BSD LICENSE
 #
 #   Copyright (c) 2021-2022 Xilinx, Inc. All rights reserved.
-#   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+#   Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
 #
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -31,6 +31,17 @@
 
 cflags += ['-DRTE_LIBRTE_QDMA_PMD']
 cflags += ['-DDMA_BRAM_SIZE=524288']
+cflags += ['-DTHROUGHPUT_MEASUREMENT']
+
+# Enable vectorization in qdma data path to use 128-bit SIMD registers
+cflags += ['-DQDMA_RX_VEC_X86_64']
+cflags += ['-DQDMA_TX_VEC_X86_64']
+
+#Used QDMA_DPDK_20_11 flag for DPDK 22.11
+#Similar for DPDK 20.11 and 21.11,
+##QDMA_DPDK_20_11, QDMA_DPDK_20_11 flags we can set it it
+
+cflags += ['-DQDMA_DPDK_22_11']
 
 includes += include_directories('.')
 includes += include_directories('qdma_access')
@@ -64,5 +75,6 @@ sources = files(
 	'qdma_access/qdma_access_common.c',
 	'qdma_mbox.c',
 	'qdma_platform.c',
-	'rte_pmd_qdma.c'
+	'rte_pmd_qdma.c',
+	'qdma_dpdk_compat.c'
 )

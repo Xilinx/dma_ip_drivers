@@ -1,8 +1,8 @@
-RELEASE: 2022.1.3
+RELEASE: 2023.1.0
 =================
 
-This release is based on DPDK v20.11 and contains QDMA poll mode driver and
-QDMA test application.
+This release is based on DPDK v20.11, v21.11 and v22.11 and
+contains QDMA poll mode driver and QDMA test application.
 
 This release is validated for
 	- On VCU1525 for QDMA5.0 2022.1 example design
@@ -10,10 +10,10 @@ This release is validated for
 	- On VCU1525 for QDMA3.1 2019.2 example design
 	- On XCVP1202 for CPM5 2022.1 example design
 
-This release includes a patch file for dpdk-pktgen v20.12.0 that extends
+This release includes patch files for dpdk-pktgen v20.12.0 and v22.04.1 that extends
 dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
 and it disables the packet size classification logic in dpdk-pktgen to remove
-application overhead in performance measurement.This patch is used for 
+application overhead in performance measurement.This patch is used for
 performance testing with dpdk-pktgen application.
 
 The driver is validated against dpdk-pktgen and testpmd applications for API compliance.
@@ -111,8 +111,20 @@ CPM5
 ----------------------
 - Added PF/VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
 
+2023.1.0 Updates
+----------------
+- Added support for DPDK framework v21.11 and v22.11 and retained the backward compatibility for v20.11
+- Enabled 128 bit SIMD vectorization for Intel and AMD platforms by default for qdma Receive and Transmit APIs
+- Added IO memory barriers for H2C/C2H producer index and completion ring consumer index updates
+
 KNOWN ISSUE:
 ============
+- CPM5:
+	- Performance optimizations are not finalized, Performance report with optimizations will be available in next patch release.
+
+- QDMA5.0:
+	- Performance optimizations are not finalized, Performance report with optimizations will be available in next patch release.
+
 - All Designs
 	- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
 	- DPDK C2H and Forwarding performance values for 8 queue is lesser compared to 4 queue case for both PF and VF.
@@ -126,14 +138,14 @@ DRIVER LIMITATIONS:
 - All Designs
 	- Big endian systems are not supported
 	- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
-
+	- Current 2023.1.0 driver which is supporting DPDK 22.11/21.11 is not fully verified for stress, multicard, tandem boot and interop use cases. These will be verified and confirmed in next patch release.
 
 
 /*-
  *   BSD LICENSE
  *
  *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- *   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ *   Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions

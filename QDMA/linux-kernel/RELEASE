@@ -127,19 +127,19 @@ CPM5
 ----------------------
 - Added PF/VF 4K queues support for CPM5 design. This feature is applicable only when corresponding RTL support is added.
 
-2023.1 Updates
---------------
+2023.1.0 Updates
+----------------
 - Updated the queue list command for >2048 Q's.
 - Added support to accomodate H2C & C2H Q's offset with fixed intervals for dma-perf application.
 
 KNOWN ISSUES:
 =============
 - CPM5 Only
-	- Data transfers are not happening when FLR is triggered with 10 VFs created on each PF.
-    - Performace optimizations are not finalized yet.
+	- When >10VFs are attached to PF and FLR is issued, mailbox timeouts are observed.
+    - Performace optimizations are not finalized, Performance report with optimizations will be available in next patch release.
 
 - QDAM5.0
-    - Performace optimizations are not finalized yet.
+    - Performace optimizations are not finalized, Performance report with optimizations will be available in next patch release.
 
 - All Designs
 	- In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors

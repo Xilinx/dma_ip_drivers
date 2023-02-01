@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- *   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ *   Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -1329,7 +1329,9 @@ static void cmd_obj_load_cmds_parsed(void *parsed_result,
 		return;
 	}
 
-	rdline_reset(&cl->rdl);
+
+	struct rdline *rdl = cmdline_get_rdline(cl);
+	rdline_reset(rdl);
 	{
 		cmdline_in(cl, "\r", 1);
 		while (fgets(buff, sizeof(buff), fp))
