@@ -133,6 +133,7 @@ Now, unbind PFs from igb_uio driver and bind PFs and VFs to vfio-pci driver.
 	# ../../usertools/dpdk-devbind.py -u 81:00.2
 	# ../../usertools/dpdk-devbind.py -u 81:00.3
 
+	# modprobe vfio-pci
 	# ../../usertools/dpdk-devbind.py -b vfio-pci 81:00.0
 	# ../../usertools/dpdk-devbind.py -b vfio-pci 81:00.1
 	# ../../usertools/dpdk-devbind.py -b vfio-pci 81:00.2
@@ -622,8 +623,8 @@ Assuming that the VM image has been created with the settings outlined in Table 
 
 	::
 
-		qemu-system-x86_64 -cpu host -enable-kvm -m 4096 -object memory-backend-file,id=mem,size=4096M,mem-path=/mnt/huge,
-		share=on -numa node,memdev=mem -mem-prealloc -smp sockets=2,cores=4 -hda <vm_image.qcow2> -device pci-assign,host=81:00.4
+		qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda <vm_image.qcow2>
+		-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -vnc :5556 &
 
 6. Copy the DPDK source code in VM by executing below command from VM.
 
@@ -657,7 +658,8 @@ Add the Vendor Id and Device Id to vfio-pci and bind the VFs to vfio-pci as belo
 
 ::
 
-	qemu-system-x86_64 -cpu host -enable-kvm -m 4096 -mem-prealloc -smp sockets=2,cores=4 -hda vm_image.qcow2 -device vfio-pci,host=81:00.4 -device vfio-pci,host=81:08.4
+		qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda <vm_image.qcow2>
+		-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -device vfio-pci,host=81:08.4 -vnc :5556 &
 
 
 Follow below steps inside VM to bind the functions with vfio-pci

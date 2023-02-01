@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2022.1',
+              VERSION:'2023.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2022.1
+                2023.1
               </div>
             
           
@@ -485,21 +485,31 @@ on the Xilinx GitHub <a class="reference external" href="https://github.com/Xili
 <tr class="row-even"><td>tools/0001-PKTGEN-20.12.0-
 Patch-to-add-Jumbo-packet
 -support.patch</td>
-<td>This is dpdk-pktgen patch based on dpdk-pktgen v20.12.0.
+<td>This is dpdk-pktgen patch based on DPDK v20.11
 This patch extends dpdk-pktgen application to handle packets
 with packet sizes more than 1518 bytes and it disables the
 packet size classification logic to remove application
 overhead in performance measurement. This patch is used for
 performance testing with dpdk-pktgen application.</td>
 </tr>
-<tr class="row-odd"><td>RELEASE.txt</td>
+<tr class="row-odd"><td>tools/0001-PKTGEN-22.04.1-
+Patch-to-add-Jumbo-packet
+-support.patch</td>
+<td>This is dpdk-pktgen patch based on DPDK v22.11.
+This patch extends dpdk-pktgen application to handle packets
+with packet sizes more than 1518 bytes and it disables the
+packet size classification logic to remove application
+overhead in performance measurement. This patch is used for
+performance testing with dpdk-pktgen application.</td>
+</tr>
+<tr class="row-even"><td>RELEASE.txt</td>
 <td>Release Notes</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="setup-download-and-modifications">
 <h3>Setup: Download and modifications<a class="headerlink" href="#setup-download-and-modifications" title="Permalink to this headline">¶</a></h3>
-<p>The reference driver code requires DPDK version 20.11.
+<p>The reference driver code requires DPDK v22.11/v21.11/v20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.</p>
 <p>Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU1525
@@ -510,28 +520,28 @@ is installed and move to this directory.</p>
 cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
 git clone http://dpdk.org/git/dpdk-stable
 cd dpdk-stable
-git checkout v20.11
+git checkout v22.11/v21.11/v20.11
 git clone git://dpdk.org/dpdk-kmods
 cp -r &lt;dpdk_sw_database&gt;/drivers/net/qdma ./drivers/net/
 cp -r &lt;dpdk_sw_database&gt;/examples/qdma_testapp ./examples/
 </pre></div>
 </div>
-<p>Additionally, make below changes to the DPDK 20.11 tree to build QDMA driver,
+<p>Additionally, make below changes to the DPDK v22.11/v21.11/v20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>To build QDMA driver</li>
 </ol>
 <ol class="loweralpha simple">
-<li>To support 2K queues and 256 PCIe functions, update below configurations     in <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code></li>
+<li>To support 4K queues and 256 PCIe functions, update below configurations     in <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code></li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_MEMZONE 20480
+<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_MEMZONE 40960
 #define RTE_MAX_VFIO_CONTAINERS 256
-#define RTE_MAX_QUEUES_PER_PORT 2048
+#define RTE_MAX_QUEUES_PER_PORT 4096
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="2">
-<li>Add below lines to <code class="docutils literal"><span class="pre">./config/meson.build</span></code> in DPDK 20.11 tree</li>
+<li>Add below lines to <code class="docutils literal"><span class="pre">./config/meson.build</span></code> in DPDK v22.11/v21.11/v20.11 tree</li>
 </ol>
 <div class="highlight-none"><div class="highlight"><pre><span></span># Set maximum Ethernet ports to 256
 dpdk_conf.set(&#39;RTE_MAX_ETHPORTS&#39;, 256)
@@ -552,12 +562,21 @@ dpdk_conf.set(&#39;RTE_MAX_VFIO_GROUPS&#39;, 256)
 <div class="highlight-none"><div class="highlight"><pre><span></span>&#39;qdma&#39;,
 </pre></div>
 </div>
+<ol class="loweralpha simple" start="5">
+<li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/meson.build</span></code>, to support required DPDK framework version</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span># Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
+# Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
+# Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
+cflags += [&#39;-DQDMA_DPDK_22_11&#39;]
+</pre></div>
+</div>
 <ol class="arabic simple" start="2">
 <li>To add Xilinx devices for device binding, add below lines to <code class="docutils literal"><span class="pre">./usertools/dpdk-devbind.py</span></code> after cavium_pkx class, where PCI base class for devices are listed.</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>xilinx_qdma_pf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348&#39;,
+<div class="highlight-none"><div class="highlight"><pre><span></span>xilinx_qdma_pf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348,b011,b111,b211,b311,b014,b114,b214,b314,b018,b118,b218,b318,b01f,b11f,b21f,b31f,b021,b121,b221,b321,b024,b124,b224,b324,b028,b128,b228,b328,b02f,b12f,b22f,b32f,b031,b131,b231,b331,b034,b134,b234,b334,b038,b138,b238,b338,b03f,b13f,b23f,b33f,b041,b141,b241,b341,b044,b144,b244,b344,b048,b148,b248,b348,b058,b158,b258,b358&#39;
 &#39;SVendor&#39;: None, &#39;SDevice&#39;: None}
-xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;a011,a111,a211,a311,a014,a114,a214,a314,a018,a118,a218,a318,a01f,a11f,a21f,a31f,a021,a121,a221,a321,a024,a124,a224,a324,a028,a128,a228,a328,a02f,a12f,a22f,a32f,a031,a131,a231,a331,a034,a134,a234,a334,a038,a138,a238,a338,a03f,a13f,a23f,a33f,a041,a141,a241,a341,a044,a144,a244,a344,a048,a148,a248,a348&#39;,
+xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;a011,a111,a211,a311,a014,a114,a214,a314,a018,a118,a218,a318,a01f,a11f,a21f,a31f,a021,a121,a221,a321,a024,a124,a224,a324,a028,a128,a228,a328,a02f,a12f,a22f,a32f,a031,a131,a231,a331,a034,a134,a234,a334,a038,a138,a238,a338,a03f,a13f,a23f,a33f,a041,a141,a241,a341,a044,a144,a244,a344,a048,a148,a248,a348,c011,c111,c211,c311,c014,c114,c214,c314,c018,c118,c218,c318,c01f,c11f,c21f,c31f,c021,c121,c221,c321,c024,c124,c224,c324,c028,c128,c228,c328,c02f,c12f,c22f,c32f,c031,c131,c231,c331,c034,c134,c234,c334,c038,c138,c238,c338,c03f,c13f,c23f,c33f,c041,c141,c241,c341,c044,c144,c244,c344,c048,c148,c248,c348,c058,c158,c258,c358&#39;,
 &#39;SVendor&#39;: None, &#39;SDevice&#39;: None}
 </pre></div>
 </div>
@@ -689,7 +708,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 18, 2022.
+        Last updated on February 01, 2023.
       </span>
 
     </p>
@@ -767,7 +786,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2022-2023 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

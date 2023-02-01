@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2022.1',
+              VERSION:'2023.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2022.1
+                2023.1
               </div>
             
           
@@ -554,6 +554,7 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 # ../../usertools/dpdk-devbind.py -u 81:00.2
 # ../../usertools/dpdk-devbind.py -u 81:00.3
 
+# modprobe vfio-pci
 # ../../usertools/dpdk-devbind.py -b vfio-pci 81:00.0
 # ../../usertools/dpdk-devbind.py -b vfio-pci 81:00.1
 # ../../usertools/dpdk-devbind.py -b vfio-pci 81:00.2
@@ -953,8 +954,8 @@ Format for this commad is:</p>
 </li>
 <li><p class="first">Start the VM using below command by attaching the VF (81:00.4 in this example)</p>
 <blockquote>
-<div><div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 4096 -object memory-backend-file,id=mem,size=4096M,mem-path=/mnt/huge,
-share=on -numa node,memdev=mem -mem-prealloc -smp sockets=2,cores=4 -hda &lt;vm_image.qcow2&gt; -device pci-assign,host=81:00.4
+<div><div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
+-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -vnc :5556 &amp;
 </pre></div>
 </div>
 </div></blockquote>
@@ -988,7 +989,8 @@ echo 0000:81:08.4 &gt; /sys/bus/pci/drivers/vfio-pci/bind
 <ol class="arabic simple" start="2">
 <li>Attach the VFs (here, 81:00.4 and 81:08.4) to VM via vfio-pci using QEMU with below command.</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 4096 -mem-prealloc -smp sockets=2,cores=4 -hda vm_image.qcow2 -device vfio-pci,host=81:00.4 -device vfio-pci,host=81:08.4
+<div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
+-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -device vfio-pci,host=81:08.4 -vnc :5556 &amp;
 </pre></div>
 </div>
 <p>Follow below steps inside VM to bind the functions with vfio-pci</p>
@@ -1037,7 +1039,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on June 18, 2022.
+        Last updated on February 01, 2023.
       </span>
 
     </p>
@@ -1115,7 +1117,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2022-2023 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

@@ -60,6 +60,8 @@ For details on Hardware Features refer to QDMA_Product_Guide_.
 Software Features
 ---------------------
 
+* Support DPDK v22.11 LTS
+* Support DPDK v21.11 LTS
 * Support DPDK v20.11 LTS
 * Support driver binding to igb_uio and vfio-pci
 * Support device arguments (module parameters) for device level configuration

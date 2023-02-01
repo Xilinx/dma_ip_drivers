@@ -50,7 +50,14 @@ on the Xilinx GitHub https://github.com/Xilinx/dma_ip_drivers, subdirectory QDMA
 +-----------------------------+------------------------------------------------------------------+
 | examples/qdma_testapp       | Xilinx CLI based test application for QDMA                       |
 +-----------------------------+------------------------------------------------------------------+
-| tools/0001-PKTGEN-20.12.0-  | This is dpdk-pktgen patch based on dpdk-pktgen v20.12.0.         |
+| tools/0001-PKTGEN-20.12.0-  | This is dpdk-pktgen patch based on DPDK v20.11                   |
+| Patch-to-add-Jumbo-packet   | This patch extends dpdk-pktgen application to handle packets     |
+| -support.patch              | with packet sizes more than 1518 bytes and it disables the       |
+|                             | packet size classification logic to remove application           |
+|                             | overhead in performance measurement. This patch is used for      |
+|                             | performance testing with dpdk-pktgen application.                |
++-----------------------------+------------------------------------------------------------------+
+| tools/0001-PKTGEN-22.04.1-  | This is dpdk-pktgen patch based on DPDK v22.11.                  |
 | Patch-to-add-Jumbo-packet   | This patch extends dpdk-pktgen application to handle packets     |
 | -support.patch              | with packet sizes more than 1518 bytes and it disables the       |
 |                             | packet size classification logic to remove application           |
@@ -63,7 +70,7 @@ on the Xilinx GitHub https://github.com/Xilinx/dma_ip_drivers, subdirectory QDMA
 Setup: Download and modifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The reference driver code requires DPDK version 20.11.
+The reference driver code requires DPDK v22.11/v21.11/v20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.
 
@@ -79,25 +86,25 @@ is installed and move to this directory.
 	cd <server_dir>/<dpdk_test_area>
 	git clone http://dpdk.org/git/dpdk-stable
 	cd dpdk-stable
-	git checkout v20.11
+	git checkout v22.11/v21.11/v20.11
 	git clone git://dpdk.org/dpdk-kmods
 	cp -r <dpdk_sw_database>/drivers/net/qdma ./drivers/net/
 	cp -r <dpdk_sw_database>/examples/qdma_testapp ./examples/
 
-Additionally, make below changes to the DPDK 20.11 tree to build QDMA driver,
+Additionally, make below changes to the DPDK v22.11/v21.11/v20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.
 
 	1. To build QDMA driver
 
-	a. To support 2K queues and 256 PCIe functions, update below configurations	in ``./config/rte_config.h``
+	a. To support 4K queues and 256 PCIe functions, update below configurations	in ``./config/rte_config.h``
 
 	::
 
-		#define RTE_MAX_MEMZONE 20480
+		#define RTE_MAX_MEMZONE 40960
 		#define RTE_MAX_VFIO_CONTAINERS 256
-		#define RTE_MAX_QUEUES_PER_PORT 2048
+		#define RTE_MAX_QUEUES_PER_PORT 4096
 
-	b. Add below lines to ``./config/meson.build`` in DPDK 20.11 tree
+	b. Add below lines to ``./config/meson.build`` in DPDK v22.11/v21.11/v20.11 tree
 
 	::
 
@@ -119,14 +126,23 @@ support 2K queues and populate Xilinx devices for binding.
 
 		'qdma',
 
+	e. Add below line to ``./drivers/net/meson.build``, to support required DPDK framework version
+
+	::
+
+		# Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
+		# Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
+		# Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
+		cflags += ['-DQDMA_DPDK_22_11']
+
 
 	2. To add Xilinx devices for device binding, add below lines to	``./usertools/dpdk-devbind.py`` after cavium_pkx class, where PCI base class for devices are listed.
 
 	::
 
-		xilinx_qdma_pf = {'Class': '05', 'Vendor': '10ee', 'Device': '9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348',
+		xilinx_qdma_pf = {'Class': '05', 'Vendor': '10ee', 'Device': '9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348,b011,b111,b211,b311,b014,b114,b214,b314,b018,b118,b218,b318,b01f,b11f,b21f,b31f,b021,b121,b221,b321,b024,b124,b224,b324,b028,b128,b228,b328,b02f,b12f,b22f,b32f,b031,b131,b231,b331,b034,b134,b234,b334,b038,b138,b238,b338,b03f,b13f,b23f,b33f,b041,b141,b241,b341,b044,b144,b244,b344,b048,b148,b248,b348,b058,b158,b258,b358'
 		'SVendor': None, 'SDevice': None}
-		xilinx_qdma_vf = {'Class': '05', 'Vendor': '10ee', 'Device': 'a011,a111,a211,a311,a014,a114,a214,a314,a018,a118,a218,a318,a01f,a11f,a21f,a31f,a021,a121,a221,a321,a024,a124,a224,a324,a028,a128,a228,a328,a02f,a12f,a22f,a32f,a031,a131,a231,a331,a034,a134,a234,a334,a038,a138,a238,a338,a03f,a13f,a23f,a33f,a041,a141,a241,a341,a044,a144,a244,a344,a048,a148,a248,a348',
+		xilinx_qdma_vf = {'Class': '05', 'Vendor': '10ee', 'Device': 'a011,a111,a211,a311,a014,a114,a214,a314,a018,a118,a218,a318,a01f,a11f,a21f,a31f,a021,a121,a221,a321,a024,a124,a224,a324,a028,a128,a228,a328,a02f,a12f,a22f,a32f,a031,a131,a231,a331,a034,a134,a234,a334,a038,a138,a238,a338,a03f,a13f,a23f,a33f,a041,a141,a241,a341,a044,a144,a244,a344,a048,a148,a248,a348,c011,c111,c211,c311,c014,c114,c214,c314,c018,c118,c218,c318,c01f,c11f,c21f,c31f,c021,c121,c221,c321,c024,c124,c224,c324,c028,c128,c228,c328,c02f,c12f,c22f,c32f,c031,c131,c231,c331,c034,c134,c234,c334,c038,c138,c238,c338,c03f,c13f,c23f,c33f,c041,c141,c241,c341,c044,c144,c244,c344,c048,c148,c248,c348,c058,c158,c258,c358',
 		'SVendor': None, 'SDevice': None}
 
 	Update entries in network devices class in ``./usertools/dpdk-devbind.py`` to add Xilinx devices
