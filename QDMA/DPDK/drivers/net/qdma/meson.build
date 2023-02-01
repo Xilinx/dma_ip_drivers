@@ -37,10 +37,9 @@ cflags += ['-DTHROUGHPUT_MEASUREMENT']
 cflags += ['-DQDMA_RX_VEC_X86_64']
 cflags += ['-DQDMA_TX_VEC_X86_64']
 
-#Used QDMA_DPDK_20_11 flag for DPDK 22.11
-#Similar for DPDK 20.11 and 21.11,
-##QDMA_DPDK_20_11, QDMA_DPDK_20_11 flags we can set it it
-
+# Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
+# Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
+# Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
 cflags += ['-DQDMA_DPDK_22_11']
 
 includes += include_directories('.')

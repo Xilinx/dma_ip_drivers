@@ -685,7 +685,7 @@ void port_close(int port_id)
 	int reg_val;
 	int ret = 0;
 
-	if (rte_pmd_qdma_dev_remove(port_id)) {
+	if (rte_pmd_qdma_get_device(port_id) == NULL) {
 		printf("Port id %d already removed. "
 			"Relaunch application to use the port again\n",
 			port_id);
@@ -778,7 +778,7 @@ int port_remove(int port_id)
 
 	/* Detach the port, it will invoke device remove/uninit */
 	printf("Removing a device with port id %d\n", port_id);
-	if (rte_pmd_qdma_dev_remove(port_id)) {
+	if (rte_pmd_qdma_get_device(port_id) == NULL) {
 		printf("Port id %d already removed\n", port_id);
 		return 0;
 	}
