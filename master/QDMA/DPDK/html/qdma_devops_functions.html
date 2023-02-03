@@ -958,35 +958,6 @@
 <p class="rubric">Returns:</p>
 <p>0 on success, -EINVAL on failure</p>
 </div>
-<div class="section" id="qdma-dev-rx-queue-count">
-<span id="cid-qdma-dev-rx-queue-count"></span><span id="doxid-group-dpdk-devops-func-1ga31d1accd675598cbf46aba9f9c9a6bf3"></span><h2>qdma_dev_rx_queue_count<a class="headerlink" href="#qdma-dev-rx-queue-count" title="Permalink to this headline">¶</a></h2>
-<p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">uint32_t</span> <span class="n">qdma_dev_rx_queue_count</span> <span class="p">(</span>
-    <span class="k">struct</span> <span class="n">rte_eth_dev</span><span class="o">*</span> <span class="n">dev</span><span class="p">,</span>
-    <span class="kt">uint16_t</span> <span class="n">rx_queue_id</span>
-    <span class="p">)</span>
-</pre>
-<p class="rubric">Details:</p>
-<p>DPDK callback to get the number of used descriptors of a rx queue</p>
-<p class="rubric">Parameters:</p>
-<table border="1" class="colwidths-given docutils">
-<colgroup>
-<col width="20%" />
-<col width="80%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>dev</td>
-<td>Pointer to Ethernet device structure</td>
-</tr>
-<tr class="row-even"><td>rx_queue_id</td>
-<td>The RX queue on the Ethernet device for which information will be retrieved</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Returns:</p>
-<p>The number of used descriptors in the specific queue</p>
-</div>
 <div class="section" id="qdma-dev-rx-descriptor-status">
 <span id="cid-qdma-dev-rx-descriptor-status"></span><span id="doxid-group-dpdk-devops-func-1gab8a834a5f484b0e840567a943a8bf535"></span><h2>qdma_dev_rx_descriptor_status<a class="headerlink" href="#qdma-dev-rx-descriptor-status" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
@@ -1198,50 +1169,6 @@
 </tbody>
 </table>
 </div>
-<div class="section" id="qdma-dev-rx-queue-release">
-<span id="cid-qdma-dev-rx-queue-release"></span><span id="doxid-group-dpdk-devops-func-1ga988a722c0fb5aa55ddeb456c3443b1ca"></span><h2>qdma_dev_rx_queue_release<a class="headerlink" href="#qdma-dev-rx-queue-release" title="Permalink to this headline">¶</a></h2>
-<p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">void</span> <span class="n">qdma_dev_rx_queue_release</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">rqueue</span><span class="p">)</span>
-</pre>
-<p class="rubric">Details:</p>
-<p>DPDK callback to release a Rx queue.</p>
-<p>This API releases the descriptor rings and any additional memory allocated for given C2H queue</p>
-<p class="rubric">Parameters:</p>
-<table border="1" class="colwidths-given docutils">
-<colgroup>
-<col width="20%" />
-<col width="80%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>rqueue</td>
-<td>Generic Rx queue pointer</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="qdma-dev-tx-queue-release">
-<span id="cid-qdma-dev-tx-queue-release"></span><span id="doxid-group-dpdk-devops-func-1ga48957c76f42977f6068325b0d6d6df53"></span><h2>qdma_dev_tx_queue_release<a class="headerlink" href="#qdma-dev-tx-queue-release" title="Permalink to this headline">¶</a></h2>
-<p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block">
-<span></span><span class="kt">void</span> <span class="n">qdma_dev_tx_queue_release</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">tqueue</span><span class="p">)</span>
-</pre>
-<p class="rubric">Details:</p>
-<p>DPDK callback to release a Tx queue.</p>
-<p>This API releases the descriptor rings and any additional memory allocated for given H2C queue</p>
-<p class="rubric">Parameters:</p>
-<table border="1" class="colwidths-given docutils">
-<colgroup>
-<col width="20%" />
-<col width="80%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>tqueue</td>
-<td>Generic Tx queue pointer</td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="qdma-dev-close">
 <span id="cid-qdma-dev-close"></span><span id="doxid-group-dpdk-devops-func-1gab47a75fea9395f7e40a9f3e562b928b3"></span><h2>qdma_dev_close<a class="headerlink" href="#qdma-dev-close" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
@@ -1374,7 +1301,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 01, 2023.
+        Last updated on February 03, 2023.
       </span>
 
     </p>

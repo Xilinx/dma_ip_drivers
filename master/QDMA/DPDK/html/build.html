@@ -563,7 +563,7 @@ dpdk_conf.set(&#39;RTE_MAX_VFIO_GROUPS&#39;, 256)
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="5">
-<li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/meson.build</span></code>, to support required DPDK framework version</li>
+<li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/qdma/meson.build</span></code>, to support required DPDK framework version</li>
 </ol>
 <div class="highlight-none"><div class="highlight"><pre><span></span># Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
 # Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
@@ -625,7 +625,10 @@ The following modifications must be made to the <code class="docutils literal"><
 <ul>
 <li><p class="first">Compile DPDK &amp; QDMA driver</p>
 <blockquote>
-<div><p>Execute the following to compile the driver.</p>
+<div><ul class="simple">
+<li>Make sure to delete all the rte and cmdline header files from /usr/local/include before switching to different dpdk framework versions.</li>
+<li>Execute the following to compile the driver.</li>
+</ul>
 <div class="highlight-none"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable
 meson build
 cd build
@@ -642,8 +645,9 @@ ldconfig
 </li>
 <li><p class="first">Verify that <code class="docutils literal"><span class="pre">librte_net_qdma.a</span></code> is installed in <code class="docutils literal"><span class="pre">./build/drivers</span></code> directory.</p>
 </li>
+<li><p class="first">Execute the following to compile the igb_uio kernel driver.</p>
+</li>
 </ul>
-<p>Execute the following to compile the igb_uio kernel driver.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable/dpdk-kmods/linux/igb_uio
 make
 </pre></div>
@@ -708,7 +712,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 01, 2023.
+        Last updated on February 03, 2023.
       </span>
 
     </p>
