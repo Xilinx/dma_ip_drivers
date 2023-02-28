@@ -96,15 +96,21 @@ support 2K queues and populate Xilinx devices for binding.
 
 	1. To build QDMA driver
 
-	a. To support 4K queues and 256 PCIe functions, update below configurations	in ``./config/rte_config.h``
+	a. To support 2K queues and 256 PCIe functions for QDMA5.0, update below configurations	in ``./config/rte_config.h``
 
 	::
 
 		#define RTE_MAX_MEMZONE 40960
 		#define RTE_MAX_VFIO_CONTAINERS 256
+		#define RTE_MAX_QUEUES_PER_PORT 2048
+
+	b. To support 4K queues for CPM5 designs, update below configurations in ``./config/rte_config.h``
+
+	::
+
 		#define RTE_MAX_QUEUES_PER_PORT 4096
 
-	b. Add below lines to ``./config/meson.build`` in DPDK v22.11/v21.11/v20.11 tree
+	c. Add below lines to ``./config/meson.build`` in DPDK v22.11/v21.11/v20.11 tree
 
 	::
 
@@ -114,19 +120,19 @@ support 2K queues and populate Xilinx devices for binding.
 		# Set maximum VFIO Groups to 256
 		dpdk_conf.set('RTE_MAX_VFIO_GROUPS', 256)
 
-	c. Add below lines to ``./config/rte_config.h`` to enable driver debug logs
+	d. Add below lines to ``./config/rte_config.h`` to enable driver debug logs
 
 	::
 
 		#define RTE_LIBRTE_QDMA_DEBUG_DRIVER 1
 
-	d. Add below line to ``./drivers/net/meson.build``, where PMDs are added to drivers list
+	e. Add below line to ``./drivers/net/meson.build``, where PMDs are added to drivers list
 
 	::
 
 		'qdma',
 
-	e. Add below line to ``./drivers/net/qdma/meson.build``, to support required DPDK framework version
+	f. Add below line to ``./drivers/net/qdma/meson.build``, to support required DPDK framework version
 
 	::
 
@@ -140,7 +146,7 @@ support 2K queues and populate Xilinx devices for binding.
 
 	::
 
-		xilinx_qdma_pf = {'Class': '05', 'Vendor': '10ee', 'Device': '9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348,b011,b111,b211,b311,b014,b114,b214,b314,b018,b118,b218,b318,b01f,b11f,b21f,b31f,b021,b121,b221,b321,b024,b124,b224,b324,b028,b128,b228,b328,b02f,b12f,b22f,b32f,b031,b131,b231,b331,b034,b134,b234,b334,b038,b138,b238,b338,b03f,b13f,b23f,b33f,b041,b141,b241,b341,b044,b144,b244,b344,b048,b148,b248,b348,b058,b158,b258,b358'
+		xilinx_qdma_pf = {'Class': '05', 'Vendor': '10ee', 'Device': '9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348,b011,b111,b211,b311,b014,b114,b214,b314,b018,b118,b218,b318,b01f,b11f,b21f,b31f,b021,b121,b221,b321,b024,b124,b224,b324,b028,b128,b228,b328,b02f,b12f,b22f,b32f,b031,b131,b231,b331,b034,b134,b234,b334,b038,b138,b238,b338,b03f,b13f,b23f,b33f,b041,b141,b241,b341,b044,b144,b244,b344,b048,b148,b248,b348,b058,b158,b258,b358',
 		'SVendor': None, 'SDevice': None}
 		xilinx_qdma_vf = {'Class': '05', 'Vendor': '10ee', 'Device': 'a011,a111,a211,a311,a014,a114,a214,a314,a018,a118,a218,a318,a01f,a11f,a21f,a31f,a021,a121,a221,a321,a024,a124,a224,a324,a028,a128,a228,a328,a02f,a12f,a22f,a32f,a031,a131,a231,a331,a034,a134,a234,a334,a038,a138,a238,a338,a03f,a13f,a23f,a33f,a041,a141,a241,a341,a044,a144,a244,a344,a048,a148,a248,a348,c011,c111,c211,c311,c014,c114,c214,c314,c018,c118,c218,c318,c01f,c11f,c21f,c31f,c021,c121,c221,c321,c024,c124,c224,c324,c028,c128,c228,c328,c02f,c12f,c22f,c32f,c031,c131,c231,c331,c034,c134,c234,c334,c038,c138,c238,c338,c03f,c13f,c23f,c33f,c041,c141,c241,c341,c044,c144,c244,c344,c048,c148,c248,c348,c058,c158,c258,c358',
 		'SVendor': None, 'SDevice': None}
@@ -151,6 +157,19 @@ support 2K queues and populate Xilinx devices for binding.
 
 		network_devices = [network_class, cavium_pkx, xilinx_qdma_pf, xilinx_qdma_vf]
 
+	3. Additional qdma dpdk driver compile time flags
+
+	a. To enable VF 4K queue driver support for CPM5 design, add below line to ./drivers/net/qdma/meson.build
+
+	::
+
+		cflags += ['-DEQDMA_CPM5_VF_GT_256Q_SUPPORTED']
+
+	b. Writeback coalesce timer count value in QDMA is used to flush CMPT data packet at a constant interval. By default Writeback coalesce timer count is configured for low latency performance measurements, but to configure this value for high throughput measurements, add below line to ./drivers/net/qdma/meson.build
+
+	::
+
+		cflags += ['-DTHROUGHPUT_MEASUREMENT']
 
 Setup: Host system
 ^^^^^^^^^^^^^^^^^^
