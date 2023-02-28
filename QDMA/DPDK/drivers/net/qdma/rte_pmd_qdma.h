@@ -757,7 +757,8 @@ int rte_pmd_qdma_dev_fp_ops_config(int port_id);
  * @return  pci_read_reg value
  *
  ******************************************************************************/
-unsigned int rte_pmd_qdma_compat_pci_read_reg(int port_id, unsigned int bar, unsigned int offset);
+unsigned int rte_pmd_qdma_compat_pci_read_reg(int port_id,
+		unsigned int bar, unsigned int offset);
 
 /*****************************************************************************/
 /**
@@ -769,7 +770,8 @@ unsigned int rte_pmd_qdma_compat_pci_read_reg(int port_id, unsigned int bar, uns
  * @param   reg_val Value which needs to write
  *
  ******************************************************************************/
-void rte_pmd_qdma_compat_pci_write_reg(int port_id, uint32_t bar, uint32_t offset, uint32_t reg_val);
+void rte_pmd_qdma_compat_pci_write_reg(int port_id, uint32_t bar,
+		uint32_t offset, uint32_t reg_val);
 
 /*****************************************************************************/
 /**
@@ -781,7 +783,8 @@ void rte_pmd_qdma_compat_pci_write_reg(int port_id, uint32_t bar, uint32_t offse
  * @param   fn Function
  *
  ******************************************************************************/
-void rte_pmd_qdma_get_bdf(uint32_t m_id, uint32_t *bus, uint32_t *dev, uint32_t *fn);
+void rte_pmd_qdma_get_bdf(uint32_t m_id, uint32_t *bus,
+		uint32_t *dev, uint32_t *fn);
 
 /*****************************************************************************/
 /**
@@ -829,7 +832,7 @@ void rte_pmd_qdma_dev_started(int port_id, bool status);
  *
  ******************************************************************************/
 
-struct rte_pci_device* rte_pmd_qdma_eth_dev_to_pci(int port_id);
+struct rte_pci_device *rte_pmd_qdma_eth_dev_to_pci(int port_id);
 
 /*****************************************************************************/
 /**
@@ -839,7 +842,17 @@ struct rte_pci_device* rte_pmd_qdma_eth_dev_to_pci(int port_id);
  * @return  rte_device* rte_device
  *
  ******************************************************************************/
-struct rte_device* rte_pmd_qdma_get_device(int port_id);
+struct rte_device *rte_pmd_qdma_get_device(int port_id);
+
+/*****************************************************************************/
+/**
+ * DPDK PMD compatibility function to validate rte device
+ *
+ * @param   port_id Port ID
+ * @return  bool true/false
+ *
+ ******************************************************************************/
+bool rte_pmd_qdma_validate_dev(int port_id);
 
 #ifdef __cplusplus
 }

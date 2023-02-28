@@ -1132,8 +1132,8 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 }
 
 /* Receive API for Streaming mode */
-uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
-				uint16_t nb_pkts)
+uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
+		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 {
 	uint16_t count_pkts;
 	struct wb_status *wb_status;
@@ -1176,11 +1176,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 		return 0;
 	}
 
-	if (nb_pkts > QDMA_MAX_BURST_SIZE)
-		nb_pkts = QDMA_MAX_BURST_SIZE;
-
-	if (nb_pkts > nb_pkts_avail)
-		nb_pkts = nb_pkts_avail;
+	nb_pkts = RTE_MIN(nb_pkts, RTE_MIN(nb_pkts_avail, QDMA_MAX_BURST_SIZE));
 
 #ifdef DUMP_MEMPOOL_USAGE_STATS
 	PMD_DRV_LOG(DEBUG, "%s(): %d: queue id = %d, mbuf_avail_count = %d, "
@@ -1196,7 +1192,9 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 #ifdef QDMA_LATENCY_OPTIMIZED
 	adapt_update_counter(rxq, nb_pkts_avail);
 #endif //QDMA_LATENCY_OPTIMIZED
-	if (process_cmpt_ring(rxq, nb_pkts) != 0)
+
+	int ret = process_cmpt_ring(rxq, nb_pkts);
+	if (unlikely(ret))
 		return 0;
 
 	if (rxq->status != RTE_ETH_QUEUE_STATE_STARTED) {
@@ -1236,8 +1234,8 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 }
 
 /* Receive API for Memory mapped mode */
-uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
-			uint16_t nb_pkts)
+uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq,
+		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;
@@ -1434,8 +1432,8 @@ qdma_dev_tx_descriptor_status(void *tx_queue, uint16_t offset)
 }
 
 /* Transmit API for Streaming mode */
-uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
-			uint16_t nb_pkts)
+uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
+		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint64_t pkt_len = 0;
@@ -1443,6 +1441,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
 
@@ -1476,7 +1475,8 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	 * Hence, DMA won't happen with new descriptors.
 	 */
 	avail = txq->nb_tx_desc - 2 - in_use;
-	if (!avail) {
+
+	if (unlikely(!avail)) {
 		PMD_DRV_LOG(DEBUG, "Tx queue full, in_use = %d", in_use);
 		return 0;
 	}
@@ -1501,7 +1501,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 #else
 		ret = qdma_ul_update_st_h2c_desc(txq, txq->offloads, mb);
 #endif //RTE_ARCH_X86_64
-		if (ret < 0)
+		if (unlikely(ret < 0))
 			break;
 	}
 
@@ -1532,8 +1532,8 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 }
 
 /* Transmit API for Memory mapped mode */
-uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
-			uint16_t nb_pkts)
+uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
+		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;

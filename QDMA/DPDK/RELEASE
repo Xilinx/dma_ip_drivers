@@ -1,4 +1,4 @@
-RELEASE: 2023.1.0
+RELEASE: 2023.1.1
 =================
 
 This release is based on DPDK v20.11, v21.11 and v22.11 and
@@ -117,13 +117,14 @@ CPM5
 - Enabled 128 bit SIMD vectorization for Intel and AMD platforms by default for qdma Receive and Transmit APIs
 - Added IO memory barriers for H2C/C2H producer index and completion ring consumer index updates
 
+2023.1.1 Updates
+----------------
+- Optimized the driver code and HW register settings for performance improvements
+
 KNOWN ISSUE:
 ============
 - CPM5:
-	- Performance optimizations are not finalized, Performance report with optimizations will be available in next patch release.
-
-- QDMA5.0:
-	- Performance optimizations are not finalized, Performance report with optimizations will be available in next patch release.
+	- Performance optimizations are not finalized, Updated Performance report with some more optimizations will be available in next patch release.
 
 - All Designs
 	- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure

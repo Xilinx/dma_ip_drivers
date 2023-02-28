@@ -233,25 +233,10 @@ int qdma_dev_notify_qdel(struct rte_eth_dev *dev, uint32_t qidx_hw,
 
 uint8_t qmda_get_desc_sz_idx(enum rte_pmd_qdma_bypass_desc_len size)
 {
-	uint8_t ret;
-	switch (size) {
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_8B:
-		ret = 0;
-		break;
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_16B:
-		ret = 1;
-		break;
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_32B:
-		ret = 2;
-		break;
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_64B:
-		ret = 3;
-		break;
-	default:
-		/* Suppress compiler warnings*/
-		ret = 0;
-	}
-	return ret;
+	return ((size == RTE_PMD_QDMA_BYPASS_DESC_LEN_64B) ? 3 :
+			(size == RTE_PMD_QDMA_BYPASS_DESC_LEN_32B) ? 2 :
+			(size == RTE_PMD_QDMA_BYPASS_DESC_LEN_16B) ? 1 :
+			/* (size == RTE_PMD_QDMA_BYPASS_DESC_LEN_8B) */0);
 }
 
 static inline int
@@ -393,6 +378,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	rxq->mb_pool = mb_pool;
 	rxq->dev = dev;
 	rxq->st_mode = qdma_dev->q_info[rx_queue_id].queue_mode;
+
 	rxq->nb_rx_desc = (nb_rx_desc + 1);
 	/* <= 2018.2 IP
 	 * double the cmpl ring size to avoid run out of cmpl entry while
@@ -765,6 +751,7 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 	}
 
 	txq->st_mode = qdma_dev->q_info[tx_queue_id].queue_mode;
+
 	txq->en_bypass = (qdma_dev->q_info[tx_queue_id].tx_bypass_mode) ? 1 : 0;
 	txq->bypass_desc_sz = qdma_dev->q_info[tx_queue_id].tx_bypass_desc_sz;
 
@@ -1010,7 +997,9 @@ int qdma_dev_link_update(struct rte_eth_dev *dev,
 {
 	dev->data->dev_link.link_status = ETH_LINK_UP;
 	dev->data->dev_link.link_duplex = ETH_LINK_FULL_DUPLEX;
-	dev->data->dev_link.link_speed = ETH_SPEED_NUM_100G;
+
+	/* TODO: Configure link speed by reading hardware capabilities */
+	dev->data->dev_link.link_speed = ETH_SPEED_NUM_200G;
 
 	PMD_DRV_LOG(INFO, "Link update done\n");
 	return 0;
@@ -1610,14 +1599,14 @@ int qdma_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 		if (!(qdma_dev->ip_type == EQDMA_SOFT_IP)) {
 			while (rxq->wb_status->pidx !=
 					rxq->cmpt_cidx_info.wrb_cidx) {
-				usleep(10);
+				rte_delay_us_block(10);
 				if (cnt++ > 10000)
 					break;
 			}
 		}
 	} else { /* MM mode */
 		while (rxq->wb_status->cidx != rxq->q_pidx_info.pidx) {
-			usleep(10);
+			rte_delay_us_block(10);
 			if (cnt++ > 10000)
 				break;
 		}
@@ -1666,7 +1655,7 @@ int qdma_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 	txq->status = RTE_ETH_QUEUE_STATE_STOPPED;
 	/* Wait for TXQ to send out all packets. */
 	while (txq->wb_status->cidx != txq->q_pidx_info.pidx) {
-		usleep(10);
+		rte_delay_us_block(10);
 		if (cnt++ > 10000)
 			break;
 	}

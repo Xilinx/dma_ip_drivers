@@ -109,6 +109,7 @@ DPDK_22 {
         rte_pmd_qdma_dev_started;
         rte_pmd_qdma_eth_dev_to_pci;
 	rte_pmd_qdma_get_device;
+        rte_pmd_qdma_validate_dev;
 
 
         local: *;
@@ -155,6 +156,7 @@ DPDK_23 {
         rte_pmd_qdma_dev_started;
         rte_pmd_qdma_eth_dev_to_pci;
 	rte_pmd_qdma_get_device;
+        rte_pmd_qdma_validate_dev;
 
 
         local: *;

@@ -572,7 +572,9 @@ static int qdma_vf_dev_link_update(struct rte_eth_dev *dev,
 {
 	dev->data->dev_link.link_status = ETH_LINK_UP;
 	dev->data->dev_link.link_duplex = ETH_LINK_FULL_DUPLEX;
-	dev->data->dev_link.link_speed = ETH_SPEED_NUM_100G;
+
+	/* TODO: Configure link speed by reading hardware capabilities */
+	dev->data->dev_link.link_speed = ETH_SPEED_NUM_200G;
 
 	PMD_DRV_LOG(INFO, "Link update done\n");
 
