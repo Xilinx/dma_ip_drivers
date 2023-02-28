@@ -67,7 +67,7 @@
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Enumerations" href="qdma_linux_export_enums.html" />
+    <link rel="next" title="&lt;no title&gt;" href="qdma_linux_export_enums.html" />
     <link rel="prev" title="QDMA Linux Driver Exported APIs" href="qdma_linux_export.html" /> 
 	</head>
 	<body>
@@ -342,27 +342,13 @@
             
             
               <p class="caption"><span class="caption-text">Table of Contents</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="features.html">QDMA Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing Software Stack</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="qdma_linux_export.html">QDMA Linux Driver Exported APIs</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Definitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#macros">Macros</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_enums.html">Enumerations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_structs.html">Data Structures</a></li>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_functions.html">Global Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_design.html">QDMA Linux Driver Design Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="devguide.html">Developers Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="performance.html">QDMA Performance</a></li>
 </ul>
 
@@ -419,7 +405,7 @@
         
           <li><a href="qdma_linux_export.html">QDMA Linux Driver Exported APIs</a> &raquo;</li>
         
-      <li>Definitions</li>
+      <li>&lt;no title&gt;</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -438,46 +424,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="definitions">
-<span id="cid-libqdma-defines"></span><span id="doxid-group-libqdma-defines"></span><span id="index-0"></span><h1>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h1>
-<p class="rubric">Overview</p>
-<div class="section" id="macros">
-<h2>Macros<a class="headerlink" href="#macros" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight title-code-block literal-block" id="cid-device-version-info-str-length">
-<span id="doxid-group-libqdma-defines-1gabe6fa2d94e71aa3f740a996b1eaf569a"></span><span></span><span class="cp">#define DEVICE_VERSION_INFO_STR_LENGTH</span>
-</pre>
-<p>DEVICE_VERSION_INFO_STR_LENGTH - QDMA HW version string array length, change this if QDMA_HW_VERSION_STRING_LEN is changed in access code</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-dev-name-maxlen">
-<span id="doxid-group-libqdma-defines-1gab4320c7434dccd6b84e1590fed855e9a"></span><span></span><span class="cp">#define QDMA_DEV_NAME_MAXLEN</span>
-</pre>
-<p>QDMA_DEV_NAME_MAXLEN - Maxinum length of the QDMA device name</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-func-id-invalid">
-<span id="doxid-group-libqdma-defines-1ga5bc05b59b1631e6fa628657bf9eac3b1"></span><span></span><span class="cp">#define QDMA_FUNC_ID_INVALID</span>
-</pre>
-<p>Invalid QDMA function number</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-queue-idx-invalid">
-<span id="doxid-group-libqdma-defines-1gae168a38d476610e8ee964f722f1b0b62"></span><span></span><span class="cp">#define QDMA_QUEUE_IDX_INVALID</span>
-</pre>
-<p>QDMA_QUEUE_IDX_INVALID - Invalid queue index</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-queue-name-maxlen">
-<span id="doxid-group-libqdma-defines-1ga802600b551da03925a314bc513c23bc4"></span><span></span><span class="cp">#define QDMA_QUEUE_NAME_MAXLEN</span>
-</pre>
-<p>QDMA_QUEUE_NAME_MAXLEN - Maximum queue name length</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-queue-vec-invalid">
-<span id="doxid-group-libqdma-defines-1ga67136280e4723ae4a90175eb523b5f77"></span><span></span><span class="cp">#define QDMA_QUEUE_VEC_INVALID</span>
-</pre>
-<p>QDMA_QUEUE_VEC_INVALID - Invalid MSIx vector index</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-req-opaque-size">
-<span id="doxid-group-libqdma-defines-1gaf876ffaacb505d5671ce1570ecebd61c"></span><span></span><span class="cp">#define QDMA_REQ_OPAQUE_SIZE</span>
-</pre>
-<p>QDMA_REQ_OPAQUE_SIZE - Maximum request length. QDMA_REQ_OPAQUE_SIZE varies according to kernel params. Size of spinlock_t varies when spinlock debug params are enabled.</p>
-<pre class="highlight title-code-block literal-block" id="cid-qdma-udd-maxlen">
-<span id="doxid-group-libqdma-defines-1gab9b01e82a91686606380701978fc0c56"></span><span></span><span class="cp">#define QDMA_UDD_MAXLEN</span>
-</pre>
-<p>QDMA_UDD_MAXLEN - Maximum length of the user defined data</p>
-</div>
-</div>
-
+  
 
            </div>
            
@@ -495,7 +442,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="qdma_linux_export_enums.html" class="btn btn-neutral float-right" title="Enumerations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="qdma_linux_export_enums.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="qdma_linux_export.html" class="btn btn-neutral float-left" title="QDMA Linux Driver Exported APIs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -508,7 +455,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 01, 2023.
+        Last updated on February 28, 2023.
       </span>
 
     </p>

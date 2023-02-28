@@ -47,6 +47,8 @@ dma-perf tool takes a configuration file as input. The configuration file format
 	h2c_q_offset_intvl=10
 	c2h_q_start_offset=0x200
 	c2h_q_offset_intvl=20
+	pci_bus=06
+	pci_device=00
 
 
 **Parameters**
@@ -76,3 +78,5 @@ dma-perf tool takes a configuration file as input. The configuration file format
 - h2c_q_offset_intvl : Fixed interval for subsequent H2C queues offsets.
 - c2h_q_start_offset : Start address of C2H queue.
 - c2h_q_offset_intvl : Fixed interval for subsequent C2H queues offsets.
+- pci_bus : pci bus id.
+- pci_device : pci device id.

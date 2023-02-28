@@ -67,7 +67,7 @@
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Definitions" href="qdma_linux_export_defines.html" />
+    <link rel="next" title="&lt;no title&gt;" href="qdma_linux_export_defines.html" />
     <link rel="prev" title="Developers Guide" href="devguide.html" /> 
 	</head>
 	<body>
@@ -349,11 +349,7 @@
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user-app.html">User Applications</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="devguide.html">Developers Guide</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">QDMA Linux Driver Exported APIs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_defines.html">Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_enums.html">Enumerations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_structs.html">Data Structures</a></li>
-<li class="toctree-l3"><a class="reference internal" href="qdma_linux_export_functions.html">Global Functions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">QDMA Linux Driver Exported APIs</a><ul class="simple">
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_design.html">QDMA Linux Driver Design Flow</a></li>
@@ -436,95 +432,6 @@
   <div class="section" id="qdma-linux-driver-exported-apis">
 <h1>QDMA Linux Driver Exported APIs<a class="headerlink" href="#qdma-linux-driver-exported-apis" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_defines.html">Definitions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_defines.html#macros">Macros</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_enums.html">Enumerations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-cmpt-desc-sz-t">enum cmpt_desc_sz_t</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-desc-sz-t">enum desc_sz_t</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-intr-ring-size-sel">enum intr_ring_size_sel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-q-state-t">enum q_state_t</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-dev-qmax-state">enum qdma_dev_qmax_state</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-drv-mode">enum qdma_drv_mode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-q-dir">enum qdma_q_dir</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-qdma-q-mode">enum qdma_q_mode</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-queue-type-t">enum queue_type_t</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_enums.html#enum-tigger-mode-t">enum tigger_mode_t</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_structs.html">Data Structures</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-drv-mode-name">struct drv_mode_name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-global-csr-conf">struct global_csr_conf</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-cmpl-ctrl">struct qdma_cmpl_ctrl</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-dev-conf">struct qdma_dev_conf</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-q-state">struct qdma_q_state</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-q-type">struct qdma_q_type</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-queue-conf">struct qdma_queue_conf</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-queue-count">struct qdma_queue_count</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-request">struct qdma_request</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-sw-sg">struct qdma_sw_sg</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-ul-cmpt-info">struct qdma_ul_cmpt_info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_structs.html#struct-qdma-version-info">struct qdma_version_info</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="qdma_linux_export_functions.html">Global Functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#libqdma-init">libqdma_init</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#libqdma-exit">libqdma_exit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#intr-legacy-init">intr_legacy_init</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-open">qdma_device_open</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-close">qdma_device_close</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-offline">qdma_device_offline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-online">qdma_device_online</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-flr-quirk-set">qdma_device_flr_quirk_set</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-flr-quirk-check">qdma_device_flr_quirk_check</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-config">qdma_device_get_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-clear-stats">qdma_device_clear_stats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-mmh2c-pkts">qdma_device_get_mmh2c_pkts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-mmc2h-pkts">qdma_device_get_mmc2h_pkts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-sth2c-pkts">qdma_device_get_sth2c_pkts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-stc2h-pkts">qdma_device_get_stc2h_pkts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-ping-pong-min-lat">qdma_device_get_ping_pong_min_lat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-ping-pong-max-lat">qdma_device_get_ping_pong_max_lat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-get-ping-pong-tot-lat">qdma_device_get_ping_pong_tot_lat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-set-config">qdma_device_set_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-sriov-config">qdma_device_sriov_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-read-config-register">qdma_device_read_config_register</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-write-config-register">qdma_device_write_config_register</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-capabilities-info">qdma_device_capabilities_info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-device-version-info">qdma_device_version_info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-software-version-info">qdma_software_version_info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-global-csr-get">qdma_global_csr_get</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-add">qdma_queue_add</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-config">qdma_queue_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-start">qdma_queue_start</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-stop">qdma_queue_stop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-get-queue-state">qdma_get_queue_state</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-remove">qdma_queue_remove</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-get-config">qdma_queue_get_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-list">qdma_queue_list</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-config-reg-dump">qdma_config_reg_dump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-dump">qdma_queue_dump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-dump-desc">qdma_queue_dump_desc</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-dump-cmpt">qdma_queue_dump_cmpt</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-request-submit">qdma_request_submit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-batch-request-submit">qdma_batch_request_submit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-c2h-peek">qdma_queue_c2h_peek</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-avail-desc">qdma_queue_avail_desc</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-cmpl-ctrl">qdma_queue_cmpl_ctrl</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-packet-read">qdma_queue_packet_read</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-packet-write">qdma_queue_packet_write</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-service">qdma_queue_service</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-queue-update-pointers">qdma_queue_update_pointers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-intr-ring-dump">qdma_intr_ring_dump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-descq-get-cmpt-udd">qdma_descq_get_cmpt_udd</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-descq-read-cmpt-data">qdma_descq_read_cmpt_data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-get-queue-count">qdma_get_queue_count</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qdma_linux_export_functions.html#qdma-config-reg-info-dump">qdma_config_reg_info_dump</a></li>
-</ul>
-</li>
-</ul>
 </div>
 </div>
 
@@ -545,7 +452,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="qdma_linux_export_defines.html" class="btn btn-neutral float-right" title="Definitions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="qdma_linux_export_defines.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="devguide.html" class="btn btn-neutral float-left" title="Developers Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -558,7 +465,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 01, 2023.
+        Last updated on February 28, 2023.
       </span>
 
     </p>

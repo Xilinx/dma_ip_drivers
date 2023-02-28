@@ -77,6 +77,12 @@ Optionally to enable debug mode for more detailed logs, build with the following
 	
 	[xilinx@]# make clean & make DEBUG=1
 
+To enable VF 4K queue driver support for CPM5 design, build driver with the following command
+
+::
+
+	[xilinx@]# make clean & make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
+
 **Kernel modules:**
 
 +-------------------+--------------------+--------------------------------+
