@@ -1,5 +1,5 @@
 QDMA Performance
 ----------------
-Refer to QDMA5.0_Performance_Answer_Record_ for more details.
+Refer to QDMA_Performance_Answer_Record_ for more details.
 
-.. _QDMA5.0_Performance_Answer_Record: https://github.com/Xilinx/dma_ip_drivers/blob/master/QDMA/docs/common/Xilinx_Answer_71453_QDMA_Performance.pdf 
+.. _QDMA_Performance_Answer_Record: https://www.xilinx.com/support/answers/71453.html
