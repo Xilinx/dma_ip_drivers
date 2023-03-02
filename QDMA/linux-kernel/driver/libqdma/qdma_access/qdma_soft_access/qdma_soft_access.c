@@ -4007,7 +4007,7 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 	uint32_t reg_val = 0;
 
 	if (!dev_hndl || !reg_info) {
-		qdma_log_error("%s: dev_handle is (%p), reg_info is (%p), err:%d\n",
+		qdma_log_error("%s: dev_hndl:(%p), reg_info:(%p), err:%d\n",
 			__func__, dev_hndl, reg_info, -QDMA_ERR_INV_PARAM);
 		return -QDMA_ERR_INV_PARAM;
 	}
