@@ -1115,8 +1115,10 @@ int qdma_queue_config(unsigned long dev_hndl, unsigned long qid,
 	if (rv != 0)
 		return rv;
 
+	lock_descq(descq);
 	/** configure descriptor queue */
 	qdma_descq_config(descq, qconf, 1);
+	unlock_descq(descq);
 
 	snprintf(buf, buflen,
 		"Queue %s id %u is configured with the qconf passed ",
@@ -1588,7 +1590,9 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 		if (rv > 0) {
 			/** support only 1 queue in legacy interrupt mode */
 			intr_legacy_clear(descq);
+			lock_descq(descq);
 			descq->q_state = Q_STATE_DISABLED;
+			unlock_descq(descq);
 			pr_debug("qdma%05x - Q%u - No free queues %u/%u.\n",
 				xdev->conf.bdf, descq->conf.qidx,
 				rv, 1);
@@ -1599,7 +1603,9 @@ int qdma_queue_add(unsigned long dev_hndl, struct qdma_queue_conf *qconf,
 			return rv;
 		} else if (rv < 0) {
 			rv = -EINVAL;
+			lock_descq(descq);
 			descq->q_state = Q_STATE_DISABLED;
+			unlock_descq(descq);
 			pr_debug("qdma%05x Legacy interrupt setup failed.\n",
 					xdev->conf.bdf);
 			snprintf(buf, buflen,
@@ -1786,7 +1792,6 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 		unlock_descq(descq);
 		return -ERANGE;
 	}
-	unlock_descq(descq);
 	/** complete the queue configuration*/
 	rv = qdma_descq_config_complete(descq);
 	if (rv < 0) {
@@ -1794,8 +1799,10 @@ int qdma_queue_start(unsigned long dev_hndl, unsigned long id,
 			descq->conf.name, descq->qidx_hw);
 		snprintf(buf, buflen,
 			"%s config failed.\n", descq->conf.name);
+		unlock_descq(descq);
 		return -EIO;
 	}
+	unlock_descq(descq);
 
 	/** allocate the queue resources*/
 	rv = qdma_descq_alloc_resource(descq);
