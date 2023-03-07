@@ -284,8 +284,6 @@ static void data_intr_direct(struct xlnx_dma_dev *xdev, int vidx, int irq,
 			  flags);
 	list_for_each_safe(entry, tmp, descq_list) {
 		descq = container_of(entry, struct qdma_descq, intr_list);
-		if (!descq)
-			continue;
 
 		if (descq->conf.ping_pong_en &&
 				descq->conf.q_type == Q_C2H && descq->conf.st)
