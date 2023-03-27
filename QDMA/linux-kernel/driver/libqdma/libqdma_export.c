@@ -253,12 +253,18 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 	 *  call back is completed
 	 */
 
-	if (req->timeout_ms)
+	if (req->timeout_ms) {
+#ifdef __XRT__
 		qdma_waitq_wait_event_timeout(cb->wq, cb->done &&
 					(descq->pidx == descq->cidx),
 					msecs_to_jiffies(req->timeout_ms));
-	else
+#else
+		qdma_waitq_wait_event_timeout(cb->wq, cb->done,
+					msecs_to_jiffies(req->timeout_ms));
+#endif
+	} else {
 		qdma_waitq_wait_event(cb->wq, cb->done);
+	}
 
 	lock_descq(descq);
 	/** if the call back is not done, request timed out
