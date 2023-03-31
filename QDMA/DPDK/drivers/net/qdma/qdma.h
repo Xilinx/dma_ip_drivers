@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,7 +37,6 @@
 #include <stdbool.h>
 #include <rte_dev.h>
 #include <rte_ethdev.h>
-#include <rte_ethdev_driver.h>
 #include <rte_spinlock.h>
 #include <rte_log.h>
 #include <rte_cycles.h>
@@ -48,6 +48,7 @@
 #include "qdma_mbox.h"
 #include "rte_pmd_qdma.h"
 #include "qdma_log.h"
+#include "qdma_dpdk_compat.h"
 
 #define QDMA_NUM_BARS          (6)
 #define DEFAULT_PF_CONFIG_BAR  (0)
@@ -165,12 +166,13 @@ struct qdma_cmpt_queue {
  * Structure associated with each RX queue.
  */
 struct qdma_rx_queue {
+	/* Move more accessed elementes into first cacheline */
 	struct rte_mempool	*mb_pool; /**< mbuf pool to populate RX ring. */
 	void			*rx_ring; /**< RX ring virtual address */
 	union qdma_ul_st_cmpt_ring	*cmpt_ring;
 	struct wb_status	*wb_status;
 	struct rte_mbuf		**sw_ring; /**< address of RX software ring. */
-	struct rte_eth_dev	*dev;
+	enum rte_pmd_qdma_bypass_desc_len	bypass_desc_sz:7;
 
 	uint16_t		rx_tail;
 	uint16_t		cmpt_desc_len;
@@ -183,6 +185,8 @@ struct qdma_rx_queue {
 	struct qdma_q_pidx_reg_info	q_pidx_info;
 	struct qdma_q_cmpt_cidx_reg_info cmpt_cidx_info;
 	struct qdma_pkt_stats	stats;
+
+	struct rte_eth_dev	*dev;
 
 	uint16_t		port_id; /**< Device port identifier. */
 	uint8_t			status:1;
@@ -197,9 +201,8 @@ struct qdma_rx_queue {
 
 	union qdma_ul_st_cmpt_ring cmpt_data[QDMA_MAX_BURST_SIZE];
 
-	enum rte_pmd_qdma_bypass_desc_len	bypass_desc_sz:7;
 	uint8_t			func_id; /**< RX queue index. */
-	uint32_t		ep_addr;
+	uint64_t		ep_addr;
 
 	int8_t			ringszidx;
 	int8_t			cmpt_ringszidx;
@@ -230,29 +233,32 @@ struct qdma_rx_queue {
  * Structure associated with each TX queue.
  */
 struct qdma_tx_queue {
+	/* Move more accessed elementes into first cacheline */
+	enum rte_pmd_qdma_bypass_desc_len		bypass_desc_sz:7;
+	uint16_t			tx_fl_tail;
 	void				*tx_ring; /* TX ring virtual address*/
+	struct qdma_q_pidx_reg_info	q_pidx_info;
+
 	struct wb_status		*wb_status;
 	struct rte_mbuf			**sw_ring;/* SW ring virtual address*/
-	struct rte_eth_dev		*dev;
-	uint16_t			tx_fl_tail;
 	uint16_t			tx_desc_pend;
 	uint16_t			nb_tx_desc; /* No of TX descriptors.*/
 	rte_spinlock_t			pidx_update_lock;
-	struct qdma_q_pidx_reg_info	q_pidx_info;
 	uint64_t			offloads; /* Tx offloads */
+
+	struct rte_eth_dev		*dev;
 
 	uint8_t				st_mode:1;/* dma-mode: MM or ST */
 	uint8_t				tx_deferred_start:1;
 	uint8_t				en_bypass:1;
 	uint8_t				status:1;
-	enum rte_pmd_qdma_bypass_desc_len		bypass_desc_sz:7;
 	uint16_t			port_id; /* Device port identifier. */
 	uint8_t				func_id; /* RX queue index. */
 	int8_t				ringszidx;
 
 	struct qdma_pkt_stats stats;
 
-	uint32_t			ep_addr;
+	uint64_t			ep_addr;
 	uint32_t			queue_id; /* TX queue index. */
 	uint32_t			num_queues; /* TX queue index. */
 	const struct rte_memzone	*tx_mz;
@@ -277,10 +283,10 @@ struct queue_info {
 };
 
 struct qdma_pci_dev {
+	void *bar_addr[QDMA_NUM_BARS]; /* memory mapped I/O addr for BARs */
 	int config_bar_idx;
 	int user_bar_idx;
 	int bypass_bar_idx;
-	void *bar_addr[QDMA_NUM_BARS]; /* memory mapped I/O addr for BARs */
 
 	/* Driver Attributes */
 	uint32_t qsets_en;  /* no. of queue pairs enabled */

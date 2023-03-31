@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -216,7 +216,7 @@ static inline int flq_fill_page_one(struct qdma_sw_pg_sg *pg_sdesc,
 	}
 
 	mapping = dma_map_page(dev, pg, 0, (PAGE_SIZE << pg_order),
-				PCI_DMA_FROMDEVICE);
+					DMA_FROM_DEVICE);
 	if (unlikely(dma_mapping_error(dev, mapping))) {
 		dev_err(dev, "page 0x%p mapping error 0x%llx.\n",
 			pg, (unsigned long long)mapping);

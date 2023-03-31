@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -81,9 +82,16 @@ static inline uint32_t get_trailing_zeros(uint64_t value)
 #define DEFAULT_PFCH_NUM_ENTRIES_PER_Q      8
 #define DEFAULT_PFCH_MAX_Q_CNT              16
 #define DEFAULT_C2H_INTR_TIMER_TICK         25
-#define DEFAULT_CMPT_COAL_TIMER_CNT         5
 #define DEFAULT_CMPT_COAL_TIMER_TICK        25
 #define DEFAULT_CMPT_COAL_MAX_BUF_SZ        32
+
+#ifdef THROUGHPUT_MEASUREMENT
+/* Update WRB coalesce timer count for throughput measurement */
+#define DEFAULT_CMPT_COAL_TIMER_CNT         10
+#else
+/* Update WRB coalesce timer count for low latency measurement */
+#define DEFAULT_CMPT_COAL_TIMER_CNT         5
+#endif
 
 #define QDMA_BAR_NUM                        6
 
@@ -908,9 +916,8 @@ int qdma_get_error_code(int acc_err_code);
  *
  * Return:	Nothing
  *****************************************************************************/
-void qdma_fetch_version_details(uint8_t is_vf, uint32_t version_reg_val,
-		struct qdma_hw_version_info *version_info);
-
+void qdma_fetch_version_details(void *dev_hndl, uint8_t is_vf,
+	uint32_t version_reg_val, struct qdma_hw_version_info *version_info);
 
 #ifdef __cplusplus
 }

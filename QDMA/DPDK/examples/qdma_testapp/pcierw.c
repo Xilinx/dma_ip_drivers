@@ -1,7 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ *   Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -37,20 +38,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <rte_ethdev.h>
+#include "../../drivers/net/qdma/rte_pmd_qdma.h"
+
 
 #include "pcierw.h"
 
 unsigned int PciRead(unsigned int bar, unsigned int offset, int port_id)
 {
-
-	return qdma_pci_read_reg(&rte_eth_devices[port_id], bar, offset);
+    return rte_pmd_qdma_compat_pci_read_reg(port_id, bar, offset);
 }
 
 
 void PciWrite(unsigned int bar, unsigned int offset, unsigned int reg_val,
 				int port_id)
 {
-
-	qdma_pci_write_reg(&rte_eth_devices[port_id], bar, offset, reg_val);
-
+    rte_pmd_qdma_compat_pci_write_reg(port_id, bar, offset, reg_val);
 }

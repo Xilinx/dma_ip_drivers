@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -493,6 +494,85 @@ static struct regfield_info
 
 
 static struct regfield_info
+	glbl2_rrq_brg_throt_field_info[] = {
+	{"GLBL2_RRQ_BRG_THROT_REQ_EN",
+		GLBL2_RRQ_BRG_THROT_REQ_EN_MASK},
+	{"GLBL2_RRQ_BRG_THROT_REQ",
+		GLBL2_RRQ_BRG_THROT_REQ_MASK},
+	{"GLBL2_RRQ_BRG_THROT_DAT_EN",
+		GLBL2_RRQ_BRG_THROT_DAT_EN_MASK},
+	{"GLBL2_RRQ_BRG_THROT_DAT",
+		GLBL2_RRQ_BRG_THROT_DAT_MASK},
+};
+
+
+static struct regfield_info
+	glbl2_rrq_pcie_throt_field_info[] = {
+	{"GLBL2_RRQ_PCIE_THROT_REQ_EN",
+		GLBL2_RRQ_PCIE_THROT_REQ_EN_MASK},
+	{"GLBL2_RRQ_PCIE_THROT_REQ",
+		GLBL2_RRQ_PCIE_THROT_REQ_MASK},
+	{"GLBL2_RRQ_PCIE_THROT_DAT_EN",
+		GLBL2_RRQ_PCIE_THROT_DAT_EN_MASK},
+	{"GLBL2_RRQ_PCIE_THROT_DAT",
+		GLBL2_RRQ_PCIE_THROT_DAT_MASK},
+};
+
+
+static struct regfield_info
+	glbl2_rrq_aximm_throt_field_info[] = {
+	{"GLBL2_RRQ_AXIMM_THROT_REQ_EN",
+		GLBL2_RRQ_AXIMM_THROT_REQ_EN_MASK},
+	{"GLBL2_RRQ_AXIMM_THROT_REQ",
+		GLBL2_RRQ_AXIMM_THROT_REQ_MASK},
+	{"GLBL2_RRQ_AXIMM_THROT_DAT_EN",
+		GLBL2_RRQ_AXIMM_THROT_DAT_EN_MASK},
+	{"GLBL2_RRQ_AXIMM_THROT_DAT",
+		GLBL2_RRQ_AXIMM_THROT_DAT_MASK},
+};
+
+
+static struct regfield_info
+	glbl2_rrq_pcie_lat0_field_info[] = {
+	{"GLBL2_RRQ_PCIE_LAT0_MAX",
+		GLBL2_RRQ_PCIE_LAT0_MAX_MASK},
+	{"GLBL2_RRQ_PCIE_LAT0_MIN",
+		GLBL2_RRQ_PCIE_LAT0_MIN_MASK},
+};
+
+
+static struct regfield_info
+	glbl2_rrq_pcie_lat1_field_info[] = {
+	{"GLBL2_RRQ_PCIE_LAT1_RSVD",
+		GLBL2_RRQ_PCIE_LAT1_RSVD_MASK},
+	{"GLBL2_RRQ_PCIE_LAT1_OVFL",
+		GLBL2_RRQ_PCIE_LAT1_OVFL_MASK},
+	{"GLBL2_RRQ_PCIE_LAT1_AVG",
+		GLBL2_RRQ_PCIE_LAT1_AVG_MASK},
+};
+
+
+static struct regfield_info
+	glbl2_rrq_aximm_lat0_field_info[] = {
+	{"GLBL2_RRQ_AXIMM_LAT0_MAX",
+		GLBL2_RRQ_AXIMM_LAT0_MAX_MASK},
+	{"GLBL2_RRQ_AXIMM_LAT0_MIN",
+		GLBL2_RRQ_AXIMM_LAT0_MIN_MASK},
+};
+
+
+static struct regfield_info
+	glbl2_rrq_aximm_lat1_field_info[] = {
+	{"GLBL2_RRQ_AXIMM_LAT1_RSVD",
+		GLBL2_RRQ_AXIMM_LAT1_RSVD_MASK},
+	{"GLBL2_RRQ_AXIMM_LAT1_OVFL",
+		GLBL2_RRQ_AXIMM_LAT1_OVFL_MASK},
+	{"GLBL2_RRQ_AXIMM_LAT1_AVG",
+		GLBL2_RRQ_AXIMM_LAT1_AVG_MASK},
+};
+
+
+static struct regfield_info
 	glbl2_dbg_pcie_rq0_field_info[] = {
 	{"GLBL2_PCIE_RQ0_NPH_AVL",
 		GLBL2_PCIE_RQ0_NPH_AVL_MASK},
@@ -933,6 +1013,10 @@ static struct regfield_info
 	glbl_dsc_cfg_field_info[] = {
 	{"GLBL_DSC_CFG_RSVD_1",
 		GLBL_DSC_CFG_RSVD_1_MASK},
+	{"GLBL_DSC_CFG_C2H_UODSC_LIMIT",
+		GLBL_DSC_CFG_C2H_UODSC_LIMIT_MASK},
+	{"GLBL_DSC_CFG_H2C_UODSC_LIMIT",
+		GLBL_DSC_CFG_H2C_UODSC_LIMIT_MASK},
 	{"GLBL_DSC_CFG_UNC_OVR_COR",
 		GLBL_DSC_CFG_UNC_OVR_COR_MASK},
 	{"GLBL_DSC_CFG_CTXT_FER_DIS",
@@ -1111,6 +1195,10 @@ static struct regfield_info
 	glbl_dsc_dbg_ctl_field_info[] = {
 	{"GLBL_DSC_CTL_RSVD_1",
 		GLBL_DSC_CTL_RSVD_1_MASK},
+	{"GLBL_DSC_CTL_LAT_QID",
+		GLBL_DSC_CTL_LAT_QID_MASK},
+	{"GLBL_DSC_CTL_DSC_ENG_LAT_CLR",
+		GLBL_DSC_CTL_DSC_ENG_LAT_CLR_MASK},
 	{"GLBL_DSC_CTL_SELECT",
 		GLBL_DSC_CTL_SELECT_MASK},
 };
@@ -1219,6 +1307,588 @@ static struct regfield_info
 
 
 static struct regfield_info
+	glbl_dsc_dbg_lat0_a_field_info[] = {
+	{"GLBL_DSC_LAT0_A_LAT_MAX",
+		GLBL_DSC_LAT0_A_LAT_MAX_MASK},
+	{"GLBL_DSC_LAT0_A_LAT_MIN",
+		GLBL_DSC_LAT0_A_LAT_MIN_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_dbg_lat1_a_field_info[] = {
+	{"GLBL_DSC_LAT1_A_RSVD",
+		GLBL_DSC_LAT1_A_RSVD_MASK},
+	{"GLBL_DSC_LAT1_A_LAT_OVF",
+		GLBL_DSC_LAT1_A_LAT_OVF_MASK},
+	{"GLBL_DSC_LAT1_A_LAT_AVG",
+		GLBL_DSC_LAT1_A_LAT_AVG_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_crd_ctr0_a_field_info[] = {
+	{"GLBL_DSC_CRD_CTR0_A_CRD_RCV_CNT",
+		GLBL_DSC_CRD_CTR0_A_CRD_RCV_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_crd_ctr1_a_field_info[] = {
+	{"GLBL_DSC_CRD_CTR1_A_CRD_RCV_CNT",
+		GLBL_DSC_CRD_CTR1_A_CRD_RCV_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_crd_ctr2_a_field_info[] = {
+	{"GLBL_DSC_CRD_CTR2_A_CRD_RCV_NRDY_CNT",
+		GLBL_DSC_CRD_CTR2_A_CRD_RCV_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_crd_ctr3_a_field_info[] = {
+	{"GLBL_DSC_CRD_CTR3_A_CRD_RCV_NRDY_CNT",
+		GLBL_DSC_CRD_CTR3_A_CRD_RCV_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_imm_crd_ctr0_a_field_info[] = {
+	{"GLBL_DSC_IMM_CRD_CTR0_A_RCV_CNT",
+		GLBL_DSC_IMM_CRD_CTR0_A_RCV_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_imm_crd_ctr1_a_field_info[] = {
+	{"GLBL_DSC_IMM_CRD_CTR1_A_RCV_CNT",
+		GLBL_DSC_IMM_CRD_CTR1_A_RCV_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_imm_crd_ctr2_a_field_info[] = {
+	{"GLBL_DSC_IMM_CRD_CTR2_A_RCV_NRDY_CNT",
+		GLBL_DSC_IMM_CRD_CTR2_A_RCV_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_imm_crd_ctr3_a_field_info[] = {
+	{"GLBL_DSC_IMM_CRD_CTR3_A_RCV_NRDY_CNT",
+		GLBL_DSC_IMM_CRD_CTR3_A_RCV_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_h2c_out_ctr0_a_field_info[] = {
+	{"GLBL_DSC_H2C_OUT_CTR0_A_H2CVLD_CNT",
+		GLBL_DSC_H2C_OUT_CTR0_A_H2CVLD_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_h2c_out_ctr1_a_field_info[] = {
+	{"GLBL_DSC_H2C_OUT_CTR1_A_H2CVLD_CNT",
+		GLBL_DSC_H2C_OUT_CTR1_A_H2CVLD_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_h2c_out_ctr2_a_field_info[] = {
+	{"GLBL_DSC_H2C_OUT_CTR2_A_H2CVLD_NRDY_CNT",
+		GLBL_DSC_H2C_OUT_CTR2_A_H2CVLD_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_h2c_out_ctr3_a_field_info[] = {
+	{"GLBL_DSC_H2C_OUT_CTR3_A_H2CVLD_NRDY_CNT",
+		GLBL_DSC_H2C_OUT_CTR3_A_H2CVLD_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_c2h_out_ctr0_a_field_info[] = {
+	{"GLBL_DSC_C2H_OUT_CTR0_A_C2HVLD_CNT",
+		GLBL_DSC_C2H_OUT_CTR0_A_C2HVLD_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_c2h_out_ctr1_a_field_info[] = {
+	{"GLBL_DSC_C2H_OUT_CTR1_A_C2HVLD_CNT",
+		GLBL_DSC_C2H_OUT_CTR1_A_C2HVLD_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_c2h_out_ctr2_a_field_info[] = {
+	{"GLBL_DSC_C2H_OUT_CTR2_A_C2HVLD_NRDY_CNT",
+		GLBL_DSC_C2H_OUT_CTR2_A_C2HVLD_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	glbl_dsc_c2h_out_ctr3_a_field_info[] = {
+	{"GLBL_DSC_C2H_OUT_CTR3_A_C2HVLD_NRDY_CNT",
+		GLBL_DSC_C2H_OUT_CTR3_A_C2HVLD_NRDY_CNT_MASK},
+};
+
+
+static struct regfield_info
+	t_field_info[] = {
+	{"T_USER_CTR_MAX",
+		T_USER_CTR_MAX_MASK},
+};
+
+
+static struct regfield_info
+	glbl_perf_cntr_ctl_a1_field_info[] = {
+	{"GLBL_PERF_CNTR_CTL_A1_RSVD",
+		GLBL_PERF_CNTR_CTL_A1_RSVD_MASK},
+	{"GLBL_PERF_CNTR_CTL_A1_USER_CTR_CLEAR",
+		GLBL_PERF_CNTR_CTL_A1_USER_CTR_CLEAR_MASK},
+	{"GLBL_PERF_CNTR_CTL_A1_USER_CTR_READ",
+		GLBL_PERF_CNTR_CTL_A1_USER_CTR_READ_MASK},
+	{"GLBL_PERF_CNTR_CTL_A1_USER_CTR_MAX",
+		GLBL_PERF_CNTR_CTL_A1_USER_CTR_MAX_MASK},
+};
+
+
+static struct regfield_info
+	glbl_free_cnt_a0_field_info[] = {
+	{"GLBL_FREE_CNT_A0_S",
+		GLBL_FREE_CNT_A0_S_MASK},
+};
+
+
+static struct regfield_info
+	glbl_free_cnt_a1_field_info[] = {
+	{"GLBL_FREE_CNT_A1_RSVD",
+		GLBL_FREE_CNT_A1_RSVD_MASK},
+	{"GLBL_FREE_CNT_A1_S",
+		GLBL_FREE_CNT_A1_S_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_h2c_cnt_a0_field_info[] = {
+	{"GLBL_AXIS_H2C_CNT_A0_MPKT_CNTS",
+		GLBL_AXIS_H2C_CNT_A0_MPKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_h2c_cnt_a1_field_info[] = {
+	{"GLBL_AXIS_H2C_CNT_A1_MIDLE_CNTS",
+		GLBL_AXIS_H2C_CNT_A1_MIDLE_CNTS_MASK},
+	{"GLBL_AXIS_H2C_CNT_A1_MPKT_CNTS",
+		GLBL_AXIS_H2C_CNT_A1_MPKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_h2c_cnt_a2_field_info[] = {
+	{"GLBL_AXIS_H2C_CNT_A2_MIDLE_CNTS",
+		GLBL_AXIS_H2C_CNT_A2_MIDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_h2c_cnt_a3_field_info[] = {
+	{"GLBL_AXIS_H2C_CNT_A3_MACTV_CNTS",
+		GLBL_AXIS_H2C_CNT_A3_MACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_h2c_cnt_a4_field_info[] = {
+	{"GLBL_AXIS_H2C_CNT_A4_MBUSY_CNTS",
+		GLBL_AXIS_H2C_CNT_A4_MBUSY_CNTS_MASK},
+	{"GLBL_AXIS_H2C_CNT_A4_MACTV_CNTS",
+		GLBL_AXIS_H2C_CNT_A4_MACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_h2c_cnt_a5_field_info[] = {
+	{"GLBL_AXIS_H2C_CNT_A5_MBUSY_CNTS",
+		GLBL_AXIS_H2C_CNT_A5_MBUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_c2h_cnt_a0_field_info[] = {
+	{"GLBL_AXIS_C2H_CNT_A0_SPKT_CNTS",
+		GLBL_AXIS_C2H_CNT_A0_SPKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_c2h_cnt_a1_field_info[] = {
+	{"GLBL_AXIS_C2H_CNT_A1_SIDLE_CNTS",
+		GLBL_AXIS_C2H_CNT_A1_SIDLE_CNTS_MASK},
+	{"GLBL_AXIS_C2H_CNT_A1_SPKT_CNTS",
+		GLBL_AXIS_C2H_CNT_A1_SPKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_c2h_cnt_a2_field_info[] = {
+	{"GLBL_AXIS_C2H_CNT_A2_SIDLE_CNTS",
+		GLBL_AXIS_C2H_CNT_A2_SIDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_c2h_cnt_a3_field_info[] = {
+	{"GLBL_AXIS_C2H_CNT_A3_SACTV_CNTS",
+		GLBL_AXIS_C2H_CNT_A3_SACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_c2h_cnt_a4_field_info[] = {
+	{"GLBL_AXIS_C2H_CNT_A4_SBUSY_CNTS",
+		GLBL_AXIS_C2H_CNT_A4_SBUSY_CNTS_MASK},
+	{"GLBL_AXIS_C2H_CNT_A4_SACTV_CNTS",
+		GLBL_AXIS_C2H_CNT_A4_SACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_axis_c2h_cnt_a5_field_info[] = {
+	{"GLBL_AXIS_C2H_CNT_A5_SBUSY_CNTS",
+		GLBL_AXIS_C2H_CNT_A5_SBUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_wr_cnt_a0_field_info[] = {
+	{"GLBL_M_AXI_WR_CNT_A0_PKT_CNTS",
+		GLBL_M_AXI_WR_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_wr_cnt_a1_field_info[] = {
+	{"GLBL_M_AXI_WR_CNT_A1_IDLE_CNTS",
+		GLBL_M_AXI_WR_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_M_AXI_WR_CNT_A1_PKT_CNTS",
+		GLBL_M_AXI_WR_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_wr_cnt_a2_field_info[] = {
+	{"GLBL_M_AXI_WR_CNT_A2_IDLE_CNTS",
+		GLBL_M_AXI_WR_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_wr_cnt_a3_field_info[] = {
+	{"GLBL_M_AXI_WR_CNT_A3_ACTV_CNTS",
+		GLBL_M_AXI_WR_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_wr_cnt_a4_field_info[] = {
+	{"GLBL_M_AXI_WR_CNT_A4_BUSY_CNTS",
+		GLBL_M_AXI_WR_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_M_AXI_WR_CNT_A4_ACTV_CNTS",
+		GLBL_M_AXI_WR_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_wr_cnt_a5_field_info[] = {
+	{"GLBL_M_AXI_WR_CNT_A5_BUSY_CNTS",
+		GLBL_M_AXI_WR_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_rd_cnt_a0_field_info[] = {
+	{"GLBL_M_AXI_RD_CNT_A0_PKT_CNTS",
+		GLBL_M_AXI_RD_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_rd_cnt_a1_field_info[] = {
+	{"GLBL_M_AXI_RD_CNT_A1_IDLE_CNTS",
+		GLBL_M_AXI_RD_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_M_AXI_RD_CNT_A1_PKT_CNTS",
+		GLBL_M_AXI_RD_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_rd_cnt_a2_field_info[] = {
+	{"GLBL_M_AXI_RD_CNT_A2_IDLE_CNTS",
+		GLBL_M_AXI_RD_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_rd_cnt_a3_field_info[] = {
+	{"GLBL_M_AXI_RD_CNT_A3_ACTV_CNTS",
+		GLBL_M_AXI_RD_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_rd_cnt_a4_field_info[] = {
+	{"GLBL_M_AXI_RD_CNT_A4_BUSY_CNTS",
+		GLBL_M_AXI_RD_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_M_AXI_RD_CNT_A4_ACTV_CNTS",
+		GLBL_M_AXI_RD_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axi_rd_cnt_a5_field_info[] = {
+	{"GLBL_M_AXI_RD_CNT_A5_BUSY_CNTS",
+		GLBL_M_AXI_RD_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_wr_cnt_a0_field_info[] = {
+	{"GLBL_M_AXIB_WR_CNT_A0_PKT_CNTS",
+		GLBL_M_AXIB_WR_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_wr_cnt_a1_field_info[] = {
+	{"GLBL_M_AXIB_WR_CNT_A1_IDLE_CNTS",
+		GLBL_M_AXIB_WR_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_M_AXIB_WR_CNT_A1_PKT_CNTS",
+		GLBL_M_AXIB_WR_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_wr_cnt_a2_field_info[] = {
+	{"GLBL_M_AXIB_WR_CNT_A2_IDLE_CNTS",
+		GLBL_M_AXIB_WR_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_wr_cnt_a3_field_info[] = {
+	{"GLBL_M_AXIB_WR_CNT_A3_ACTV_CNTS",
+		GLBL_M_AXIB_WR_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_wr_cnt_a4_field_info[] = {
+	{"GLBL_M_AXIB_WR_CNT_A4_BUSY_CNTS",
+		GLBL_M_AXIB_WR_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_M_AXIB_WR_CNT_A4_ACTV_CNTS",
+		GLBL_M_AXIB_WR_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_wr_cnt_a5_field_info[] = {
+	{"GLBL_M_AXIB_WR_CNT_A5_BUSY_CNTS",
+		GLBL_M_AXIB_WR_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_rd_cnt_a0_field_info[] = {
+	{"GLBL_M_AXIB_RD_CNT_A0_PKT_CNTS",
+		GLBL_M_AXIB_RD_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_rd_cnt_a1_field_info[] = {
+	{"GLBL_M_AXIB_RD_CNT_A1_IDLE_CNTS",
+		GLBL_M_AXIB_RD_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_M_AXIB_RD_CNT_A1_PKT_CNTS",
+		GLBL_M_AXIB_RD_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_rd_cnt_a2_field_info[] = {
+	{"GLBL_M_AXIB_RD_CNT_A2_IDLE_CNTS",
+		GLBL_M_AXIB_RD_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_rd_cnt_a3_field_info[] = {
+	{"GLBL_M_AXIB_RD_CNT_A3_ACTV_CNTS",
+		GLBL_M_AXIB_RD_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_rd_cnt_a4_field_info[] = {
+	{"GLBL_M_AXIB_RD_CNT_A4_BUSY_CNTS",
+		GLBL_M_AXIB_RD_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_M_AXIB_RD_CNT_A4_ACTV_CNTS",
+		GLBL_M_AXIB_RD_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_m_axib_rd_cnt_a5_field_info[] = {
+	{"GLBL_M_AXIB_RD_CNT_A5_BUSY_CNTS",
+		GLBL_M_AXIB_RD_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_wr_cnt_a0_field_info[] = {
+	{"GLBL_S_AXI_WR_CNT_A0_PKT_CNTS",
+		GLBL_S_AXI_WR_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_wr_cnt_a1_field_info[] = {
+	{"GLBL_S_AXI_WR_CNT_A1_IDLE_CNTS",
+		GLBL_S_AXI_WR_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_S_AXI_WR_CNT_A1_PKT_CNTS",
+		GLBL_S_AXI_WR_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_wr_cnt_a2_field_info[] = {
+	{"GLBL_S_AXI_WR_CNT_A2_IDLE_CNTS",
+		GLBL_S_AXI_WR_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_wr_cnt_a3_field_info[] = {
+	{"GLBL_S_AXI_WR_CNT_A3_ACTV_CNTS",
+		GLBL_S_AXI_WR_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_wr_cnt_a4_field_info[] = {
+	{"GLBL_S_AXI_WR_CNT_A4_BUSY_CNTS",
+		GLBL_S_AXI_WR_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_S_AXI_WR_CNT_A4_ACTV_CNTS",
+		GLBL_S_AXI_WR_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_wr_cnt_a5_field_info[] = {
+	{"GLBL_S_AXI_WR_CNT_A5_BUSY_CNTS",
+		GLBL_S_AXI_WR_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_rd_cnt_a0_field_info[] = {
+	{"GLBL_S_AXI_RD_CNT_A0_PKT_CNTS",
+		GLBL_S_AXI_RD_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_rd_cnt_a1_field_info[] = {
+	{"GLBL_S_AXI_RD_CNT_A1_IDLE_CNTS",
+		GLBL_S_AXI_RD_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_S_AXI_RD_CNT_A1_PKT_CNTS",
+		GLBL_S_AXI_RD_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_rd_cnt_a2_field_info[] = {
+	{"GLBL_S_AXI_RD_CNT_A2_IDLE_CNTS",
+		GLBL_S_AXI_RD_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_rd_cnt_a3_field_info[] = {
+	{"GLBL_S_AXI_RD_CNT_A3_ACTV_CNTS",
+		GLBL_S_AXI_RD_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_rd_cnt_a4_field_info[] = {
+	{"GLBL_S_AXI_RD_CNT_A4_BUSY_CNTS",
+		GLBL_S_AXI_RD_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_S_AXI_RD_CNT_A4_ACTV_CNTS",
+		GLBL_S_AXI_RD_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axi_rd_cnt_a5_field_info[] = {
+	{"GLBL_S_AXI_RD_CNT_A5_BUSY_CNTS",
+		GLBL_S_AXI_RD_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axis_cmp_cnt_a0_field_info[] = {
+	{"GLBL_S_AXIS_CMP_CNT_A0_PKT_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A0_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axis_cmp_cnt_a1_field_info[] = {
+	{"GLBL_S_AXIS_CMP_CNT_A1_IDLE_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A1_IDLE_CNTS_MASK},
+	{"GLBL_S_AXIS_CMP_CNT_A1_PKT_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A1_PKT_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axis_cmp_cnt_a2_field_info[] = {
+	{"GLBL_S_AXIS_CMP_CNT_A2_IDLE_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A2_IDLE_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axis_cmp_cnt_a3_field_info[] = {
+	{"GLBL_S_AXIS_CMP_CNT_A3_ACTV_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A3_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axis_cmp_cnt_a4_field_info[] = {
+	{"GLBL_S_AXIS_CMP_CNT_A4_BUSY_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A4_BUSY_CNTS_MASK},
+	{"GLBL_S_AXIS_CMP_CNT_A4_ACTV_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A4_ACTV_CNTS_MASK},
+};
+
+
+static struct regfield_info
+	glbl_s_axis_cmp_cnt_a5_field_info[] = {
+	{"GLBL_S_AXIS_CMP_CNT_A5_BUSY_CNTS",
+		GLBL_S_AXIS_CMP_CNT_A5_BUSY_CNTS_MASK},
+};
+
+
+static struct regfield_info
 	ind_ctxt_data_field_info[] = {
 	{"IND_CTXT_DATA_DATA",
 		IND_CTXT_DATA_DATA_MASK},
@@ -1262,6 +1932,32 @@ static struct regfield_info
 		C2H_CNT_TH_RSVD_1_MASK},
 	{"C2H_CNT_TH_THESHOLD_CNT",
 		C2H_CNT_TH_THESHOLD_CNT_MASK},
+};
+
+
+static struct regfield_info
+	c2h_pfch_cfg_1_field_info[] = {
+	{"C2H_PFCH_CFG_1_EVT_QCNT_TH",
+		C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK},
+	{"C2H_PFCH_CFG_1_QCNT",
+		C2H_PFCH_CFG_1_QCNT_MASK},
+};
+
+
+static struct regfield_info
+	c2h_pfch_cfg_2_field_info[] = {
+	{"C2H_PFCH_CFG_2_FENCE",
+		C2H_PFCH_CFG_2_FENCE_MASK},
+	{"C2H_PFCH_CFG_2_RSVD",
+		C2H_PFCH_CFG_2_RSVD_MASK},
+	{"C2H_PFCH_CFG_2_VAR_DESC_NO_DROP",
+		C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_MASK},
+	{"C2H_PFCH_CFG_2_LL_SZ_TH",
+		C2H_PFCH_CFG_2_LL_SZ_TH_MASK},
+	{"C2H_PFCH_CFG_2_VAR_DESC_NUM",
+		C2H_PFCH_CFG_2_VAR_DESC_NUM_MASK},
+	{"C2H_PFCH_CFG_2_NUM",
+		C2H_PFCH_CFG_2_NUM_MASK},
 };
 
 
@@ -1488,32 +2184,6 @@ static struct regfield_info
 
 
 static struct regfield_info
-	c2h_pfch_cfg_1_field_info[] = {
-	{"C2H_PFCH_CFG_1_EVT_QCNT_TH",
-		C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK},
-	{"C2H_PFCH_CFG_1_QCNT",
-		C2H_PFCH_CFG_1_QCNT_MASK},
-};
-
-
-static struct regfield_info
-	c2h_pfch_cfg_2_field_info[] = {
-	{"C2H_PFCH_CFG_2_FENCE",
-		C2H_PFCH_CFG_2_FENCE_MASK},
-	{"C2H_PFCH_CFG_2_RSVD",
-		C2H_PFCH_CFG_2_RSVD_MASK},
-	{"C2H_PFCH_CFG_2_VAR_DESC_NO_DROP",
-		C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_MASK},
-	{"C2H_PFCH_CFG_2_LL_SZ_TH",
-		C2H_PFCH_CFG_2_LL_SZ_TH_MASK},
-	{"C2H_PFCH_CFG_2_VAR_DESC_NUM",
-		C2H_PFCH_CFG_2_VAR_DESC_NUM_MASK},
-	{"C2H_PFCH_CFG_2_NUM",
-		C2H_PFCH_CFG_2_NUM_MASK},
-};
-
-
-static struct regfield_info
 	c2h_int_timer_tick_field_info[] = {
 	{"C2H_INT_TIMER_TICK",
 		C2H_INT_TIMER_TICK_MASK},
@@ -1572,8 +2242,10 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_dbg_dma_eng_1_field_info[] = {
-	{"C2H_STAT_DMA_ENG_1_RSVD_1",
-		C2H_STAT_DMA_ENG_1_RSVD_1_MASK},
+	{"C2H_STAT_DMA_ENG_1_WRB_USER_0_CMPT_TYPE",
+		C2H_STAT_DMA_ENG_1_WRB_USER_0_CMPT_TYPE_MASK},
+	{"C2H_STAT_DMA_ENG_1_DESC_RSP_FIFO_OUT_VLD",
+		C2H_STAT_DMA_ENG_1_DESC_RSP_FIFO_OUT_VLD_MASK},
 	{"C2H_STAT_DMA_ENG_1_QID_FIFO_OUT_CNT",
 		C2H_STAT_DMA_ENG_1_QID_FIFO_OUT_CNT_MASK},
 	{"C2H_STAT_DMA_ENG_1_PLD_FIFO_OUT_CNT",
@@ -1585,23 +2257,31 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_dbg_dma_eng_2_field_info[] = {
-	{"C2H_STAT_DMA_ENG_2_RSVD_1",
-		C2H_STAT_DMA_ENG_2_RSVD_1_MASK},
-	{"C2H_STAT_DMA_ENG_2_QID_FIFO_OUT_CNT",
-		C2H_STAT_DMA_ENG_2_QID_FIFO_OUT_CNT_MASK},
-	{"C2H_STAT_DMA_ENG_2_PLD_FIFO_OUT_CNT",
-		C2H_STAT_DMA_ENG_2_PLD_FIFO_OUT_CNT_MASK},
-	{"C2H_STAT_DMA_ENG_2_PLD_ST_FIFO_CNT",
-		C2H_STAT_DMA_ENG_2_PLD_ST_FIFO_CNT_MASK},
+	{"C2H_STAT_DMA_ENG_2_WRB_USER_1_CMPT_TYPE",
+		C2H_STAT_DMA_ENG_2_WRB_USER_1_CMPT_TYPE_MASK},
+	{"C2H_STAT_DMA_ENG_2_DESC_RSP_FIFO_OUT_VLD_1",
+		C2H_STAT_DMA_ENG_2_DESC_RSP_FIFO_OUT_VLD_1_MASK},
+	{"C2H_STAT_DMA_ENG_2_QID_FIFO_OUT_CNT_1",
+		C2H_STAT_DMA_ENG_2_QID_FIFO_OUT_CNT_1_MASK},
+	{"C2H_STAT_DMA_ENG_2_PLD_FIFO_OUT_CNT_1",
+		C2H_STAT_DMA_ENG_2_PLD_FIFO_OUT_CNT_1_MASK},
+	{"C2H_STAT_DMA_ENG_2_PLD_ST_FIFO_CNT_1",
+		C2H_STAT_DMA_ENG_2_PLD_ST_FIFO_CNT_1_MASK},
 };
 
 
 static struct regfield_info
 	c2h_stat_dbg_dma_eng_3_field_info[] = {
-	{"C2H_STAT_DMA_ENG_3_RSVD_1",
-		C2H_STAT_DMA_ENG_3_RSVD_1_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_FIFO_OUT_CNT",
-		C2H_STAT_DMA_ENG_3_WRQ_FIFO_OUT_CNT_MASK},
+	{"C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_HAS_CMPT",
+		C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_HAS_CMPT_MASK},
+	{"C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_MARKER",
+		C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_MARKER_MASK},
+	{"C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_DROP_REQ",
+		C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_DROP_REQ_MASK},
+	{"C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_QID",
+		C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_QID_MASK},
+	{"C2H_STAT_DMA_ENG_3_WR_HDR_FIFO_OUT_CNT",
+		C2H_STAT_DMA_ENG_3_WR_HDR_FIFO_OUT_CNT_MASK},
 	{"C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_VLD",
 		C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_VLD_MASK},
 	{"C2H_STAT_DMA_ENG_3_PLD_FIFO_OUT_VLD",
@@ -1620,22 +2300,8 @@ static struct regfield_info
 		C2H_STAT_DMA_ENG_3_DESC_CNT_FIFO_IN_RDY_MASK},
 	{"C2H_STAT_DMA_ENG_3_DESC_RSP_FIFO_IN_RDY",
 		C2H_STAT_DMA_ENG_3_DESC_RSP_FIFO_IN_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_3_PLD_PKT_ID_LARGER_0",
-		C2H_STAT_DMA_ENG_3_PLD_PKT_ID_LARGER_0_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_VLD",
-		C2H_STAT_DMA_ENG_3_WRQ_VLD_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_RDY",
-		C2H_STAT_DMA_ENG_3_WRQ_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_FIFO_OUT_RDY",
-		C2H_STAT_DMA_ENG_3_WRQ_FIFO_OUT_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_DROP",
-		C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_DROP_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_ERR",
-		C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_ERR_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_MARKER",
-		C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_MARKER_MASK},
-	{"C2H_STAT_DMA_ENG_3_WRQ_PACKET_PRE_EOR",
-		C2H_STAT_DMA_ENG_3_WRQ_PACKET_PRE_EOR_MASK},
+	{"C2H_STAT_DMA_ENG_3_PLD_PKT_ID_LARGER",
+		C2H_STAT_DMA_ENG_3_PLD_PKT_ID_LARGER_MASK},
 	{"C2H_STAT_DMA_ENG_3_WCP_FIFO_IN_RDY",
 		C2H_STAT_DMA_ENG_3_WCP_FIFO_IN_RDY_MASK},
 	{"C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_IN_RDY",
@@ -1868,55 +2534,47 @@ static struct regfield_info
 
 static struct regfield_info
 	c2h_stat_dbg_dma_eng_4_field_info[] = {
-	{"C2H_STAT_DMA_ENG_4_RSVD_1",
-		C2H_STAT_DMA_ENG_4_RSVD_1_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_FIFO_OUT_CNT",
-		C2H_STAT_DMA_ENG_4_WRQ_FIFO_OUT_CNT_MASK},
-	{"C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_VLD",
-		C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_VLD_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_FIFO_OUT_VLD",
-		C2H_STAT_DMA_ENG_4_PLD_FIFO_OUT_VLD_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_VLD",
-		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_VLD_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_EOP",
-		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_EOP_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE",
-		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_DROP",
-		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_DROP_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_ERR",
-		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_ERR_MASK},
-	{"C2H_STAT_DMA_ENG_4_DESC_CNT_FIFO_IN_RDY",
-		C2H_STAT_DMA_ENG_4_DESC_CNT_FIFO_IN_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_4_DESC_RSP_FIFO_IN_RDY",
-		C2H_STAT_DMA_ENG_4_DESC_RSP_FIFO_IN_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_PKT_ID_LARGER_0",
-		C2H_STAT_DMA_ENG_4_PLD_PKT_ID_LARGER_0_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_VLD",
-		C2H_STAT_DMA_ENG_4_WRQ_VLD_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_RDY",
-		C2H_STAT_DMA_ENG_4_WRQ_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_FIFO_OUT_RDY",
-		C2H_STAT_DMA_ENG_4_WRQ_FIFO_OUT_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_DROP",
-		C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_DROP_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_ERR",
-		C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_ERR_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_MARKER",
-		C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_MARKER_MASK},
-	{"C2H_STAT_DMA_ENG_4_WRQ_PACKET_PRE_EOR",
-		C2H_STAT_DMA_ENG_4_WRQ_PACKET_PRE_EOR_MASK},
-	{"C2H_STAT_DMA_ENG_4_WCP_FIFO_IN_RDY",
-		C2H_STAT_DMA_ENG_4_WCP_FIFO_IN_RDY_MASK},
-	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_IN_RDY",
-		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_IN_RDY_MASK},
+	{"C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_HAS_CMPT_1",
+		C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_HAS_CMPT_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_MARKER_1",
+		C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_MARKER_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_DROP_REQ_1",
+		C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_DROP_REQ_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_QID_1",
+		C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_QID_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_WR_HDR_FIFO_OUT_CNT_1",
+		C2H_STAT_DMA_ENG_4_WR_HDR_FIFO_OUT_CNT_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_VLD_1",
+		C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_VLD_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_FIFO_OUT_VLD_1",
+		C2H_STAT_DMA_ENG_4_PLD_FIFO_OUT_VLD_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_VLD_1",
+		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_VLD_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_EOP_1",
+		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_EOP_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_1",
+		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_DROP_1",
+		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_DROP_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_ERR_1",
+		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_ERR_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_DESC_CNT_FIFO_IN_RDY_1",
+		C2H_STAT_DMA_ENG_4_DESC_CNT_FIFO_IN_RDY_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_DESC_RSP_FIFO_IN_RDY_1",
+		C2H_STAT_DMA_ENG_4_DESC_RSP_FIFO_IN_RDY_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_PKT_ID_LARGER_1",
+		C2H_STAT_DMA_ENG_4_PLD_PKT_ID_LARGER_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_WCP_FIFO_IN_RDY_1",
+		C2H_STAT_DMA_ENG_4_WCP_FIFO_IN_RDY_1_MASK},
+	{"C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_IN_RDY_1",
+		C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_IN_RDY_1_MASK},
 };
 
 
 static struct regfield_info
 	c2h_stat_dbg_dma_eng_5_field_info[] = {
-	{"C2H_STAT_DMA_ENG_5_RSVD_1",
-		C2H_STAT_DMA_ENG_5_RSVD_1_MASK},
+	{"C2H_STAT_DMA_ENG_5_ARB_FIFO_IN_RDY",
+		C2H_STAT_DMA_ENG_5_ARB_FIFO_IN_RDY_MASK},
 	{"C2H_STAT_DMA_ENG_5_WRB_SM_VIRT_CH",
 		C2H_STAT_DMA_ENG_5_WRB_SM_VIRT_CH_MASK},
 	{"C2H_STAT_DMA_ENG_5_WRB_FIFO_IN_REQ",
@@ -2653,6 +3311,17 @@ static struct regfield_info
 
 
 static struct regfield_info
+	h2c_mm_data_throttle_field_info[] = {
+	{"H2C_MM_DATA_THROTTLE_RSVD_1",
+		H2C_MM_DATA_THROTTLE_RSVD_1_MASK},
+	{"H2C_MM_DATA_THROTTLE_DAT_EN",
+		H2C_MM_DATA_THROTTLE_DAT_EN_MASK},
+	{"H2C_MM_DATA_THROTTLE_DAT",
+		H2C_MM_DATA_THROTTLE_DAT_MASK},
+};
+
+
+static struct regfield_info
 	c2h_crdt_coal_cfg_1_field_info[] = {
 	{"C2H_CRDT_COAL_CFG_1_RSVD_1",
 		C2H_CRDT_COAL_CFG_1_RSVD_1_MASK},
@@ -2704,6 +3373,134 @@ static struct regfield_info
 		C2H_WATER_MARK_HIGH_WM_MASK},
 	{"C2H_WATER_MARK_LOW_WM",
 		C2H_WATER_MARK_LOW_WM_MASK},
+};
+
+
+static struct regfield_info
+	c2h_notify_empty_field_info[] = {
+	{"C2H_NOTIFY_EMPTY_RSVD_1",
+		C2H_NOTIFY_EMPTY_RSVD_1_MASK},
+	{"C2H_NOTIFY_EMPTY_NOE",
+		C2H_NOTIFY_EMPTY_NOE_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_s_axis_c2h_accepted_1_field_info[] = {
+	{"C2H_STAT_S_AXIS_C2H_ACCEPTED_1",
+		C2H_STAT_S_AXIS_C2H_ACCEPTED_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_s_axis_wrb_accepted_1_field_info[] = {
+	{"C2H_STAT_S_AXIS_WRB_ACCEPTED_1",
+		C2H_STAT_S_AXIS_WRB_ACCEPTED_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_desc_rsp_pkt_accepted_1_field_info[] = {
+	{"C2H_STAT_DESC_RSP_PKT_ACCEPTED_1_D",
+		C2H_STAT_DESC_RSP_PKT_ACCEPTED_1_D_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_axis_pkg_cmp_1_field_info[] = {
+	{"C2H_STAT_AXIS_PKG_CMP_1",
+		C2H_STAT_AXIS_PKG_CMP_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_s_axis_wrb_accepted_2_field_info[] = {
+	{"C2H_STAT_S_AXIS_WRB_ACCEPTED_2",
+		C2H_STAT_S_AXIS_WRB_ACCEPTED_2_MASK},
+};
+
+
+static struct regfield_info
+	c2h_st_pld_fifo_depth_field_info[] = {
+	{"C2H_ST_PLD_FIFO_DEPTH",
+		C2H_ST_PLD_FIFO_DEPTH_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_dbg_dma_eng_6_field_info[] = {
+	{"C2H_STAT_DMA_ENG_6_RSVD",
+		C2H_STAT_DMA_ENG_6_RSVD_MASK},
+	{"C2H_STAT_DMA_ENG_6_PLD_ST_FIFO_OUT_DATA_QID",
+		C2H_STAT_DMA_ENG_6_PLD_ST_FIFO_OUT_DATA_QID_MASK},
+	{"C2H_STAT_DMA_ENG_6_PLD_STS_FIFO_OUT_DATA_PLD_ST_PKT_ID",
+		C2H_STAT_DMA_ENG_6_PLD_STS_FIFO_OUT_DATA_PLD_ST_PKT_ID_MASK},
+	{"C2H_STAT_DMA_ENG_6_PLD_PKT_ID_LARGER_PLD_ST",
+		C2H_STAT_DMA_ENG_6_PLD_PKT_ID_LARGER_PLD_ST_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_dbg_dma_eng_7_field_info[] = {
+	{"C2H_STAT_DMA_ENG_7_RSVD",
+		C2H_STAT_DMA_ENG_7_RSVD_MASK},
+	{"C2H_STAT_DMA_ENG_7_PLD_ST_FIFO_OUT_DATA_QID_1",
+		C2H_STAT_DMA_ENG_7_PLD_ST_FIFO_OUT_DATA_QID_1_MASK},
+	{"C2H_STAT_DMA_ENG_7_PLD_STS_FIFO_OUT_DATA_PLD_ST_PKT_ID_1",
+		C2H_STAT_DMA_ENG_7_PLD_STS_FIFO_OUT_DATA_PLD_ST_PKT_ID_1_MASK},
+	{"C2H_STAT_DMA_ENG_7_PLD_PKT_ID_LARGER_PLD_ST_1",
+		C2H_STAT_DMA_ENG_7_PLD_PKT_ID_LARGER_PLD_ST_1_MASK},
+};
+
+
+static struct regfield_info
+	c2h_stat_pcie_cmp_1_field_info[] = {
+	{"C2H_STAT_PCIE_CMP_1_DEPTH",
+		C2H_STAT_PCIE_CMP_1_DEPTH_MASK},
+};
+
+
+static struct regfield_info
+	c2h_pld_fifo_almost_full_field_info[] = {
+	{"C2H_PLD_FIFO_ALMOST_FULL_ENABLE",
+		C2H_PLD_FIFO_ALMOST_FULL_ENABLE_MASK},
+	{"C2H_PLD_FIFO_ALMOST_FULL_TH",
+		C2H_PLD_FIFO_ALMOST_FULL_TH_MASK},
+};
+
+
+static struct regfield_info
+	pfch_cfg_3_field_info[] = {
+	{"PFCH_CFG_3_RSVD",
+		PFCH_CFG_3_RSVD_MASK},
+	{"PFCH_CFG_3_VAR_DESC_FL_FREE_CNT_TH",
+		PFCH_CFG_3_VAR_DESC_FL_FREE_CNT_TH_MASK},
+	{"PFCH_CFG_3_VAR_DESC_LG_PKT_CAM_CN_TH",
+		PFCH_CFG_3_VAR_DESC_LG_PKT_CAM_CN_TH_MASK},
+};
+
+
+static struct regfield_info
+	cmpt_cfg_0_field_info[] = {
+	{"CMPT_CFG_0_RSVD",
+		CMPT_CFG_0_RSVD_MASK},
+	{"CMPT_CFG_0_VIO_SPRS_INT_AFTER_RTY",
+		CMPT_CFG_0_VIO_SPRS_INT_AFTER_RTY_MASK},
+	{"CMPT_CFG_0_VIO_EVNT_SUP_EN",
+		CMPT_CFG_0_VIO_EVNT_SUP_EN_MASK},
+};
+
+
+static struct regfield_info
+	pfch_cfg_4_field_info[] = {
+	{"PFCH_CFG_4_GLB_EVT_TIMER_TICK",
+		PFCH_CFG_4_GLB_EVT_TIMER_TICK_MASK},
+	{"PFCH_CFG_4_DISABLE_GLB_EVT_TIMER",
+		PFCH_CFG_4_DISABLE_GLB_EVT_TIMER_MASK},
+	{"PFCH_CFG_4_EVT_TIMER_TICK",
+		PFCH_CFG_4_EVT_TIMER_TICK_MASK},
+	{"PFCH_CFG_4_DISABLE_EVT_TIMER",
+		PFCH_CFG_4_DISABLE_EVT_TIMER_MASK},
 };
 
 static struct xreg_info eqdma_config_regs[] = {
@@ -2886,6 +3683,48 @@ static struct xreg_info eqdma_config_regs[] = {
 	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(glbl2_misc_cap_field_info),
 	glbl2_misc_cap_field_info
+},
+{"GLBL2_RRQ_BRG_THROT", 0x158,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_brg_throt_field_info),
+	glbl2_rrq_brg_throt_field_info
+},
+{"GLBL2_RRQ_PCIE_THROT", 0x15c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_pcie_throt_field_info),
+	glbl2_rrq_pcie_throt_field_info
+},
+{"GLBL2_RRQ_AXIMM_THROT", 0x160,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_aximm_throt_field_info),
+	glbl2_rrq_aximm_throt_field_info
+},
+{"GLBL2_RRQ_PCIE_LAT0", 0x164,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_pcie_lat0_field_info),
+	glbl2_rrq_pcie_lat0_field_info
+},
+{"GLBL2_RRQ_PCIE_LAT1", 0x168,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_pcie_lat1_field_info),
+	glbl2_rrq_pcie_lat1_field_info
+},
+{"GLBL2_RRQ_AXIMM_LAT0", 0x16c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_aximm_lat0_field_info),
+	glbl2_rrq_aximm_lat0_field_info
+},
+{"GLBL2_RRQ_AXIMM_LAT1", 0x170,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl2_rrq_aximm_lat1_field_info),
+	glbl2_rrq_aximm_lat1_field_info
 },
 {"GLBL2_DBG_PCIE_RQ0", 0x1b8,
 	1, 0, 0, 0,
@@ -3175,6 +4014,462 @@ static struct xreg_info eqdma_config_regs[] = {
 	ARRAY_SIZE(glbl_req_err_msk_field_info),
 	glbl_req_err_msk_field_info
 },
+{"GLBL_DSC_DBG_LAT0_A", 0x320,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_dbg_lat0_a_field_info),
+	glbl_dsc_dbg_lat0_a_field_info
+},
+{"GLBL_DSC_DBG_LAT1_A", 0x324,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_dbg_lat1_a_field_info),
+	glbl_dsc_dbg_lat1_a_field_info
+},
+{"GLBL_DSC_CRD_CTR0_A", 0x328,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_crd_ctr0_a_field_info),
+	glbl_dsc_crd_ctr0_a_field_info
+},
+{"GLBL_DSC_CRD_CTR1_A", 0x32c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_crd_ctr1_a_field_info),
+	glbl_dsc_crd_ctr1_a_field_info
+},
+{"GLBL_DSC_CRD_CTR2_A", 0x330,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_crd_ctr2_a_field_info),
+	glbl_dsc_crd_ctr2_a_field_info
+},
+{"GLBL_DSC_CRD_CTR3_A", 0x334,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_crd_ctr3_a_field_info),
+	glbl_dsc_crd_ctr3_a_field_info
+},
+{"GLBL_DSC_IMM_CRD_CTR0_A", 0x338,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_imm_crd_ctr0_a_field_info),
+	glbl_dsc_imm_crd_ctr0_a_field_info
+},
+{"GLBL_DSC_IMM_CRD_CTR1_A", 0x33c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_imm_crd_ctr1_a_field_info),
+	glbl_dsc_imm_crd_ctr1_a_field_info
+},
+{"GLBL_DSC_IMM_CRD_CTR2_A", 0x340,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_imm_crd_ctr2_a_field_info),
+	glbl_dsc_imm_crd_ctr2_a_field_info
+},
+{"GLBL_DSC_IMM_CRD_CTR3_A", 0x344,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_imm_crd_ctr3_a_field_info),
+	glbl_dsc_imm_crd_ctr3_a_field_info
+},
+{"GLBL_DSC_H2C_OUT_CTR0_A", 0x348,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_h2c_out_ctr0_a_field_info),
+	glbl_dsc_h2c_out_ctr0_a_field_info
+},
+{"GLBL_DSC_H2C_OUT_CTR1_A", 0x34c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_h2c_out_ctr1_a_field_info),
+	glbl_dsc_h2c_out_ctr1_a_field_info
+},
+{"GLBL_DSC_H2C_OUT_CTR2_A", 0x350,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_h2c_out_ctr2_a_field_info),
+	glbl_dsc_h2c_out_ctr2_a_field_info
+},
+{"GLBL_DSC_H2C_OUT_CTR3_A", 0x354,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_h2c_out_ctr3_a_field_info),
+	glbl_dsc_h2c_out_ctr3_a_field_info
+},
+{"GLBL_DSC_C2H_OUT_CTR0_A", 0x358,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_c2h_out_ctr0_a_field_info),
+	glbl_dsc_c2h_out_ctr0_a_field_info
+},
+{"GLBL_DSC_C2H_OUT_CTR1_A", 0x35c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_c2h_out_ctr1_a_field_info),
+	glbl_dsc_c2h_out_ctr1_a_field_info
+},
+{"GLBL_DSC_C2H_OUT_CTR2_A", 0x360,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_c2h_out_ctr2_a_field_info),
+	glbl_dsc_c2h_out_ctr2_a_field_info
+},
+{"GLBL_DSC_C2H_OUT_CTR3_A", 0x364,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_dsc_c2h_out_ctr3_a_field_info),
+	glbl_dsc_c2h_out_ctr3_a_field_info
+},
+{"T", 0x368,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(t_field_info),
+	t_field_info
+},
+{"GLBL_PERF_CNTR_CTL_A1", 0x36c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_perf_cntr_ctl_a1_field_info),
+	glbl_perf_cntr_ctl_a1_field_info
+},
+{"GLBL_FREE_CNT_A0", 0x370,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_free_cnt_a0_field_info),
+	glbl_free_cnt_a0_field_info
+},
+{"GLBL_FREE_CNT_A1", 0x374,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_free_cnt_a1_field_info),
+	glbl_free_cnt_a1_field_info
+},
+{"GLBL_AXIS_H2C_CNT_A0", 0x378,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_h2c_cnt_a0_field_info),
+	glbl_axis_h2c_cnt_a0_field_info
+},
+{"GLBL_AXIS_H2C_CNT_A1", 0x37c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_h2c_cnt_a1_field_info),
+	glbl_axis_h2c_cnt_a1_field_info
+},
+{"GLBL_AXIS_H2C_CNT_A2", 0x380,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_h2c_cnt_a2_field_info),
+	glbl_axis_h2c_cnt_a2_field_info
+},
+{"GLBL_AXIS_H2C_CNT_A3", 0x384,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_h2c_cnt_a3_field_info),
+	glbl_axis_h2c_cnt_a3_field_info
+},
+{"GLBL_AXIS_H2C_CNT_A4", 0x388,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_h2c_cnt_a4_field_info),
+	glbl_axis_h2c_cnt_a4_field_info
+},
+{"GLBL_AXIS_H2C_CNT_A5", 0x38c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_h2c_cnt_a5_field_info),
+	glbl_axis_h2c_cnt_a5_field_info
+},
+{"GLBL_AXIS_C2H_CNT_A0", 0x390,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_c2h_cnt_a0_field_info),
+	glbl_axis_c2h_cnt_a0_field_info
+},
+{"GLBL_AXIS_C2H_CNT_A1", 0x394,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_c2h_cnt_a1_field_info),
+	glbl_axis_c2h_cnt_a1_field_info
+},
+{"GLBL_AXIS_C2H_CNT_A2", 0x398,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_c2h_cnt_a2_field_info),
+	glbl_axis_c2h_cnt_a2_field_info
+},
+{"GLBL_AXIS_C2H_CNT_A3", 0x39c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_c2h_cnt_a3_field_info),
+	glbl_axis_c2h_cnt_a3_field_info
+},
+{"GLBL_AXIS_C2H_CNT_A4", 0x3a0,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_c2h_cnt_a4_field_info),
+	glbl_axis_c2h_cnt_a4_field_info
+},
+{"GLBL_AXIS_C2H_CNT_A5", 0x3a4,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_axis_c2h_cnt_a5_field_info),
+	glbl_axis_c2h_cnt_a5_field_info
+},
+{"GLBL_M_AXI_WR_CNT_A0", 0x3a8,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_wr_cnt_a0_field_info),
+	glbl_m_axi_wr_cnt_a0_field_info
+},
+{"GLBL_M_AXI_WR_CNT_A1", 0x3ac,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_wr_cnt_a1_field_info),
+	glbl_m_axi_wr_cnt_a1_field_info
+},
+{"GLBL_M_AXI_WR_CNT_A2", 0x3b0,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_wr_cnt_a2_field_info),
+	glbl_m_axi_wr_cnt_a2_field_info
+},
+{"GLBL_M_AXI_WR_CNT_A3", 0x3b4,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_wr_cnt_a3_field_info),
+	glbl_m_axi_wr_cnt_a3_field_info
+},
+{"GLBL_M_AXI_WR_CNT_A4", 0x3b8,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_wr_cnt_a4_field_info),
+	glbl_m_axi_wr_cnt_a4_field_info
+},
+{"GLBL_M_AXI_WR_CNT_A5", 0x3bc,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_wr_cnt_a5_field_info),
+	glbl_m_axi_wr_cnt_a5_field_info
+},
+{"GLBL_M_AXI_RD_CNT_A0", 0x3c0,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_rd_cnt_a0_field_info),
+	glbl_m_axi_rd_cnt_a0_field_info
+},
+{"GLBL_M_AXI_RD_CNT_A1", 0x3c4,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_rd_cnt_a1_field_info),
+	glbl_m_axi_rd_cnt_a1_field_info
+},
+{"GLBL_M_AXI_RD_CNT_A2", 0x3c8,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_rd_cnt_a2_field_info),
+	glbl_m_axi_rd_cnt_a2_field_info
+},
+{"GLBL_M_AXI_RD_CNT_A3", 0x3cc,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_rd_cnt_a3_field_info),
+	glbl_m_axi_rd_cnt_a3_field_info
+},
+{"GLBL_M_AXI_RD_CNT_A4", 0x3d0,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_rd_cnt_a4_field_info),
+	glbl_m_axi_rd_cnt_a4_field_info
+},
+{"GLBL_M_AXI_RD_CNT_A5", 0x3d4,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axi_rd_cnt_a5_field_info),
+	glbl_m_axi_rd_cnt_a5_field_info
+},
+{"GLBL_M_AXIB_WR_CNT_A0", 0x3d8,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_wr_cnt_a0_field_info),
+	glbl_m_axib_wr_cnt_a0_field_info
+},
+{"GLBL_M_AXIB_WR_CNT_A1", 0x3dc,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_wr_cnt_a1_field_info),
+	glbl_m_axib_wr_cnt_a1_field_info
+},
+{"GLBL_M_AXIB_WR_CNT_A2", 0x3e0,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_wr_cnt_a2_field_info),
+	glbl_m_axib_wr_cnt_a2_field_info
+},
+{"GLBL_M_AXIB_WR_CNT_A3", 0x3e4,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_wr_cnt_a3_field_info),
+	glbl_m_axib_wr_cnt_a3_field_info
+},
+{"GLBL_M_AXIB_WR_CNT_A4", 0x3e8,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_wr_cnt_a4_field_info),
+	glbl_m_axib_wr_cnt_a4_field_info
+},
+{"GLBL_M_AXIB_WR_CNT_A5", 0x3ec,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_wr_cnt_a5_field_info),
+	glbl_m_axib_wr_cnt_a5_field_info
+},
+{"GLBL_M_AXIB_RD_CNT_A0", 0x3f0,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_rd_cnt_a0_field_info),
+	glbl_m_axib_rd_cnt_a0_field_info
+},
+{"GLBL_M_AXIB_RD_CNT_A1", 0x3f4,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_rd_cnt_a1_field_info),
+	glbl_m_axib_rd_cnt_a1_field_info
+},
+{"GLBL_M_AXIB_RD_CNT_A2", 0x3f8,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_rd_cnt_a2_field_info),
+	glbl_m_axib_rd_cnt_a2_field_info
+},
+{"GLBL_M_AXIB_RD_CNT_A3", 0x3fc,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_rd_cnt_a3_field_info),
+	glbl_m_axib_rd_cnt_a3_field_info
+},
+{"GLBL_M_AXIB_RD_CNT_A4", 0x400,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_rd_cnt_a4_field_info),
+	glbl_m_axib_rd_cnt_a4_field_info
+},
+{"GLBL_M_AXIB_RD_CNT_A5", 0x404,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_m_axib_rd_cnt_a5_field_info),
+	glbl_m_axib_rd_cnt_a5_field_info
+},
+{"GLBL_S_AXI_WR_CNT_A0", 0x408,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_wr_cnt_a0_field_info),
+	glbl_s_axi_wr_cnt_a0_field_info
+},
+{"GLBL_S_AXI_WR_CNT_A1", 0x40c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_wr_cnt_a1_field_info),
+	glbl_s_axi_wr_cnt_a1_field_info
+},
+{"GLBL_S_AXI_WR_CNT_A2", 0x410,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_wr_cnt_a2_field_info),
+	glbl_s_axi_wr_cnt_a2_field_info
+},
+{"GLBL_S_AXI_WR_CNT_A3", 0x414,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_wr_cnt_a3_field_info),
+	glbl_s_axi_wr_cnt_a3_field_info
+},
+{"GLBL_S_AXI_WR_CNT_A4", 0x418,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_wr_cnt_a4_field_info),
+	glbl_s_axi_wr_cnt_a4_field_info
+},
+{"GLBL_S_AXI_WR_CNT_A5", 0x41c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_wr_cnt_a5_field_info),
+	glbl_s_axi_wr_cnt_a5_field_info
+},
+{"GLBL_S_AXI_RD_CNT_A0", 0x420,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_rd_cnt_a0_field_info),
+	glbl_s_axi_rd_cnt_a0_field_info
+},
+{"GLBL_S_AXI_RD_CNT_A1", 0x424,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_rd_cnt_a1_field_info),
+	glbl_s_axi_rd_cnt_a1_field_info
+},
+{"GLBL_S_AXI_RD_CNT_A2", 0x428,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_rd_cnt_a2_field_info),
+	glbl_s_axi_rd_cnt_a2_field_info
+},
+{"GLBL_S_AXI_RD_CNT_A3", 0x42c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_rd_cnt_a3_field_info),
+	glbl_s_axi_rd_cnt_a3_field_info
+},
+{"GLBL_S_AXI_RD_CNT_A4", 0x430,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_rd_cnt_a4_field_info),
+	glbl_s_axi_rd_cnt_a4_field_info
+},
+{"GLBL_S_AXI_RD_CNT_A5", 0x434,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axi_rd_cnt_a5_field_info),
+	glbl_s_axi_rd_cnt_a5_field_info
+},
+{"GLBL_S_AXIS_CMP_CNT_A0", 0x438,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axis_cmp_cnt_a0_field_info),
+	glbl_s_axis_cmp_cnt_a0_field_info
+},
+{"GLBL_S_AXIS_CMP_CNT_A1", 0x43c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axis_cmp_cnt_a1_field_info),
+	glbl_s_axis_cmp_cnt_a1_field_info
+},
+{"GLBL_S_AXIS_CMP_CNT_A2", 0x440,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axis_cmp_cnt_a2_field_info),
+	glbl_s_axis_cmp_cnt_a2_field_info
+},
+{"GLBL_S_AXIS_CMP_CNT_A3", 0x444,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axis_cmp_cnt_a3_field_info),
+	glbl_s_axis_cmp_cnt_a3_field_info
+},
+{"GLBL_S_AXIS_CMP_CNT_A4", 0x448,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axis_cmp_cnt_a4_field_info),
+	glbl_s_axis_cmp_cnt_a4_field_info
+},
+{"GLBL_S_AXIS_CMP_CNT_A5", 0x44c,
+	1, 0, 0, 0,
+	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(glbl_s_axis_cmp_cnt_a5_field_info),
+	glbl_s_axis_cmp_cnt_a5_field_info
+},
 {"IND_CTXT_DATA", 0x804,
 	1, 0, 0, 0,
 	0, QDMA_MM_ST_MODE, QDMA_REG_READ_PF_ONLY,
@@ -3204,6 +4499,18 @@ static struct xreg_info eqdma_config_regs[] = {
 	0, QDMA_COMPLETION_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_cnt_th_field_info),
 	c2h_cnt_th_field_info
+},
+{"C2H_PFCH_CFG_1", 0xa80,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	ARRAY_SIZE(c2h_pfch_cfg_1_field_info),
+	c2h_pfch_cfg_1_field_info
+},
+{"C2H_PFCH_CFG_2", 0xa84,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_VF,
+	ARRAY_SIZE(c2h_pfch_cfg_2_field_info),
+	c2h_pfch_cfg_2_field_info
 },
 {"C2H_STAT_S_AXIS_C2H_ACCEPTED", 0xa88,
 	1, 0, 0, 0,
@@ -3312,18 +4619,6 @@ static struct xreg_info eqdma_config_regs[] = {
 	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_pfch_cfg_field_info),
 	c2h_pfch_cfg_field_info
-},
-{"C2H_PFCH_CFG_1", 0xa80,
-	1, 0, 0, 0,
-	0, QDMA_COMPLETION_MODE, QDMA_REG_READ_PF_ONLY,
-	ARRAY_SIZE(c2h_pfch_cfg_1_field_info),
-	c2h_pfch_cfg_1_field_info
-},
-{"C2H_PFCH_CFG_2", 0xa84,
-	1, 0, 0, 0,
-	0, QDMA_COMPLETION_MODE, QDMA_REG_READ_PF_ONLY,
-	ARRAY_SIZE(c2h_pfch_cfg_2_field_info),
-	c2h_pfch_cfg_2_field_info
 },
 {"C2H_INT_TIMER_TICK", 0xb0c,
 	1, 0, 0, 0,
@@ -3907,6 +5202,12 @@ static struct xreg_info eqdma_config_regs[] = {
 	ARRAY_SIZE(h2c_mm_dbg_field_info),
 	h2c_mm_dbg_field_info
 },
+{"H2C_MM_DATA_THROTTLE", 0x12ec,
+	1, 0, 0, 0,
+	0, QDMA_MM_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(h2c_mm_data_throttle_field_info),
+	h2c_mm_data_throttle_field_info
+},
 {"C2H_CRDT_COAL_CFG_1", 0x1400,
 	1, 0, 0, 0,
 	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
@@ -3931,11 +5232,95 @@ static struct xreg_info eqdma_config_regs[] = {
 	ARRAY_SIZE(c2h_pfch_byp_tag_field_info),
 	c2h_pfch_byp_tag_field_info
 },
-{"C2H_WATER_MARK", 0x1500,
+{"C2H_WATER_MARK", 0x1410,
 	1, 0, 0, 0,
 	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
 	ARRAY_SIZE(c2h_water_mark_field_info),
 	c2h_water_mark_field_info
+},
+{"C2H_NOTIFY_EMPTY", 0x1450,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_notify_empty_field_info),
+	c2h_notify_empty_field_info
+},
+{"C2H_STAT_S_AXIS_C2H_ACCEPTED_1", 0x1454,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_s_axis_c2h_accepted_1_field_info),
+	c2h_stat_s_axis_c2h_accepted_1_field_info
+},
+{"C2H_STAT_S_AXIS_WRB_ACCEPTED_1", 0x1458,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_s_axis_wrb_accepted_1_field_info),
+	c2h_stat_s_axis_wrb_accepted_1_field_info
+},
+{"C2H_STAT_DESC_RSP_PKT_ACCEPTED_1", 0x145c,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_desc_rsp_pkt_accepted_1_field_info),
+	c2h_stat_desc_rsp_pkt_accepted_1_field_info
+},
+{"C2H_STAT_AXIS_PKG_CMP_1", 0x1460,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_axis_pkg_cmp_1_field_info),
+	c2h_stat_axis_pkg_cmp_1_field_info
+},
+{"C2H_STAT_S_AXIS_WRB_ACCEPTED_2", 0x1464,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_s_axis_wrb_accepted_2_field_info),
+	c2h_stat_s_axis_wrb_accepted_2_field_info
+},
+{"C2H_ST_PLD_FIFO_DEPTH", 0x1468,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_st_pld_fifo_depth_field_info),
+	c2h_st_pld_fifo_depth_field_info
+},
+{"C2H_STAT_DBG_DMA_ENG_6", 0x146c,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_dbg_dma_eng_6_field_info),
+	c2h_stat_dbg_dma_eng_6_field_info
+},
+{"C2H_STAT_DBG_DMA_ENG_7", 0x1470,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_dbg_dma_eng_7_field_info),
+	c2h_stat_dbg_dma_eng_7_field_info
+},
+{"C2H_STAT_PCIE_CMP_1", 0x1474,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_stat_pcie_cmp_1_field_info),
+	c2h_stat_pcie_cmp_1_field_info
+},
+{"C2H_PLD_FIFO_ALMOST_FULL", 0x1478,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(c2h_pld_fifo_almost_full_field_info),
+	c2h_pld_fifo_almost_full_field_info
+},
+{"PFCH_CFG_3", 0x147c,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(pfch_cfg_3_field_info),
+	pfch_cfg_3_field_info
+},
+{"CMPT_CFG_0", 0x1480,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(cmpt_cfg_0_field_info),
+	cmpt_cfg_0_field_info
+},
+{"PFCH_CFG_4", 0x1484,
+	1, 0, 0, 0,
+	0, QDMA_ST_MODE, QDMA_REG_READ_PF_ONLY,
+	ARRAY_SIZE(pfch_cfg_4_field_info),
+	pfch_cfg_4_field_info
 },
 
 };

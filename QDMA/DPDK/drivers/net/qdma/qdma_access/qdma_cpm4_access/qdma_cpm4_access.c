@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -1427,7 +1428,7 @@ static int dump_cpm4_context(struct qdma_descq_context *queue_context,
 	int n;
 	int len = 0;
 	int rv;
-	char banner[DEBGFS_LINE_SZ];
+	char banner[DEBGFS_LINE_SZ] = "";
 
 	if (queue_context == NULL) {
 		qdma_log_error("%s: queue_context is NULL, err:%d\n",
@@ -1941,7 +1942,7 @@ static int dump_cpm4_intr_context(struct qdma_indirect_intr_ctxt *intr_ctx,
 	int n;
 	int len = 0;
 	int rv;
-	char banner[DEBGFS_LINE_SZ];
+	char banner[DEBGFS_LINE_SZ] = "";
 
 	qdma_cpm4_fill_intr_ctxt(intr_ctx);
 

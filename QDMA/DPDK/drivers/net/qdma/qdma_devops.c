@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,7 +36,6 @@
 #include <sys/fcntl.h>
 #include <rte_memzone.h>
 #include <rte_string_fns.h>
-#include <rte_ethdev_pci.h>
 #include <rte_malloc.h>
 #include <rte_dev.h>
 #include <rte_pci.h>
@@ -46,7 +46,6 @@
 #include <rte_atomic.h>
 #include <unistd.h>
 #include <string.h>
-
 #include "qdma.h"
 #include "qdma_access_common.h"
 #include "qdma_mbox_protocol.h"
@@ -234,25 +233,10 @@ int qdma_dev_notify_qdel(struct rte_eth_dev *dev, uint32_t qidx_hw,
 
 uint8_t qmda_get_desc_sz_idx(enum rte_pmd_qdma_bypass_desc_len size)
 {
-	uint8_t ret;
-	switch (size) {
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_8B:
-		ret = 0;
-		break;
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_16B:
-		ret = 1;
-		break;
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_32B:
-		ret = 2;
-		break;
-	case RTE_PMD_QDMA_BYPASS_DESC_LEN_64B:
-		ret = 3;
-		break;
-	default:
-		/* Suppress compiler warnings*/
-		ret = 0;
-	}
-	return ret;
+	return ((size == RTE_PMD_QDMA_BYPASS_DESC_LEN_64B) ? 3 :
+			(size == RTE_PMD_QDMA_BYPASS_DESC_LEN_32B) ? 2 :
+			(size == RTE_PMD_QDMA_BYPASS_DESC_LEN_16B) ? 1 :
+			/* (size == RTE_PMD_QDMA_BYPASS_DESC_LEN_8B) */0);
 }
 
 static inline int
@@ -394,6 +378,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	rxq->mb_pool = mb_pool;
 	rxq->dev = dev;
 	rxq->st_mode = qdma_dev->q_info[rx_queue_id].queue_mode;
+
 	rxq->nb_rx_desc = (nb_rx_desc + 1);
 	/* <= 2018.2 IP
 	 * double the cmpl ring size to avoid run out of cmpl entry while
@@ -766,6 +751,7 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 	}
 
 	txq->st_mode = qdma_dev->q_info[tx_queue_id].queue_mode;
+
 	txq->en_bypass = (qdma_dev->q_info[tx_queue_id].tx_bypass_mode) ? 1 : 0;
 	txq->bypass_desc_sz = qdma_dev->q_info[tx_queue_id].tx_bypass_desc_sz;
 
@@ -948,79 +934,6 @@ void qdma_txq_pidx_update(void *arg)
 }
 #endif
 
-
-
-void qdma_dev_tx_queue_release(void *tqueue)
-{
-	struct qdma_tx_queue *txq = (struct qdma_tx_queue *)tqueue;
-	struct qdma_pci_dev *qdma_dev;
-
-	if (txq != NULL) {
-		PMD_DRV_LOG(INFO, "Remove H2C queue: %d", txq->queue_id);
-		qdma_dev = txq->dev->data->dev_private;
-
-		if (!qdma_dev->is_vf)
-			qdma_dev_decrement_active_queue(
-					qdma_dev->dma_device_index,
-					qdma_dev->func_id,
-					QDMA_DEV_Q_TYPE_H2C);
-		else
-			qdma_dev_notify_qdel(txq->dev, txq->queue_id +
-						qdma_dev->queue_base,
-						QDMA_DEV_Q_TYPE_H2C);
-		if (txq->sw_ring)
-			rte_free(txq->sw_ring);
-		if (txq->tx_mz)
-			rte_memzone_free(txq->tx_mz);
-		rte_free(txq);
-		PMD_DRV_LOG(INFO, "H2C queue %d removed", txq->queue_id);
-	}
-}
-
-void qdma_dev_rx_queue_release(void *rqueue)
-{
-	struct qdma_rx_queue *rxq = (struct qdma_rx_queue *)rqueue;
-	struct qdma_pci_dev *qdma_dev = NULL;
-
-	if (rxq != NULL) {
-		PMD_DRV_LOG(INFO, "Remove C2H queue: %d", rxq->queue_id);
-		qdma_dev = rxq->dev->data->dev_private;
-
-		if (!qdma_dev->is_vf) {
-			qdma_dev_decrement_active_queue(
-					qdma_dev->dma_device_index,
-					qdma_dev->func_id,
-					QDMA_DEV_Q_TYPE_C2H);
-
-			if (rxq->st_mode)
-				qdma_dev_decrement_active_queue(
-					qdma_dev->dma_device_index,
-					qdma_dev->func_id,
-					QDMA_DEV_Q_TYPE_CMPT);
-		} else {
-			qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
-					qdma_dev->queue_base,
-					QDMA_DEV_Q_TYPE_C2H);
-
-			if (rxq->st_mode)
-				qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
-						qdma_dev->queue_base,
-						QDMA_DEV_Q_TYPE_CMPT);
-		}
-
-		if (rxq->sw_ring)
-			rte_free(rxq->sw_ring);
-		if (rxq->st_mode) { /** if ST-mode **/
-			if (rxq->rx_cmpt_mz)
-				rte_memzone_free(rxq->rx_cmpt_mz);
-		}
-		if (rxq->rx_mz)
-			rte_memzone_free(rxq->rx_mz);
-		rte_free(rxq);
-		PMD_DRV_LOG(INFO, "C2H queue %d removed", rxq->queue_id);
-	}
-}
-
 /**
  * DPDK callback to start the device.
  *
@@ -1084,7 +997,10 @@ int qdma_dev_link_update(struct rte_eth_dev *dev,
 {
 	dev->data->dev_link.link_status = ETH_LINK_UP;
 	dev->data->dev_link.link_duplex = ETH_LINK_FULL_DUPLEX;
-	dev->data->dev_link.link_speed = ETH_SPEED_NUM_100G;
+
+	/* TODO: Configure link speed by reading hardware capabilities */
+	dev->data->dev_link.link_speed = ETH_SPEED_NUM_200G;
+
 	PMD_DRV_LOG(INFO, "Link update done\n");
 	return 0;
 }
@@ -1683,14 +1599,14 @@ int qdma_dev_rx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 		if (!(qdma_dev->ip_type == EQDMA_SOFT_IP)) {
 			while (rxq->wb_status->pidx !=
 					rxq->cmpt_cidx_info.wrb_cidx) {
-				usleep(10);
+				rte_delay_us_block(10);
 				if (cnt++ > 10000)
 					break;
 			}
 		}
 	} else { /* MM mode */
 		while (rxq->wb_status->cidx != rxq->q_pidx_info.pidx) {
-			usleep(10);
+			rte_delay_us_block(10);
 			if (cnt++ > 10000)
 				break;
 		}
@@ -1739,7 +1655,7 @@ int qdma_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t qid)
 	txq->status = RTE_ETH_QUEUE_STATE_STOPPED;
 	/* Wait for TXQ to send out all packets. */
 	while (txq->wb_status->cidx != txq->q_pidx_info.pidx) {
-		usleep(10);
+		rte_delay_us_block(10);
 		if (cnt++ > 10000)
 			break;
 	}

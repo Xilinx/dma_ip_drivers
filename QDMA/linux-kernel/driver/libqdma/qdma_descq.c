@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -1876,6 +1876,8 @@ int qdma_queue_packet_write(unsigned long dev_hndl, unsigned long id,
 		return -EINVAL;
 	}
 
+	memset(cb, 0, QDMA_REQ_OPAQUE_SIZE);
+	qdma_waitq_init(&cb->wq);
 	qdma_work_queue_add(descq, cb);
 
 	if (!req->dma_mapped) {

@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -182,24 +183,26 @@ int qdma_ul_update_st_h2c_desc(void *qhndl, uint64_t q_offloads,
 		desc_info->src_addr = mb->buf_iova + mb->data_off;
 		desc_info->flags = (S_H2C_DESC_F_SOP | S_H2C_DESC_F_EOP);
 		desc_info->cdh_flags = 0;
-	} else {
-		while (nsegs && mb) {
-			desc_info = get_st_h2c_desc(qhndl);
-
-			desc_info->len = rte_pktmbuf_data_len(mb);
-			desc_info->pld_len = desc_info->len;
-			desc_info->src_addr = mb->buf_iova + mb->data_off;
-			desc_info->flags = 0;
-			if (nsegs == pkt_segs)
-				desc_info->flags |= S_H2C_DESC_F_SOP;
-			if (nsegs == 1)
-				desc_info->flags |= S_H2C_DESC_F_EOP;
-			desc_info->cdh_flags = 0;
-
-			nsegs--;
-			mb = mb->next;
-		}
+		return 0;
 	}
+
+	while (nsegs && mb) {
+		desc_info = get_st_h2c_desc(qhndl);
+
+		desc_info->len = rte_pktmbuf_data_len(mb);
+		desc_info->pld_len = desc_info->len;
+		desc_info->src_addr = mb->buf_iova + mb->data_off;
+		desc_info->flags = 0;
+
+		desc_info->flags |= (nsegs == pkt_segs) ? S_H2C_DESC_F_SOP : 0;
+		desc_info->flags |= (nsegs == 1) ? S_H2C_DESC_F_EOP : 0;
+
+		desc_info->cdh_flags = 0;
+
+		nsegs--;
+		mb = mb->next;
+	}
+
 	return 0;
 }
 

@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -236,6 +237,10 @@ static int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 
 	id = txq->tx_fl_tail;
 	fl_desc = (int)cidx - id;
+
+	if (fl_desc == 0)
+		return 0;
+
 	if (fl_desc < 0)
 		fl_desc += (txq->nb_tx_desc - 1);
 
@@ -344,7 +349,7 @@ void qdma_get_device_info(void *queue_hndl,
 	*ip_type = (enum qdma_ip_type)qdma_dev->ip_type;
 }
 
-uint32_t get_mm_c2h_ep_addr(void *queue_hndl)
+uint64_t get_mm_c2h_ep_addr(void *queue_hndl)
 {
 	struct qdma_rx_queue *rxq = (struct qdma_rx_queue *)queue_hndl;
 
@@ -395,7 +400,7 @@ struct qdma_ul_mm_desc *get_mm_h2c_desc(void *queue_hndl)
 	return desc;
 }
 
-uint32_t get_mm_h2c_ep_addr(void *queue_hndl)
+uint64_t get_mm_h2c_ep_addr(void *queue_hndl)
 {
 	struct qdma_tx_queue *txq = (struct qdma_tx_queue *)queue_hndl;
 
@@ -632,7 +637,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 	return 0;
 }
 
-static uint32_t rx_queue_count(void *rx_queue)
+uint32_t rx_queue_count(void *rx_queue)
 {
 	struct qdma_rx_queue *rxq = rx_queue;
 	struct wb_status *wb_status;
@@ -682,24 +687,6 @@ static uint32_t rx_queue_count(void *rx_queue)
 	PMD_DRV_LOG(DEBUG, "%s: nb_desc_used = %d",
 			__func__, nb_desc_used);
 	return nb_desc_used;
-}
-
-/**
- * DPDK callback to get the number of used descriptors of a rx queue.
- *
- * @param dev
- *   Pointer to Ethernet device structure.
- * @param rx_queue_id
- *   The RX queue on the Ethernet device for which information will be
- *   retrieved
- *
- * @return
- *   The number of used descriptors in the specific queue.
- */
-uint32_t
-qdma_dev_rx_queue_count(struct rte_eth_dev *dev, uint16_t rx_queue_id)
-{
-	return rx_queue_count(dev->data->rx_queues[rx_queue_id]);
 }
 
 /**
@@ -1145,8 +1132,8 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 }
 
 /* Receive API for Streaming mode */
-uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
-				uint16_t nb_pkts)
+uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
+		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 {
 	uint16_t count_pkts;
 	struct wb_status *wb_status;
@@ -1189,11 +1176,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 		return 0;
 	}
 
-	if (nb_pkts > QDMA_MAX_BURST_SIZE)
-		nb_pkts = QDMA_MAX_BURST_SIZE;
-
-	if (nb_pkts > nb_pkts_avail)
-		nb_pkts = nb_pkts_avail;
+	nb_pkts = RTE_MIN(nb_pkts, RTE_MIN(nb_pkts_avail, QDMA_MAX_BURST_SIZE));
 
 #ifdef DUMP_MEMPOOL_USAGE_STATS
 	PMD_DRV_LOG(DEBUG, "%s(): %d: queue id = %d, mbuf_avail_count = %d, "
@@ -1209,7 +1192,9 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 #ifdef QDMA_LATENCY_OPTIMIZED
 	adapt_update_counter(rxq, nb_pkts_avail);
 #endif //QDMA_LATENCY_OPTIMIZED
-	if (process_cmpt_ring(rxq, nb_pkts) != 0)
+
+	int ret = process_cmpt_ring(rxq, nb_pkts);
+	if (unlikely(ret))
 		return 0;
 
 	if (rxq->status != RTE_ETH_QUEUE_STATE_STARTED) {
@@ -1249,8 +1234,8 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 }
 
 /* Receive API for Memory mapped mode */
-uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
-			uint16_t nb_pkts)
+uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq,
+		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;
@@ -1447,8 +1432,8 @@ qdma_dev_tx_descriptor_status(void *tx_queue, uint16_t offset)
 }
 
 /* Transmit API for Streaming mode */
-uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
-			uint16_t nb_pkts)
+uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
+		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint64_t pkt_len = 0;
@@ -1456,6 +1441,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
 
@@ -1466,6 +1452,12 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 #endif
 
 	id = txq->q_pidx_info.pidx;
+
+	/* Make sure reads to Tx ring are synchronized before
+	 * accessing the status descriptor.
+	 */
+	rte_rmb();
+
 	cidx = txq->wb_status->cidx;
 	PMD_DRV_LOG(DEBUG, "Xmit start on tx queue-id:%d, tail index:%d\n",
 			txq->queue_id, id);
@@ -1483,7 +1475,8 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 	 * Hence, DMA won't happen with new descriptors.
 	 */
 	avail = txq->nb_tx_desc - 2 - in_use;
-	if (!avail) {
+
+	if (unlikely(!avail)) {
 		PMD_DRV_LOG(DEBUG, "Tx queue full, in_use = %d", in_use);
 		return 0;
 	}
@@ -1508,17 +1501,12 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 #else
 		ret = qdma_ul_update_st_h2c_desc(txq, txq->offloads, mb);
 #endif //RTE_ARCH_X86_64
-		if (ret < 0)
+		if (unlikely(ret < 0))
 			break;
 	}
 
 	txq->stats.pkts += count;
 	txq->stats.bytes += pkt_len;
-
-	/* Make sure writes to the H2C descriptors are synchronized
-	 * before updating PIDX
-	 */
-	rte_wmb();
 
 #if (MIN_TX_PIDX_UPDATE_THRESHOLD > 1)
 	rte_spinlock_lock(&txq->pidx_update_lock);
@@ -1544,8 +1532,8 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 }
 
 /* Transmit API for Memory mapped mode */
-uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
-			uint16_t nb_pkts)
+uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
+		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;
@@ -1604,7 +1592,9 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 		PMD_DRV_LOG(DEBUG, "xmit number of bytes:%ld, count:%d ",
 				len, count);
 
+#ifndef TANDEM_BOOT_SUPPORTED
 		txq->ep_addr = (txq->ep_addr + len) % DMA_BRAM_SIZE;
+#endif
 		id = txq->q_pidx_info.pidx;
 	}
 
@@ -1637,7 +1627,7 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
  * DPDK callback for transmitting packets in burst.
  *
  * @param tx_queue
- G*   Generic pointer to TX queue structure.
+ *   Generic pointer to TX queue structure.
  * @param[in] tx_pkts
  *   Packets to transmit.
  * @param nb_pkts

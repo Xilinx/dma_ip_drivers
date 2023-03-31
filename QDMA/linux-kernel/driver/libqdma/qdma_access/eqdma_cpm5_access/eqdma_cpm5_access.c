@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -82,9 +83,13 @@
 #define EQDMA_CPM5_GLBL2_FLR_PRESENT_MASK			BIT(1)
 #define EQDMA_CPM5_GLBL2_MAILBOX_EN_MASK			BIT(0)
 
+#define EQDMA_CPM5_DEFAULT_C2H_INTR_TIMER_TICK  50
+#define PREFETCH_QUEUE_COUNT_STEP               4
+
+/* TODO: This is work around and this needs to be auto generated from ODS */
 /** EQDMA_CPM5_IND_REG_SEL_FMAP */
-#define EQDMA_CPM5_FMAP_CTXT_W1_QID_MAX_MASK         GENMASK(11, 0)
-#define EQDMA_CPM5_FMAP_CTXT_W0_QID_MASK             GENMASK(10, 0)
+#define EQDMA_CPM5_FMAP_CTXT_W1_QID_MAX_MASK         GENMASK(12, 0)
+#define EQDMA_CPM5_FMAP_CTXT_W0_QID_MASK             GENMASK(11, 0)
 
 static void eqdma_cpm5_hw_st_h2c_err_process(void *dev_hndl);
 static void eqdma_cpm5_hw_st_c2h_err_process(void *dev_hndl);
@@ -1716,6 +1721,307 @@ static uint32_t eqdma_cpm5_intr_context_buf_len(void)
 }
 
 /*
+ * eqdma_cpm5_set_perf_opt() - Helper function to set the
+ *				cpm5 perf optimizations.
+ *
+ */
+static void eqdma_cpm5_set_perf_opt(void *dev_hndl)
+{
+	uint32_t reg_val = 0;
+	uint32_t pftch_cache_depth = 0;
+	uint32_t pftch_qcnt = 0;
+	uint32_t pftch_evnt_qcnt_th = 0;
+	uint32_t crdt_coal_fifo_th = 0;
+	uint32_t crdt_coal_crdt_th = 0;
+
+	/* C2H interrupt timer tick */
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_INT_TIMER_TICK_ADDR,
+		EQDMA_CPM5_DEFAULT_C2H_INTR_TIMER_TICK);
+
+/*
+ * #define EQDMA_CPM5_C2H_PFCH_CACHE_DEPTH_ADDR    0xBE0
+ * #define C2H_PFCH_CACHE_DEPTH_MAX_STBUF_MASK     GENMASK(23, 16)
+ * #define C2H_PFCH_CACHE_DEPTH_MASK               GENMASK(7, 0)
+ */
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_C2H_PFCH_CACHE_DEPTH_ADDR);
+	pftch_cache_depth = FIELD_GET(C2H_PFCH_CACHE_DEPTH_MASK, reg_val);
+
+/*
+ * #define EQDMA_CPM5_GLBL_DSC_CFG_ADDR      0x250
+ * #define GLBL_DSC_CFG_RSVD_1_MASK          GENMASK(31, 10)
+ * #define GLBL_DSC_CFG_UNC_OVR_COR_MASK     BIT(9)
+ * #define GLBL_DSC_CFG_CTXT_FER_DIS_MASK    BIT(8)
+ * #define GLBL_DSC_CFG_RSVD_2_MASK          GENMASK(7, 6)
+ * #define GLBL_DSC_CFG_MAXFETCH_MASK        GENMASK(5, 3)
+ * #define GLBL_DSC_CFG_WB_ACC_INT_MASK      GENMASK(2, 0)
+ */
+#define GLBL_DSC_CFG_RSVD_1_DFLT        0
+#define GLBL_DSC_CFG_UNC_OVR_COR_DFLT   0
+#define GLBL_DSC_CFG_CTXT_FER_DIS_DFLT  0
+#define GLBL_DSC_CFG_RSVD_2_DFLT        0
+/* =IF(Internal mode, 2,5) */
+#define GLBL_DSC_CFG_MAXFETCH           2
+#define GLBL_DSC_CFG_WB_ACC_INT         5
+	reg_val =
+		FIELD_SET(GLBL_DSC_CFG_RSVD_1_MASK, GLBL_DSC_CFG_RSVD_1_DFLT) |
+		FIELD_SET(GLBL_DSC_CFG_UNC_OVR_COR_MASK,
+					GLBL_DSC_CFG_UNC_OVR_COR_DFLT) |
+		FIELD_SET(GLBL_DSC_CFG_CTXT_FER_DIS_MASK,
+					GLBL_DSC_CFG_CTXT_FER_DIS_DFLT) |
+		FIELD_SET(GLBL_DSC_CFG_RSVD_2_MASK, GLBL_DSC_CFG_RSVD_2_DFLT) |
+		FIELD_SET(GLBL_DSC_CFG_MAXFETCH_MASK,
+					GLBL_DSC_CFG_MAXFETCH) |
+		FIELD_SET(GLBL_DSC_CFG_WB_ACC_INT_MASK,
+					GLBL_DSC_CFG_WB_ACC_INT);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_GLBL_DSC_CFG_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_GLBL_DSC_CFG_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+		__func__, EQDMA_CPM5_GLBL_DSC_CFG_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_CFG_BLK_MISC_CTL_ADDR               0x4C
+ * #define CFG_BLK_MISC_CTL_RSVD_1_MASK                   GENMASK(31, 24)
+ * #define CFG_BLK_MISC_CTL_10B_TAG_EN_MASK               BIT(23)
+ * #define CFG_BLK_MISC_CTL_RSVD_2_MASK                   BIT(22)
+ * #define CFG_BLK_MISC_CTL_AXI_WBK_MASK                  BIT(21)
+ * #define CFG_BLK_MISC_CTL_AXI_DSC_MASK                  BIT(20)
+ * #define CFG_BLK_MISC_CTL_NUM_TAG_MASK                  GENMASK(19, 8)
+ * #define CFG_BLK_MISC_CTL_RSVD_3_MASK                   GENMASK(7, 5)
+ * #define CFG_BLK_MISC_CTL_RQ_METERING_MULTIPLIER_MASK   GENMASK(4, 0)
+ */
+#define CFG_BLK_MISC_CTL_RSVD_1_DFLT             0
+#define CFG_BLK_MISC_CTL_RSVD_2_DFLT             0
+#define CFG_BLK_MISC_CTL_AXI_WBK_DFLT            0
+#define CFG_BLK_MISC_CTL_AXI_DSC_DFLT            0
+/* IF(10bit tag enabled, 512,256) */
+#ifdef EQDMA_CPM5_10BIT_TAG_ENABLE
+#define CFG_BLK_MISC_CTL_10B_TAG_DFLT            1
+#define CFG_BLK_MISC_CTL_NUM_TAG_DFLT            512
+#else
+#define CFG_BLK_MISC_CTL_10B_TAG_DFLT            0
+#define CFG_BLK_MISC_CTL_NUM_TAG_DFLT            256
+#endif
+#define CFG_BLK_MISC_CTL_RSVD_3_DFLT             0
+#define EQDMA_CFG_BLK_MISC_CTL_RQ_METERING_MUL   31
+	reg_val =
+		FIELD_SET(CFG_BLK_MISC_CTL_RSVD_1_MASK,
+					CFG_BLK_MISC_CTL_RSVD_1_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_10B_TAG_EN_MASK,
+					CFG_BLK_MISC_CTL_10B_TAG_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_RSVD_2_MASK,
+					CFG_BLK_MISC_CTL_RSVD_2_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_AXI_WBK_MASK,
+					CFG_BLK_MISC_CTL_AXI_WBK_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_AXI_DSC_MASK,
+					CFG_BLK_MISC_CTL_AXI_DSC_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_NUM_TAG_MASK,
+					CFG_BLK_MISC_CTL_NUM_TAG_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_RSVD_3_MASK,
+					CFG_BLK_MISC_CTL_RSVD_3_DFLT) |
+		FIELD_SET(CFG_BLK_MISC_CTL_RQ_METERING_MULTIPLIER_MASK,
+					EQDMA_CFG_BLK_MISC_CTL_RQ_METERING_MUL);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_CFG_BLK_MISC_CTL_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_CFG_BLK_MISC_CTL_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_CFG_BLK_MISC_CTL_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_C2H_PFCH_CFG_ADDR        0xB08
+ * #define C2H_PFCH_CFG_EVTFL_TH_MASK          GENMASK(31, 16)
+ * #define C2H_PFCH_CFG_FL_TH_MASK             GENMASK(15, 0)
+ */
+#define EQDMA_PFTCH_CFG_EVT_PFTH_FL_TH         256
+#define C2H_PFCH_CFG_FL_TH_DFLT                256
+	reg_val =
+		FIELD_SET(C2H_PFCH_CFG_EVTFL_TH_MASK,
+					EQDMA_PFTCH_CFG_EVT_PFTH_FL_TH) |
+		FIELD_SET(C2H_PFCH_CFG_FL_TH_MASK,
+					C2H_PFCH_CFG_FL_TH_DFLT);
+
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_PFCH_CFG_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_C2H_PFCH_CFG_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_C2H_PFCH_CFG_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_C2H_PFCH_CFG_1_ADDR       0xA80
+ * #define C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK      GENMASK(31, 16)
+ * #define C2H_PFCH_CFG_1_QCNT_MASK             GENMASK(15, 0)
+ */
+	pftch_qcnt = pftch_cache_depth - PREFETCH_QUEUE_COUNT_STEP;
+	pftch_evnt_qcnt_th = pftch_qcnt - PREFETCH_QUEUE_COUNT_STEP;
+	reg_val =
+		FIELD_SET(C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK, pftch_evnt_qcnt_th) |
+		FIELD_SET(C2H_PFCH_CFG_1_QCNT_MASK, pftch_qcnt);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_PFCH_CFG_1_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_C2H_PFCH_CFG_1_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_C2H_PFCH_CFG_1_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_C2H_PFCH_CFG_2_ADDR          0xA84
+ * #define C2H_PFCH_CFG_2_FENCE_MASK               BIT(31)
+ * #define C2H_PFCH_CFG_2_RSVD_MASK                GENMASK(30, 29)
+ * #define C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_MASK    BIT(28)
+ * #define C2H_PFCH_CFG_2_LL_SZ_TH_MASK            GENMASK(27, 12)
+ * #define C2H_PFCH_CFG_2_VAR_DESC_NUM_MASK        GENMASK(11, 6)
+ * #define C2H_PFCH_CFG_2_NUM_MASK                 GENMASK(5, 0)
+ */
+#define C2H_PFCH_CFG_2_FENCE_EN                1
+#define C2H_PFCH_CFG_2_RSVD_DFLT               0
+#define C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_DFLT   0
+#define C2H_PFCH_CFG_2_LL_SZ_TH_DFLT           1024
+#define C2H_PFCH_CFG_2_VAR_DESC_NUM            15
+#define C2H_PFCH_CFG_2_NUM_PFCH_DFLT           16
+	reg_val =
+		FIELD_SET(C2H_PFCH_CFG_2_FENCE_MASK,
+				C2H_PFCH_CFG_2_FENCE_EN) |
+		FIELD_SET(C2H_PFCH_CFG_2_RSVD_MASK,
+				C2H_PFCH_CFG_2_RSVD_DFLT) |
+		FIELD_SET(C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_MASK,
+				C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_DFLT) |
+		FIELD_SET(C2H_PFCH_CFG_2_LL_SZ_TH_MASK,
+				C2H_PFCH_CFG_2_LL_SZ_TH_DFLT) |
+		FIELD_SET(C2H_PFCH_CFG_2_VAR_DESC_NUM_MASK,
+				C2H_PFCH_CFG_2_VAR_DESC_NUM) |
+		FIELD_SET(C2H_PFCH_CFG_2_NUM_MASK,
+				C2H_PFCH_CFG_2_NUM_PFCH_DFLT);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_PFCH_CFG_2_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_C2H_PFCH_CFG_2_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_C2H_PFCH_CFG_2_ADDR, reg_val);
+
+/* Registers Not Applicable for CPM5
+ * #define EQDMA_PFCH_CFG_3_ADDR           0x147C
+ * #define EQDMA_PFCH_CFG_4_ADDR           0x1484
+ */
+
+/*
+ * #define EQDMA_CPM5_C2H_CRDT_COAL_CFG_1_ADDR     0x1400
+ * #define C2H_CRDT_COAL_CFG_1_RSVD_1_MASK         GENMASK(31, 18)
+ * #define C2H_CRDT_COAL_CFG_1_PLD_FIFO_TH_MASK    GENMASK(17, 10)
+ * #define C2H_CRDT_COAL_CFG_1_TIMER_TH_MASK       GENMASK(9, 0)4
+ */
+#define C2H_CRDT_COAL_CFG_1_RSVD_1_DFLT            0
+#define C2H_CRDT_COAL_CFG_1_PLD_FIFO_TH_DFLT       16
+#define C2H_CRDT_COAL_CFG_1_TIMER_TH               16
+	reg_val =
+		FIELD_SET(C2H_CRDT_COAL_CFG_1_RSVD_1_MASK,
+				C2H_CRDT_COAL_CFG_1_RSVD_1_DFLT) |
+		FIELD_SET(C2H_CRDT_COAL_CFG_1_PLD_FIFO_TH_MASK,
+				C2H_CRDT_COAL_CFG_1_PLD_FIFO_TH_DFLT) |
+		FIELD_SET(C2H_CRDT_COAL_CFG_1_TIMER_TH_MASK,
+				C2H_CRDT_COAL_CFG_1_TIMER_TH);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_CRDT_COAL_CFG_1_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_C2H_CRDT_COAL_CFG_1_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_C2H_CRDT_COAL_CFG_1_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_C2H_CRDT_COAL_CFG_2_ADDR     0x1404
+ * #define C2H_CRDT_COAL_CFG_2_RSVD_1_MASK         GENMASK(31, 24)
+ * #define C2H_CRDT_COAL_CFG_2_FIFO_TH_MASK        GENMASK(23, 16)
+ * #define C2H_CRDT_COAL_CFG_2_RESERVED1_MASK      GENMASK(15, 11)
+ * #define C2H_CRDT_COAL_CFG_2_NT_TH_MASK          GENMASK(10, 0)
+ */
+#define C2H_CRDT_COAL_CFG_2_RSVD_1_DFLT            0
+#define C2H_CRDT_COAL_CFG_2_RESERVED1_DFLT         0
+#define C2H_CRDT_COAL_CFG_2_CRDT_CNT_TH_DFLT       156
+	crdt_coal_fifo_th = pftch_cache_depth - 8;
+	crdt_coal_crdt_th = C2H_CRDT_COAL_CFG_2_CRDT_CNT_TH_DFLT;
+	reg_val =
+		FIELD_SET(C2H_CRDT_COAL_CFG_2_RSVD_1_MASK,
+				C2H_CRDT_COAL_CFG_2_RSVD_1_DFLT) |
+		FIELD_SET(C2H_CRDT_COAL_CFG_2_FIFO_TH_MASK,
+				crdt_coal_fifo_th) |
+		FIELD_SET(C2H_CRDT_COAL_CFG_2_RESERVED1_MASK,
+				C2H_CRDT_COAL_CFG_2_RESERVED1_DFLT) |
+		FIELD_SET(C2H_CRDT_COAL_CFG_2_NT_TH_MASK,
+				crdt_coal_crdt_th);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_CRDT_COAL_CFG_2_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_C2H_CRDT_COAL_CFG_2_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_C2H_CRDT_COAL_CFG_2_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_H2C_REQ_THROT_PCIE_ADDR      0xE24
+ * #define H2C_REQ_THROT_PCIE_EN_REQ_MASK          BIT(31)
+ * #define H2C_REQ_THROT_PCIE_MASK                 GENMASK(30, 19)
+ * #define H2C_REQ_THROT_PCIE_EN_DATA_MASK         BIT(18)
+ * #define H2C_REQ_THROT_PCIE_DATA_THRESH_MASK     GENMASK(17, 0)
+ */
+#define H2C_REQ_THROT_PCIE_EN_REQ    1
+/* IF(10bit tag enabled, 512-64, 192) */
+#ifdef EQDMA_CPM5_10BIT_TAG_ENABLE
+#define H2C_REQ_THROT_PCIE_REQ_TH    448
+#else
+#define H2C_REQ_THROT_PCIE_REQ_TH    192
+#endif
+#define H2C_REQ_THROT_PCIE_EN_DATA   1
+#define H2C_REQ_THROT_PCIE_DATA_TH   57344
+	reg_val =
+		FIELD_SET(H2C_REQ_THROT_PCIE_EN_REQ_MASK,
+					H2C_REQ_THROT_PCIE_EN_REQ) |
+		FIELD_SET(H2C_REQ_THROT_PCIE_MASK,
+					H2C_REQ_THROT_PCIE_REQ_TH) |
+		FIELD_SET(H2C_REQ_THROT_PCIE_EN_DATA_MASK,
+					H2C_REQ_THROT_PCIE_EN_DATA) |
+		FIELD_SET(H2C_REQ_THROT_PCIE_DATA_THRESH_MASK,
+					H2C_REQ_THROT_PCIE_DATA_TH);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_H2C_REQ_THROT_PCIE_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_H2C_REQ_THROT_PCIE_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_H2C_REQ_THROT_PCIE_ADDR, reg_val);
+
+/*
+ * #define EQDMA_CPM5_H2C_REQ_THROT_AXIMM_ADDR    0xE2C
+ * #define H2C_REQ_THROT_AXIMM_EN_REQ_MASK        BIT(31)
+ * #define H2C_REQ_THROT_AXIMM_MASK               GENMASK(30, 19)
+ * #define H2C_REQ_THROT_AXIMM_EN_DATA_MASK       BIT(18)
+ * #define H2C_REQ_THROT_AXIMM_DATA_THRESH_MASK   GENMASK(17, 0)
+ */
+#define H2C_REQ_THROT_AXIMM_EN_REQ      0
+/* IF(10bit tag en=1, 512-64, 192) */
+#ifdef EQDMA_CPM5_10BIT_TAG_ENABLE
+#define H2C_REQ_THROT_AXIMM_REQ_TH      448
+#else
+#define H2C_REQ_THROT_AXIMM_REQ_TH      192
+#endif
+#define H2C_REQ_THROT_AXIMM_EN_DATA     0
+#define H2C_REQ_THROT_AXIMM_DATA_TH     65536
+	reg_val =
+		FIELD_SET(H2C_REQ_THROT_AXIMM_EN_REQ_MASK,
+				H2C_REQ_THROT_AXIMM_EN_REQ) |
+		FIELD_SET(H2C_REQ_THROT_AXIMM_MASK,
+				H2C_REQ_THROT_AXIMM_REQ_TH) |
+		FIELD_SET(H2C_REQ_THROT_AXIMM_EN_DATA_MASK,
+				H2C_REQ_THROT_AXIMM_EN_DATA) |
+		FIELD_SET(H2C_REQ_THROT_AXIMM_DATA_THRESH_MASK,
+				H2C_REQ_THROT_AXIMM_DATA_TH);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_H2C_REQ_THROT_AXIMM_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_H2C_REQ_THROT_AXIMM_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+			__func__, EQDMA_CPM5_H2C_REQ_THROT_AXIMM_ADDR, reg_val);
+
+#define EQDMA_CPM5_H2C_MM_DATA_THROTTLE_ADDR    0x12EC
+#define H2C_MM_DATA_THROTTLE_RSVD_1_MASK        GENMASK(31, 17)
+#define H2C_MM_DATA_THROTTLE_DAT_EN_MASK        BIT(16)
+#define H2C_MM_DATA_THROTTLE_DAT_MASK           GENMASK(15, 0)
+#define H2C_MM_DATA_THROTTLE_RSVD_1_DFLT        0
+#define H2C_MM_DATA_TH_EN                       1
+#define H2C_MM_DATA_TH                          57344
+	reg_val =
+		FIELD_SET(H2C_MM_DATA_THROTTLE_RSVD_1_MASK,
+					H2C_MM_DATA_THROTTLE_RSVD_1_DFLT) |
+		FIELD_SET(H2C_MM_DATA_THROTTLE_DAT_EN_MASK, H2C_MM_DATA_TH_EN) |
+		FIELD_SET(H2C_MM_DATA_THROTTLE_DAT_MASK, H2C_MM_DATA_TH);
+	qdma_reg_write(dev_hndl, EQDMA_CPM5_H2C_MM_DATA_THROTTLE_ADDR, reg_val);
+	reg_val = qdma_reg_read(dev_hndl, EQDMA_CPM5_H2C_MM_DATA_THROTTLE_ADDR);
+	qdma_log_info("%s: reg = 0x%08X val = 0x%08X\n",
+		__func__, EQDMA_CPM5_H2C_MM_DATA_THROTTLE_ADDR, reg_val);
+}
+
+/*
  * eqdma_cpm5_indirect_reg_invalidate() - helper function to invalidate
  * indirect context registers.
  *
@@ -2128,27 +2434,6 @@ int eqdma_cpm5_set_default_global_csr(void *dev_hndl)
 		qdma_write_csr_values(dev_hndl, EQDMA_CPM5_C2H_BUF_SZ_ADDR,
 				0, QDMA_NUM_C2H_BUFFER_SIZES, buf_sz);
 
-		/* Prefetch Configuration */
-		reg_val = qdma_reg_read(dev_hndl,
-				EQDMA_CPM5_C2H_PFCH_CACHE_DEPTH_ADDR);
-		cfg_val = FIELD_GET(C2H_PFCH_CACHE_DEPTH_MASK, reg_val);
-
-		reg_val = FIELD_SET(C2H_PFCH_CFG_1_QCNT_MASK, (cfg_val >> 2)) |
-				  FIELD_SET(C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK,
-						((cfg_val >> 2) - 4));
-		qdma_reg_write(dev_hndl,
-				EQDMA_CPM5_C2H_PFCH_CFG_1_ADDR, reg_val);
-
-		reg_val = qdma_reg_read(dev_hndl,
-					EQDMA_CPM5_C2H_PFCH_CFG_2_ADDR);
-		reg_val |= FIELD_SET(C2H_PFCH_CFG_2_FENCE_MASK, 1);
-		qdma_reg_write(dev_hndl,
-				EQDMA_CPM5_C2H_PFCH_CFG_2_ADDR, reg_val);
-
-		/* C2H interrupt timer tick */
-		qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_INT_TIMER_TICK_ADDR,
-				DEFAULT_C2H_INTR_TIMER_TICK);
-
 		/* C2h Completion Coalesce Configuration */
 		cfg_val = qdma_reg_read(dev_hndl,
 				EQDMA_CPM5_C2H_WRB_COAL_BUF_DEPTH_ADDR);
@@ -2160,22 +2445,9 @@ int eqdma_cpm5_set_default_global_csr(void *dev_hndl)
 			FIELD_SET(C2H_WRB_COAL_CFG_MAX_BUF_SZ_MASK, cfg_val);
 		qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_WRB_COAL_CFG_ADDR,
 				reg_val);
-
-		/* H2C throttle Configuration*/
-
-		reg_val =
-			FIELD_SET(H2C_REQ_THROT_PCIE_DATA_THRESH_MASK,
-					EQDMA_CPM5_H2C_THROT_DATA_THRESH) |
-			FIELD_SET(H2C_REQ_THROT_PCIE_EN_DATA_MASK,
-					EQDMA_CPM5_THROT_EN_DATA) |
-			FIELD_SET(H2C_REQ_THROT_PCIE_MASK,
-					EQDMA_CPM5_H2C_THROT_REQ_THRESH) |
-			FIELD_SET(H2C_REQ_THROT_PCIE_EN_REQ_MASK,
-					EQDMA_CPM5_THROT_EN_REQ);
-		qdma_reg_write(dev_hndl, EQDMA_CPM5_H2C_REQ_THROT_PCIE_ADDR,
-			reg_val);
 	}
 
+	eqdma_cpm5_set_perf_opt(dev_hndl);
 	return QDMA_SUCCESS;
 }
 
@@ -2776,7 +3048,7 @@ int eqdma_cpm5_get_version(void *dev_hndl, uint8_t is_vf,
 
 	reg_val = qdma_reg_read(dev_hndl, reg_addr);
 
-	qdma_fetch_version_details(is_vf, reg_val, version_info);
+	qdma_fetch_version_details(dev_hndl, is_vf, reg_val, version_info);
 
 	return QDMA_SUCCESS;
 }
@@ -3545,7 +3817,7 @@ static int eqdma_cpm5_cmpt_context_read(void *dev_hndl, uint16_t hw_qid,
 	ctxt->en_int = FIELD_GET(CMPL_CTXT_DATA_W0_EN_INT_MASK, cmpt_ctxt[0]);
 	ctxt->trig_mode =
 		FIELD_GET(CMPL_CTXT_DATA_W0_TRIG_MODE_MASK, cmpt_ctxt[0]);
-	ctxt->fnc_id = FIELD_GET(CMPL_CTXT_DATA_W0_FNC_ID_MASK,	cmpt_ctxt[0]);
+	ctxt->fnc_id = FIELD_GET(CMPL_CTXT_DATA_W0_FNC_ID_MASK, cmpt_ctxt[0]);
 	ctxt->counter_idx =
 		(uint8_t)(FIELD_GET(CMPL_CTXT_DATA_W0_CNTER_IX_MASK,
 			cmpt_ctxt[0]));
@@ -5242,7 +5514,7 @@ int eqdma_cpm5_hw_error_enable(void *dev_hndl, uint32_t err_idx)
 	if (err_idx > EQDMA_CPM5_ERRS_ALL) {
 		qdma_log_error("%s: err_idx=%d is invalid, err:%d\n",
 				__func__,
-			       (enum eqdma_cpm5_error_idx)err_idx,
+				(enum eqdma_cpm5_error_idx)err_idx,
 				-QDMA_ERR_INV_PARAM);
 		return -QDMA_ERR_INV_PARAM;
 	}

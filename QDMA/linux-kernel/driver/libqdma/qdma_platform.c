@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -129,4 +129,17 @@ int qdma_get_err_code(int acc_err_code)
 {
 	acc_err_code *= -1;
 	return -(error_code_map_list[acc_err_code].err_code);
+}
+
+int qdma_io_wmb(void)
+{
+	/*
+	 * TODO: Write memory barrier(wmb) calls are happening differently
+	 * for DPDK and Linux drivers. DPDK driver is calling wmb() before
+	 * pidx/cmpt_cidx updates, where as linux driver calls wmb() after
+	 * pidx/cmpt_cidx updates. As linux driver performance numbers
+	 * are good with current changes, so keeping this function
+	 * as place holder for furure changes related to memory barriers.
+	 */
+	return 0;
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -2462,7 +2463,7 @@ int qdma_get_version(void *dev_hndl, uint8_t is_vf,
 
 	reg_val = qdma_reg_read(dev_hndl, reg_addr);
 
-	qdma_fetch_version_details(is_vf, reg_val, version_info);
+	qdma_fetch_version_details(dev_hndl, is_vf, reg_val, version_info);
 
 	return QDMA_SUCCESS;
 }
@@ -4005,16 +4006,9 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 	uint32_t reg_addr = 0;
 	uint32_t reg_val = 0;
 
-	if (!dev_hndl) {
-		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
-						__func__,
-					   -QDMA_ERR_INV_PARAM);
-		return -QDMA_ERR_INV_PARAM;
-	}
-	if (!reg_info) {
-		qdma_log_error("%s: reg_info is NULL, err:%d\n",
-						__func__,
-					   -QDMA_ERR_INV_PARAM);
+	if (!dev_hndl || !reg_info) {
+		qdma_log_error("%s: dev_hndl:(%p), reg_info:(%p), err:%d\n",
+			__func__, dev_hndl, reg_info, -QDMA_ERR_INV_PARAM);
 		return -QDMA_ERR_INV_PARAM;
 	}
 
@@ -4031,6 +4025,11 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 	reg_val = FIELD_SET(QDMA_DMA_SEL_DESC_PIDX_MASK, reg_info->pidx) |
 			  FIELD_SET(QDMA_DMA_SEL_IRQ_EN_MASK,
 			  reg_info->irq_en);
+
+	/* Make sure writes to the H2C/C2H descriptors are synchronized
+	 * before updating PIDX
+	 */
+	qdma_io_wmb();
 
 	qdma_reg_write(dev_hndl, reg_addr, reg_val);
 
@@ -4055,17 +4054,9 @@ int qdma_queue_cmpt_cidx_update(void *dev_hndl, uint8_t is_vf,
 		QDMA_OFFSET_DMAP_SEL_CMPT_CIDX;
 	uint32_t reg_val = 0;
 
-	if (!dev_hndl) {
-		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
-						__func__,
-					   -QDMA_ERR_INV_PARAM);
-		return -QDMA_ERR_INV_PARAM;
-	}
-
-	if (!reg_info) {
-		qdma_log_error("%s: reg_info is NULL, err:%d\n",
-						__func__,
-					   -QDMA_ERR_INV_PARAM);
+	if (!dev_hndl || !reg_info) {
+		qdma_log_error("%s: dev_handle (%p) reg_info (%p) , err:%d\n",
+			__func__, dev_hndl, reg_info, -QDMA_ERR_INV_PARAM);
 		return -QDMA_ERR_INV_PARAM;
 	}
 
@@ -4083,6 +4074,11 @@ int qdma_queue_cmpt_cidx_update(void *dev_hndl, uint8_t is_vf,
 		FIELD_SET(QDMA_DMAP_SEL_CMPT_STS_DESC_EN_MASK,
 				reg_info->wrb_en) |
 		FIELD_SET(QDMA_DMAP_SEL_CMPT_IRQ_EN_MASK, reg_info->irq_en);
+
+	/* Make sure writes to the CMPT ring are synchronized
+	 * before updating CIDX
+	 */
+	qdma_io_wmb();
 
 	qdma_reg_write(dev_hndl, reg_addr, reg_val);
 
@@ -4107,15 +4103,9 @@ int qdma_queue_intr_cidx_update(void *dev_hndl, uint8_t is_vf,
 		QDMA_OFFSET_DMAP_SEL_INT_CIDX;
 	uint32_t reg_val = 0;
 
-	if (!dev_hndl) {
-		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
-				__func__, -QDMA_ERR_INV_PARAM);
-		return -QDMA_ERR_INV_PARAM;
-	}
-
-	if (!reg_info) {
-		qdma_log_error("%s: reg_info is NULL, err:%d\n",
-					__func__, -QDMA_ERR_INV_PARAM);
+	if (!dev_hndl || !reg_info) {
+		qdma_log_error("%s: dev_handle (%p) reg_info (%p), err:%d\n",
+			__func__, dev_hndl, reg_info, -QDMA_ERR_INV_PARAM);
 		return -QDMA_ERR_INV_PARAM;
 	}
 

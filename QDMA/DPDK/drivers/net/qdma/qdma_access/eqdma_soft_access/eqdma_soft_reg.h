@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -271,6 +272,35 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define GLBL2_SYSTEM_ID_MASK                              GENMASK(15, 0)
 #define EQDMA_GLBL2_MISC_CAP_ADDR                          0x134
 #define GLBL2_MISC_CAP_MASK                               GENMASK(31, 0)
+#define EQDMA_GLBL2_RRQ_BRG_THROT_ADDR                     0x158
+#define GLBL2_RRQ_BRG_THROT_REQ_EN_MASK                    BIT(31)
+#define GLBL2_RRQ_BRG_THROT_REQ_MASK                       GENMASK(30, 19)
+#define GLBL2_RRQ_BRG_THROT_DAT_EN_MASK                    BIT(18)
+#define GLBL2_RRQ_BRG_THROT_DAT_MASK                       GENMASK(17, 0)
+#define EQDMA_GLBL2_RRQ_PCIE_THROT_ADDR                    0x15C
+#define GLBL2_RRQ_PCIE_THROT_REQ_EN_MASK                   BIT(31)
+#define GLBL2_RRQ_PCIE_THROT_REQ_MASK                      GENMASK(30, 19)
+#define GLBL2_RRQ_PCIE_THROT_DAT_EN_MASK                   BIT(18)
+#define GLBL2_RRQ_PCIE_THROT_DAT_MASK                      GENMASK(17, 0)
+#define EQDMA_GLBL2_RRQ_AXIMM_THROT_ADDR                   0x160
+#define GLBL2_RRQ_AXIMM_THROT_REQ_EN_MASK                  BIT(31)
+#define GLBL2_RRQ_AXIMM_THROT_REQ_MASK                     GENMASK(30, 19)
+#define GLBL2_RRQ_AXIMM_THROT_DAT_EN_MASK                  BIT(18)
+#define GLBL2_RRQ_AXIMM_THROT_DAT_MASK                     GENMASK(17, 0)
+#define EQDMA_GLBL2_RRQ_PCIE_LAT0_ADDR                     0x164
+#define GLBL2_RRQ_PCIE_LAT0_MAX_MASK                      GENMASK(31, 16)
+#define GLBL2_RRQ_PCIE_LAT0_MIN_MASK                      GENMASK(15, 0)
+#define EQDMA_GLBL2_RRQ_PCIE_LAT1_ADDR                     0x168
+#define GLBL2_RRQ_PCIE_LAT1_RSVD_MASK                      GENMASK(31, 17)
+#define GLBL2_RRQ_PCIE_LAT1_OVFL_MASK                     BIT(16)
+#define GLBL2_RRQ_PCIE_LAT1_AVG_MASK                      GENMASK(15, 0)
+#define EQDMA_GLBL2_RRQ_AXIMM_LAT0_ADDR                    0x16C
+#define GLBL2_RRQ_AXIMM_LAT0_MAX_MASK                     GENMASK(31, 16)
+#define GLBL2_RRQ_AXIMM_LAT0_MIN_MASK                     GENMASK(15, 0)
+#define EQDMA_GLBL2_RRQ_AXIMM_LAT1_ADDR                    0x170
+#define GLBL2_RRQ_AXIMM_LAT1_RSVD_MASK                     GENMASK(31, 17)
+#define GLBL2_RRQ_AXIMM_LAT1_OVFL_MASK                    BIT(16)
+#define GLBL2_RRQ_AXIMM_LAT1_AVG_MASK                     GENMASK(15, 0)
 #define EQDMA_GLBL2_DBG_PCIE_RQ0_ADDR                      0x1B8
 #define GLBL2_PCIE_RQ0_NPH_AVL_MASK                    GENMASK(31, 20)
 #define GLBL2_PCIE_RQ0_RCB_AVL_MASK                    GENMASK(19, 9)
@@ -447,7 +477,9 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define EQDMA_GLBL_ERR_MASK_ADDR                           0x24C
 #define GLBL_ERR_MASK                            GENMASK(31, 0)
 #define EQDMA_GLBL_DSC_CFG_ADDR                            0x250
-#define GLBL_DSC_CFG_RSVD_1_MASK                           GENMASK(31, 10)
+#define GLBL_DSC_CFG_RSVD_1_MASK                           GENMASK(31, 30)
+#define GLBL_DSC_CFG_C2H_UODSC_LIMIT_MASK                  GENMASK(29, 20)
+#define GLBL_DSC_CFG_H2C_UODSC_LIMIT_MASK                  GENMASK(19, 10)
 #define GLBL_DSC_CFG_UNC_OVR_COR_MASK                      BIT(9)
 #define GLBL_DSC_CFG_CTXT_FER_DIS_MASK                     BIT(8)
 #define GLBL_DSC_CFG_RSVD_2_MASK                           GENMASK(7, 6)
@@ -521,7 +553,9 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define GLBL_DSC_DAT1_DSC_SPC_C2H_MASK                 GENMASK(15, 8)
 #define GLBL_DSC_DAT1_DSC_SPC_H2C_MASK                 GENMASK(7, 0)
 #define EQDMA_GLBL_DSC_DBG_CTL_ADDR                        0x278
-#define GLBL_DSC_CTL_RSVD_1_MASK                       GENMASK(31, 3)
+#define GLBL_DSC_CTL_RSVD_1_MASK                       GENMASK(31, 16)
+#define GLBL_DSC_CTL_LAT_QID_MASK                  GENMASK(15, 4)
+#define GLBL_DSC_CTL_DSC_ENG_LAT_CLR_MASK              BIT(3)
 #define GLBL_DSC_CTL_SELECT_MASK                       GENMASK(2, 0)
 #define EQDMA_GLBL_DSC_ERR_LOG2_ADDR                       0x27c
 #define GLBL_DSC_ERR_LOG2_OLD_PIDX_MASK                    GENMASK(31, 16)
@@ -562,6 +596,183 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define GLBL_REQ_ERR_STS_RC_POISONED_MASK                  BIT(0)
 #define EQDMA_GLBL_REQ_ERR_MSK_ADDR                        0x31C
 #define GLBL_REQ_ERR_MSK_MASK                         GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_DBG_LAT0_A_ADDR                     0x320
+#define GLBL_DSC_LAT0_A_LAT_MAX_MASK                   GENMASK(31, 16)
+#define GLBL_DSC_LAT0_A_LAT_MIN_MASK                   GENMASK(15, 0)
+#define EQDMA_GLBL_DSC_DBG_LAT1_A_ADDR                     0x324
+#define GLBL_DSC_LAT1_A_RSVD_MASK                      GENMASK(31, 17)
+#define GLBL_DSC_LAT1_A_LAT_OVF_MASK                   BIT(16)
+#define GLBL_DSC_LAT1_A_LAT_AVG_MASK                   GENMASK(15, 0)
+#define EQDMA_GLBL_DSC_CRD_CTR0_A_ADDR                     0x328
+#define GLBL_DSC_CRD_CTR0_A_CRD_RCV_CNT_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_CRD_CTR1_A_ADDR                     0x32C
+#define GLBL_DSC_CRD_CTR1_A_CRD_RCV_CNT_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_CRD_CTR2_A_ADDR                     0x330
+#define GLBL_DSC_CRD_CTR2_A_CRD_RCV_NRDY_CNT_MASK          GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_CRD_CTR3_A_ADDR                     0x334
+#define GLBL_DSC_CRD_CTR3_A_CRD_RCV_NRDY_CNT_MASK          GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_IMM_CRD_CTR0_A_ADDR                 0x338
+#define GLBL_DSC_IMM_CRD_CTR0_A_RCV_CNT_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_IMM_CRD_CTR1_A_ADDR                 0x33C
+#define GLBL_DSC_IMM_CRD_CTR1_A_RCV_CNT_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_IMM_CRD_CTR2_A_ADDR                 0x340
+#define GLBL_DSC_IMM_CRD_CTR2_A_RCV_NRDY_CNT_MASK          GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_IMM_CRD_CTR3_A_ADDR                 0x344
+#define GLBL_DSC_IMM_CRD_CTR3_A_RCV_NRDY_CNT_MASK          GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_H2C_OUT_CTR0_A_ADDR                 0x348
+#define GLBL_DSC_H2C_OUT_CTR0_A_H2CVLD_CNT_MASK            GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_H2C_OUT_CTR1_A_ADDR                 0x34C
+#define GLBL_DSC_H2C_OUT_CTR1_A_H2CVLD_CNT_MASK            GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_H2C_OUT_CTR2_A_ADDR                 0x350
+#define GLBL_DSC_H2C_OUT_CTR2_A_H2CVLD_NRDY_CNT_MASK       GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_H2C_OUT_CTR3_A_ADDR                 0x354
+#define GLBL_DSC_H2C_OUT_CTR3_A_H2CVLD_NRDY_CNT_MASK       GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_C2H_OUT_CTR0_A_ADDR                 0x358
+#define GLBL_DSC_C2H_OUT_CTR0_A_C2HVLD_CNT_MASK            GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_C2H_OUT_CTR1_A_ADDR                 0x35C
+#define GLBL_DSC_C2H_OUT_CTR1_A_C2HVLD_CNT_MASK            GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_C2H_OUT_CTR2_A_ADDR                 0x360
+#define GLBL_DSC_C2H_OUT_CTR2_A_C2HVLD_NRDY_CNT_MASK       GENMASK(31, 0)
+#define EQDMA_GLBL_DSC_C2H_OUT_CTR3_A_ADDR                 0x364
+#define GLBL_DSC_C2H_OUT_CTR3_A_C2HVLD_NRDY_CNT_MASK       GENMASK(31, 0)
+#define EQDMA_T_ADDR                                       0x368
+#define T_USER_CTR_MAX_MASK                                GENMASK(31, 0)
+#define EQDMA_GLBL_PERF_CNTR_CTL_A1_ADDR                   0x36C
+#define GLBL_PERF_CNTR_CTL_A1_RSVD_MASK                    GENMASK(31, 18)
+#define GLBL_PERF_CNTR_CTL_A1_USER_CTR_CLEAR_MASK          BIT(17)
+#define GLBL_PERF_CNTR_CTL_A1_USER_CTR_READ_MASK           BIT(16)
+#define GLBL_PERF_CNTR_CTL_A1_USER_CTR_MAX_MASK            GENMASK(15, 0)
+#define EQDMA_GLBL_FREE_CNT_A0_ADDR                        0x370
+#define GLBL_FREE_CNT_A0_S_MASK                            GENMASK(31, 0)
+#define EQDMA_GLBL_FREE_CNT_A1_ADDR                        0x374
+#define GLBL_FREE_CNT_A1_RSVD_MASK                         GENMASK(31, 16)
+#define GLBL_FREE_CNT_A1_S_MASK                            GENMASK(15, 0)
+#define EQDMA_GLBL_AXIS_H2C_CNT_A0_ADDR                    0x378
+#define GLBL_AXIS_H2C_CNT_A0_MPKT_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_H2C_CNT_A1_ADDR                    0x37C
+#define GLBL_AXIS_H2C_CNT_A1_MIDLE_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_AXIS_H2C_CNT_A1_MPKT_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_AXIS_H2C_CNT_A2_ADDR                    0x380
+#define GLBL_AXIS_H2C_CNT_A2_MIDLE_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_H2C_CNT_A3_ADDR                    0x384
+#define GLBL_AXIS_H2C_CNT_A3_MACTV_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_H2C_CNT_A4_ADDR                    0x388
+#define GLBL_AXIS_H2C_CNT_A4_MBUSY_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_AXIS_H2C_CNT_A4_MACTV_CNTS_MASK               GENMASK(15, 0)
+#define EQDMA_GLBL_AXIS_H2C_CNT_A5_ADDR                    0x38C
+#define GLBL_AXIS_H2C_CNT_A5_MBUSY_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_C2H_CNT_A0_ADDR                    0x390
+#define GLBL_AXIS_C2H_CNT_A0_SPKT_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_C2H_CNT_A1_ADDR                    0x394
+#define GLBL_AXIS_C2H_CNT_A1_SIDLE_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_AXIS_C2H_CNT_A1_SPKT_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_AXIS_C2H_CNT_A2_ADDR                    0x398
+#define GLBL_AXIS_C2H_CNT_A2_SIDLE_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_C2H_CNT_A3_ADDR                    0x39C
+#define GLBL_AXIS_C2H_CNT_A3_SACTV_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_AXIS_C2H_CNT_A4_ADDR                    0x3A0
+#define GLBL_AXIS_C2H_CNT_A4_SBUSY_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_AXIS_C2H_CNT_A4_SACTV_CNTS_MASK               GENMASK(15, 0)
+#define EQDMA_GLBL_AXIS_C2H_CNT_A5_ADDR                    0x3A4
+#define GLBL_AXIS_C2H_CNT_A5_SBUSY_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_WR_CNT_A0_ADDR                    0x3A8
+#define GLBL_M_AXI_WR_CNT_A0_PKT_CNTS_MASK                 GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_WR_CNT_A1_ADDR                    0x3AC
+#define GLBL_M_AXI_WR_CNT_A1_IDLE_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_M_AXI_WR_CNT_A1_PKT_CNTS_MASK                 GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXI_WR_CNT_A2_ADDR                    0x3B0
+#define GLBL_M_AXI_WR_CNT_A2_IDLE_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_WR_CNT_A3_ADDR                    0x3B4
+#define GLBL_M_AXI_WR_CNT_A3_ACTV_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_WR_CNT_A4_ADDR                    0x3B8
+#define GLBL_M_AXI_WR_CNT_A4_BUSY_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_M_AXI_WR_CNT_A4_ACTV_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXI_WR_CNT_A5_ADDR                    0x3BC
+#define GLBL_M_AXI_WR_CNT_A5_BUSY_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_RD_CNT_A0_ADDR                    0x3C0
+#define GLBL_M_AXI_RD_CNT_A0_PKT_CNTS_MASK                 GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_RD_CNT_A1_ADDR                    0x3C4
+#define GLBL_M_AXI_RD_CNT_A1_IDLE_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_M_AXI_RD_CNT_A1_PKT_CNTS_MASK                 GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXI_RD_CNT_A2_ADDR                    0x3C8
+#define GLBL_M_AXI_RD_CNT_A2_IDLE_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_RD_CNT_A3_ADDR                    0x3CC
+#define GLBL_M_AXI_RD_CNT_A3_ACTV_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXI_RD_CNT_A4_ADDR                    0x3D0
+#define GLBL_M_AXI_RD_CNT_A4_BUSY_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_M_AXI_RD_CNT_A4_ACTV_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXI_RD_CNT_A5_ADDR                    0x3D4
+#define GLBL_M_AXI_RD_CNT_A5_BUSY_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_WR_CNT_A0_ADDR                   0x3D8
+#define GLBL_M_AXIB_WR_CNT_A0_PKT_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_WR_CNT_A1_ADDR                   0x3DC
+#define GLBL_M_AXIB_WR_CNT_A1_IDLE_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_M_AXIB_WR_CNT_A1_PKT_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXIB_WR_CNT_A2_ADDR                   0x3E0
+#define GLBL_M_AXIB_WR_CNT_A2_IDLE_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_WR_CNT_A3_ADDR                   0x3E4
+#define GLBL_M_AXIB_WR_CNT_A3_ACTV_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_WR_CNT_A4_ADDR                   0x3E8
+#define GLBL_M_AXIB_WR_CNT_A4_BUSY_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_M_AXIB_WR_CNT_A4_ACTV_CNTS_MASK               GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXIB_WR_CNT_A5_ADDR                   0x3EC
+#define GLBL_M_AXIB_WR_CNT_A5_BUSY_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_RD_CNT_A0_ADDR                   0x3F0
+#define GLBL_M_AXIB_RD_CNT_A0_PKT_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_RD_CNT_A1_ADDR                   0x3F4
+#define GLBL_M_AXIB_RD_CNT_A1_IDLE_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_M_AXIB_RD_CNT_A1_PKT_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXIB_RD_CNT_A2_ADDR                   0x3F8
+#define GLBL_M_AXIB_RD_CNT_A2_IDLE_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_RD_CNT_A3_ADDR                   0x3FC
+#define GLBL_M_AXIB_RD_CNT_A3_ACTV_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_M_AXIB_RD_CNT_A4_ADDR                   0x400
+#define GLBL_M_AXIB_RD_CNT_A4_BUSY_CNTS_MASK               GENMASK(15, 0)
+#define GLBL_M_AXIB_RD_CNT_A4_ACTV_CNTS_MASK               GENMASK(15, 0)
+#define EQDMA_GLBL_M_AXIB_RD_CNT_A5_ADDR                   0x404
+#define GLBL_M_AXIB_RD_CNT_A5_BUSY_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_WR_CNT_A0_ADDR                    0x408
+#define GLBL_S_AXI_WR_CNT_A0_PKT_CNTS_MASK                 GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_WR_CNT_A1_ADDR                    0x40C
+#define GLBL_S_AXI_WR_CNT_A1_IDLE_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_S_AXI_WR_CNT_A1_PKT_CNTS_MASK                 GENMASK(15, 0)
+#define EQDMA_GLBL_S_AXI_WR_CNT_A2_ADDR                    0x410
+#define GLBL_S_AXI_WR_CNT_A2_IDLE_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_WR_CNT_A3_ADDR                    0x414
+#define GLBL_S_AXI_WR_CNT_A3_ACTV_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_WR_CNT_A4_ADDR                    0x418
+#define GLBL_S_AXI_WR_CNT_A4_BUSY_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_S_AXI_WR_CNT_A4_ACTV_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_S_AXI_WR_CNT_A5_ADDR                    0x41C
+#define GLBL_S_AXI_WR_CNT_A5_BUSY_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_RD_CNT_A0_ADDR                    0x420
+#define GLBL_S_AXI_RD_CNT_A0_PKT_CNTS_MASK                 GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_RD_CNT_A1_ADDR                    0x424
+#define GLBL_S_AXI_RD_CNT_A1_IDLE_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_S_AXI_RD_CNT_A1_PKT_CNTS_MASK                 GENMASK(15, 0)
+#define EQDMA_GLBL_S_AXI_RD_CNT_A2_ADDR                    0x428
+#define GLBL_S_AXI_RD_CNT_A2_IDLE_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_RD_CNT_A3_ADDR                    0x42C
+#define GLBL_S_AXI_RD_CNT_A3_ACTV_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXI_RD_CNT_A4_ADDR                    0x430
+#define GLBL_S_AXI_RD_CNT_A4_BUSY_CNTS_MASK                GENMASK(15, 0)
+#define GLBL_S_AXI_RD_CNT_A4_ACTV_CNTS_MASK                GENMASK(15, 0)
+#define EQDMA_GLBL_S_AXI_RD_CNT_A5_ADDR                    0x434
+#define GLBL_S_AXI_RD_CNT_A5_BUSY_CNTS_MASK                GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXIS_CMP_CNT_A0_ADDR                  0x438
+#define GLBL_S_AXIS_CMP_CNT_A0_PKT_CNTS_MASK               GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXIS_CMP_CNT_A1_ADDR                  0x43C
+#define GLBL_S_AXIS_CMP_CNT_A1_IDLE_CNTS_MASK              GENMASK(15, 0)
+#define GLBL_S_AXIS_CMP_CNT_A1_PKT_CNTS_MASK               GENMASK(15, 0)
+#define EQDMA_GLBL_S_AXIS_CMP_CNT_A2_ADDR                  0x440
+#define GLBL_S_AXIS_CMP_CNT_A2_IDLE_CNTS_MASK              GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXIS_CMP_CNT_A3_ADDR                  0x444
+#define GLBL_S_AXIS_CMP_CNT_A3_ACTV_CNTS_MASK              GENMASK(31, 0)
+#define EQDMA_GLBL_S_AXIS_CMP_CNT_A4_ADDR                  0x448
+#define GLBL_S_AXIS_CMP_CNT_A4_BUSY_CNTS_MASK              GENMASK(15, 0)
+#define GLBL_S_AXIS_CMP_CNT_A4_ACTV_CNTS_MASK              GENMASK(15, 0)
+#define EQDMA_GLBL_S_AXIS_CMP_CNT_A5_ADDR                  0x44C
+#define GLBL_S_AXIS_CMP_CNT_A5_BUSY_CNTS_MASK              GENMASK(31, 0)
 #define EQDMA_IND_CTXT_DATA_ADDR                           0x804
 #define IND_CTXT_DATA_DATA_MASK                            GENMASK(31, 0)
 #define EQDMA_IND_CTXT_MASK_ADDR                           0x824
@@ -578,6 +789,16 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define EQDMA_C2H_CNT_TH_ADDR                              0xA40
 #define C2H_CNT_TH_RSVD_1_MASK                             GENMASK(31, 16)
 #define C2H_CNT_TH_THESHOLD_CNT_MASK                       GENMASK(15, 0)
+#define EQDMA_C2H_PFCH_CFG_1_ADDR                          0xA80
+#define C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK                    GENMASK(31, 16)
+#define C2H_PFCH_CFG_1_QCNT_MASK                           GENMASK(15, 0)
+#define EQDMA_C2H_PFCH_CFG_2_ADDR                          0xA84
+#define C2H_PFCH_CFG_2_FENCE_MASK                          BIT(31)
+#define C2H_PFCH_CFG_2_RSVD_MASK                           GENMASK(30, 29)
+#define C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_MASK               BIT(28)
+#define C2H_PFCH_CFG_2_LL_SZ_TH_MASK                       GENMASK(27, 12)
+#define C2H_PFCH_CFG_2_VAR_DESC_NUM_MASK                   GENMASK(11, 6)
+#define C2H_PFCH_CFG_2_NUM_MASK                            GENMASK(5, 0)
 #define EQDMA_C2H_STAT_S_AXIS_C2H_ACCEPTED_ADDR            0xA88
 #define C2H_STAT_S_AXIS_C2H_ACCEPTED_MASK                 GENMASK(31, 0)
 #define EQDMA_C2H_STAT_S_AXIS_WRB_ACCEPTED_ADDR            0xA8C
@@ -662,16 +883,6 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define EQDMA_C2H_PFCH_CFG_ADDR                            0xB08
 #define C2H_PFCH_CFG_EVTFL_TH_MASK                         GENMASK(31, 16)
 #define C2H_PFCH_CFG_FL_TH_MASK                            GENMASK(15, 0)
-#define EQDMA_C2H_PFCH_CFG_1_ADDR                          0xA80
-#define C2H_PFCH_CFG_1_EVT_QCNT_TH_MASK                    GENMASK(31, 16)
-#define C2H_PFCH_CFG_1_QCNT_MASK                           GENMASK(15, 0)
-#define EQDMA_C2H_PFCH_CFG_2_ADDR                          0xA84
-#define C2H_PFCH_CFG_2_FENCE_MASK                          BIT(31)
-#define C2H_PFCH_CFG_2_RSVD_MASK                           GENMASK(30, 29)
-#define C2H_PFCH_CFG_2_VAR_DESC_NO_DROP_MASK               BIT(28)
-#define C2H_PFCH_CFG_2_LL_SZ_TH_MASK                       GENMASK(27, 12)
-#define C2H_PFCH_CFG_2_VAR_DESC_NUM_MASK                   GENMASK(11, 6)
-#define C2H_PFCH_CFG_2_NUM_MASK                            GENMASK(5, 0)
 #define EQDMA_C2H_INT_TIMER_TICK_ADDR                      0xB0C
 #define C2H_INT_TIMER_TICK_MASK                           GENMASK(31, 0)
 #define EQDMA_C2H_STAT_DESC_RSP_DROP_ACCEPTED_ADDR         0xB10
@@ -694,35 +905,33 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define C2H_STAT_DMA_ENG_0_WRB_SM_CS_MASK              BIT(4)
 #define C2H_STAT_DMA_ENG_0_MAIN_SM_CS_MASK             GENMASK(3, 0)
 #define EQDMA_C2H_STAT_DBG_DMA_ENG_1_ADDR                  0xB20
-#define C2H_STAT_DMA_ENG_1_RSVD_1_MASK                 GENMASK(31, 29)
+#define C2H_STAT_DMA_ENG_1_WRB_USER_0_CMPT_TYPE_MASK   GENMASK(31, 30)
+#define C2H_STAT_DMA_ENG_1_DESC_RSP_FIFO_OUT_VLD_MASK  GENMASK(29, 29)
 #define C2H_STAT_DMA_ENG_1_QID_FIFO_OUT_CNT_MASK       GENMASK(28, 18)
 #define C2H_STAT_DMA_ENG_1_PLD_FIFO_OUT_CNT_MASK       GENMASK(17, 7)
 #define C2H_STAT_DMA_ENG_1_PLD_ST_FIFO_CNT_MASK        GENMASK(6, 0)
 #define EQDMA_C2H_STAT_DBG_DMA_ENG_2_ADDR                  0xB24
-#define C2H_STAT_DMA_ENG_2_RSVD_1_MASK                 GENMASK(31, 29)
-#define C2H_STAT_DMA_ENG_2_QID_FIFO_OUT_CNT_MASK       GENMASK(28, 18)
-#define C2H_STAT_DMA_ENG_2_PLD_FIFO_OUT_CNT_MASK       GENMASK(17, 7)
-#define C2H_STAT_DMA_ENG_2_PLD_ST_FIFO_CNT_MASK        GENMASK(6, 0)
+#define C2H_STAT_DMA_ENG_2_WRB_USER_1_CMPT_TYPE_MASK   GENMASK(31, 30)
+#define C2H_STAT_DMA_ENG_2_DESC_RSP_FIFO_OUT_VLD_1_MASK GENMASK(29, 29)
+#define C2H_STAT_DMA_ENG_2_QID_FIFO_OUT_CNT_1_MASK     GENMASK(28, 18)
+#define C2H_STAT_DMA_ENG_2_PLD_FIFO_OUT_CNT_1_MASK     GENMASK(17, 7)
+#define C2H_STAT_DMA_ENG_2_PLD_ST_FIFO_CNT_1_MASK      GENMASK(6, 0)
 #define EQDMA_C2H_STAT_DBG_DMA_ENG_3_ADDR                  0xB28
-#define C2H_STAT_DMA_ENG_3_RSVD_1_MASK                 GENMASK(31, 24)
-#define C2H_STAT_DMA_ENG_3_WRQ_FIFO_OUT_CNT_MASK       GENMASK(23, 19)
-#define C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_VLD_MASK       BIT(18)
-#define C2H_STAT_DMA_ENG_3_PLD_FIFO_OUT_VLD_MASK       BIT(17)
-#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_VLD_MASK    BIT(16)
-#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_EOP_MASK BIT(15)
-#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_MASK BIT(14)
-#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_DROP_MASK BIT(13)
-#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_ERR_MASK BIT(12)
-#define C2H_STAT_DMA_ENG_3_DESC_CNT_FIFO_IN_RDY_MASK   BIT(11)
-#define C2H_STAT_DMA_ENG_3_DESC_RSP_FIFO_IN_RDY_MASK   BIT(10)
-#define C2H_STAT_DMA_ENG_3_PLD_PKT_ID_LARGER_0_MASK    BIT(9)
-#define C2H_STAT_DMA_ENG_3_WRQ_VLD_MASK                BIT(8)
-#define C2H_STAT_DMA_ENG_3_WRQ_RDY_MASK                BIT(7)
-#define C2H_STAT_DMA_ENG_3_WRQ_FIFO_OUT_RDY_MASK       BIT(6)
-#define C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_DROP_MASK BIT(5)
-#define C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_ERR_MASK BIT(4)
-#define C2H_STAT_DMA_ENG_3_WRQ_PACKET_OUT_DATA_MARKER_MASK BIT(3)
-#define C2H_STAT_DMA_ENG_3_WRQ_PACKET_PRE_EOR_MASK     BIT(2)
+#define C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_HAS_CMPT_MASK BIT(31)
+#define C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_MARKER_MASK BIT(30)
+#define C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_DROP_REQ_MASK BIT(29)
+#define C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_DAT_QID_MASK   GENMASK(28, 17)
+#define C2H_STAT_DMA_ENG_3_WR_HDR_FIFO_OUT_CNT_MASK    GENMASK(16, 12)
+#define C2H_STAT_DMA_ENG_3_QID_FIFO_OUT_VLD_MASK       BIT(11)
+#define C2H_STAT_DMA_ENG_3_PLD_FIFO_OUT_VLD_MASK       BIT(10)
+#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_VLD_MASK    BIT(9)
+#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_EOP_MASK BIT(8)
+#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_MASK BIT(7)
+#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_DROP_MASK BIT(6)
+#define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_OUT_DATA_ERR_MASK BIT(5)
+#define C2H_STAT_DMA_ENG_3_DESC_CNT_FIFO_IN_RDY_MASK   BIT(4)
+#define C2H_STAT_DMA_ENG_3_DESC_RSP_FIFO_IN_RDY_MASK   BIT(3)
+#define C2H_STAT_DMA_ENG_3_PLD_PKT_ID_LARGER_MASK      BIT(2)
 #define C2H_STAT_DMA_ENG_3_WCP_FIFO_IN_RDY_MASK        BIT(1)
 #define C2H_STAT_DMA_ENG_3_PLD_ST_FIFO_IN_RDY_MASK     BIT(0)
 #define EQDMA_C2H_DBG_PFCH_ERR_CTXT_ADDR                   0xB2C
@@ -803,31 +1012,27 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define C2H_STAT_WR_CMP_RSVD_1_MASK                        GENMASK(31, 18)
 #define C2H_STAT_WR_CMP_CNT_MASK                           GENMASK(17, 0)
 #define EQDMA_C2H_STAT_DBG_DMA_ENG_4_ADDR                  0xB88
-#define C2H_STAT_DMA_ENG_4_RSVD_1_MASK                 GENMASK(31, 24)
-#define C2H_STAT_DMA_ENG_4_WRQ_FIFO_OUT_CNT_MASK       GENMASK(23, 19)
-#define C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_VLD_MASK       BIT(18)
-#define C2H_STAT_DMA_ENG_4_PLD_FIFO_OUT_VLD_MASK       BIT(17)
-#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_VLD_MASK    BIT(16)
-#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_EOP_MASK BIT(15)
-#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_MASK BIT(14)
-#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_DROP_MASK BIT(13)
-#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_ERR_MASK BIT(12)
-#define C2H_STAT_DMA_ENG_4_DESC_CNT_FIFO_IN_RDY_MASK   BIT(11)
-#define C2H_STAT_DMA_ENG_4_DESC_RSP_FIFO_IN_RDY_MASK   BIT(10)
-#define C2H_STAT_DMA_ENG_4_PLD_PKT_ID_LARGER_0_MASK    BIT(9)
-#define C2H_STAT_DMA_ENG_4_WRQ_VLD_MASK                BIT(8)
-#define C2H_STAT_DMA_ENG_4_WRQ_RDY_MASK                BIT(7)
-#define C2H_STAT_DMA_ENG_4_WRQ_FIFO_OUT_RDY_MASK       BIT(6)
-#define C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_DROP_MASK BIT(5)
-#define C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_ERR_MASK BIT(4)
-#define C2H_STAT_DMA_ENG_4_WRQ_PACKET_OUT_DATA_MARKER_MASK BIT(3)
-#define C2H_STAT_DMA_ENG_4_WRQ_PACKET_PRE_EOR_MASK     BIT(2)
-#define C2H_STAT_DMA_ENG_4_WCP_FIFO_IN_RDY_MASK        BIT(1)
-#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_IN_RDY_MASK     BIT(0)
+#define C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_HAS_CMPT_1_MASK BIT(31)
+#define C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_MARKER_1_MASK BIT(30)
+#define C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_DROP_REQ_1_MASK BIT(29)
+#define C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_DAT_QID_1_MASK GENMASK(28, 17)
+#define C2H_STAT_DMA_ENG_4_WR_HDR_FIFO_OUT_CNT_1_MASK  GENMASK(16, 12)
+#define C2H_STAT_DMA_ENG_4_QID_FIFO_OUT_VLD_1_MASK     BIT(11)
+#define C2H_STAT_DMA_ENG_4_PLD_FIFO_OUT_VLD_1_MASK     BIT(10)
+#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_VLD_1_MASK  BIT(9)
+#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_EOP_1_MASK BIT(8)
+#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_AVL_IDX_ENABLE_1_MASK BIT(7)
+#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_DROP_1_MASK BIT(6)
+#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_OUT_DATA_ERR_1_MASK BIT(5)
+#define C2H_STAT_DMA_ENG_4_DESC_CNT_FIFO_IN_RDY_1_MASK BIT(4)
+#define C2H_STAT_DMA_ENG_4_DESC_RSP_FIFO_IN_RDY_1_MASK BIT(3)
+#define C2H_STAT_DMA_ENG_4_PLD_PKT_ID_LARGER_1_MASK    BIT(2)
+#define C2H_STAT_DMA_ENG_4_WCP_FIFO_IN_RDY_1_MASK      BIT(1)
+#define C2H_STAT_DMA_ENG_4_PLD_ST_FIFO_IN_RDY_1_MASK   BIT(0)
 #define EQDMA_C2H_STAT_DBG_DMA_ENG_5_ADDR                  0xB8C
-#define C2H_STAT_DMA_ENG_5_RSVD_1_MASK                 GENMASK(31, 30)
-#define C2H_STAT_DMA_ENG_5_WRB_SM_VIRT_CH_MASK         BIT(29)
-#define C2H_STAT_DMA_ENG_5_WRB_FIFO_IN_REQ_MASK        GENMASK(28, 24)
+#define C2H_STAT_DMA_ENG_5_ARB_FIFO_IN_RDY_MASK        BIT(31)
+#define C2H_STAT_DMA_ENG_5_WRB_SM_VIRT_CH_MASK         BIT(30)
+#define C2H_STAT_DMA_ENG_5_WRB_FIFO_IN_REQ_MASK        GENMASK(29, 24)
 #define C2H_STAT_DMA_ENG_5_ARB_FIFO_OUT_CNT_MASK       GENMASK(23, 22)
 #define C2H_STAT_DMA_ENG_5_ARB_FIFO_OUT_DATA_LEN_MASK  GENMASK(21, 6)
 #define C2H_STAT_DMA_ENG_5_ARB_FIFO_OUT_DATA_VIRT_CH_MASK BIT(5)
@@ -1096,6 +1301,10 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define H2C_MM_WBK_STALL_MASK                          BIT(2)
 #define H2C_MM_DSC_FIFO_EP_MASK                        BIT(1)
 #define H2C_MM_DSC_FIFO_FL_MASK                        BIT(0)
+#define EQDMA_H2C_MM_DATA_THROTTLE_ADDR                    0x12EC
+#define H2C_MM_DATA_THROTTLE_RSVD_1_MASK                   GENMASK(31, 17)
+#define H2C_MM_DATA_THROTTLE_DAT_EN_MASK                   BIT(16)
+#define H2C_MM_DATA_THROTTLE_DAT_MASK                      GENMASK(15, 0)
 #define EQDMA_C2H_CRDT_COAL_CFG_1_ADDR                     0x1400
 #define C2H_CRDT_COAL_CFG_1_RSVD_1_MASK                    GENMASK(31, 18)
 #define C2H_CRDT_COAL_CFG_1_PLD_FIFO_TH_MASK               GENMASK(17, 10)
@@ -1113,9 +1322,54 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define C2H_PFCH_BYP_TAG_BYP_QID_MASK                      GENMASK(19, 8)
 #define C2H_PFCH_BYP_TAG_RSVD_2_MASK                       BIT(7)
 #define C2H_PFCH_BYP_TAG_MASK                             GENMASK(6, 0)
-#define EQDMA_C2H_WATER_MARK_ADDR                          0x1500
+#define EQDMA_C2H_WATER_MARK_ADDR                          0x1410
 #define C2H_WATER_MARK_HIGH_WM_MASK                        GENMASK(31, 16)
 #define C2H_WATER_MARK_LOW_WM_MASK                         GENMASK(15, 0)
+#define EQDMA_C2H_NOTIFY_EMPTY_ADDR                        0x1450
+#define C2H_NOTIFY_EMPTY_RSVD_1_MASK                       GENMASK(31, 16)
+#define C2H_NOTIFY_EMPTY_NOE_MASK                          GENMASK(15, 0)
+#define EQDMA_C2H_STAT_S_AXIS_C2H_ACCEPTED_1_ADDR          0x1454
+#define C2H_STAT_S_AXIS_C2H_ACCEPTED_1_MASK               GENMASK(31, 0)
+#define EQDMA_C2H_STAT_S_AXIS_WRB_ACCEPTED_1_ADDR          0x1458
+#define C2H_STAT_S_AXIS_WRB_ACCEPTED_1_MASK               GENMASK(31, 0)
+#define EQDMA_C2H_STAT_DESC_RSP_PKT_ACCEPTED_1_ADDR        0x145C
+#define C2H_STAT_DESC_RSP_PKT_ACCEPTED_1_D_MASK            GENMASK(31, 0)
+#define EQDMA_C2H_STAT_AXIS_PKG_CMP_1_ADDR                 0x1460
+#define C2H_STAT_AXIS_PKG_CMP_1_MASK                      GENMASK(31, 0)
+#define EQDMA_C2H_STAT_S_AXIS_WRB_ACCEPTED_2_ADDR          0x1464
+#define C2H_STAT_S_AXIS_WRB_ACCEPTED_2_MASK               GENMASK(31, 0)
+#define EQDMA_C2H_ST_PLD_FIFO_DEPTH_ADDR                   0x1468
+#define C2H_ST_PLD_FIFO_DEPTH_MASK                        GENMASK(31, 0)
+#define EQDMA_C2H_STAT_DBG_DMA_ENG_6_ADDR                  0x146C
+#define C2H_STAT_DMA_ENG_6_RSVD_MASK                   GENMASK(31, 29)
+#define C2H_STAT_DMA_ENG_6_PLD_ST_FIFO_OUT_DATA_QID_MASK GENMASK(28, 17)
+#define C2H_STAT_DMA_ENG_6_PLD_STS_FIFO_OUT_DATA_PLD_ST_PKT_ID_MASK \
+	GENMASK(16, 1)
+#define C2H_STAT_DMA_ENG_6_PLD_PKT_ID_LARGER_PLD_ST_MASK BIT(0)
+#define EQDMA_C2H_STAT_DBG_DMA_ENG_7_ADDR                  0x1470
+#define C2H_STAT_DMA_ENG_7_RSVD_MASK                   GENMASK(31, 29)
+#define C2H_STAT_DMA_ENG_7_PLD_ST_FIFO_OUT_DATA_QID_1_MASK GENMASK(28, 17)
+#define C2H_STAT_DMA_ENG_7_PLD_STS_FIFO_OUT_DATA_PLD_ST_PKT_ID_1_MASK \
+	GENMASK(16, 1)
+#define C2H_STAT_DMA_ENG_7_PLD_PKT_ID_LARGER_PLD_ST_1_MASK BIT(0)
+#define EQDMA_C2H_STAT_PCIE_CMP_1_ADDR                     0x1474
+#define C2H_STAT_PCIE_CMP_1_DEPTH_MASK                     GENMASK(31, 0)
+#define EQDMA_C2H_PLD_FIFO_ALMOST_FULL_ADDR                0x1478
+#define C2H_PLD_FIFO_ALMOST_FULL_ENABLE_MASK               BIT(31)
+#define C2H_PLD_FIFO_ALMOST_FULL_TH_MASK                   GENMASK(30, 0)
+#define EQDMA_PFCH_CFG_3_ADDR                              0x147C
+#define PFCH_CFG_3_RSVD_MASK                               GENMASK(31, 16)
+#define PFCH_CFG_3_VAR_DESC_FL_FREE_CNT_TH_MASK            GENMASK(15, 7)
+#define PFCH_CFG_3_VAR_DESC_LG_PKT_CAM_CN_TH_MASK          GENMASK(6, 0)
+#define EQDMA_CMPT_CFG_0_ADDR                              0x1480
+#define CMPT_CFG_0_RSVD_MASK                               GENMASK(31, 2)
+#define CMPT_CFG_0_VIO_SPRS_INT_AFTER_RTY_MASK             BIT(1)
+#define CMPT_CFG_0_VIO_EVNT_SUP_EN_MASK                    BIT(0)
+#define EQDMA_PFCH_CFG_4_ADDR                              0x1484
+#define PFCH_CFG_4_GLB_EVT_TIMER_TICK_MASK                 GENMASK(31, 17)
+#define PFCH_CFG_4_DISABLE_GLB_EVT_TIMER_MASK              BIT(16)
+#define PFCH_CFG_4_EVT_TIMER_TICK_MASK                     GENMASK(15, 1)
+#define PFCH_CFG_4_DISABLE_EVT_TIMER_MASK                  BIT(0)
 #define SW_IND_CTXT_DATA_W7_VIRTIO_DSC_BASE_H_MASK        GENMASK(10, 0)
 #define SW_IND_CTXT_DATA_W6_VIRTIO_DSC_BASE_M_MASK        GENMASK(31, 0)
 #define SW_IND_CTXT_DATA_W5_VIRTIO_DSC_BASE_L_MASK        GENMASK(31, 11)
@@ -1233,6 +1487,50 @@ struct xreg_info *eqdma_config_regs_get(void);
 #define INTR_CTXT_DATA_W0_RSVD1_MASK                      BIT(12)
 #define INTR_CTXT_DATA_W0_VEC_MASK                        GENMASK(11, 1)
 #define INTR_CTXT_DATA_W0_VALID_MASK                      BIT(0)
+#define HOSTID_TABLE_W6_SMID_MASK                          GENMASK(9, 0)
+#define HOSTID_TABLE_W5_H2C_MM_AWPROT_MASK                 GENMASK(27, 26)
+#define HOSTID_TABLE_W5_H2C_MM_AWCACHE_MASK                GENMASK(25, 22)
+#define HOSTID_TABLE_W5_H2C_MM_AWSTEERING_MASK             GENMASK(20, 18)
+#define HOSTID_TABLE_W5_DSC_AWPROT_MASK                    GENMASK(17, 16)
+#define HOSTID_TABLE_W5_DSC_AWCACHE_MASK                   GENMASK(15, 12)
+#define HOSTID_TABLE_W5_DSC_AWSTEERING_MASK                GENMASK(11, 8)
+#define HOSTID_TABLE_W5_INT_MSG_AWPROT_MASK                GENMASK(7, 6)
+#define HOSTID_TABLE_W5_INT_MSG_AWCACHE_MASK               GENMASK(5, 2)
+#define HOSTID_TABLE_W5_INT_MSG_AWSTEERING_H_MASK          GENMASK(0, 0)
+#define HOSTID_TABLE_W4_INT_MSG_AWSTEERING_L_MASK          GENMASK(31, 30)
+#define HOSTID_TABLE_W4_INT_AGGR_AWPROT_MASK               GENMASK(29, 28)
+#define HOSTID_TABLE_W4_INT_AGGR_AWCACHE_MASK              GENMASK(27, 24)
+#define HOSTID_TABLE_W4_INT_AGGR_AWSTEERING_MASK           GENMASK(22, 20)
+#define HOSTID_TABLE_W4_CMPT_AWPROT_MASK                   GENMASK(19, 18)
+#define HOSTID_TABLE_W4_CMPT_AWCACHE_MASK                  GENMASK(17, 14)
+#define HOSTID_TABLE_W4_CMPT_AWSTEERING_MASK               GENMASK(12, 10)
+#define HOSTID_TABLE_W4_C2H_PLD_AWPROT_MASK                GENMASK(9, 8)
+#define HOSTID_TABLE_W4_C2H_PLD_AWCACHE_MASK               GENMASK(7, 4)
+#define HOSTID_TABLE_W4_C2H_PLD_AWSTEERING_MASK            GENMASK(2, 0)
+#define HOSTID_TABLE_W3_C2H_MM_ARPROT_MASK                 GENMASK(7, 6)
+#define HOSTID_TABLE_W3_C2H_MM_ARCACHE_MASK                GENMASK(5, 2)
+#define HOSTID_TABLE_W3_C2H_MM_ARSTEERING_H_MASK           GENMASK(0, 0)
+#define HOSTID_TABLE_W2_C2H_MM_ARSTEERING_L_MASK           GENMASK(31, 30)
+#define HOSTID_TABLE_W2_H2C_MM_ARPROT_MASK                 GENMASK(29, 28)
+#define HOSTID_TABLE_W2_H2C_MM_ARCACHE_MASK                GENMASK(27, 24)
+#define HOSTID_TABLE_W2_H2C_MM_ARSTEERING_MASK             GENMASK(22, 20)
+#define HOSTID_TABLE_W2_H2C_ST_ARPROT_MASK                 GENMASK(19, 18)
+#define HOSTID_TABLE_W2_H2C_ST_ARCACHE_MASK                GENMASK(17, 14)
+#define HOSTID_TABLE_W2_H2C_ST_ARSTEERING_MASK             GENMASK(12, 10)
+#define HOSTID_TABLE_W2_DSC_ARPOT_MASK                     GENMASK(9, 8)
+#define HOSTID_TABLE_W2_DSC_ARCACHE_MASK                   GENMASK(7, 4)
+#define HOSTID_TABLE_W2_DSC_ARSTEERING_MASK                GENMASK(2, 0)
+#define HOSTID_TABLE_W0_VCH_H2C_MM_MASK                    GENMASK(27, 24)
+#define HOSTID_TABLE_W0_VCH_H2C_ST_MASK                    GENMASK(23, 20)
+#define HOSTID_TABLE_W0_VCH_DSC_MASK                       GENMASK(19, 16)
+#define HOSTID_TABLE_W0_VCH_INT_MSG_MASK                   GENMASK(15, 12)
+#define HOSTID_TABLE_W0_VCH_INT_AGGR_MASK                  GENMASK(11, 8)
+#define HOSTID_TABLE_W0_VCH_CMPT_MASK                      GENMASK(7, 4)
+#define HOSTID_TABLE_W0_VCH_H2C_PLD_MASK                   GENMASK(3, 0)
+#define CTXT_SELC_FNC_STS_W0_MSIX_MASK                GENMASK(3, 3)
+#define CTXT_SELC_FNC_STS_W0_MSIX_ENABLE_MASK              GENMASK(2, 2)
+#define CTXT_SELC_FNC_STS_W0_MEM_SPACE_ENABLE_MASK         GENMASK(1, 1)
+#define CTXT_SELC_FNC_STS_W0_BUS_MASTER_ENABLE_MASK        GENMASK(0, 0)
 
 #ifdef __cplusplus
 }

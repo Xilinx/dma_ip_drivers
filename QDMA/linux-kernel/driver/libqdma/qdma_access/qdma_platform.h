@@ -1,5 +1,6 @@
 /*
- * Copyright(c) 2019-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -160,6 +161,14 @@ void qdma_strncpy(char *dest, const char *src, size_t n);
  * Return:   returns the platform specific error code
  *****************************************************************************/
 int qdma_get_err_code(int acc_err_code);
+
+/*****************************************************************************/
+/**
+ * qdma_io_wmb() - Write memory barrier for IO device
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+int qdma_io_wmb(void);
 
 #ifdef __cplusplus
 }

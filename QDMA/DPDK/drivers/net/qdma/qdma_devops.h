@@ -1,7 +1,8 @@
 /*-
  * BSD LICENSE
  *
- * Copyright(c) 2020-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2020-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +33,6 @@
 
 #ifndef __QDMA_DEVOPS_H__
 #define __QDMA_DEVOPS_H__
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -319,21 +319,6 @@ int qdma_dev_queue_stats_mapping(struct rte_eth_dev *dev,
 					     uint8_t stat_idx,
 					     uint8_t is_rx);
 
-/**
- * DPDK callback to get the number of used descriptors of a rx queue
- *
- * @param dev
- *   Pointer to Ethernet device structure
- * @param rx_queue_id
- *   The RX queue on the Ethernet device for which information will be
- *   retrieved
- *
- * @return
- *   The number of used descriptors in the specific queue
- * @ingroup dpdk_devops_func
- */
-uint32_t
-qdma_dev_rx_queue_count(struct rte_eth_dev *dev, uint16_t rx_queue_id);
 
 /**
  * DPDK callback to check the status of a Rx descriptor in the queue
@@ -463,30 +448,6 @@ int qdma_dev_tx_queue_stop(struct rte_eth_dev *dev, uint16_t qid);
  *
  */
 int qdma_dev_stop(struct rte_eth_dev *dev);
-
-/**
- * DPDK callback to release a Rx queue.
- *
- * This API releases the descriptor rings and any additional memory allocated
- * for given C2H queue
- *
- * @param rqueue: Generic Rx queue pointer
- *
- * @ingroup dpdk_devops_func
- */
-void qdma_dev_rx_queue_release(void *rqueue);
-
-/**
- * DPDK callback to release a Tx queue.
- *
- * This API releases the descriptor rings and any additional memory allocated
- * for given H2C queue
- *
- * @param tqueue: Generic Tx queue pointer
- *
- * @ingroup dpdk_devops_func
- */
-void qdma_dev_tx_queue_release(void *tqueue);
 
 /**
  * DPDK callback to close the device.

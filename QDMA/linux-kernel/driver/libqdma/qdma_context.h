@@ -1,8 +1,8 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-2022,  Xilinx, Inc.
- * All rights reserved.
+ * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -26,6 +26,14 @@
  */
 #include "xdev.h"
 #include "qdma_mbox.h"
+
+/*
+ * fetch_max [40:37]
+ * Description: Maximum number of descriptor fetches outstanding for this queue.
+ * The max outstanding is fetch_max + 1 .
+ * Higher value can increase the single queue performance.
+ */
+#define FETCH_MAX_NUM 7
 
 /*****************************************************************************/
 /**
