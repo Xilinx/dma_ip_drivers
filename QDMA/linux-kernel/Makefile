@@ -71,7 +71,7 @@ driver:
 	@echo "#######################";
 	@echo "####  Driver       ####";
 	@echo "#######################";
-	$(MAKE) $(MODULE) -C driver
+	$(MAKE) $(MODULE) -C driver modulesymfile=$(srcdir)/driver/src/Module.symvers
 
 .PHONY: post
 post:
