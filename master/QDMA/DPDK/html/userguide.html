@@ -571,7 +571,7 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <h2>Controlling and Configuring the QDMA IP<a class="headerlink" href="#controlling-and-configuring-the-qdma-ip" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="supported-device-arguments-module-parameters">
 <h3>Supported Device arguments (module parameters)<a class="headerlink" href="#supported-device-arguments-module-parameters" title="Permalink to this headline">¶</a></h3>
-<p>Device specific parameters can be passed to a device by using the ‘-w’ EAL option.
+<p>Device specific parameters can be passed to a device by using the ‘-a’ EAL option.
 Xilinx supports following device arguments to configure PCIe device.</p>
 <ol class="arabic">
 <li><p class="first"><strong>config_bar</strong></p>
@@ -579,7 +579,7 @@ Xilinx supports following device arguments to configure PCIe device.</p>
 <div><p>This parameter specifies the PCIe BAR number where QDMA configuration register space is mapped.
 Valid values are 0 to 5. Default is set to 0 i.e. BAR 0 in the driver.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,config_bar=2 -w 81:00.1,config_bar=4
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,config_bar=2 -a 81:00.1,config_bar=4
 </pre></div>
 </div>
 <p>This example configures BAR 2 as QDMA configuration BAR for device “81:00.0”
@@ -591,7 +591,7 @@ and BAR 4 as QDMA configuration BAR for device “81:00.1”.</p>
 <div><p>This parameter enables or disables descriptor prefetch on C2H streaming queues.
 Default is prefetch disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,desc_prefetch=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,desc_prefetch=1
 </pre></div>
 </div>
 <p>This example enables descriptor prefetch on all the streaming C2H queues of
@@ -603,7 +603,7 @@ the device “81:00.0”.</p>
 <div><p>This parameter sets the completion entry length of the completion queue.
 Valid lengths are 8, 16 and 32 bytes. Default length is 8 bytes.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,cmpt_desc_len=32
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,cmpt_desc_len=32
 </pre></div>
 </div>
 <p>This example sets completion entry length to 32 bytes on all the completion queues
@@ -621,7 +621,7 @@ of the device “81:00.0”.</p>
 <p>5 - Trigger when either of USER_TIMER or COUNT is reached.</p>
 <p>Default value configured in the driver is 5.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,trigger_mode=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,trigger_mode=1
 </pre></div>
 </div>
 <p>This example sets the trigger mode to every event for all the
@@ -636,7 +636,7 @@ completion queues of the device “81:00.0”.</p>
 <p>2 - Simple bypass mode</p>
 <p>Default is internal mode i.e. bypass disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,c2h_byp_mode=2
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,c2h_byp_mode=2
 </pre></div>
 </div>
 <p>This example sets simple bypass mode on all the C2H queues belonging to the
@@ -650,7 +650,7 @@ PCIe device “81:00.0”.</p>
 <p>1 - Bypass enabled</p>
 <p>Default is Bypass disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,h2c_byp_mode=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,h2c_byp_mode=1
 </pre></div>
 </div>
 <p>This example sets bypass mode on all the H2C queues belonging to the
@@ -829,7 +829,7 @@ Format for this commad is:</p>
 </div>
 <p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
-<p><strong>bar-num</strong> represents the PCIe BAR where the register is located</p>
+<p><strong>bar-num</strong> represents the PCIe BAR where the register is located and this input value should be a decimal value in the range 0-5</p>
 <p><strong>address</strong> represents offset of the register in the PCIe BAR <cite>bar-num</cite></p>
 </div></blockquote>
 </li>
@@ -842,7 +842,7 @@ Format for this commad is:</p>
 </div>
 <p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
-<p><strong>bar-num</strong> represents the PCIe BAR where the register is located</p>
+<p><strong>bar-num</strong> represents the PCIe BAR where the register is located and this input value should be a decimal value in the range 0-5</p>
 <p><strong>address</strong> represents offset of the register in the PCIe BAR <cite>bar-num</cite></p>
 <p><strong>value</strong> represents the value to be written at the register offset <cite>address</cite></p>
 </div></blockquote>
@@ -1039,7 +1039,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on February 28, 2023.
+        Last updated on April 28, 2023.
       </span>
 
     </p>

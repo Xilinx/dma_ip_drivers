@@ -151,7 +151,7 @@ Controlling and Configuring the QDMA IP
 Supported Device arguments (module parameters)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Device specific parameters can be passed to a device by using the ‘-w’ EAL option.
+Device specific parameters can be passed to a device by using the ‘-a’ EAL option.
 Xilinx supports following device arguments to configure PCIe device.
 
 1. **config_bar**
@@ -163,7 +163,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	::
 
-	./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,config_bar=2 -w 81:00.1,config_bar=4
+	./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,config_bar=2 -a 81:00.1,config_bar=4
 
 	This example configures BAR 2 as QDMA configuration BAR for device "81:00.0"
 	and BAR 4 as QDMA configuration BAR for device "81:00.1".
@@ -177,7 +177,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	::
 
-	./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,desc_prefetch=1
+	./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,desc_prefetch=1
 
 	This example enables descriptor prefetch on all the streaming C2H queues of
 	the device "81:00.0".
@@ -191,7 +191,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	::
 
-	./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,cmpt_desc_len=32
+	./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,cmpt_desc_len=32
 
 	This example sets completion entry length to 32 bytes on all the completion queues
 	of the device "81:00.0".
@@ -218,7 +218,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	::
 
-	./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,trigger_mode=1
+	./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,trigger_mode=1
 
 	This example sets the trigger mode to every event for all the
 	completion queues of the device "81:00.0".
@@ -239,7 +239,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	::
 
-	./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,c2h_byp_mode=2
+	./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,c2h_byp_mode=2
 
 	This example sets simple bypass mode on all the C2H queues belonging to the
 	PCIe device "81:00.0".
@@ -258,7 +258,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	::
 
-	./build/qdma_testapp -c 0x1f -n 4 -w 81:00.0,h2c_byp_mode=1
+	./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,h2c_byp_mode=1
 
 	This example sets bypass mode on all the H2C queues belonging to the
 	PCIe device "81:00.0".
@@ -482,7 +482,7 @@ Commands supported by the qdma_testapp CLI
 	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
 	The first PCIe function that is bound has port id as 0.
 
-	**bar-num** represents the PCIe BAR where the register is located
+	**bar-num** represents the PCIe BAR where the register is located and this input value should be a decimal value in the range 0-5
 
 	**address** represents offset of the register in the PCIe BAR `bar-num`
 
@@ -498,7 +498,7 @@ Commands supported by the qdma_testapp CLI
 	**port-id** represents a logical numbering for PCIe functions in the order they are bind to ``igb_uio`` driver.
 	The first PCIe function that is bound has port id as 0.
 
-	**bar-num** represents the PCIe BAR where the register is located
+	**bar-num** represents the PCIe BAR where the register is located and this input value should be a decimal value in the range 0-5
 
 	**address** represents offset of the register in the PCIe BAR `bar-num`
 
