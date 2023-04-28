@@ -33,10 +33,6 @@ cflags += ['-DRTE_LIBRTE_QDMA_PMD']
 cflags += ['-DDMA_BRAM_SIZE=524288']
 cflags += ['-DTHROUGHPUT_MEASUREMENT']
 
-# Enable vectorization in qdma data path to use 128-bit SIMD registers
-cflags += ['-DQDMA_RX_VEC_X86_64']
-cflags += ['-DQDMA_TX_VEC_X86_64']
-
 # Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
 # Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
 # Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
@@ -77,3 +73,7 @@ sources = files(
 	'rte_pmd_qdma.c',
 	'qdma_dpdk_compat.c'
 )
+
+if arch_subdir == 'x86'
+    sources += files('qdma_rxtx_vec_sse.c')
+endif

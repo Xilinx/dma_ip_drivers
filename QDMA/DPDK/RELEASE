@@ -1,4 +1,4 @@
-RELEASE: 2023.1.1
+RELEASE: 2023.1.2
 =================
 
 This release is based on DPDK v20.11, v21.11 and v22.11 and
@@ -121,14 +121,17 @@ CPM5
 ----------------
 - Optimized the driver code and HW register settings for performance improvements
 
+2023.1.2 Updates
+----------------
+- Optimized dpdk PMD and HW register settings for CPM5 performance improvements
+
 KNOWN ISSUE:
 ============
 - CPM5:
-	- Performance optimizations are not finalized, Updated Performance report with some more optimizations will be available in next patch release.
+	- Smaller packet forwarding performance optimizations are in progress and report will be updated in subsequent releases
 
 - All Designs
 	- Function Level Reset(FLR) of PF device when VFs are attached to this PF results in mailbox communication failure
-	- DPDK C2H and Forwarding performance values for 8 queue is lesser compared to 4 queue case for both PF and VF.
 
 
 DRIVER LIMITATIONS:
@@ -139,7 +142,6 @@ DRIVER LIMITATIONS:
 - All Designs
 	- Big endian systems are not supported
 	- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
-	- Current 2023.1.0 driver which is supporting DPDK 22.11/21.11 is not fully verified for stress, multicard, tandem boot and interop use cases. These will be verified and confirmed in next patch release.
 
 
 /*-

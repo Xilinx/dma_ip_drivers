@@ -45,111 +45,7 @@
 #include <immintrin.h>
 #include <emmintrin.h>
 #define RTE_QDMA_DESCS_PER_LOOP (2)
-#endif //RTE_ARCH_X86_64
-
-/******** User logic dependent functions start **********/
-static int qdma_ul_extract_st_cmpt_info_v(void *ul_cmpt_entry, void *cmpt_info)
-{
-	union qdma_ul_st_cmpt_ring *cmpt_data, *cmpt_desc;
-
-	cmpt_desc = (union qdma_ul_st_cmpt_ring *)(ul_cmpt_entry);
-	cmpt_data = (union qdma_ul_st_cmpt_ring *)(cmpt_info);
-
-	cmpt_data->data = cmpt_desc->data;
-	if (unlikely(!cmpt_desc->desc_used))
-		cmpt_data->length = 0;
-
-	return 0;
-}
-
-#ifdef QDMA_RX_VEC_X86_64
-/* Vector implementation to get packet length from two completion entries */
-static void qdma_ul_get_cmpt_pkt_len_v(void *ul_cmpt_entry, __m128i *data)
-{
-	union qdma_ul_st_cmpt_ring *cmpt_entry1, *cmpt_entry2;
-	__m128i pkt_len_shift = _mm_set_epi64x(0, 4);
-
-	cmpt_entry1 = (union qdma_ul_st_cmpt_ring *)(ul_cmpt_entry);
-	cmpt_entry2 = cmpt_entry1 + 1;
-
-	/* Read desc statuses backwards to avoid race condition */
-	/* Load a pkt desc */
-	data[1] = _mm_set_epi64x(0, cmpt_entry2->data);
-	/* Find packet length, currently driver needs
-	 * only packet length from completion info
-	 */
-	data[1] = _mm_srl_epi32(data[1], pkt_len_shift);
-
-	/* Load a pkt desc */
-	data[0] = _mm_set_epi64x(0, cmpt_entry1->data);
-	/* Find packet length, currently driver needs
-	 * only packet length from completion info
-	 */
-	data[0] = _mm_srl_epi32(data[0], pkt_len_shift);
-}
-#endif //QDMA_RX_VEC_X86_64
-
-#ifdef QDMA_TX_VEC_X86_64
-/* Vector implementation to update H2C descriptor */
-static int qdma_ul_update_st_h2c_desc_v(void *qhndl, uint64_t q_offloads,
-				struct rte_mbuf *mb)
-{
-	(void)q_offloads;
-	int nsegs = mb->nb_segs;
-	uint16_t flags = S_H2C_DESC_F_SOP | S_H2C_DESC_F_EOP;
-	uint16_t id;
-	struct qdma_ul_st_h2c_desc *tx_ring_st;
-	struct qdma_tx_queue *txq = (struct qdma_tx_queue *)qhndl;
-
-	tx_ring_st = (struct qdma_ul_st_h2c_desc *)txq->tx_ring;
-	id = txq->q_pidx_info.pidx;
-
-	if (nsegs == 1) {
-		__m128i descriptor;
-		uint16_t datalen = mb->data_len;
-
-		descriptor = _mm_set_epi64x(mb->buf_iova + mb->data_off,
-				(uint64_t)datalen << 16 |
-				(uint64_t)datalen << 32 |
-				(uint64_t)flags << 48);
-		_mm_store_si128((__m128i *)&tx_ring_st[id], descriptor);
-
-		id++;
-		if (unlikely(id >= (txq->nb_tx_desc - 1)))
-			id -= (txq->nb_tx_desc - 1);
-	} else {
-		int pkt_segs = nsegs;
-		while (nsegs && mb) {
-			__m128i descriptor;
-			uint16_t datalen = mb->data_len;
-
-			flags = 0;
-			if (nsegs == pkt_segs)
-				flags |= S_H2C_DESC_F_SOP;
-			if (nsegs == 1)
-				flags |= S_H2C_DESC_F_EOP;
-
-			descriptor = _mm_set_epi64x(mb->buf_iova + mb->data_off,
-					(uint64_t)datalen << 16 |
-					(uint64_t)datalen << 32 |
-					(uint64_t)flags << 48);
-			_mm_store_si128((__m128i *)&tx_ring_st[id], descriptor);
-
-			nsegs--;
-			mb = mb->next;
-			id++;
-			if (unlikely(id >= (txq->nb_tx_desc - 1)))
-				id -= (txq->nb_tx_desc - 1);
-		}
-	}
-
-	txq->q_pidx_info.pidx = id;
-
-	return 0;
-}
-#endif //QDMA_TX_VEC_X86_64
-
-/******** User logic dependent functions end **********/
+#endif
 
 /**
  * Poll the QDMA engine for transfer completion.
@@ -228,17 +124,32 @@ static int dma_wb_monitor(void *xq, uint8_t dir, uint16_t expected_count)
 	return -1;
 }
 
-static int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
+int qdma_extract_st_cmpt_info(void *ul_cmpt_entry, void *cmpt_info)
+{
+	union qdma_ul_st_cmpt_ring *cmpt_data, *cmpt_desc;
+
+	cmpt_desc = (union qdma_ul_st_cmpt_ring *)(ul_cmpt_entry);
+	cmpt_data = (union qdma_ul_st_cmpt_ring *)(cmpt_info);
+
+	cmpt_data->data = cmpt_desc->data;
+	if (unlikely(!cmpt_desc->desc_used))
+		cmpt_data->length = 0;
+
+	return 0;
+}
+
+int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 			uint16_t cidx, uint16_t free_cnt)
 {
 	int fl_desc = 0;
+	uint16_t fl_desc_cnt;
 	uint16_t count;
 	int id;
 
 	id = txq->tx_fl_tail;
 	fl_desc = (int)cidx - id;
 
-	if (fl_desc == 0)
+	if (unlikely(!fl_desc))
 		return 0;
 
 	if (fl_desc < 0)
@@ -248,33 +159,35 @@ static int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 		fl_desc = free_cnt;
 
 	if ((id + fl_desc) < (txq->nb_tx_desc - 1)) {
-		for (count = 0; count < ((uint16_t)fl_desc & 0xFFFF);
-				count++) {
-			rte_pktmbuf_free(txq->sw_ring[id]);
+		fl_desc_cnt = ((uint16_t)fl_desc & 0xFFFF);
+		rte_pktmbuf_free_bulk(&txq->sw_ring[id], fl_desc_cnt);
+		for (count = 0; count < fl_desc_cnt; count++)
 			txq->sw_ring[id++] = NULL;
-		}
-	} else {
-		fl_desc -= (txq->nb_tx_desc - 1 - id);
-		for (; id < (txq->nb_tx_desc - 1); id++) {
-			rte_pktmbuf_free(txq->sw_ring[id]);
-			txq->sw_ring[id] = NULL;
-		}
 
-		id -= (txq->nb_tx_desc - 1);
-		for (count = 0; count < ((uint16_t)fl_desc & 0xFFFF);
-				count++) {
-			rte_pktmbuf_free(txq->sw_ring[id]);
-			txq->sw_ring[id++] = NULL;
-		}
+		txq->tx_fl_tail = id;
+		return fl_desc;
 	}
+
+	/* Handle Tx queue ring wrap case */
+	fl_desc -= (txq->nb_tx_desc - 1 - id);
+	rte_pktmbuf_free_bulk(&txq->sw_ring[id], (txq->nb_tx_desc - 1 - id));
+	for (; id < (txq->nb_tx_desc - 1); id++)
+		txq->sw_ring[id] = NULL;
+
+	id -= (txq->nb_tx_desc - 1);
+	fl_desc_cnt = ((uint16_t)fl_desc & 0xFFFF);
+	rte_pktmbuf_free_bulk(&txq->sw_ring[id], fl_desc_cnt);
+	for (count = 0; count < fl_desc_cnt; count++)
+		txq->sw_ring[id++] = NULL;
+
 	txq->tx_fl_tail = id;
 
 	return fl_desc;
 }
 
 #ifdef TEST_64B_DESC_BYPASS
-static uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
-			struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
+uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
+		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
 	uint16_t count, id;
 	uint8_t *tx_ring_st_bypass = NULL;
@@ -555,7 +468,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 				((uint64_t)rxq->cmpt_ring +
 				((uint64_t)rx_cmpt_tail * rxq->cmpt_desc_len));
 
-				ret = qdma_ul_extract_st_cmpt_info_v(
+				ret = qdma_extract_st_cmpt_info(
 						user_cmpt_entry,
 						&rxq->cmpt_data[count]);
 				if (ret != 0) {
@@ -574,7 +487,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 				((uint64_t)rxq->cmpt_ring +
 				((uint64_t)rx_cmpt_tail * rxq->cmpt_desc_len));
 
-				ret = qdma_ul_extract_st_cmpt_info_v(
+				ret = qdma_extract_st_cmpt_info(
 						user_cmpt_entry,
 						&rxq->cmpt_data[count]);
 				if (ret != 0) {
@@ -741,7 +654,7 @@ qdma_dev_rx_descriptor_status(void *rx_queue, uint16_t offset)
 }
 
 /* Update mbuf for a segmented packet */
-static struct rte_mbuf *prepare_segmented_packet(struct qdma_rx_queue *rxq,
+struct rte_mbuf *prepare_segmented_packet(struct qdma_rx_queue *rxq,
 		uint16_t pkt_length, uint16_t *tail)
 {
 	struct rte_mbuf *mb;
@@ -828,147 +741,12 @@ struct rte_mbuf *prepare_single_packet(struct qdma_rx_queue *rxq,
 	return mb;
 }
 
-#ifdef QDMA_RX_VEC_X86_64
-/* Vector implementation to prepare mbufs for packets.
- * Update this API if HW provides more information to be populated in mbuf.
- */
-static uint16_t prepare_packets_v(struct qdma_rx_queue *rxq,
-			struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
-{
-	struct rte_mbuf *mb;
-	uint16_t count = 0, count_pkts = 0;
-	uint16_t n_pkts = nb_pkts & -2;
-	uint16_t id = rxq->rx_tail;
-	struct rte_mbuf **sw_ring = rxq->sw_ring;
-	uint16_t rx_buff_size = rxq->rx_buff_size;
-	/* mask to shuffle from desc. to mbuf */
-	__m128i shuf_msk = _mm_set_epi8(
-			0xFF, 0xFF, 0xFF, 0xFF,  /* skip 32bits rss */
-			0xFF, 0xFF,      /* skip low 16 bits vlan_macip */
-			1, 0,      /* octet 0~1, 16 bits data_len */
-			0xFF, 0xFF,  /* skip high 16 bits pkt_len, zero out */
-			1, 0,      /* octet 0~1, low 16 bits pkt_len */
-			0xFF, 0xFF,  /* skip 32 bit pkt_type */
-			0xFF, 0xFF
-			);
-	__m128i mbuf_init, pktlen, zero_data;
-
-	mbuf_init = _mm_set_epi64x(0, rxq->mbuf_initializer);
-	pktlen = _mm_setzero_si128();
-	zero_data = _mm_setzero_si128();
-
-	/* compile-time check */
-	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, pkt_len) !=
-			offsetof(struct rte_mbuf, rx_descriptor_fields1) + 4);
-	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, data_len) !=
-			offsetof(struct rte_mbuf, rx_descriptor_fields1) + 8);
-	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, rearm_data) !=
-			RTE_ALIGN(offsetof(struct rte_mbuf, rearm_data), 16));
-
-	for (count = 0; count < n_pkts;
-		count += RTE_QDMA_DESCS_PER_LOOP) {
-		__m128i pkt_len[RTE_QDMA_DESCS_PER_LOOP];
-		__m128i pkt_mb1, pkt_mb2;
-		__m128i mbp1;
-		uint16_t pktlen1, pktlen2;
-
-		qdma_ul_get_cmpt_pkt_len_v(
-			&rxq->cmpt_data[count], pkt_len);
-
-		pktlen1 = _mm_extract_epi16(pkt_len[0], 0);
-		pktlen2 = _mm_extract_epi16(pkt_len[1], 0);
-
-		/* Check if packets are segmented across descriptors */
-		if ((pktlen1 && (pktlen1 <= rx_buff_size)) &&
-			(pktlen2 && (pktlen2 <= rx_buff_size)) &&
-			((id + RTE_QDMA_DESCS_PER_LOOP) <
-				(rxq->nb_rx_desc - 1))) {
-			/* Load 2 (64 bit) mbuf pointers */
-			mbp1 = _mm_loadu_si128((__m128i *)&sw_ring[id]);
-
-			/* Copy 2 64 bit mbuf point into rx_pkts */
-			_mm_storeu_si128((__m128i *)&rx_pkts[count_pkts], mbp1);
-			_mm_storeu_si128((__m128i *)&sw_ring[id], zero_data);
-
-			/* Pkt 1,2 convert format from desc to pktmbuf */
-			/* We only have packet length to copy */
-			pkt_mb2 = _mm_shuffle_epi8(pkt_len[1], shuf_msk);
-			pkt_mb1 = _mm_shuffle_epi8(pkt_len[0], shuf_msk);
-
-			/* Write the rearm data and the olflags in one write */
-			_mm_store_si128(
-			(__m128i *)&rx_pkts[count_pkts]->rearm_data, mbuf_init);
-			_mm_store_si128(
-			(__m128i *)&rx_pkts[count_pkts + 1]->rearm_data,
-			mbuf_init);
-
-			/* Write packet length */
-			_mm_storeu_si128(
-			(void *)&rx_pkts[count_pkts]->rx_descriptor_fields1,
-			pkt_mb1);
-			_mm_storeu_si128(
-			(void *)&rx_pkts[count_pkts + 1]->rx_descriptor_fields1,
-			pkt_mb2);
-
-			/* Accumulate packet length counter */
-			pktlen = _mm_add_epi64(pktlen,
-				_mm_set_epi16(0, 0, 0, 0,
-					0, 0, 0, pktlen1));
-			pktlen = _mm_add_epi64(pktlen,
-				_mm_set_epi16(0, 0, 0, 0,
-					0, 0, 0, pktlen2));
-
-			count_pkts += RTE_QDMA_DESCS_PER_LOOP;
-			id += RTE_QDMA_DESCS_PER_LOOP;
-		} else {
-			/* Handle packets segmented
-			 * across multiple descriptors
-			 * or ring wrap
-			 */
-			if (pktlen1) {
-				mb = prepare_segmented_packet(rxq,
-					pktlen1, &id);
-				rx_pkts[count_pkts++] = mb;
-				pktlen = _mm_add_epi64(pktlen,
-					_mm_set_epi16(0, 0, 0, 0,
-						0, 0, 0, pktlen1));
-			}
-
-			if (pktlen2) {
-				mb = prepare_segmented_packet(rxq,
-					pktlen2, &id);
-				rx_pkts[count_pkts++] = mb;
-				pktlen = _mm_add_epi64(pktlen,
-					_mm_set_epi16(0, 0, 0, 0,
-						0, 0, 0, pktlen2));
-			}
-		}
-	}
-
-	rxq->stats.pkts += count_pkts;
-	rxq->stats.bytes += _mm_extract_epi64(pktlen, 0);
-	rxq->rx_tail = id;
-
-	/* Handle single packet, if any pending */
-	if (nb_pkts & 1) {
-		mb = prepare_single_packet(rxq, count);
-		if (mb)
-			rx_pkts[count_pkts++] = mb;
-	}
-
-	return count_pkts;
-}
-#endif //QDMA_RX_VEC_X86_64
-
 /* Prepare mbufs with packet information */
 static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
 			struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
 {
 	uint16_t count_pkts = 0;
 
-#ifdef QDMA_RX_VEC_X86_64
-	count_pkts = prepare_packets_v(rxq, rx_pkts, nb_pkts);
-#else //QDMA_RX_VEC_X86_64
 	struct rte_mbuf *mb;
 	uint16_t pkt_length;
 	uint16_t count = 0;
@@ -984,7 +762,6 @@ static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
 		}
 		count++;
 	}
-#endif //QDMA_RX_VEC_X86_64
 
 	return count_pkts;
 }
@@ -1023,47 +800,6 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 		return -1;
 	}
 
-#ifdef QDMA_RX_VEC_X86_64
-	int rearm_cnt = rearm_descs & -2;
-	__m128i head_room = _mm_set_epi64x(RTE_PKTMBUF_HEADROOM,
-			RTE_PKTMBUF_HEADROOM);
-
-	for (mbuf_index = 0; mbuf_index < ((uint16_t)rearm_cnt  & 0xFFFF);
-			mbuf_index += RTE_QDMA_DESCS_PER_LOOP,
-			id += RTE_QDMA_DESCS_PER_LOOP) {
-		__m128i vaddr0, vaddr1;
-		__m128i dma_addr;
-
-		/* load buf_addr(lo 64bit) and buf_iova(hi 64bit) */
-		RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, buf_iova) !=
-				offsetof(struct rte_mbuf, buf_addr) + 8);
-
-		/* Load two mbufs data addresses */
-		vaddr0 = _mm_loadu_si128(
-				(__m128i *)&(rxq->sw_ring[id]->buf_addr));
-		vaddr1 = _mm_loadu_si128(
-				(__m128i *)&(rxq->sw_ring[id+1]->buf_addr));
-
-		/* Extract physical addresses of two mbufs */
-		dma_addr = _mm_unpackhi_epi64(vaddr0, vaddr1);
-
-		/* Add headroom to dma_addr */
-		dma_addr = _mm_add_epi64(dma_addr, head_room);
-
-		/* Write C2H desc with physical dma_addr */
-		_mm_storeu_si128((__m128i *)&rx_ring_st[id], dma_addr);
-	}
-
-	if (rearm_descs & 1) {
-		mb = rxq->sw_ring[id];
-
-		/* rearm descriptor */
-		rx_ring_st[id].dst_addr =
-				(uint64_t)mb->buf_iova +
-					RTE_PKTMBUF_HEADROOM;
-		id++;
-	}
-#else //QDMA_RX_VEC_X86_64
 	for (mbuf_index = 0; mbuf_index < rearm_descs;
 			mbuf_index++, id++) {
 		mb = rxq->sw_ring[id];
@@ -1074,7 +810,6 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 				(uint64_t)mb->buf_iova +
 					RTE_PKTMBUF_HEADROOM;
 	}
-#endif //QDMA_RX_VEC_X86_64
 
 	if (unlikely(id >= (rxq->nb_rx_desc - 1)))
 		id -= (rxq->nb_rx_desc - 1);
@@ -1132,8 +867,8 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 }
 
 /* Receive API for Streaming mode */
-uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
-		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
+uint16_t qdma_recv_pkts_st(void *rx_queue, struct rte_mbuf **rx_pkts,
+				uint16_t nb_pkts)
 {
 	uint16_t count_pkts;
 	struct wb_status *wb_status;
@@ -1141,6 +876,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 	uint16_t rx_cmpt_tail = 0;
 	uint16_t cmpt_pidx, c2h_pidx;
 	uint16_t pending_desc;
+	struct qdma_rx_queue *rxq = rx_queue;
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
 #endif
@@ -1234,14 +970,15 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 }
 
 /* Receive API for Memory mapped mode */
-uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq,
-		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
+uint16_t qdma_recv_pkts_mm(void *rx_queue, struct rte_mbuf **rx_pkts,
+			uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;
 	struct qdma_ul_mm_desc *desc;
 	uint32_t len;
 	int ret;
+	struct qdma_rx_queue *rxq = rx_queue;
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
@@ -1349,9 +1086,9 @@ uint16_t qdma_recv_pkts(void *rx_queue, struct rte_mbuf **rx_pkts,
 	uint32_t count;
 
 	if (rxq->st_mode)
-		count = qdma_recv_pkts_st(rxq, rx_pkts, nb_pkts);
+		count = qdma_recv_pkts_st(rx_queue, rx_pkts, nb_pkts);
 	else
-		count = qdma_recv_pkts_mm(rxq, rx_pkts, nb_pkts);
+		count = qdma_recv_pkts_mm(rx_queue, rx_pkts, nb_pkts);
 
 	return count;
 }
@@ -1432,14 +1169,15 @@ qdma_dev_tx_descriptor_status(void *tx_queue, uint16_t offset)
 }
 
 /* Transmit API for Streaming mode */
-uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
-		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
+uint16_t qdma_xmit_pkts_st(void *tx_queue, struct rte_mbuf **tx_pkts,
+			uint16_t nb_pkts)
 {
-	struct rte_mbuf *mb;
+	struct rte_mbuf *mb = NULL;
 	uint64_t pkt_len = 0;
 	int avail, in_use, ret, nsegs;
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
+	struct qdma_tx_queue *txq = tx_queue;
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
 
 #ifdef TEST_64B_DESC_BYPASS
@@ -1496,11 +1234,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 		txq->sw_ring[id] = mb;
 		pkt_len += rte_pktmbuf_pkt_len(mb);
 
-#ifdef QDMA_TX_VEC_X86_64
-		ret = qdma_ul_update_st_h2c_desc_v(txq, txq->offloads, mb);
-#else
 		ret = qdma_ul_update_st_h2c_desc(txq, txq->offloads, mb);
-#endif //RTE_ARCH_X86_64
 		if (unlikely(ret < 0))
 			break;
 	}
@@ -1532,14 +1266,15 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 }
 
 /* Transmit API for Memory mapped mode */
-uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
-		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
+uint16_t qdma_xmit_pkts_mm(void *tx_queue, struct rte_mbuf **tx_pkts,
+			uint16_t nb_pkts)
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;
 	uint64_t	len = 0;
 	int avail, in_use;
 	int ret;
+	struct qdma_tx_queue *txq = tx_queue;
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
 	uint16_t cidx = 0;
 
@@ -1646,9 +1381,43 @@ uint16_t qdma_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 		return 0;
 
 	if (txq->st_mode)
-		count =	qdma_xmit_pkts_st(txq, tx_pkts, nb_pkts);
+		count =	qdma_xmit_pkts_st(tx_queue, tx_pkts, nb_pkts);
 	else
-		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
+		count =	qdma_xmit_pkts_mm(tx_queue, tx_pkts, nb_pkts);
 
 	return count;
+}
+
+void __rte_cold
+qdma_set_tx_function(struct rte_eth_dev *dev)
+{
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+
+	if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) {
+		PMD_DRV_LOG(DEBUG, "Using Vector Tx (port %d).",
+			dev->data->port_id);
+		qdma_dev->tx_vec_allowed = true;
+		dev->tx_pkt_burst = qdma_xmit_pkts_vec;
+	} else {
+		PMD_DRV_LOG(DEBUG, "Normal Rx will be used on port %d.",
+				dev->data->port_id);
+		dev->tx_pkt_burst = qdma_xmit_pkts;
+	}
+}
+
+void __rte_cold
+qdma_set_rx_function(struct rte_eth_dev *dev)
+{
+	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+
+	if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) {
+		PMD_DRV_LOG(DEBUG, "Using Vector Rx (port %d).",
+			dev->data->port_id);
+		qdma_dev->rx_vec_allowed = true;
+		dev->rx_pkt_burst = qdma_recv_pkts_vec;
+	} else {
+		PMD_DRV_LOG(DEBUG, "Normal Rx will be used on port %d.",
+				dev->data->port_id);
+		dev->rx_pkt_burst = qdma_recv_pkts;
+	}
 }
