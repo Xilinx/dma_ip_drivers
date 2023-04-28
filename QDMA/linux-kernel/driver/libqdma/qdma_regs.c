@@ -582,11 +582,16 @@ int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long id,
 		unlock_descq(descq);
 
 	} else {
+		lock_descq(descq);
 		/* read the setting */
 		rv = queue_cmpt_cidx_read(descq->xdev,
 				descq->conf.qidx, &descq->cmpt_cidx_info);
-		if (unlikely(rv < 0))
+		if (unlikely(rv < 0)) {
+			pr_err("%s: Failed to read cmpt cidx\n",
+					descq->conf.name);
+			unlock_descq(descq);
 			return rv;
+		}
 
 		cctrl->trigger_mode = descq->conf.cmpl_trig_mode =
 				descq->cmpt_cidx_info.trig_mode;
@@ -598,6 +603,7 @@ int qdma_queue_cmpl_ctrl(unsigned long dev_hndl, unsigned long id,
 				descq->cmpt_cidx_info.wrb_en;
 		cctrl->cmpl_en_intr = descq->conf.cmpl_en_intr =
 				descq->cmpt_cidx_info.irq_en;
+		unlock_descq(descq);
 	}
 
 	return 0;

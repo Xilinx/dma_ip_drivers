@@ -234,7 +234,7 @@ clean:
 	done;
 	@-/bin/rm -f *.symvers eval.mak 2>/dev/null;
 	@-/bin/rm -rf $(shell pwd)/libqdma/qdma_access/*.o $(shell pwd)/libqdma/qdma_access/.*.o.* $(shell pwd)/libqdma/qdma_access/.*.cmd $(shell pwd)/libqdma/qdma_access/.*.o.cmd
-	@-/bin/rm -f $(shell pwd)/src/libqdma
+	@-/bin/rm -rf $(shell pwd)/src/libqdma
 
 .PHONY: install-mods
 install-mods:

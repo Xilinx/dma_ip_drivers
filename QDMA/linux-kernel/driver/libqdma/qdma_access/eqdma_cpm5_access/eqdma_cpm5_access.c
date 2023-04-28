@@ -83,8 +83,9 @@
 #define EQDMA_CPM5_GLBL2_FLR_PRESENT_MASK			BIT(1)
 #define EQDMA_CPM5_GLBL2_MAILBOX_EN_MASK			BIT(0)
 
-#define EQDMA_CPM5_DEFAULT_C2H_INTR_TIMER_TICK  50
-#define PREFETCH_QUEUE_COUNT_STEP               4
+#define EQDMA_CPM5_DEFAULT_C2H_INTR_TIMER_TICK     50
+#define PREFETCH_QUEUE_COUNT_STEP                   4
+#define EQDMA_CPM5_DEFAULT_CMPT_COAL_MAX_BUF_SZ    0x3F
 
 /* TODO: This is work around and this needs to be auto generated from ODS */
 /** EQDMA_CPM5_IND_REG_SEL_FMAP */
@@ -2383,7 +2384,7 @@ static void eqdma_cpm5_fill_intr_ctxt(struct qdma_indirect_intr_ctxt
 int eqdma_cpm5_set_default_global_csr(void *dev_hndl)
 {
 	/* Default values */
-	uint32_t cfg_val = 0, reg_val = 0;
+	uint32_t reg_val = 0;
 	uint32_t rng_sz[QDMA_NUM_RING_SIZES] = {2049, 65, 129, 193, 257, 385,
 		513, 769, 1025, 1537, 3073, 4097, 6145, 8193, 12289, 16385};
 	uint32_t tmr_cnt[QDMA_NUM_C2H_TIMERS] = {1, 2, 4, 5, 8, 10, 15, 20, 25,
@@ -2435,14 +2436,13 @@ int eqdma_cpm5_set_default_global_csr(void *dev_hndl)
 				0, QDMA_NUM_C2H_BUFFER_SIZES, buf_sz);
 
 		/* C2h Completion Coalesce Configuration */
-		cfg_val = qdma_reg_read(dev_hndl,
-				EQDMA_CPM5_C2H_WRB_COAL_BUF_DEPTH_ADDR);
 		reg_val =
 			FIELD_SET(C2H_WRB_COAL_CFG_TICK_CNT_MASK,
-					DEFAULT_CMPT_COAL_TIMER_CNT) |
+				DEFAULT_CMPT_COAL_TIMER_CNT) |
 			FIELD_SET(C2H_WRB_COAL_CFG_TICK_VAL_MASK,
-					DEFAULT_CMPT_COAL_TIMER_TICK) |
-			FIELD_SET(C2H_WRB_COAL_CFG_MAX_BUF_SZ_MASK, cfg_val);
+				DEFAULT_CMPT_COAL_TIMER_TICK) |
+			FIELD_SET(C2H_WRB_COAL_CFG_MAX_BUF_SZ_MASK,
+				EQDMA_CPM5_DEFAULT_CMPT_COAL_MAX_BUF_SZ);
 		qdma_reg_write(dev_hndl, EQDMA_CPM5_C2H_WRB_COAL_CFG_ADDR,
 				reg_val);
 	}

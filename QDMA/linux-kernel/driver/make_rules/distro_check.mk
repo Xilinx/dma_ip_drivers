@@ -92,6 +92,10 @@ ifeq ($(distro),)
   ifeq ($(kversion),5)
       distro := GIT
   endif
+
+  ifeq ($(kversion),6)
+      distro := GIT
+  endif
 endif # assume kernel.org kernels
 
 ifeq ($(distro),)

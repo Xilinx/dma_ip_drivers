@@ -2544,7 +2544,7 @@ static int dump_eqdma_context(struct qdma_descq_context *queue_context,
 	int n;
 	int len = 0;
 	int rv;
-	char banner[DEBGFS_LINE_SZ];
+	char banner[DEBGFS_LINE_SZ] = "";
 
 	if (queue_context == NULL) {
 		qdma_log_error("%s: queue_context is NULL, err:%d\n",

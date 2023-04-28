@@ -13,7 +13,7 @@
 #define __DMA_FROM_DEVICE_VERSION_H
 
 #define PROGNAME "dma-from-device"
-#define VERSION "2023.1.0"
+#define VERSION "2023.1.2"
 #define COPYRIGHT "Copyright (c) 2022-2023 Advanced Micro Devices Inc."
 
 #endif

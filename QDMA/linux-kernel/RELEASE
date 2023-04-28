@@ -1,4 +1,4 @@
-RELEASE: 2023.1.1
+RELEASE: 2023.1.2
 =================
 
 This release is validated
@@ -136,16 +136,20 @@ CPM5
 ----------------
 - Optimized the driver code and HW register settings for performance improvements.
 
+2023.1.2 Updates
+----------------
+- Added support for Fedora37 & CentOS9 distros.
+
 KNOWN ISSUES:
 =============
+- Observed MMAP failure for applications when device is binded QDMA Linux driver on Fedora37. Fix will be availbale in upcoming release.
+
 - CPM5 Only
-	- When >10VFs are attached to PF and FLR is issued, mailbox timeouts are observed.
 	- Performace optimizations are not finalized, Performance report with optimizations will be available in next patch release.
 
 - All Designs
 	- In interrupt mode, Sometimes completions are not received when C2H PIDX updates are held for 64 descriptors
 	- On QDMA4.0 2020.1 design, HW error observed during the probe of the VFs
-	- With 2020.2 QDMA4.0 design, ST Performance design has performance drop for higher packet sizes
 
 DRIVER LIMITATIONS:
 ===================

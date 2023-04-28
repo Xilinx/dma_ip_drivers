@@ -13,7 +13,7 @@
 #define __DMA_CTL_VERSION_H
 
 #define PROGNAME "dma-ctl"
-#define VERSION "2023.1.0"
+#define VERSION "2023.1.2"
 #define COPYRIGHT "Copyright (c) 2022-2023 Advanced Micro Devices Inc."
 
 #endif

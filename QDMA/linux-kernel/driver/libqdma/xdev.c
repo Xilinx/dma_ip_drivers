@@ -1117,7 +1117,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 
 	rv = qdma_dev_qinfo_get(xdev->dma_device_index, xdev->func_id,
 				&xdev->conf.qsets_base,
-				(uint32_t *) &xdev->conf.qsets_max);
+				&xdev->conf.qsets_max);
 	if (rv < 0) {
 		rv = qdma_dev_entry_create(xdev->dma_device_index,
 				xdev->func_id);
