@@ -396,7 +396,9 @@ static ssize_t cdev_gen_read_write(struct file *file, char __user *buf,
 	req->h2c_eot = 1;		/* set to 1 for STM tests */
 
 	res = xcdev->fp_rw(xcdev->xcb->xpdev->dev_hndl, qhndl, req);
-
+	
+	*pos += count;
+	
 	unmap_user_buf(&iocb, write);
 	iocb_release(&iocb);
 
