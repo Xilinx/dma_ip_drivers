@@ -1115,7 +1115,7 @@ static int parse_q_cmd(int argc, char *argv[], int i, struct xcmd_info *xcmd)
 
 	args_valid = validate_qcmd(xcmd->op, qparm);
 
-	qparm->sflags = f_arg_set;
+	qparm->sflags |= f_arg_set;
 	return (args_valid == 0) ? i : args_valid;
 }
 
