@@ -46,4 +46,3 @@ sinclude .depend
 
 clean :
 	rm -rf *.o *.a
-
