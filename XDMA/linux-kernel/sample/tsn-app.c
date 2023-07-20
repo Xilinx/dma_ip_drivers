@@ -143,7 +143,7 @@ int process_main_runCmd(int argc, const char *argv[],
                 printf("Invalid parameter given or out of range for '-s'.");
                 return -1;
             }
-            if ((DataSize < 64) || (DataSize > 4096)) {
+            if ((DataSize < 64) || (DataSize > MAX_BUFFER_LENGTH)) {
                 printf("DataSize %d is out of range.", DataSize);
                 return -1;
             }
