@@ -194,9 +194,9 @@ int bridge_mmap(struct file *file, struct vm_area_struct *vma)
 	struct xdma_dev *xdev;
 	struct xdma_cdev *xcdev = (struct xdma_cdev *)file->private_data;
 	unsigned long off;
-	unsigned long phys;
+	resource_size_t phys;
 	unsigned long vsize;
-	unsigned long psize;
+	resource_size_t psize;
 	int rv;
 
 	rv = xcdev_check(__func__, xcdev, 0);
