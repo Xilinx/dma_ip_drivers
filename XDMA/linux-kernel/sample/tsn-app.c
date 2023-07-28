@@ -461,8 +461,17 @@ int command_parser(int argc, char ** argv) {
 }
 
 int main(int argc, char *argv[]) {
+
+#ifndef PLATFORM_DEBUG
+    int mode  = DEFAULT_RUN_MODE;
+    int DataSize = MAX_BUFFER_LENGTH;
+    char InputFileName[256] = TEST_DATA_FILE_NAME;
+
+    return tsn_app(mode, DataSize, InputFileName);
+
+#else
     int id;
-    int rc=0, t_argc;
+    int t_argc;
     char **pav = NULL;
 
     for(id=0; id<argc; id++) {
@@ -473,8 +482,7 @@ int main(int argc, char *argv[]) {
     t_argc = argc, pav = argv;
     pav++, t_argc--;
 
-    rc = command_parser(t_argc, pav);
-
-    return rc;
+    return command_parser(t_argc, pav);
+#endif
 }
 

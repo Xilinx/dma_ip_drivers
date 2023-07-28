@@ -314,7 +314,7 @@ void sender_in_tsn_mode(char* devname, int fd, uint64_t size) {
         elapsedTime = (currentTime.tv_sec - previousTime.tv_sec) + (currentTime.tv_usec - previousTime.tv_usec) / 1000000.0;
         if (elapsedTime >= 1.0) {
             periodic_process_ptp();
-            gettimeofday(&previousTime, NULL);
+            memcpy(&previousTime, &currentTime, sizeof(struct timeval));
         }
 
         // Process RX

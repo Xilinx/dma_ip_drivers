@@ -21,7 +21,7 @@ typedef uint64_t timestamp_t;
 
 typedef uintptr_t UINTPTR;
 
-#define PLATFORM_DEBUG
+//#define PLATFORM_DEBUG
 
 #define SDK_VERSION                                 (0x2305260C)
 /*
