@@ -2,9 +2,9 @@
 #define __XDMA_COMMON_H__
 
 #define BUFFER_ALIGNMENT  (0x1000)
-//#define MAX_BUFFER_LENGTH (0x1000)
-#define MAX_BUFFER_LENGTH (0x10000 * 16)
-#define NUMBER_OF_BUFFER  (2048)
+#define MAX_BUFFER_LENGTH (0x1000)
+//#define MAX_BUFFER_LENGTH (0x10000 * 16)
+#define NUMBER_OF_BUFFER  (4096)    // (2048)
 #define NUMBER_OF_POOL_BUFFER (NUMBER_OF_BUFFER + 1)
 #define NUMBER_OF_RESERVED_BUFFER (4)
 
@@ -17,6 +17,12 @@ typedef struct buffer_stack {
     int top;
     pthread_mutex_t mutex;
 } buffer_stack_t;
+
+typedef struct reserved_buffer_stack {
+    BUF_POINTER elements[NUMBER_OF_RESERVED_BUFFER];
+    int top;
+    pthread_mutex_t mutex;
+} reserved_buffer_stack_t;
 
 #define NUMBER_OF_QUEUE  NUMBER_OF_BUFFER    // (2048)
 typedef char *    QueueElement;
@@ -43,6 +49,7 @@ typedef struct stats {
 #define TEST_DATA_FILE_NAME "./tests/data/datafile0_4K.bin"
 #define TEST_DATA_SIZE 1024
 enum {
+    RUN_MODE_TSN,
     RUN_MODE_NORMAL,
     RUN_MODE_LOOPBACK,
     RUN_MODE_PERFORMANCE,
@@ -50,7 +57,7 @@ enum {
     RUN_MODE_CNT,
 };
 
-#define DEFAULT_RUN_MODE RUN_MODE_NORMAL
+#define DEFAULT_RUN_MODE RUN_MODE_TSN
 
 #define MAX_INPUT_FILE_NAME_SIZE 256
 typedef struct rx_thread_arg {

@@ -28,10 +28,11 @@
 
 struct menu_command *command_tbl;
 typedef int (*cbFn)(int argc, const char *argv[], struct menu_command *menu_tbl);
+typedef int (*argFn)(int32_t argc, const char *argv[]);
 
 typedef struct argument_list {
     char *name;
-    cbFn fP;
+    argFn fP;
 } argument_list_t;
 
 typedef struct menu_command {

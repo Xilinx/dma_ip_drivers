@@ -24,11 +24,11 @@ RANLIB  = $(CROSS_COMPILE)ranlib
 
 LIB = libxdma.a
 
-OBJS    = api_xdma.o
+OBJS = api_xdma.o
 
 INCLUDES =
 
-CFLAGS = -Wall -Werror -I./ -I../ -I../include/ -I../xdma/
+CFLAGS += -Wall -Werror -I./ -I../ -I../include/ -I../xdma/
 
 all:    $(LIB) $(OBJS)
 

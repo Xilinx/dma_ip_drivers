@@ -5,6 +5,9 @@
 #ifndef __ERROR_DEFINE_H__
 #define __ERROR_DEFINE_H__
 
+#define XST_SUCCESS            (0)
+#define XST_FAILURE            (1)
+
 #define ERR_TCP_PORT_FILE            -2
 #define ERR_TX_SERVER_NOT_RESPONSE   -3
 #define ERR_NO_DATA_OR_FAIL_TO_READ  -4

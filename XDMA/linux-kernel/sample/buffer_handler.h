@@ -16,8 +16,8 @@
 
 void relese_buffers(int count);
 
-int push(BUF_POINTER element);
-BUF_POINTER pop();
+int buffer_pool_free(BUF_POINTER element);
+BUF_POINTER buffer_pool_alloc();
 int initialize_buffer_allocation();
 
 void buffer_release();

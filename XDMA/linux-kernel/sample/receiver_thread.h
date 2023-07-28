@@ -23,8 +23,9 @@
 
 #include "../libxdma/api_xdma.h"
 
-void enqueue(QueueElement element);
-QueueElement dequeue();
+void xbuffer_enqueue(QueueElement element);
+QueueElement xbuffer_dequeue();
+int getQueueCount();
 
 void initialize_statistics(stats_t* p_stats);
 

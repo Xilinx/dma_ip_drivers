@@ -333,7 +333,7 @@ int xdma_api_read_to_buffer(char *devname, char *buffer,
                             uint64_t size, uint64_t *bytes_rcv) {
 
     int fd;
-    size_t bytes_done = 0;
+    int bytes_done = 0;
 
     /*
      * use O_TRUNC to indicate to the driver to flush the data up based on
@@ -347,7 +347,7 @@ int xdma_api_read_to_buffer(char *devname, char *buffer,
         return -EINVAL;
     }
 
-    bytes_done = read_to_buffer(devname, fd, buffer, size, 0 /*addr*/);
+    bytes_done = (int)read_to_buffer(devname, fd, buffer, size, 0 /*addr*/);
     close(fd);
 
     if (bytes_done < 0) {
@@ -361,18 +361,18 @@ int xdma_api_read_to_buffer(char *devname, char *buffer,
 }
 
 int xdma_api_read_to_buffer_with_fd(char *devname, int fd, char *buffer, 
-                                    uint64_t size, uint64_t *bytes_rcv) {
+                                    uint64_t size, int *bytes_rcv) {
 
-    size_t bytes_done = 0;
+    int bytes_done = 0;
 
-    bytes_done = read_to_buffer(devname, fd, buffer, size, 0 /*addr*/);
+    bytes_done = (int)read_to_buffer(devname, fd, buffer, size, 0 /*addr*/);
 
     if (bytes_done < 0) {
         *bytes_rcv = 0;
         return -1;
     }
 
-    *bytes_rcv = bytes_done;
+    *bytes_rcv = (int)bytes_done;
 
     return 0;
 }

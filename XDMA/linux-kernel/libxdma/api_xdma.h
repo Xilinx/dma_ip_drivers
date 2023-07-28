@@ -25,7 +25,7 @@ int xdma_api_ioctl_perf_stop(char *devname,
 int xdma_api_read_to_buffer(char *devname, char *buffer, 
                             uint64_t size, uint64_t *bytes_rcv);
 int xdma_api_read_to_buffer_with_fd(char *devname, int fd, char *buffer,
-                                    uint64_t size, uint64_t *bytes_rcv);
+                                    uint64_t size, int *bytes_rcv);
 /* dma to device */
 int xdma_api_write_from_buffer(char *devname, char *buffer, 
                                uint64_t size, uint64_t *bytes_tr);
