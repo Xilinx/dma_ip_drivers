@@ -1,5 +1,6 @@
 The files in this directory provide Xilinx PCIe DMA drivers, example software,
 and example test scripts that can be used to exercise the Xilinx PCIe DMA IP.
+Also includes library and sample application for TSNLAB XDMA.
 
 This software can be used directly or referenced to create drivers and software
 for your Xilinx FPGA hardware design.
@@ -14,6 +15,8 @@ Ubuntu:		16.04.5 LTS, 16.04.6 LTS
 		18.04.1 LTS, 18.04.2 LTS, 18.04.4 LTS3, 18.04.5 LTS
 		20.04 LTS, 20.04.1 LT
 
+TSNLAB sample application: Ubuntu 20.04
+
 HW Requirement:
 ===============
 The PCIe DMA supports UltraScale+, UltraScale, Virtex-7 XT and 7 Series Gen2
@@ -25,6 +28,12 @@ Express" for details of the IP.
 
 Directory and file description:
 ===============================
+ - libcom/: This directory contains libraries for common functions used in the sample application
+
+ - libxdma/: This directory contains APIs for using the Xilinx PCIe DMA kernel module in the sample application
+
+ - sample/: This directory contains a sample application that uses the Xilinx PCIe DMA kernel module
+
  - xdma/: This directory contains the Xilinx PCIe DMA kernel module
        driver files.
 
@@ -113,7 +122,16 @@ Usage:
   - Change directory to the driver directory.
         cd xdma
   - Compile and install the kernel module driver.
-        make install
+        sudo make install
+  - Compile the sample application in debug mode
+        Uncomment the PLATFORM_DEBUG define phrase (located approximately at line 24) of the platform_config.h file in the sample directory
+        make clean;make
+
+		or
+
+  - Compile the sample application in non-debug mode
+        Comment the PLATFORM_DEBUG define phrase (located approximately at line 24) of the platform_config.h file in the sample directory
+        make clean;make
   - Change directory to the tools directory.
         cd tools
   - Compile the provided example test tools.
@@ -123,6 +141,17 @@ Usage:
 	b. using the provided script.
 		cd tests
         	./load_driver.sh
+	
+  - Run the sample application in debug mode
+        sudo ./sample/tsn-app run
+
+		or
+
+  - Run the sample application in non-debug mode
+        sudo ./sample/tsn-app 
+		   or
+        sudo ./sample/tsn-app  &
+
   - Run the provided test script to generate basic DMA traffic.
         ./run_test.sh
  	

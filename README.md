@@ -1,3 +1,13 @@
+# TSNLAB XDMA 
+
+This repository is a fork of the Xilinx DMA IP Reference drivers.
+For Xilinx DMA IP Reference drivers, see Xilinx DMA IP Reference drivers below.
+
+TSNLAB XDMA is in subdirectory XDMA/linux-kernel.
+Go to the XDMA/linux-kernel directory and see the readme.txt file.
+
+#
+
 # Xilinx DMA IP Reference drivers
 
 ## Xilinx QDMA
