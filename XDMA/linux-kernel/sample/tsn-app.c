@@ -128,10 +128,12 @@ int tsn_app(int mode, int DataSize, char *InputFileName) {
     rx_arg.mode = mode;
     rx_arg.size = DataSize;
     pthread_create(&tid1, NULL, receiver_thread, (void *)&rx_arg);
+#ifdef _MULTI_CPU_CORES_
     cpu_set_t cpuset1;
     CPU_ZERO(&cpuset1);
     CPU_SET(1, &cpuset1);
     pthread_setaffinity_np(tid1, sizeof(cpu_set_t), &cpuset1);
+#endif
 
     memset(&tx_arg, 0, sizeof(tx_thread_arg_t));
     memcpy(tx_arg.devname, DEF_TX_DEVICE_NAME, sizeof(DEF_TX_DEVICE_NAME));
@@ -139,19 +141,23 @@ int tsn_app(int mode, int DataSize, char *InputFileName) {
     tx_arg.mode = mode;
     tx_arg.size = DataSize;
     pthread_create(&tid2, NULL, sender_thread, (void *)&tx_arg);
+#ifdef _MULTI_CPU_CORES_
     cpu_set_t cpuset2;
     CPU_ZERO(&cpuset2);
     CPU_SET(2, &cpuset2);
     pthread_setaffinity_np(tid2, sizeof(cpu_set_t), &cpuset2);
+#endif
 
 #ifdef PLATFORM_DEBUG
     memset(&st_arg, 0, sizeof(stats_thread_arg_t));
     st_arg.mode = 1;
     pthread_create(&tid3, NULL, stats_thread, (void *)&st_arg);
+#ifdef _MULTI_CPU_CORES_
     cpu_set_t cpuset3;
     CPU_ZERO(&cpuset3);
     CPU_SET(3, &cpuset3);
     pthread_setaffinity_np(tid3, sizeof(cpu_set_t), &cpuset3);
+#endif
 #endif
 
     pthread_join(tid1, NULL);
