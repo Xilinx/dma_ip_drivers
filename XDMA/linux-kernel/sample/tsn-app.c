@@ -106,6 +106,7 @@ void register_signal_handler() {
     signal(SIGABRT, xdma_signal_handler);
 }
 
+//#define _MULTI_CPU_CORES_
 int tsn_app(int mode, int DataSize, char *InputFileName) {
 
     pthread_t tid1, tid2;
@@ -134,6 +135,7 @@ int tsn_app(int mode, int DataSize, char *InputFileName) {
     CPU_SET(1, &cpuset1);
     pthread_setaffinity_np(tid1, sizeof(cpu_set_t), &cpuset1);
 #endif
+	sleep(1);
 
     memset(&tx_arg, 0, sizeof(tx_thread_arg_t));
     memcpy(tx_arg.devname, DEF_TX_DEVICE_NAME, sizeof(DEF_TX_DEVICE_NAME));
@@ -147,6 +149,7 @@ int tsn_app(int mode, int DataSize, char *InputFileName) {
     CPU_SET(2, &cpuset2);
     pthread_setaffinity_np(tid2, sizeof(cpu_set_t), &cpuset2);
 #endif
+	sleep(1);
 
 #ifdef PLATFORM_DEBUG
     memset(&st_arg, 0, sizeof(stats_thread_arg_t));

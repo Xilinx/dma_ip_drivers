@@ -358,6 +358,7 @@ void sender_in_normal_mode(char* devname, int fd, uint64_t size) {
 
         if(xdma_api_write_from_buffer_with_fd(devname, fd, buffer,
                                        size, &bytes_tr)) {
+            buffer_pool_free((BUF_POINTER)buffer);
             continue;
         }
 
