@@ -966,7 +966,7 @@ engine_service_final_transfer(struct xdma_engine *engine,
 				}
 			}
 
-			transfer->desc_cmpl += *pdesc_completed;
+			transfer->desc_cmpl = *pdesc_completed;
 			if (!(transfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED)) {
 				return NULL;
 			}
