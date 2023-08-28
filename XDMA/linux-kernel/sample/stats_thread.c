@@ -21,24 +21,32 @@
 #define MAX_COUNTERS            29
 
 char* counter_name[MAX_COUNTERS] = {
-  "rxPackets",
-  "rxBytes",
-  "rxPps",
-  "rxBps",
-  "txPackets",
-  "txBytes",
-  "txPps",
-  "txBps",
-  NULL,
+    "rxPackets",
+    "rxBytes",
+    "rxErrors",
+    "rxNoBuffer",
+    "rxPps",
+    "rxBps",
+    "txPackets",
+    "txBytes",
+    "txFiltered",
+    "txErrors",
+    "txPps",
+    "txBps",
+    NULL,
 };
 
 enum {
     COUNTERS_RXPACKETS,
     COUNTERS_RXBYTES,
+    COUNTERS_RXERRORS,
+    COUNTERS_RXNOBUF,
     COUNTERS_RXPPS,
     COUNTERS_RXBPS,
     COUNTERS_TXPACKETS,
     COUNTERS_TXBYTES,
+    COUNTERS_TXFILTERED,
+    COUNTERS_TXERRORS,
     COUNTERS_TXPPS,
     COUNTERS_TXBPS,
 
@@ -94,6 +102,10 @@ void print_counter() {
     printf("%16llu\n", rx_stats.rxPackets);
     printf("%20s", counter_name[COUNTERS_RXBYTES]);
     printf("%16llu\n", rx_stats.rxBytes);
+    printf("%20s", counter_name[COUNTERS_RXERRORS]);
+    printf("%16llu\n", rx_stats.rxErrors);
+    printf("%20s", counter_name[COUNTERS_RXNOBUF]);
+    printf("%16llu\n", rx_stats.rxNoBuffer);
     printf("%20s", counter_name[COUNTERS_RXPPS]);
     printf("%16llu\n", cs.rxPps);
     printf("%20s", counter_name[COUNTERS_RXBPS]);
@@ -102,6 +114,10 @@ void print_counter() {
     printf("%16llu\n", tx_stats.txPackets);
     printf("%20s", counter_name[COUNTERS_TXBYTES]);
     printf("%16llu\n", tx_stats.txBytes);
+    printf("%20s", counter_name[COUNTERS_TXFILTERED]);
+    printf("%16llu\n", tx_stats.txFiltered);
+    printf("%20s", counter_name[COUNTERS_TXERRORS]);
+    printf("%16llu\n", tx_stats.txErrors);
     printf("%20s", counter_name[COUNTERS_TXPPS]);
     printf("%16llu\n", cs.txPps);
     printf("%20s", counter_name[COUNTERS_TXBPS]);

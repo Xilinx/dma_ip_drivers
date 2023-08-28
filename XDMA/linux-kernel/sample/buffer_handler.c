@@ -75,6 +75,8 @@ int isStackFull() {
 }
 
 int buffer_pool_free(BUF_POINTER element) {
+
+    element = (BUF_POINTER)(((uint64_t)element / BUFFER_ALIGNMENT) * BUFFER_ALIGNMENT);
     if (element >= RESERVED_BUFFER_BASE ) {
         pthread_mutex_lock(&reserved_stack->mutex);
 
@@ -170,7 +172,7 @@ int initialize_buffer_allocation() {
     for(id = 0; id < (NUMBER_OF_BUFFER + NUMBER_OF_RESERVED_BUFFER); id++) {
         buffer = NULL;
 
-        if(posix_memalign((void **)&buffer, BUFFER_ALIGNMENT /*alignment */, MAX_BUFFER_LENGTH + BUFFER_ALIGNMENT)) {
+        if(posix_memalign((void **)&buffer, BUFFER_ALIGNMENT /*alignment */, MAX_BUFFER_LENGTH)) {
             fprintf(stderr, "OOM %u.\n", MAX_BUFFER_LENGTH);
             relese_buffers(id);
             pthread_mutex_destroy(&stack->mutex);

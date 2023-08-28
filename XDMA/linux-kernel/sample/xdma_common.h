@@ -3,8 +3,7 @@
 
 #define BUFFER_ALIGNMENT  (0x1000)
 #define MAX_BUFFER_LENGTH (0x1000)
-//#define MAX_BUFFER_LENGTH (0x10000 * 16)
-#define NUMBER_OF_BUFFER  (4096)    // (2048)
+#define NUMBER_OF_BUFFER  (2048)
 #define NUMBER_OF_POOL_BUFFER (NUMBER_OF_BUFFER + 1)
 #define NUMBER_OF_RESERVED_BUFFER (4)
 
@@ -37,10 +36,14 @@ typedef struct circular_queue{
 typedef struct stats {
     unsigned long long  rxPackets;
     unsigned long long  rxBytes;
+    unsigned long long  rxErrors;
+    unsigned long long  rxNoBuffer;	// BD is not available
     unsigned long long  rxPps;
     unsigned long long  rxBps;
     unsigned long long  txPackets;
     unsigned long long  txBytes;
+    unsigned long long  txFiltered;
+    unsigned long long  txErrors;
     unsigned long long  txPps;
     unsigned long long  txBps;
 } stats_t;

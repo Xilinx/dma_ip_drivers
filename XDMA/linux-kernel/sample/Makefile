@@ -11,7 +11,8 @@
 
 include $(TOPDIR)/Makefile.inc
 
-APP_TSNV1_XDMA_OBJS = receiver_thread.o  sender_thread.o  stats_thread.o  buffer_handler.o tsn-app.o 
+#APP_TSNV1_XDMA_OBJS = receiver_thread.o  sender_thread.o  stats_thread.o  buffer_handler.o tsn-app.o 
+APP_TSNV1_XDMA_OBJS = receiver_thread.o  stats_thread.o  buffer_handler.o tsn-app.o 
 APP_TSNV1_XDMA_OBJS += gptp.o icmp.o tsn.o
 
 OBJS = $(APP_TSNV1_XDMA_OBJS)

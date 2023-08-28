@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include "../sample/xdma_common.h"
 /*
  * man 2 write:
  * On Linux, write() (and similar system calls) will transfer at most
@@ -24,7 +25,7 @@
  */
 
 //#define RW_MAX_SIZE    0x7ffff000
-#define RW_MAX_SIZE    (0x1000) // #define MAX_BUFFER_LENGTH (0x1000)
+#define RW_MAX_SIZE MAX_BUFFER_LENGTH
 
 
 uint64_t getopt_integer(char *optarg)
@@ -40,7 +41,7 @@ uint64_t getopt_integer(char *optarg)
     return value;
 }
 
-ssize_t read_to_buffer(char *fname, int fd, char *buffer, uint64_t size,
+static ssize_t read_to_buffer(char *fname, int fd, char *buffer, uint64_t size,
             uint64_t base)
 {
     ssize_t rc;
@@ -96,7 +97,7 @@ ssize_t read_to_buffer(char *fname, int fd, char *buffer, uint64_t size,
     return count;
 }
 
-ssize_t write_from_buffer(char *fname, int fd, char *buffer, uint64_t size,
+static ssize_t write_from_buffer(char *fname, int fd, char *buffer, uint64_t size,
             uint64_t base)
 {
     ssize_t rc;

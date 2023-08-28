@@ -237,7 +237,7 @@ static int process_followup(struct tsn_rx_buffer* rx, struct tsn_tx_buffer* tx) 
 
 static int process_pdelay_req(struct tsn_rx_buffer* rx, struct tsn_tx_buffer* tx) {
     // Note: This function sends two packets.
-    // So we use bare transmit_tsn_packet and return 0.
+    // So we use bare extern_transmit_tsn_packet and return 0.
     // FIXME whenever
 
     tx = (struct tsn_tx_buffer*)get_reserved_tx_buffer();
@@ -277,7 +277,7 @@ static int process_pdelay_req(struct tsn_rx_buffer* rx, struct tsn_tx_buffer* tx
     tx->metadata.timestamp_id = TIMESTAMP_ID_GPTP_RESP;
     tx->metadata.vlan_tag = 0;
 
-    transmit_tsn_packet(tx);
+    extern_transmit_tsn_packet(tx);
     timestamp_t pdelay_resp_tx_timestamp = gptp_get_tx_timestamp(TIMESTAMP_ID_GPTP_RESP);
 
     // Send pdelay_resp_fup packet
@@ -313,7 +313,7 @@ static int process_pdelay_req(struct tsn_rx_buffer* rx, struct tsn_tx_buffer* tx
     fup->metadata.timestamp_id = 0;
     fup->metadata.vlan_tag = 0;
 
-    transmit_tsn_packet(fup);
+    extern_transmit_tsn_packet(fup);
 
     // As we send packets manually, return 0;
     return 0;

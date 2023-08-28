@@ -21,7 +21,10 @@ typedef uint64_t timestamp_t;
 
 typedef uintptr_t UINTPTR;
 
-//#define PLATFORM_DEBUG
+#define PLATFORM_DEBUG
+
+#define __DEVICE_OPEN_ONCE__
+//#define __USE_BUFFER_STACK__
 
 #define SDK_VERSION                                 (0x2305260C)
 /*
@@ -85,10 +88,19 @@ typedef uintptr_t UINTPTR;
 
 #define TSCB_ADDRESS                            (0x44C00000)
 
-#define DUMPREG_GENERAL 0x1
-#define DUMPREG_RX      0x2
-#define DUMPREG_TX      0x4
-#define DUMPREG_ALL     0x7
+#define DUMPREG_GENERAL 0x01
+#define DUMPREG_RX      0x02
+#define DUMPREG_TX      0x04
+#define XDMA_REG_H2C    0x08
+#define XDMA_REG_C2H    0x10
+#define XDMA_REG_IRQ    0x20
+#define XDMA_REG_CON    0x40
+#define XDMA_REG_H2CS   0x80
+#define XDMA_REG_C2HS   0x100
+#define XDMA_REG_SCOM   0x200
+#define XDMA_REG_MSIX   0x400
+#define DUMPREG_ALL     0x7FF
+
 
 struct rx_metadata {
     uint64_t timestamp;
