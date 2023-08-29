@@ -1,4 +1,4 @@
-RELEASE: 2023.1.2
+RELEASE: 2023.1.3
 =================
 
 This release is validated
@@ -139,6 +139,10 @@ CPM5
 2023.1.2 Updates
 ----------------
 - Added support for Fedora37 & CentOS9 distros.
+
+2023.1.3 Updates
+----------------
+- dma-ctl application is updated to append q params during queue start.
 
 KNOWN ISSUES:
 =============
