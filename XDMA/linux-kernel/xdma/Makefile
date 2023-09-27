@@ -43,6 +43,18 @@ clean:
 	@/bin/rm -f *.ko modules.order *.mod.c *.o *.o.ur-safe .*.o.cmd
 
 install: all
-	$(MAKE) -C $(BUILDSYSTEM_DIR) M=$(PWD) modules_install
+	@rm -f /lib/modules/5.15.0-67-generic/extra/xdma.ko
+	@echo "installing kernel modules to /lib/modules/$(shell uname -r)/xdma ..."
+	@mkdir -p -m 755 /lib/modules/$(shell uname -r)/xdma
+	@install -v -m 644 *.ko /lib/modules/$(shell uname -r)/xdma
+	@depmod -a || true
+
+uninstall:
+	@echo "Un-installing /lib/modules/$(shell uname -r)/xdma ..."
+	@/bin/rm -rf /lib/modules/$(shell uname -r)/xdma
+	@depmod -a
+
+
+
 
 endif
