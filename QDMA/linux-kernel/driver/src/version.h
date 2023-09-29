@@ -29,10 +29,10 @@
 #define DRV_MODULE_NAME		"qdma-pf"
 #define DRV_MODULE_DESC		"Xilinx QDMA PF Reference Driver"
 #endif /* #ifdef __QDMA_VF__ */
-#define DRV_MODULE_RELDATE	"Jan 2023"
+#define DRV_MODULE_RELDATE	"Sept 2023"
 
 #define DRV_MOD_MAJOR		2023
-#define DRV_MOD_MINOR		1
+#define DRV_MOD_MINOR		2
 #define DRV_MOD_PATCHLEVEL	0
 
 #define DRV_MODULE_VERSION      \

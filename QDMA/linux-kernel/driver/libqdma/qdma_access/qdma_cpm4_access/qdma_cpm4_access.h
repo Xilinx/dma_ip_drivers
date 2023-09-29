@@ -163,6 +163,10 @@ struct qdma_cpm4_hw_err_info {
 
 int qdma_cpm4_init_ctxt_memory(void *dev_hndl);
 
+#ifdef TANDEM_BOOT_SUPPORTED
+int qdma_cpm4_init_st_ctxt(void *dev_hndl);
+#endif
+
 int qdma_cpm4_qid2vec_conf(void *dev_hndl, uint8_t c2h, uint16_t hw_qid,
 			 struct qdma_qid2vec *ctxt,
 			 enum qdma_hw_access_type access_type);

@@ -13,7 +13,7 @@
 #define __DMA_PERF_VERSION_H
 
 #define PROGNAME "dma-perf"
-#define VERSION "2023.1.2"
+#define VERSION "2023.2.0"
 #define COPYRIGHT "Copyright (c) 2022-2023 Advanced Micro Devices Inc."
 
 #endif

@@ -131,7 +131,7 @@ static void dump_dev_global_csr(struct xcmd_info *xcmd)
 		printf("%d ",xcmd->resp.csr.c2h_cnt_th[i]);
 	printf("\nC2H Buf Sizes:");
 	for ( int i=0; i < QDMA_GLOBAL_CSR_ARRAY_SZ; i++)
-		printf("%d ",xcmd->resp.csr.c2h_cnt_th[i]);
+		printf("%d ",xcmd->resp.csr.c2h_buf_sz[i]);
 	printf("\nWriteback Interval:%d\n",xcmd->resp.csr.wb_intvl);
 
 }

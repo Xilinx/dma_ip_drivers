@@ -12,7 +12,7 @@
 #define __DMA_XFER_VERSION_H
 
 #define PROGNAME "dma-xfer"
-#define VERSION "2023.1.2"
+#define VERSION "2023.2.0"
 #define COPYRIGHT "Copyright (c) 2022-2023 Advanced Micro Devices Inc."
 
 #endif

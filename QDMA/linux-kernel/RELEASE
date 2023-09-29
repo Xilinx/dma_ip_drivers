@@ -1,4 +1,4 @@
-RELEASE: 2023.1.3
+RELEASE: 2023.2.0
 =================
 
 This release is validated
@@ -6,6 +6,7 @@ This release is validated
 	- On VCU1525 for QDMA4.0 2020.2 example design
 	- On VCU1525 for QDMA3.1 2019.2 example design
 	- On XCVP1202 for CPM5 2022.1 example design
+	- On XCVC1902 for CPM4 2022.1 example design
 
 SUPPORTED FEATURES:
 ===================
@@ -144,8 +145,18 @@ CPM5
 ----------------
 - dma-ctl application is updated to append q params during queue start.
 
+2023.2.0 Updates
+----------------
+- Added driver support for CPM4 design.
+
+
 KNOWN ISSUES:
 =============
+- CPM4 Only
+	- Due to HW PDI limitaion,
+		- VF is supported in poll mode only.
+		- VF functionality on VM is not verfied.
+
 - Observed MMAP failure for applications when device is binded QDMA Linux driver on Fedora37. Fix will be availbale in upcoming release.
 
 - CPM5 Only
