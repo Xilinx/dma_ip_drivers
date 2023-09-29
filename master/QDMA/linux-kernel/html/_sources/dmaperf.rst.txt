@@ -2,7 +2,7 @@
 DMA Performance Tool (dma-perf)
 *******************************
 
-Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic. This tool is used with AXI Stream Loopback Example Design only.
+Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic. This tool is used with AXI Stream with Completion Example Design only.
 
 =====
 Note:
