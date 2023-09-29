@@ -337,6 +337,34 @@ int rte_pmd_qdma_dbg_qdevice(uint8_t port_id);
 
 /******************************************************************************/
 /**
+ * Dumps the qdma Tx and Rx queue stats for the given queue ID
+ *
+ * @param	port_id Port ID
+ * @param	queue  Queue ID relative to the Port
+ *
+ * @return	'0' on success and "< 0" on failure
+ *
+ * @note	None
+ * @ingroup rte_pmd_qdma_func
+ ******************************************************************************/
+int rte_pmd_qdma_qstats(uint8_t port_id, uint16_t queue);
+
+/******************************************************************************/
+/**
+ * Clear the qdma Tx and Rx queue stats for the given queue ID
+ *
+ * @param	port_id Port ID
+ * @param	queue  Queue ID relative to the Port
+ *
+ * @return	'0' on success and "< 0" on failure
+ *
+ * @note	None
+ * @ingroup rte_pmd_qdma_func
+ ******************************************************************************/
+int rte_pmd_qdma_qstats_clear(uint8_t port_id, uint16_t queue);
+
+/******************************************************************************/
+/**
  * Dumps the queue contexts and queue specific SW
  * structures for the given queue ID
  *

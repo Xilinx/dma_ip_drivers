@@ -1139,18 +1139,8 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 		return -EINVAL;
 	}
 
-	if (dma_priv->dev_cap.cmpt_trig_count_timer) {
-		/* Setting default Mode to
-		 * RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT
-		 */
-		dma_priv->trigger_mode =
-				RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT;
-	} else {
-		/* Setting default Mode to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER */
-		dma_priv->trigger_mode = RTE_PMD_QDMA_TRIG_MODE_USER_TIMER;
-	}
-	if (dma_priv->trigger_mode == RTE_PMD_QDMA_TRIG_MODE_USER_TIMER_COUNT)
-		dma_priv->timer_count = DEFAULT_TIMER_CNT_TRIG_MODE_COUNT_TIMER;
+	/* Setting default Mode to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER */
+	dma_priv->trigger_mode = RTE_PMD_QDMA_TRIG_MODE_USER_TIMER;
 
 	dma_priv->reset_state = RESET_STATE_IDLE;
 

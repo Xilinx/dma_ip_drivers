@@ -61,9 +61,10 @@ DPDK_21 {
 	rte_pmd_qdma_mm_cmpt_process;
 	rte_pmd_qdma_dev_cmptq_stop;
 	rte_pmd_qdma_dbg_qdevice;
+	rte_pmd_qdma_qstats;
+	rte_pmd_qdma_qstats_clear;
 	rte_pmd_qdma_dev_close;
 	rte_pmd_qdma_dev_fp_ops_config;
-
 
 	local: *;
 };
@@ -98,6 +99,8 @@ DPDK_22 {
         rte_pmd_qdma_mm_cmpt_process;
         rte_pmd_qdma_dev_cmptq_stop;
         rte_pmd_qdma_dbg_qdevice;
+        rte_pmd_qdma_qstats;
+        rte_pmd_qdma_qstats_clear;
         rte_pmd_qdma_dev_close;
         rte_pmd_qdma_dev_fp_ops_config;
         rte_pmd_qdma_compat_pci_write_reg;
@@ -108,9 +111,8 @@ DPDK_22 {
         rte_pmd_qdma_get_dev_id;
         rte_pmd_qdma_dev_started;
         rte_pmd_qdma_eth_dev_to_pci;
-	rte_pmd_qdma_get_device;
+		rte_pmd_qdma_get_device;
         rte_pmd_qdma_validate_dev;
-
 
         local: *;
 };
@@ -145,6 +147,8 @@ DPDK_23 {
         rte_pmd_qdma_mm_cmpt_process;
         rte_pmd_qdma_dev_cmptq_stop;
         rte_pmd_qdma_dbg_qdevice;
+        rte_pmd_qdma_qstats;
+        rte_pmd_qdma_qstats_clear;
         rte_pmd_qdma_dev_close;
         rte_pmd_qdma_dev_fp_ops_config;
         rte_pmd_qdma_compat_pci_write_reg;
@@ -155,9 +159,8 @@ DPDK_23 {
         rte_pmd_qdma_get_dev_id;
         rte_pmd_qdma_dev_started;
         rte_pmd_qdma_eth_dev_to_pci;
-	rte_pmd_qdma_get_device;
+		rte_pmd_qdma_get_device;
         rte_pmd_qdma_validate_dev;
-
 
         local: *;
 };

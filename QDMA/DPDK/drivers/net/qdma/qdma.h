@@ -108,6 +108,15 @@
 
 #define DEFAULT_QDMA_CMPT_DESC_LEN (RTE_PMD_QDMA_CMPT_DESC_LEN_8B)
 
+#define LATENCY_MAX_QUEUES 4
+#define LATENCY_CNT 20
+
+#ifdef LATENCY_MEASUREMENT
+extern const struct rte_memzone *txq_lat_buf_mz;
+extern const struct rte_memzone *rxq_lat_buf_mz;
+extern double (*h2c_pidx_to_hw_cidx_lat)[LATENCY_CNT];
+extern double (*c2h_pidx_to_cmpt_pidx_lat)[LATENCY_CNT];
+#endif
 
 enum dma_data_direction {
 	DMA_BIDIRECTIONAL = 0,
@@ -134,6 +143,45 @@ struct __attribute__ ((packed)) wb_status
 struct qdma_pkt_stats {
 	uint64_t pkts;
 	uint64_t bytes;
+};
+
+struct qdma_pkt_lat {
+	double prev;
+	double curr;
+};
+
+struct qdma_txq_stats {
+	uint16_t pidx;
+	uint16_t wrb_cidx;
+	uint16_t txq_tail;
+	uint16_t in_use_desc;
+	uint16_t nb_pkts;
+	uint16_t lat_cnt;
+	uint32_t ring_wrap_cnt;
+	uint32_t txq_full_cnt;
+#ifdef LATENCY_MEASUREMENT
+	uint32_t wrb_cidx_cnt_no_change;
+	uint32_t wrb_cidx_cnt_lt_8;
+	uint32_t wrb_cidx_cnt_8_to_32;
+	uint32_t wrb_cidx_cnt_32_to_64;
+	uint32_t wrb_cidx_cnt_gt_64;
+	struct qdma_pkt_lat pkt_lat;
+#endif
+};
+
+struct qdma_rxq_stats {
+	uint16_t pidx;
+	uint16_t wrb_pidx;
+	uint16_t wrb_cidx;
+	uint16_t rxq_cmpt_tail;
+	uint16_t pending_desc;
+	uint16_t lat_cnt;
+	uint32_t ring_wrap_cnt;
+	uint32_t mbuf_avail_cnt;
+	uint32_t mbuf_in_use_cnt;
+#ifdef LATENCY_MEASUREMENT
+	struct qdma_pkt_lat pkt_lat;
+#endif
 };
 
 /*
@@ -185,6 +233,7 @@ struct qdma_rx_queue {
 	struct qdma_q_pidx_reg_info	q_pidx_info;
 	struct qdma_q_cmpt_cidx_reg_info cmpt_cidx_info;
 	struct qdma_pkt_stats	stats;
+	struct qdma_rxq_stats   qstats;
 
 	struct rte_eth_dev	*dev;
 
@@ -257,6 +306,7 @@ struct qdma_tx_queue {
 	int8_t				ringszidx;
 
 	struct qdma_pkt_stats stats;
+	struct qdma_txq_stats qstats;
 
 	uint64_t			ep_addr;
 	uint32_t			queue_id; /* TX queue index. */
@@ -379,13 +429,13 @@ int qdma_identify_bars(struct rte_eth_dev *dev);
 int qdma_get_hw_version(struct rte_eth_dev *dev);
 
 /* implemented in rxtx.c */
-uint16_t qdma_recv_pkts_st(void *rx_queue, struct rte_mbuf **rx_pkts,
+uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 				uint16_t nb_pkts);
-uint16_t qdma_recv_pkts_mm(void *rx_queue, struct rte_mbuf **rx_pkts,
+uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq, struct rte_mbuf **rx_pkts,
 				uint16_t nb_pkts);
-uint16_t qdma_xmit_pkts_st(void *tx_queue, struct rte_mbuf **tx_pkts,
+uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 				uint16_t nb_pkts);
-uint16_t qdma_xmit_pkts_mm(void *tx_queue, struct rte_mbuf **tx_pkts,
+uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq, struct rte_mbuf **tx_pkts,
 				uint16_t nb_pkts);
 
 #ifdef TEST_64B_DESC_BYPASS
@@ -427,22 +477,24 @@ struct rte_mbuf *prepare_segmented_packet(struct qdma_rx_queue *rxq,
 		uint16_t pkt_length, uint16_t *tail);
 int reclaim_tx_mbuf(struct qdma_tx_queue *txq,
 		uint16_t cidx, uint16_t free_cnt);
-int qdma_extract_st_cmpt_info(void *ul_cmpt_entry, void *cmpt_info);
 int qdma_ul_extract_st_cmpt_info(void *ul_cmpt_entry, void *cmpt_info);
 
 /* Transmit API for Streaming mode */
 uint16_t qdma_xmit_pkts_vec(void *tx_queue,
 		struct rte_mbuf **tx_pkts, uint16_t nb_pkts);
-uint16_t qdma_xmit_pkts_st_vec(void *tx_queue,
+uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 		struct rte_mbuf **tx_pkts, uint16_t nb_pkts);
 
 /* Receive API for Streaming mode */
 uint16_t qdma_recv_pkts_vec(void *rx_queue,
 		struct rte_mbuf **rx_pkts, uint16_t nb_pkts);
-uint16_t qdma_recv_pkts_st_vec(void *rx_queue,
+uint16_t qdma_recv_pkts_st_vec(struct qdma_rx_queue *rxq,
 		struct rte_mbuf **rx_pkts, uint16_t nb_pkts);
 
 void __rte_cold qdma_set_tx_function(struct rte_eth_dev *dev);
 void __rte_cold qdma_set_rx_function(struct rte_eth_dev *dev);
+
+int qdma_tx_qstats_clear(struct rte_eth_dev *dev, uint16_t queue);
+int qdma_rx_qstats_clear(struct rte_eth_dev *dev, uint16_t queue);
 
 #endif /* ifndef __QDMA_H__ */

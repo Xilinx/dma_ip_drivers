@@ -219,6 +219,10 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 	user_bar_idx = pinfo[port_id].user_bar_idx;
 	PciWrite(user_bar_idx, C2H_ST_QID_REG, (queueid + qbase), port_id);
 
+	reg_val = PciRead(user_bar_idx, C2H_CONTROL_REG, port_id);
+	reg_val &= C2H_CONTROL_REG_MASK;
+	loopback_en = reg_val & ST_LOOPBACK_EN;
+
 	/* As per  hardware design a single completion will point to atmost
 	 * 7 descriptors. So If the size of the buffer in descriptor is 4KB ,
 	 * then a single completion which corresponds a packet can  give you
@@ -231,7 +235,14 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 	 * packets, which needs to be combined as one in application.
 	 */
 
-	max_completion_size = pinfo[port_id].buff_size * 7;
+	if (!loopback_en)
+		max_completion_size = pinfo[port_id].buff_size * 7;
+	else {
+		/* For loopback case, each packet handles 4KB only,
+		 * so limiting to buffer size.
+		 */
+		max_completion_size = pinfo[port_id].buff_size;
+	}
 
 	/* Calculate number of packets to receive and programming AXI Master Lite bar(user bar) */
 	if (input_size == 0) /* zerobyte support uses one descriptor */
@@ -247,9 +258,6 @@ int do_recv_st(int port_id, int fd, int queueid, int input_size)
 		only_pkt = 1;
 	}
 
-	reg_val = PciRead(user_bar_idx, C2H_CONTROL_REG, port_id);
-	reg_val &= C2H_CONTROL_REG_MASK;
-	loopback_en = reg_val & ST_LOOPBACK_EN;
 	if (!loopback_en) {
 		PciWrite(user_bar_idx, C2H_PACKET_COUNT_REG, num_pkts, port_id);
 
@@ -876,6 +884,14 @@ int port_init(int port_id, int num_queues, int st_queues,
 	 * consumed by application or sent to Tx
 	 */
 	nb_buff += ((NUM_TX_PKTS) * num_queues);
+
+	/*
+	* rte_mempool_create_empty() has sanity check to refuse large cache
+	* size compared to the number of elements.
+	* CACHE_FLUSHTHRESH_MULTIPLIER (1.5) is defined in a C file, so using a
+	* constant number 2 instead.
+	*/
+	nb_buff = RTE_MAX(nb_buff, MP_CACHE_SZ * 2);
 
 	mbuf_pool = rte_pktmbuf_pool_create(pinfo[port_id].mem_pool, nb_buff,
 			MP_CACHE_SZ, 0, buff_size +

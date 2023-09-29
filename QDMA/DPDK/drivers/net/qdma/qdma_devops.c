@@ -379,13 +379,6 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	rxq->dev = dev;
 	rxq->st_mode = qdma_dev->q_info[rx_queue_id].queue_mode;
 
-	/* Override rx_pkt_burst with direct call based on st or mm mode */
-	if (rxq->st_mode) {
-		dev->rx_pkt_burst = (qdma_dev->rx_vec_allowed) ?
-			&qdma_recv_pkts_st_vec : &qdma_recv_pkts_st;
-	} else
-		dev->rx_pkt_burst = &qdma_recv_pkts_mm;
-
 	rxq->nb_rx_desc = (nb_rx_desc + 1);
 	/* <= 2018.2 IP
 	 * double the cmpl ring size to avoid run out of cmpl entry while
@@ -649,6 +642,16 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 
 	dev->data->rx_queues[rx_queue_id] = rxq;
 
+#ifdef LATENCY_MEASUREMENT
+	err = qdma_rx_qstats_clear(dev, rx_queue_id);
+	if (err) {
+		PMD_DRV_LOG(ERR,
+			"Failed to clear QDMA Rx queue stats for qid: %d\n",
+			rx_queue_id);
+		return err;
+	}
+#endif
+
 	return 0;
 
 rx_setup_err:
@@ -758,13 +761,6 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 	}
 
 	txq->st_mode = qdma_dev->q_info[tx_queue_id].queue_mode;
-
-	/* Override tx_pkt_burst with direct call based on st or mm mode */
-	if (txq->st_mode) {
-		dev->tx_pkt_burst = (qdma_dev->tx_vec_allowed) ?
-			&qdma_xmit_pkts_st_vec : &qdma_xmit_pkts_st;
-	} else
-		dev->tx_pkt_burst = &qdma_xmit_pkts_mm;
 
 	txq->en_bypass = (qdma_dev->q_info[tx_queue_id].tx_bypass_mode) ? 1 : 0;
 	txq->bypass_desc_sz = qdma_dev->q_info[tx_queue_id].tx_bypass_desc_sz;
@@ -899,6 +895,16 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 
 	rte_spinlock_init(&txq->pidx_update_lock);
 	dev->data->tx_queues[tx_queue_id] = txq;
+
+#ifdef LATENCY_MEASUREMENT
+	err = qdma_tx_qstats_clear(dev, tx_queue_id);
+	if (err) {
+		PMD_DRV_LOG(ERR,
+			"Failed to clear QDMA Tx queue stats for qid: %d\n",
+			tx_queue_id);
+		return err;
+	}
+#endif
 
 	return 0;
 

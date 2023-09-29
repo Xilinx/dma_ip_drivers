@@ -1,0 +1,362 @@
+From aa6931cc32ac9c7baea453717a34816f01803536 Mon Sep 17 00:00:00 2001
+From: Suryanarayana Raju Sangani <ssangani@xilinx.com>
+Date: Mon, 19 Jun 2023 12:44:20 +0530
+Subject: [PATCH] Add QDMA xdebug to proc-info of dpdk-22.11
+
+Signed-off-by: Nikhil agarwal <nagarwal@xilinx.com>
+Signed-off-by: Prasad Pardeshi <prasadp@xilinx.com>
+Signed-off-by: Sangani Suryanarayana Raju <ssangani@xilinx.com>
+---
+ app/proc-info/main.c      | 195 ++++++++++++++++++++++++++++++++++++--
+ app/proc-info/meson.build |   2 +-
+ app/test-pmd/config.c     |   2 +
+ 3 files changed, 189 insertions(+), 10 deletions(-)
+ mode change 100644 => 100755 app/proc-info/main.c
+ mode change 100644 => 100755 app/proc-info/meson.build
+ mode change 100644 => 100755 app/test-pmd/config.c
+
+diff --git a/app/proc-info/main.c b/app/proc-info/main.c
+old mode 100644
+new mode 100755
+index 53e852a..eeb20e7
+--- a/app/proc-info/main.c
++++ b/app/proc-info/main.c
+@@ -32,6 +32,7 @@
+ #ifdef RTE_LIB_METRICS
+ #include <rte_metrics.h>
+ #endif
++#include <rte_pmd_qdma.h>
+ #include <rte_cycles.h>
+ #ifdef RTE_LIB_SECURITY
+ #include <rte_security.h>
+@@ -55,9 +56,31 @@
+ 	STATS_BDR_FMT, s, w, STATS_BDR_FMT)
+ 
+ /* mask of enabled ports */
+-static unsigned long enabled_port_mask;
++static uint64_t enabled_port_mask;
++/**< QID for queue context */
++static uint32_t qid;
++/**< desc dump type */
++static uint32_t desc_type;
++/**< QID for desc start value */
++static uint32_t start;
++/**< QID for desc end value */
++static uint32_t end;
++/**< Enable desc dump. */
++static uint32_t enable_desc_dump;
+ /* Enable stats. */
+ static uint32_t enable_stats;
++/**< Enable Device Structs */
++static uint32_t qdma_device;
++/**< Enable QDMA Tx and Rx queue stats */
++static uint32_t qdma_qstats;
++/**< Clear QDMA Tx and Rx queue stats */
++static uint32_t qdma_qstats_clear;
++/**< Enable Queue context and Queue structs. */
++static uint32_t queue_info;
++/**< Enable register field information. */
++static uint32_t reg_info;
++/**< Register address */
++static uint32_t reg_addr;
+ /* Enable xstats. */
+ static uint32_t enable_xstats;
+ /* Enable collectd format */
+@@ -76,6 +99,8 @@ static uint32_t reset_stats;
+ static uint32_t reset_xstats;
+ /* Enable memory info. */
+ static uint32_t mem_info;
++/**< Enable Global Errors . */
++static uint32_t qdma_csr_info;
+ /* Enable displaying xstat name. */
+ static uint32_t enable_xstats_name;
+ static char *xstats_name;
+@@ -138,8 +163,15 @@ proc_info_usage(const char *prgname)
+ {
+ 	printf("%s [EAL options] -- -p PORTMASK\n"
+ 		"  -m to display DPDK memory zones, segments and TAILQ information\n"
++		"  -g to display DPDK QDMA PMD global CSR info\n"
+ 		"  -p PORTMASK: hexadecimal bitmask of ports to retrieve stats for\n"
+ 		"  --stats: to display port statistics, enabled by default\n"
++		"  --qdevice: to display QDMA device structure\n"
++		"  --qstats: to display QDMA Tx and Rx queue stats\n"
++		"  --qstats_clr: to clear QDMA Tx and Rx queue stats\n"
++		"  --qinfo: to display QDMA queue context and queue structures\n"
++		"  --reg-info {reg_addr}: to display field info of a register at reg_addr offset\n"
++		"  --desc-dump {rx | tx | cmpt}: to dump QDMA queue descriptors\n"
+ 		"  --xstats: to display extended port statistics, disabled by "
+ 			"default\n"
+ #ifdef RTE_LIB_METRICS
+@@ -179,7 +211,7 @@ proc_info_usage(const char *prgname)
+ /*
+  * Parse the portmask provided at run time.
+  */
+-static int
++static int64_t
+ parse_portmask(const char *portmask)
+ {
+ 	char *end = NULL;
+@@ -196,6 +228,71 @@ parse_portmask(const char *portmask)
+ 	return 0;
+ }
+ 
++/*
++ *  * Parse the QID provided at run time.
++ **/
++static int
++parse_int(const char *id)
++{
++	char *end = NULL;
++	unsigned long val;
++
++	errno = 0;
++
++	/* parse hexadecimal string */
++	val = strtoul(id, &end, 10);
++	if ((id[0] == '\0') || (end == NULL) || (*end != '\0') ||
++			(errno != 0)) {
++		printf("%s ERROR parsing the QID\n", __func__);
++		return -1;
++	}
++
++	return val;
++}
++
++/*
++ * Parse the register address provided at run time.
++ */
++static int32_t
++parse_reg_addr(const char *addr)
++{
++	char *end = NULL;
++
++	errno = 0;
++
++	/* parse hexadecimal string */
++	reg_addr = strtoul(addr, &end, 16);
++	if ((addr[0] == '\0') || (end == NULL) || (*end != '\0') ||
++		(errno != 0)) {
++		printf("%s ERROR parsing the register address\n", __func__);
++		return -1;
++	}
++
++	if (reg_addr == 0)
++		return -1;
++
++	return reg_addr;
++}
++
++/*
++ *  * Parse the desc dump type provided at run time.
++ **/
++static int
++parse_desc_type(const char *type)
++{
++	if (!strcmp(type, "rx")) {
++		desc_type = RTE_PMD_QDMA_XDEBUG_DESC_C2H;
++	} else if (!strcmp(type, "tx")) {
++		desc_type = RTE_PMD_QDMA_XDEBUG_DESC_H2C;
++	} else if (!strcmp(type, "cmpt")) {
++		desc_type = RTE_PMD_QDMA_XDEBUG_DESC_CMPT;
++	} else {
++		printf("%s ERROR parsing the desc type\n", __func__);
++		return -1;
++	}
++	return 0;
++}
++
+ /*
+  * Parse ids value list into array
+  */
+@@ -273,11 +370,17 @@ proc_info_preparse_args(int argc, char **argv)
+ static int
+ proc_info_parse_args(int argc, char **argv)
+ {
+-	int opt;
++	int opt, ret;
+ 	int option_index;
+ 	char *prgname = argv[0];
+ 	static struct option long_option[] = {
+ 		{"stats", 0, NULL, 0},
++		{"qdevice", 0, NULL, 0},
++		{"qstats", 0, NULL, 0},
++		{"qstats_clr", 0, NULL, 0},
++		{"qinfo", 0, NULL, 0},
++		{"reg-info", required_argument, NULL, 1},
++		{"desc-dump", required_argument, NULL, 1},
+ 		{"stats-reset", 0, NULL, 0},
+ 		{"xstats", 0, NULL, 0},
+ #ifdef RTE_LIB_METRICS
+@@ -309,7 +412,7 @@ proc_info_parse_args(int argc, char **argv)
+ 		proc_info_usage(prgname);
+ 
+ 	/* Parse command line */
+-	while ((opt = getopt_long(argc, argv, "p:m",
++	while ((opt = getopt_long(argc, argv, "p:mq:gs:e:",
+ 			long_option, &option_index)) != EOF) {
+ 		switch (opt) {
+ 		/* portmask */
+@@ -322,11 +425,54 @@ proc_info_parse_args(int argc, char **argv)
+ 		case 'm':
+ 			mem_info = 1;
+ 			break;
++		case 'g':
++			qdma_csr_info = 1;
++			break;
++		case 'q':
++			ret = parse_int(optarg);
++			if (ret < 0) {
++				printf("Invalid queue\n");
++				return -1;
++			}
++			qid = ret;
++			break;
++		case 's':
++			ret = parse_int(optarg);
++			if (ret < 0) {
++				printf("Invalid start value\n");
++				return -1;
++			}
++			start = ret;
++			break;
++		case 'e':
++			ret = parse_int(optarg);
++			if (ret < 0) {
++				printf("Invalid end value\n");
++				return -1;
++			}
++			end = ret;
++			break;
+ 		case 0:
+ 			/* Print stats */
+ 			if (!strncmp(long_option[option_index].name, "stats",
+ 					MAX_LONG_OPT_SZ))
+ 				enable_stats = 1;
++			/* Print qdma device */
++			if (!strncmp(long_option[option_index].name, "qdevice",
++					MAX_LONG_OPT_SZ))
++				qdma_device = 1;
++			/* Print qdma Tx and Rx queue stats */
++			if (!strncmp(long_option[option_index].name, "qstats",
++					MAX_LONG_OPT_SZ))
++				qdma_qstats = 1;
++                        /* Clear qdma Tx and Rx queue stats */
++                        if (!strncmp(long_option[option_index].name, "qstats_clr",
++                                        MAX_LONG_OPT_SZ))
++                                qdma_qstats_clear = 1;
++			/* Print queue context and queue Structures*/
++			if (!strncmp(long_option[option_index].name, "qinfo",
++					MAX_LONG_OPT_SZ))
++				queue_info = 1;
+ 			/* Print xstats */
+ 			else if (!strncmp(long_option[option_index].name, "xstats",
+ 					MAX_LONG_OPT_SZ))
+@@ -425,6 +571,24 @@ proc_info_parse_args(int argc, char **argv)
+ 					return -1;
+ 				}
+ 				enable_shw_tx_desc_dump = 1;
++			} else if (!strncmp(long_option[option_index].name,
++					"desc-dump",
++					MAX_LONG_OPT_SZ)) {
++				if (parse_desc_type(optarg) < 0) {
++					printf("desc-dump parse error.\n");
++					proc_info_usage(prgname);
++					return -1;
++				}
++				enable_desc_dump = 1;
++			} else if (!strncmp(long_option[option_index].name,
++					"reg-info",
++					MAX_LONG_OPT_SZ)) {
++				if (parse_reg_addr(optarg) < 0) {
++					printf("reg-info parse error.\n");
++					proc_info_usage(prgname);
++					return -1;
++				}
++				reg_info = 1;
+ 			}
+ 			break;
+ 		default:
+@@ -1791,7 +1955,6 @@ main(int argc, char **argv)
+ 
+ 	if (mem_info) {
+ 		meminfo_display();
+-		return 0;
+ 	}
+ 
+ 	nb_ports = rte_eth_dev_count_avail();
+@@ -1807,7 +1970,7 @@ main(int argc, char **argv)
+ 	for (i = 0; i < RTE_MAX_ETHPORTS; i++) {
+ 
+ 		/* Skip if port is not in mask */
+-		if ((enabled_port_mask & (1ul << i)) == 0)
++		if ((enabled_port_mask & ((uint64_t)1 << i)) == 0)
+ 			continue;
+ 
+ 		/* Skip if port is unused */
+@@ -1832,6 +1995,23 @@ main(int argc, char **argv)
+ 			metrics_display(i);
+ #endif
+ 
++		else if (qdma_csr_info)
++			rte_pmd_qdma_dbg_regdump(i);
++		else if (qdma_device)
++			rte_pmd_qdma_dbg_qdevice(i);
++		else if (qdma_qstats)
++			rte_pmd_qdma_qstats(i, qid);
++                else if (qdma_qstats_clear)
++                        rte_pmd_qdma_qstats_clear(i, qid);
++		else if (queue_info)
++			rte_pmd_qdma_dbg_qinfo(i, qid);
++		else if (reg_info)
++			rte_pmd_qdma_dbg_reg_info_dump(i,
++				1, reg_addr);
++		else if (enable_desc_dump)
++			rte_pmd_qdma_dbg_qdesc(i, qid,
++				start, end, desc_type);
++
+ 		if (enable_shw_rx_desc_dump)
+ 			nic_rx_descriptor_display(i, &rx_desc_param);
+ 		if (enable_shw_tx_desc_dump)
+@@ -1870,9 +2050,6 @@ main(int argc, char **argv)
+ 	if (enable_shw_module_eeprom)
+ 		show_module_eeprom_info();
+ 
+-	RTE_ETH_FOREACH_DEV(i)
+-		rte_eth_dev_close(i);
+-
+ 	ret = rte_eal_cleanup();
+ 	if (ret)
+ 		printf("Error from rte_eal_cleanup(), %d\n", ret);
+diff --git a/app/proc-info/meson.build b/app/proc-info/meson.build
+old mode 100644
+new mode 100755
+index 1563ce6..340b9ab
+--- a/app/proc-info/meson.build
++++ b/app/proc-info/meson.build
+@@ -8,7 +8,7 @@ if is_windows
+ endif
+ 
+ sources = files('main.c')
+-deps += ['ethdev', 'security']
++deps += ['ethdev', 'metrics', 'security', 'net_qdma']
+ if dpdk_conf.has('RTE_LIB_METRICS')
+     deps += 'metrics'
+ endif
+diff --git a/app/test-pmd/config.c b/app/test-pmd/config.c
+old mode 100644
+new mode 100755
+index acccb6b..6d51d62
+--- a/app/test-pmd/config.c
++++ b/app/test-pmd/config.c
+@@ -58,6 +58,8 @@
+ #include "testpmd.h"
+ #include "cmdline_mtr.h"
+ 
++#include <ethdev_driver.h>
++
+ #define ETHDEV_FWVERS_LEN 32
+ 
+ #ifdef CLOCK_MONOTONIC_RAW /* Defined in glibc bits/time.h */
+-- 
+2.25.1
+

@@ -477,7 +477,48 @@ Commands supported by the qdma_testapp CLI
 
 	The keyboard keys Ctrl and D when pressed together quits the application.
 
+Instructions on how to use proc-info test for driver debugging:
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+1. Apply the below patch on top of the code changes mentioned in the dpdk driver documentation page and build the dpdk source code.
+	patch -p1 < 0001-Add-QDMA-xdebug-to-proc-info-of-dpdk-22.11.patch
+
+2. Run the testpmd application as primary application on one linux terminal
+	./build/app/dpdk-testpmd -l 1-17 -n 4 -a 65:00.0,desc_prefetch=1,cmpt_desc_len=16 --log-level=3 -- --burst=256 -i --nb-cores=1 --rxq=1 --txq=1 --forward-mode=io --rxd=2048 --txd=2048 --mbcache=512 --mbuf-size=4096
+
+3. Run the proc info as secondary application on another linux terminal as mentioned below with diferent port combinations.
+One port:
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 -g
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --qdevice
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --qinfo
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --qstats_clr
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --qstats
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --desc-dump tx
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --desc-dump rx
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --desc-dump cmpt
+	./build/app/dpdk-proc-info -a 81:00.0 --log-level=7 -- -p 1 -q 0 --stats
+Two ports:
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 -g
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --qdevice
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --qinfo
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --qstats_clr
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --qstats
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --desc-dump tx
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --desc-dump rx
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --desc-dump cmpt
+	./build/app/dpdk-proc-info -a 81:00.0, -a 81:00.1, --log-level=7 -- -p 3 -q 0 --stats
+4. Available commands for proc info are mentioned below.
+		-m to display DPDK memory zones, segments and TAILQ information
+		-g to display DPDK QDMA PMD global CSR info
+		-p PORTMASK: hexadecimal bitmask of ports to retrieve stats for
+		--stats: to display port statistics, enabled by default
+		--qdevice: to display QDMA device structure
+		--qinfo: to display QDMA queue context and queue structures
+		--qstats: to display QDMA Tx and Rx queue stats
+		--qstats_clr: to clear QDMA Tx and Rx queue stats
+		--desc-dump {rx | tx | cmpt}: to dump QDMA queue descriptors
+		--xstats: to display extended port statistics, disabled by default
+		--metrics: to display derived metrics of the ports, disabled by
 
 
 

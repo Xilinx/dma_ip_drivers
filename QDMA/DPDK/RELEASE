@@ -1,4 +1,4 @@
-RELEASE: 2023.1.2
+RELEASE: 2023.2.0
 =================
 
 This release is based on DPDK v20.11, v21.11 and v22.11 and
@@ -9,6 +9,7 @@ This release is validated for
 	- On VCU1525 for QDMA4.0 2020.2 example design
 	- On VCU1525 for QDMA3.1 2019.2 example design
 	- On XCVP1202 for CPM5 2022.1 example design
+	- On XCVC1902 for CPM4 2022.1 example design
 
 This release includes patch files for dpdk-pktgen v20.12.0 and v22.04.1 that extends
 dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
@@ -125,8 +126,20 @@ CPM5
 ----------------
 - Optimized dpdk PMD and HW register settings for CPM5 performance improvements
 
+2023.2.0 Updates
+----------------
+- Added driver support for CPM4 design.
+- Added support for Tx and Rx queue statistics to enhance debugging capabilities
+- Added support for latency measurements in Tx and Rx data path to enhance debugging capabilities
+
 KNOWN ISSUE:
 ============
+- CPM4:
+	- HW pdi limitation
+		- VF functionality with vfio-pci on host is not verified
+		- VF functionality on VM is not verified
+		- Forwarding performance numbers are not reaching 100Gbps and capping at 98.8Gbps
+
 - CPM5:
 	- Smaller packet forwarding performance optimizations are in progress and report will be updated in subsequent releases
 
