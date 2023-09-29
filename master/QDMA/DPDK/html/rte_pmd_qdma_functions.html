@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.1',
+              VERSION:'2023.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.1
+                2023.2
               </div>
             
           
@@ -517,6 +517,66 @@
 <tbody valign="top">
 <tr class="row-odd"><td>port_id</td>
 <td>Port ID</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>‘0’ on success and “&lt; 0” on failure</p>
+</div>
+<div class="section" id="rte-pmd-qdma-qstats">
+<span id="cid-rte-pmd-qdma-qstats"></span><span id="doxid-group-rte-pmd-qdma-func-1gaace97bc00567c00625f69058b2769e5e"></span><h2>rte_pmd_qdma_qstats<a class="headerlink" href="#rte-pmd-qdma-qstats" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">rte_pmd_qdma_qstats</span> <span class="p">(</span>
+    <span class="kt">uint8_t</span> <span class="n">port_id</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">queue</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>Dumps the qdma Tx and Rx queue stats for the given queue ID</p>
+<p>None</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>port_id</td>
+<td>Port ID</td>
+</tr>
+<tr class="row-even"><td>queue</td>
+<td>Queue ID relative to the Port</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>‘0’ on success and “&lt; 0” on failure</p>
+</div>
+<div class="section" id="rte-pmd-qdma-qstats-clear">
+<span id="cid-rte-pmd-qdma-qstats-clear"></span><span id="doxid-group-rte-pmd-qdma-func-1ga26176c8cb1153f531dea4976f14c1582"></span><h2>rte_pmd_qdma_qstats_clear<a class="headerlink" href="#rte-pmd-qdma-qstats-clear" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">rte_pmd_qdma_qstats_clear</span> <span class="p">(</span>
+    <span class="kt">uint8_t</span> <span class="n">port_id</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">queue</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p>Clear the qdma Tx and Rx queue stats for the given queue ID</p>
+<p>None</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>port_id</td>
+<td>Port ID</td>
+</tr>
+<tr class="row-even"><td>queue</td>
+<td>Queue ID relative to the Port</td>
 </tr>
 </tbody>
 </table>
@@ -1277,7 +1337,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on April 28, 2023.
+        Last updated on September 29, 2023.
       </span>
 
     </p>

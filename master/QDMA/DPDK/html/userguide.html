@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.1',
+              VERSION:'2023.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.1
+                2023.2
               </div>
             
           
@@ -546,7 +546,7 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 </div>
 <div class="section" id="driver-binding-with-vfio-pci">
 <h3>Driver binding with vfio-pci<a class="headerlink" href="#driver-binding-with-vfio-pci" title="Permalink to this headline">¶</a></h3>
-<p>vfio-pci doesn’t provide sysfs interface to enable VFs. Hence, we first bind PFs with igb_uio and enable VFs and then unbind from igb_uio to bind with vfio-pci.</p>
+<p>For linux kernel versions prior to 5.0, vfio-pci doesn’t provide sysfs interface to enable VFs. Hence, we first bind PFs with igb_uio and enable VFs and then unbind from igb_uio to bind with vfio-pci.</p>
 <p>Execute steps 1 to 6 of <a class="reference internal" href="#run-dpdk"><span class="std std-ref">Running the DPDK software test application</span></a> to bind PFs with igb_uio and enable VFs.</p>
 <p>Now, unbind PFs from igb_uio driver and bind PFs and VFs to vfio-pci driver.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -u 81:00.0
@@ -565,6 +565,38 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 # ../../usertools/dpdk-devbind.py -b vfio-pci 81:17.4
 </pre></div>
 </div>
+<p>Starting from Linux kernel version 5.7 and later, the vfio-pci module has been enhanced to fully support VFs. This includes the capability to create VFs seamlessly via the sysfs interface after binding the PF to the vfio-pci module. The following steps provide guidance on VF creation.</p>
+<ol class="arabic simple">
+<li>Generate the VF token by uuid command</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>14d63f20-8445-11ea-8900-1f9ce7d5650c
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li>Load the vfio-pci module with enable_sriov parameter set</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>sudo modprobe vfio-pci enable_sriov=1
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li>Alternatively, pass the enable_sriov parameter through the sysfs if the module is already loaded or is built-in:</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>echo 1 | sudo tee /sys/module/vfio_pci/parameters/enable_sriov
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li>Bind the PCI devices to vfio-pci driver</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>../../usertools/dpdk-devbind.py -b vfio-pci 0000:81:00.0
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li>Create the desired number of VF devices</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>echo 2 &gt; /sys/bus/pci/devices/0000:81:00.0/sriov_numvfs
+</pre></div>
+</div>
+<p>Please note that between Linux kernel versions 5.0 and 5.7, there have been observed issues when unbinding PF after creating VFs using igb_uio. This process may leave SR-IOV enabled, potentially causing compatibility challenges with newer kernel versions that incorporate vfio-pci as a built-in module. To mitigate this concern, we recommend considering an upgrade to kernel version 5.7 or a more recent release, as these versions have addressed these issues and offer improved compatibility.</p>
 </div>
 </div>
 <div class="section" id="controlling-and-configuring-the-qdma-ip">
@@ -1039,7 +1071,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on April 28, 2023.
+        Last updated on September 29, 2023.
       </span>
 
     </p>

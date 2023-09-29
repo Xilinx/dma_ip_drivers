@@ -120,7 +120,7 @@ To bind with VFIO, enable IOMMU in the grub file as below
 Driver binding with vfio-pci
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-vfio-pci doesn't provide sysfs interface to enable VFs. Hence, we first bind PFs with igb_uio and enable VFs and then unbind from igb_uio to bind with vfio-pci.
+For linux kernel versions prior to 5.0, vfio-pci doesn't provide sysfs interface to enable VFs. Hence, we first bind PFs with igb_uio and enable VFs and then unbind from igb_uio to bind with vfio-pci.
 
 Execute steps 1 to 6 of :ref:`run_dpdk` to bind PFs with igb_uio and enable VFs.
 
@@ -143,7 +143,39 @@ Now, unbind PFs from igb_uio driver and bind PFs and VFs to vfio-pci driver.
 	# ../../usertools/dpdk-devbind.py -b vfio-pci 81:10.0
 	# ../../usertools/dpdk-devbind.py -b vfio-pci 81:17.4
 
+Starting from Linux kernel version 5.7 and later, the vfio-pci module has been enhanced to fully support VFs. This includes the capability to create VFs seamlessly via the sysfs interface after binding the PF to the vfio-pci module. The following steps provide guidance on VF creation.
 
+1. Generate the VF token by uuid command
+
+::
+
+	14d63f20-8445-11ea-8900-1f9ce7d5650c
+
+2. Load the vfio-pci module with enable_sriov parameter set
+
+::
+
+	sudo modprobe vfio-pci enable_sriov=1
+
+3. Alternatively, pass the enable_sriov parameter through the sysfs if the module is already loaded or is built-in:
+
+::
+
+	echo 1 | sudo tee /sys/module/vfio_pci/parameters/enable_sriov
+
+4. Bind the PCI devices to vfio-pci driver
+
+::
+
+	../../usertools/dpdk-devbind.py -b vfio-pci 0000:81:00.0
+
+5. Create the desired number of VF devices
+
+::
+
+	echo 2 > /sys/bus/pci/devices/0000:81:00.0/sriov_numvfs
+
+Please note that between Linux kernel versions 5.0 and 5.7, there have been observed issues when unbinding PF after creating VFs using igb_uio. This process may leave SR-IOV enabled, potentially causing compatibility challenges with newer kernel versions that incorporate vfio-pci as a built-in module. To mitigate this concern, we recommend considering an upgrade to kernel version 5.7 or a more recent release, as these versions have addressed these issues and offer improved compatibility.
 
 Controlling and Configuring the QDMA IP
 ---------------------------------------
