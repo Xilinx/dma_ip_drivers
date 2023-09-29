@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.1',
+              VERSION:'2023.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.1
+                2023.2
               </div>
             
           
@@ -349,6 +349,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-qdma3-1-design">Features Supported only in QDMA3.1 Design</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-qdma4-0-design">Features Supported only in QDMA4.0 Design</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-versal-cpm5-design">Features Supported only in Versal CPM5 Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#features-supported-only-in-versal-cpm4-design">Features Supported only in Versal CPM4 Design</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#qdma-software-features">QDMA Software Features</a></li>
@@ -536,7 +537,37 @@
 <li><p class="first">Tandem boot support</p>
 </li>
 </ul>
-<p>For details on Hardware Features refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf">QDMA_Product_Guide</a>.</p>
+</div>
+<div class="section" id="features-supported-only-in-versal-cpm4-design">
+<h3>Features Supported only in Versal CPM4 Design<a class="headerlink" href="#features-supported-only-in-versal-cpm4-design" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">SRIOV with 4 Physical Functions (PF) and 252 Virtual Functions (VF)</p>
+</li>
+<li><p class="first">Descriptor Engine can be configured in Internal Mode only</p>
+</li>
+<li><p class="first">Supports 2048 queue sets for Physical Functions</p>
+<blockquote>
+<div><ul class="simple">
+<li>2048 H2C (Host-to-Card) descriptor rings</li>
+<li>2048 C2H (Card-to-Host) descriptor rings</li>
+<li>2048 completion rings</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Supports 256 queue sets for Virtual Functions</p>
+<blockquote>
+<div><ul class="simple">
+<li>256 H2C (Host-to-Card) descriptor rings</li>
+<li>256 C2H (Card-to-Host) descriptor rings</li>
+<li>256 Completion Rings</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Tandem boot support</p>
+</li>
+</ul>
+<p>For details on QDMA Hardware Features refer to <a class="reference external" href="https://docs.xilinx.com/viewer/book-attachment/n6fBd_xlVtlFE96gGACfJA/gbwHDtOsU98Gh7U6BMS5rg">QDMA_Soft_Product_Guide</a>.</p>
+<p>For details on CPM4 and CPM5 Hardware Features refer to <a class="reference external" href="https://docs.xilinx.com/viewer/book-attachment/bjqy7nDIaVBBMR9rpQMFyg/aru18LAWHcbJZJmSRvXf~A">QDMA_Hard_Product_Guide</a>.</p>
 </div>
 </div>
 <div class="section" id="qdma-software-features">
@@ -620,7 +651,7 @@ Interrupt aggregation is used for processing the completion ring.</dd>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on April 28, 2023.
+        Last updated on September 29, 2023.
       </span>
 
     </p>

@@ -2,14 +2,14 @@
 DMA Performance Tool (dma-perf)
 *******************************
 
-Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic. 
+Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic. This tool is used with AXI Stream Loopback Example Design only.
 
 =====
 Note:
 =====
 The name of the application in previous releases before 2020.1 was ``dmaperf``. If user installed ``dmaperf`` application aleady in ``/usr/local/sbin`` area, make sure to uninstall the old application(s). Using ``dmaperf`` aginst latest driver would lead to undefined behaviour and errors may be observed.
 
-Standard IO tools such as ``fio`` can be used for performing IO operations using the char device interface. 
+Standard IO tools such as ``fio`` can be used for performing IO operations using the char device interface.
 
 However, most of the tools are limited to sending / receiving 1 packet at a time and wait for the processing of the packet to complete, so they are not able to keep the driver/ HW busy enough for performance measurement. Although fio also supports asynchronous interfaces, it does not continuously submit IO requests while polling for the completion in parallel.
 
@@ -20,6 +20,55 @@ To overcome this limitation, Xilinx developed dma-perf tool. It leverages the as
 	usage: dma-perf [OPTIONS]
 
 	  -c (--config) config file that has configuration for IO
+
+
+Example
+
+::
+
+	[xilinx@]# dma-perf -c perf_config.txt
+	qdma65000-MM-0 H2C added.
+	Added 1 Queues.
+	Queues started, idx 0 ~ 0.
+	qdma65000-MM-0 C2H added.
+	Added 1 Queues.
+	Queues started, idx 0 ~ 0.
+	dmautils(16) threads
+	Exit Check: tid =8, req_sbmitted=1495488 req_completed=1495488 dir=H2C, intime=0 loop_count=0,
+	Exit Check: tid =13, req_sbmitted=1482752 req_completed=1482752 dir=C2H, intime=0 loop_count=0,
+	Exit Check: tid =14, req_sbmitted=1494720 req_completed=1494720 dir=H2C, intime=0 loop_count=0,
+	Exit Check: tid =8, req_sbmitted=1495488 req_completed=1495488 dir=H2C, intime=0 loop_count=0,
+	Exit Check: tid =14, req_sbmitted=1494720 req_completed=1494720 dir=H2C, intime=0 loop_count=0,
+	Exit Check: tid =6, req_sbmitted=1495488 req_completed=1495488 dir=H2C, intime=1495360 loop_count=1,
+	Exit Check: tid =5, req_sbmitted=1485568 req_completed=1485568 dir=C2H, intime=1485440 loop_count=1,
+	Exit Check: tid =11, req_sbmitted=1454208 req_completed=1454208 dir=C2H, intime=1454080 loop_count=1,
+	Exit Check: tid =13, req_sbmitted=1482944 req_completed=1482944 dir=C2H, intime=1482752 loop_count=1,
+	Exit Check: tid =0, req_sbmitted=1495168 req_completed=1495168 dir=H2C, intime=1494976 loop_count=2,
+	Exit Check: tid =10, req_sbmitted=1495104 req_completed=1495104 dir=H2C, intime=1494912 loop_count=2,
+	Exit Check: tid =12, req_sbmitted=1494592 req_completed=1494592 dir=H2C, intime=1494400 loop_count=2,
+	Exit Check: tid =9, req_sbmitted=1486784 req_completed=1486784 dir=C2H, intime=1486592 loop_count=2,
+	Exit Check: tid =15, req_sbmitted=1485248 req_completed=1485248 dir=C2H, intime=1485056 loop_count=2,
+	Exit Check: tid =1, req_sbmitted=1486656 req_completed=1486656 dir=C2H, intime=1486592 loop_count=1,
+	Exit Check: tid =4, req_sbmitted=1495872 req_completed=1495872 dir=H2C, intime=1495744 loop_count=1,
+	Exit Check: tid =3, req_sbmitted=1486336 req_completed=1486336 dir=C2H, intime=1486208 loop_count=2,
+	Exit Check: tid =7, req_sbmitted=1486400 req_completed=1486400 dir=C2H, intime=1486208 loop_count=2,
+	Exit Check: tid =2, req_sbmitted=1495744 req_completed=1495744 dir=H2C, intime=1495616 loop_count=2,
+	Exit Check: tid =10, req_sbmitted=1495296 req_completed=1495104 dir=H2C, intime=1494912 loop_count=10000,
+	Exit Check: tid =11, req_sbmitted=1454464 req_completed=1454336 dir=C2H, intime=1454080 loop_count=10000,
+	Exit Check: tid =5, req_sbmitted=1485632 req_completed=1485504 dir=C2H, intime=1485440 loop_count=10000,
+	Exit Check: tid =0, req_sbmitted=1495616 req_completed=1495424 dir=H2C, intime=1494976 loop_count=10000,
+	Exit Check: tid =12, req_sbmitted=1494912 req_completed=1494720 dir=H2C, intime=1494400 loop_count=10000,
+	Exit Check: tid =6, req_sbmitted=1495616 req_completed=1495488 dir=H2C, intime=1495360 loop_count=10000,
+	Stopped Queues 0 -> 0.
+	Exit Check: tid =9, req_sbmitted=1486912 req_completed=1486720 dir=C2H, intime=1486592 loop_count=10000,
+	Exit Check: tid =15, req_sbmitted=1485952 req_completed=1485760 dir=C2H, intime=1485056 loop_count=10000,
+	Exit Check: tid =13, req_sbmitted=1483456 req_completed=1483264 dir=C2H, intime=1482752 loop_count=10000,
+	Stopped Queues 0 -> 0.
+	Deleted Queues 0 -> 0.
+	Deleted Queues 0 -> 0.
+	WRITE: total pps = 3987072 BW = 255.172608 MB/sec
+	READ: total pps = 3950976 BW = 252.862464 MB/sec
+	[xilinx@]#
 
 
 dma-perf tool takes a configuration file as input. The configuration file format is as below.

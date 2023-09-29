@@ -22,7 +22,7 @@ QDMA Hardware Features
    * User Interrupts
    * Error Interrupts
 
-* Mailbox communication between PF and VF 
+* Mailbox communication between PF and VF
 * HW Error reporting
 * Immediate data transfers
 * Streaming H2C to C2H and C2H to H2C loopback support
@@ -48,7 +48,7 @@ Features Supported only in QDMA3.1 Design
 =========================================
 
 * Flexible BAR mapping for QDMA configuration register space
-		
+
 Features Supported only in QDMA4.0 Design
 =========================================
 
@@ -72,11 +72,33 @@ Features Supported only in Versal CPM5 Design
    * 256 C2H (Card-to-Host) descriptor rings
    * 256 Completion Rings
 * Tandem boot support
-   
 
-For details on Hardware Features refer to QDMA_Product_Guide_.
+Features Supported only in Versal CPM4 Design
+=============================================
 
-.. _QDMA_Product_Guide: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v4_0/pg302-qdma.pdf
+* SRIOV with 4 Physical Functions (PF) and 252 Virtual Functions (VF)
+* Descriptor Engine can be configured in Internal Mode only
+* Supports 2048 queue sets for Physical Functions
+
+   - 2048 H2C (Host-to-Card) descriptor rings
+   - 2048 C2H (Card-to-Host) descriptor rings
+   - 2048 completion rings
+* Supports 256 queue sets for Virtual Functions
+
+   - 256 H2C (Host-to-Card) descriptor rings
+   - 256 C2H (Card-to-Host) descriptor rings
+   - 256 Completion Rings
+* Tandem boot support
+
+
+For details on QDMA Hardware Features refer to QDMA_Soft_Product_Guide_.
+
+.. _QDMA_Soft_Product_Guide: https://docs.xilinx.com/viewer/book-attachment/n6fBd_xlVtlFE96gGACfJA/gbwHDtOsU98Gh7U6BMS5rg
+
+For details on CPM4 and CPM5 Hardware Features refer to QDMA_Hard_Product_Guide_.
+
+.. _QDMA_Hard_Product_Guide: https://docs.xilinx.com/viewer/book-attachment/bjqy7nDIaVBBMR9rpQMFyg/aru18LAWHcbJZJmSRvXf~A
+
 
 QDMA Software Features
 **********************
@@ -85,23 +107,23 @@ QDMA Software Features
 	QDMA software provides 2 different drivers. PF driver for Physical functions and and VF driver for Virtual Functions.
 	PF and VF drivers can be inserted in different modes.
 
-   - Polling Mode 
-		In Poll Mode, Software polls for the write back completions (Status Descriptor Write Back) 
-		
+   - Polling Mode
+		In Poll Mode, Software polls for the write back completions (Status Descriptor Write Back)
+
    - Direct Interrupt Mode
-		In Direct Interrupt mode, each queue is assigned to one of the available interrupt vectors in a round robin fashion to service the requests. 
+		In Direct Interrupt mode, each queue is assigned to one of the available interrupt vectors in a round robin fashion to service the requests.
 		Interrupt is raised by the HW upon receiving the completions and software reads the completion status.
-		
+
    - Indirect Interrupt Mode
-		In Indirect Interrupt mode or Interrupt Aggregation mode, each vector has an associated Interrupt Aggregation Ring. 
-		The QID and status of queues requiring service are written into the Interrupt Aggregation Ring. 
-		When a PCIe MSI-X interrupt is received by the Host, the software reads the Interrupt Aggregation Ring to determine which queue needs service. 
+		In Indirect Interrupt mode or Interrupt Aggregation mode, each vector has an associated Interrupt Aggregation Ring.
+		The QID and status of queues requiring service are written into the Interrupt Aggregation Ring.
+		When a PCIe MSI-X interrupt is received by the Host, the software reads the Interrupt Aggregation Ring to determine which queue needs service.
 		Mapping of queues to vectors is programmable
-		
+
    - Auto Mode
 		Auto mode is mix of Poll and Interrupt Aggregation mode. Driver polls for the write back status updates.
 		Interrupt aggregation is used for processing the completion ring.
-		
+
 - Allows only Privileged Physical Function to program the contexts and registers
 - Dynamic queue configuration, refer to Interface file, libqdma_export.h (``struct qdma_queue_conf``) for configurable parameters
 - Dynamic driver configuration, refer to Interface file, libqdma_export.h (``struct qdma_dev_conf``) for configurable parameters

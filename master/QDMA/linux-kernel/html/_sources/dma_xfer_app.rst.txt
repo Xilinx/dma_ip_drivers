@@ -42,6 +42,16 @@ Testing/Creation of cmpt queues is outside the scope of this application as tran
 	  -v (--version), to print version name
 
 
+Example
+
+::
+
+	[xilinx@]# dma-xfer -c sample_qdma_xfer_config.txt
+	PF :0 Queue :0 H2C Async transfer success
+	PF :0 Queue :0 C2H ASync transfer success
+
+
+
 dma-xfer application takes a configuration file as input. The configuration file format is as below.
 
 ::

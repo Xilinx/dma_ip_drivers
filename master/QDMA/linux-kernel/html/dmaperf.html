@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.1',
+              VERSION:'2023.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.1
+                2023.2
               </div>
             
           
@@ -435,7 +435,7 @@
             
   <div class="section" id="dma-performance-tool-dma-perf">
 <h1>DMA Performance Tool (dma-perf)<a class="headerlink" href="#dma-performance-tool-dma-perf" title="Permalink to this headline">¶</a></h1>
-<p>Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic.</p>
+<p>Xilinx-developed custom tool``dma-perf`` is used to collect the performance metrics for unidirectional and bidirectional traffic. This tool is used with AXI Stream Loopback Example Design only.</p>
 <div class="section" id="note">
 <h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
 <p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dmaperf</span></code>. If user installed <code class="docutils literal"><span class="pre">dmaperf</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dmaperf</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
@@ -445,6 +445,52 @@
 <div class="highlight-none"><div class="highlight"><pre><span></span>usage: dma-perf [OPTIONS]
 
   -c (--config) config file that has configuration for IO
+</pre></div>
+</div>
+<p>Example</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-perf -c perf_config.txt
+qdma65000-MM-0 H2C added.
+Added 1 Queues.
+Queues started, idx 0 ~ 0.
+qdma65000-MM-0 C2H added.
+Added 1 Queues.
+Queues started, idx 0 ~ 0.
+dmautils(16) threads
+Exit Check: tid =8, req_sbmitted=1495488 req_completed=1495488 dir=H2C, intime=0 loop_count=0,
+Exit Check: tid =13, req_sbmitted=1482752 req_completed=1482752 dir=C2H, intime=0 loop_count=0,
+Exit Check: tid =14, req_sbmitted=1494720 req_completed=1494720 dir=H2C, intime=0 loop_count=0,
+Exit Check: tid =8, req_sbmitted=1495488 req_completed=1495488 dir=H2C, intime=0 loop_count=0,
+Exit Check: tid =14, req_sbmitted=1494720 req_completed=1494720 dir=H2C, intime=0 loop_count=0,
+Exit Check: tid =6, req_sbmitted=1495488 req_completed=1495488 dir=H2C, intime=1495360 loop_count=1,
+Exit Check: tid =5, req_sbmitted=1485568 req_completed=1485568 dir=C2H, intime=1485440 loop_count=1,
+Exit Check: tid =11, req_sbmitted=1454208 req_completed=1454208 dir=C2H, intime=1454080 loop_count=1,
+Exit Check: tid =13, req_sbmitted=1482944 req_completed=1482944 dir=C2H, intime=1482752 loop_count=1,
+Exit Check: tid =0, req_sbmitted=1495168 req_completed=1495168 dir=H2C, intime=1494976 loop_count=2,
+Exit Check: tid =10, req_sbmitted=1495104 req_completed=1495104 dir=H2C, intime=1494912 loop_count=2,
+Exit Check: tid =12, req_sbmitted=1494592 req_completed=1494592 dir=H2C, intime=1494400 loop_count=2,
+Exit Check: tid =9, req_sbmitted=1486784 req_completed=1486784 dir=C2H, intime=1486592 loop_count=2,
+Exit Check: tid =15, req_sbmitted=1485248 req_completed=1485248 dir=C2H, intime=1485056 loop_count=2,
+Exit Check: tid =1, req_sbmitted=1486656 req_completed=1486656 dir=C2H, intime=1486592 loop_count=1,
+Exit Check: tid =4, req_sbmitted=1495872 req_completed=1495872 dir=H2C, intime=1495744 loop_count=1,
+Exit Check: tid =3, req_sbmitted=1486336 req_completed=1486336 dir=C2H, intime=1486208 loop_count=2,
+Exit Check: tid =7, req_sbmitted=1486400 req_completed=1486400 dir=C2H, intime=1486208 loop_count=2,
+Exit Check: tid =2, req_sbmitted=1495744 req_completed=1495744 dir=H2C, intime=1495616 loop_count=2,
+Exit Check: tid =10, req_sbmitted=1495296 req_completed=1495104 dir=H2C, intime=1494912 loop_count=10000,
+Exit Check: tid =11, req_sbmitted=1454464 req_completed=1454336 dir=C2H, intime=1454080 loop_count=10000,
+Exit Check: tid =5, req_sbmitted=1485632 req_completed=1485504 dir=C2H, intime=1485440 loop_count=10000,
+Exit Check: tid =0, req_sbmitted=1495616 req_completed=1495424 dir=H2C, intime=1494976 loop_count=10000,
+Exit Check: tid =12, req_sbmitted=1494912 req_completed=1494720 dir=H2C, intime=1494400 loop_count=10000,
+Exit Check: tid =6, req_sbmitted=1495616 req_completed=1495488 dir=H2C, intime=1495360 loop_count=10000,
+Stopped Queues 0 -&gt; 0.
+Exit Check: tid =9, req_sbmitted=1486912 req_completed=1486720 dir=C2H, intime=1486592 loop_count=10000,
+Exit Check: tid =15, req_sbmitted=1485952 req_completed=1485760 dir=C2H, intime=1485056 loop_count=10000,
+Exit Check: tid =13, req_sbmitted=1483456 req_completed=1483264 dir=C2H, intime=1482752 loop_count=10000,
+Stopped Queues 0 -&gt; 0.
+Deleted Queues 0 -&gt; 0.
+Deleted Queues 0 -&gt; 0.
+WRITE: total pps = 3987072 BW = 255.172608 MB/sec
+READ: total pps = 3950976 BW = 252.862464 MB/sec
+[xilinx@]#
 </pre></div>
 </div>
 <p>dma-perf tool takes a configuration file as input. The configuration file format is as below.</p>
@@ -536,7 +582,7 @@ pci_device=00
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on April 28, 2023.
+        Last updated on September 29, 2023.
       </span>
 
     </p>

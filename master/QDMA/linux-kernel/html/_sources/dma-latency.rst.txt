@@ -2,13 +2,41 @@
 DMA Latency Application (dma-latency)
 *************************************
 
-Xilinx-developed custom tool ``dma-latency`` is used to collect the latency metrics for unidirectional and bidirectional traffic. 
+Xilinx-developed custom tool ``dma-latency`` is used to collect the latency metrics for unidirectional and bidirectional traffic.
 
 ::
 
 	usage: dma-latency [OPTIONS
 
 	  -c (--config) config file that has configuration for IO
+
+Example
+
+::
+
+	[xilinx@]# dma-latency -c dmalat.conf
+	dma-ctl qdma06000 global_csr | grep Global| cut -d : -f 2 > glbl_rng_sz
+	qdma06000-ST-0 H2C added.
+	Added 1 Queues.
+	1 Queues started, idx 0 ~ 0.
+	qdma06000-ST-0 C2H added.
+	Added 1 Queues.
+	1 Queues started, idx 0 ~ 0.
+	dmautils(1) threads
+	Stopped Queues 0 -> 0.
+	Deleted Queues 0 -> 0.
+	Stopped Queues 0 -> 0.
+	Deleted Queues 0 -> 0.
+	qdma06000:statistics
+	Total MM H2C packets processed = 0
+	Total MM C2H packets processed = 0
+	Total ST H2C packets processed = 2288284
+	Total ST C2H packets processed = 2288284
+	Min Ping Pong Latency = 0
+	Max Ping Pong Latency = 0
+	Avg Ping Pong Latency = 0
+	[xilinx@]#
+
 
 dma-latency tool takes a configuration file as input. The configuration file format is as below.
 
@@ -30,6 +58,9 @@ dma-latency tool takes a configuration file as input. The configuration file for
 	bidir_en=1
 	num_pkt=64
 	pkt_sz=64
+	pci_bus=06
+	pci_device=00
+
 
 
 **Parameters**
@@ -49,4 +80,4 @@ dma-latency tool takes a configuration file as input. The configuration file for
 - num_threads : number of threads to be used in dma-perf application to pump the traffic to queues
 - bidir_en : Enable or Disable the bi-direction mode \( 0: Disable, 1: Enable \)
 - num_pkt : number of packets
-- pkt_sz : Packet size 
+- pkt_sz : Packet size

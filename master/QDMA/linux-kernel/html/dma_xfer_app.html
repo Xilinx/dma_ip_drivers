@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.1',
+              VERSION:'2023.2',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.1
+                2023.2
               </div>
             
           
@@ -461,6 +461,12 @@ QDMA configuration and transfer functionality.</p>
   -v (--version), to print version name
 </pre></div>
 </div>
+<p>Example</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-xfer -c sample_qdma_xfer_config.txt
+PF :0 Queue :0 H2C Async transfer success
+PF :0 Queue :0 C2H ASync transfer success
+</pre></div>
+</div>
 <p>dma-xfer application takes a configuration file as input. The configuration file format is as below.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>name=mm_sample
 pci_bus=08 #pci bus id
@@ -536,7 +542,7 @@ outputfile=OUTPUT
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on April 28, 2023.
+        Last updated on September 29, 2023.
       </span>
 
     </p>
