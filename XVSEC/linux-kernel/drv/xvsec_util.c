@@ -63,13 +63,17 @@ int xvsec_util_find_file_type(char *fname, const char *suffix)
 struct file *xvsec_util_fopen(const char *path, int flags, int rights)
 {
 	struct file *filep;
-	mm_segment_t oldfs;
 	int err = 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
+	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+#endif
 	filep = filp_open(path, (flags | O_LARGEFILE), rights);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	set_fs(oldfs);
+#endif
 	if (IS_ERR(filep) != 0) {
 		err = PTR_ERR(filep);
 		pr_err("%s : filp_open failed, err : 0x%X\n", __func__, err);
@@ -87,17 +91,21 @@ int xvsec_util_fread(struct file *filep, uint64_t offset,
 	uint8_t *data, uint32_t size)
 {
 	int ret = 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+#endif
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 	ret = vfs_read(filep, (char __user *)data, size, (loff_t *)&offset);
 #else
 	ret = kernel_read(filep, (void *)data, size, (loff_t *)&offset);
 #endif
 	filep->f_pos = offset;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	set_fs(oldfs);
+#endif
 
 	if (ret < 0) {
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
@@ -117,10 +125,12 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 	uint8_t *data, uint32_t size)
 {
 	int ret = 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+#endif
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 	ret = vfs_write(filep, (char __user *)data, size, (loff_t *)&offset);
 #else
@@ -128,7 +138,9 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 				(loff_t *)&offset);
 #endif
 	filep->f_pos = offset;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	set_fs(oldfs);
+#endif
 
 	if (ret < 0) {
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
@@ -148,6 +160,7 @@ int xvsec_util_fsync(struct file *filep)
 	return 0;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 int xvsec_util_get_file_size(const char *fname, loff_t *size)
 {
 	int ret = 0;
@@ -169,4 +182,9 @@ int xvsec_util_get_file_size(const char *fname, loff_t *size)
 
 	return ret;
 }
-
+#else
+loff_t xvsec_util_get_file_size(struct file *filep)
+{
+	return i_size_read(file_inode(filep));
+}
+#endif

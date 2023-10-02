@@ -1,0 +1,4 @@
+*.o*
+*.ko*
+*.mod*
+*Module.symvers*
