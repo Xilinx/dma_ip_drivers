@@ -171,6 +171,12 @@ support 2K queues and populate Xilinx devices for binding.
 
 		cflags += ['-DTHROUGHPUT_MEASUREMENT']
 
+	b. To enhance the DPDK driver's debugging capabilities, added support for latency measurement statistics in both the Tx path (TxQ SW PIDX to HW CIDX) and the Rx path (RxQ SW PIDX to CMPT PIDX). To enable this driver support, please add the following line to ./drivers/net/qdma/meson.build
+
+	::
+
+		cflags += ['-DLATENCY_MEASUREMENT']
+
 Setup: Host system
 ^^^^^^^^^^^^^^^^^^
 
