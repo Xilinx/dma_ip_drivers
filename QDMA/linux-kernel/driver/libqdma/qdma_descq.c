@@ -981,8 +981,8 @@ int qdma_queue_update_pointers(unsigned long dev_hndl, unsigned long qhndl)
 		return -EINVAL;
 	}
 
+	lock_descq(descq);
 	if (descq->conf.st && (descq->conf.q_type == Q_C2H)) {
-		lock_descq(descq);
 		if (descq->q_state == Q_STATE_ONLINE) {
 			ret = queue_cmpt_cidx_update(descq->xdev,
 					descq->conf.qidx,
