@@ -56,7 +56,7 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 	struct xdma_io_cb *cb = (struct xdma_io_cb *)cb_hndl;
 	struct cdev_async_io *caio = (struct cdev_async_io *)cb->private;
 	ssize_t numbytes = 0;
-	ssize_t res;
+	ssize_t res, res2;
 	int lock_stat;
 	int rv;
 
@@ -94,11 +94,9 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 
 	char_sgdma_unmap_user_buf(cb, cb->write);
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
 	caio->res2 |= (err < 0) ? err : 0;
 	if (caio->res2)
 		caio->err_cnt++;
-#endif
 
 	caio->cmpl_cnt++;
 	caio->res += numbytes;
