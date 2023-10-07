@@ -237,6 +237,7 @@ int bridge_mmap(struct file *file, struct vm_area_struct *vma)
 	vm_flags_set(vma, VMEM_FLAGS);
 #else
 	vma->vm_flags |= VMEM_FLAGS;
+#endif
 	/* make MMIO accessible to user space */
 	rv = io_remap_pfn_range(vma, vma->vm_start, phys >> PAGE_SHIFT,
 			vsize, vma->vm_page_prot);
