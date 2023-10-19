@@ -633,7 +633,7 @@ the device “81:00.0”.</p>
 <li><p class="first"><strong>cmpt_desc_len</strong></p>
 <blockquote>
 <div><p>This parameter sets the completion entry length of the completion queue.
-Valid lengths are 8, 16 and 32 bytes. Default length is 8 bytes.</p>
+Valid lengths are 8, 16, 32 and 64 bytes. Default length is 8 bytes.</p>
 <p>Example usage:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,cmpt_desc_len=32
 </pre></div>
@@ -651,7 +651,7 @@ of the device “81:00.0”.</p>
 <p>3 – Trigger when USER defined event is reached</p>
 <p>4 - Trigger when USER_TIMER threshold is reached</p>
 <p>5 - Trigger when either of USER_TIMER or COUNT is reached.</p>
-<p>Default value configured in the driver is 5.</p>
+<p>Default value configured in the driver is 4.</p>
 <p>Example usage:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,trigger_mode=1
 </pre></div>
@@ -1071,7 +1071,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 03, 2023.
+        Last updated on October 18, 2023.
       </span>
 
     </p>

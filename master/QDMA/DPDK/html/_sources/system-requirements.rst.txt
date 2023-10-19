@@ -8,7 +8,8 @@ Xilinx Accelerator Card
 
 1. VCU1525
 2. U200
-3. Versal CPM5 XCVP1202
+3. Versal CPM4 XCVC1902
+4. Versal CPM5 XCVP1202
 
 Host System
 -----------

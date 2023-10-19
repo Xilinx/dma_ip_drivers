@@ -155,7 +155,7 @@ support 2K queues and populate Xilinx devices for binding.
 
 	::
 
-		network_devices = [network_class, cavium_pkx, xilinx_qdma_pf, xilinx_qdma_vf]
+		network_devices = [network_class, cavium_pkx, avp_vnic, ifpga_class, xilinx_qdma_pf, xilinx_qdma_vf]
 
 	3. Additional qdma dpdk driver compile time flags
 
@@ -196,11 +196,17 @@ The following modifications must be made to the ``/boot/grub/grub.cfg`` on the h
 
 - Enable IOMMU for VM testing
 
-	Update ``/etc/default/grub`` file as below.
+	On an Intel platform, update ``/etc/default/grub`` file as below
 
 	::
 
 		GRUB_CMDLINE_LINUX="default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt intel_iommu=on"
+
+	On an AMD platform, update ``/etc/default/grub`` file as below
+
+	::
+
+		GRUB_CMDLINE_LINUX="default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt amd_iommu=on"
 
 Execute the following command to modify the ``/boot/grub/grub.cfg`` with the configuration set in the above steps and permanently add them to the kernel command line.
 

@@ -587,7 +587,7 @@ xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39
 </pre></div>
 </div>
 <p>Update entries in network devices class in <code class="docutils literal"><span class="pre">./usertools/dpdk-devbind.py</span></code> to add Xilinx devices</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>network_devices = [network_class, cavium_pkx, xilinx_qdma_pf, xilinx_qdma_vf]
+<div class="highlight-none"><div class="highlight"><pre><span></span>network_devices = [network_class, cavium_pkx, avp_vnic, ifpga_class, xilinx_qdma_pf, xilinx_qdma_vf]
 </pre></div>
 </div>
 <ol class="arabic simple" start="3">
@@ -632,8 +632,12 @@ The following modifications must be made to the <code class="docutils literal"><
 </li>
 <li><p class="first">Enable IOMMU for VM testing</p>
 <blockquote>
-<div><p>Update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below.</p>
+<div><p>On an Intel platform, update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt intel_iommu=on&quot;
+</pre></div>
+</div>
+<p>On an AMD platform, update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt amd_iommu=on&quot;
 </pre></div>
 </div>
 </div></blockquote>
@@ -739,7 +743,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 03, 2023.
+        Last updated on October 18, 2023.
       </span>
 
     </p>

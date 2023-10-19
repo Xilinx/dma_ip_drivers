@@ -217,7 +217,7 @@ Xilinx supports following device arguments to configure PCIe device.
 3. **cmpt_desc_len**
 
 	This parameter sets the completion entry length of the completion queue.
-	Valid lengths are 8, 16 and 32 bytes. Default length is 8 bytes.
+	Valid lengths are 8, 16, 32 and 64 bytes. Default length is 8 bytes.
 
 	Example usage:
 
@@ -244,7 +244,7 @@ Xilinx supports following device arguments to configure PCIe device.
 
 	5 - Trigger when either of USER_TIMER or COUNT is reached.
 
-	Default value configured in the driver is 5.
+	Default value configured in the driver is 4.
 
 	Example usage:
 
