@@ -304,7 +304,9 @@ static int create_xcdev(struct xdma_pci_dev *xpdev, struct xdma_cdev *xcdev,
 	 * do not register yet, create kobjects and name them,
 	 */
 	xcdev->magic = MAGIC_CHAR;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	xcdev->cdev.owner = THIS_MODULE;
+#endif
 	xcdev->xpdev = xpdev;
 	xcdev->xdev = xdev;
 	xcdev->engine = engine;
@@ -603,7 +605,11 @@ fail:
 
 int xdma_cdev_init(void)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+#else
+	g_xdma_class = class_create(XDMA_NODE_NAME);
+#endif
 	if (IS_ERR(g_xdma_class)) {
 		dbg_init(XDMA_NODE_NAME ": failed to create class");
 		return -EINVAL;
