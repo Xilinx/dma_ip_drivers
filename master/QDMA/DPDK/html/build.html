@@ -605,10 +605,16 @@ xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39
 <div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DTHROUGHPUT_MEASUREMENT&#39;]
 </pre></div>
 </div>
-<ol class="loweralpha simple" start="2">
+<ol class="loweralpha simple" start="3">
 <li>To enhance the DPDK driver’s debugging capabilities, added support for latency measurement statistics in both the Tx path (TxQ SW PIDX to HW CIDX) and the Rx path (RxQ SW PIDX to CMPT PIDX). To enable this driver support, please add the following line to ./drivers/net/qdma/meson.build</li>
 </ol>
 <div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DLATENCY_MEASUREMENT&#39;]
+</pre></div>
+</div>
+<ol class="loweralpha simple" start="4">
+<li>To enable 10 bit tag support in qdma dpdk driver for Gen5x8 performance measurements for CPM5 design, add below line to ./drivers/net/qdma/meson.build</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DEQDMA_CPM5_10BIT_TAG_ENABLE&#39;]
 </pre></div>
 </div>
 </div></blockquote>
@@ -743,7 +749,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 18, 2023.
+        Last updated on November 10, 2023.
       </span>
 
     </p>
