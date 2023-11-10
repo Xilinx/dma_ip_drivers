@@ -1,4 +1,4 @@
-RELEASE: 2023.2.0
+RELEASE: 2023.2.1
 =================
 
 This release is validated
@@ -149,6 +149,9 @@ CPM5
 ----------------
 - Added driver support for CPM4 design.
 
+2023.2.1 Updates
+----------------
+- Added driver support to enable 10 bit tag for CPM5 design.
 
 KNOWN ISSUES:
 =============
