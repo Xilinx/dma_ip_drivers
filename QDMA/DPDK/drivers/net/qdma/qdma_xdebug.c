@@ -1283,6 +1283,9 @@ int qdma_tx_qstats_clear(struct rte_eth_dev *dev, uint16_t queue)
 {
 	struct qdma_tx_queue *txq;
 	int ret;
+#ifdef LATENCY_MEASUREMENT
+	int i;
+#endif
 
 	if (queue >= dev->data->nb_tx_queues) {
 		xdebug_info("TX queue_id=%d not configured\n", queue);
@@ -1296,6 +1299,11 @@ int qdma_tx_qstats_clear(struct rte_eth_dev *dev, uint16_t queue)
 	}
 
 	memset(&txq->qstats, 0, sizeof(struct qdma_txq_stats));
+
+#ifdef LATENCY_MEASUREMENT
+	for (i = 0; i < LATENCY_CNT; i++)
+		h2c_pidx_to_hw_cidx_lat[queue][i] = 0;
+#endif
 
 	xdebug_info("\nCleared Tx queue stats for  qid: %d\n",
 		queue);
@@ -1314,6 +1322,9 @@ int qdma_rx_qstats_clear(struct rte_eth_dev *dev, uint16_t queue)
 {
 	struct qdma_rx_queue *rxq;
 	int ret;
+#ifdef LATENCY_MEASUREMENT
+	int i;
+#endif
 
 	if (queue >= dev->data->nb_rx_queues) {
 		xdebug_info("RX queue_id=%d not configured\n", queue);
@@ -1327,6 +1338,11 @@ int qdma_rx_qstats_clear(struct rte_eth_dev *dev, uint16_t queue)
 	}
 
 	memset(&rxq->qstats, 0, sizeof(struct qdma_rxq_stats));
+
+#ifdef LATENCY_MEASUREMENT
+	for (i = 0; i < LATENCY_CNT; i++)
+		c2h_pidx_to_cmpt_pidx_lat[queue][i] = 0;
+#endif
 
 	xdebug_info("\nCleared Rx queue stats for  qid: %d\n",
 		queue);

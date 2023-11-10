@@ -772,31 +772,40 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	}
 
 #ifdef LATENCY_MEASUREMENT
-	/* Create a shared memory zone for the txq latency buffer */
-	txq_lat_buf_mz = rte_memzone_reserve("TXQ_LAT_BUFFER_ZONE",
-		LATENCY_MAX_QUEUES * LATENCY_CNT * sizeof(double),
-		rte_socket_id(), 0);
-	if (txq_lat_buf_mz == NULL) {
-		PMD_DRV_LOG(ERR, "Failed to allocate txq latency buffer memzone\n");
-		return -1;
+	/* Create txq and rxq latency measurement shared memory
+	 * if not already created by the VF
+	 */
+	if (!h2c_pidx_to_hw_cidx_lat) {
+		/* Create a shared memory zone for the txq latency buffer */
+		txq_lat_buf_mz = rte_memzone_reserve("TXQ_LAT_BUFFER_ZONE",
+			LATENCY_MAX_QUEUES * LATENCY_CNT * sizeof(double),
+			rte_socket_id(), 0);
+		if (txq_lat_buf_mz == NULL) {
+			PMD_DRV_LOG(ERR,
+				"Failed to allocate txq latency buffer memzone\n");
+			return -1;
+		}
+
+		/* Get the virtual address of the txq latency buffer */
+		h2c_pidx_to_hw_cidx_lat =
+			(double(*)[LATENCY_CNT])txq_lat_buf_mz->addr;
 	}
 
-	/* Get the virtual address of the txq latency buffer */
-	h2c_pidx_to_hw_cidx_lat =
-		(double(*)[LATENCY_CNT])txq_lat_buf_mz->addr;
+	if (!c2h_pidx_to_cmpt_pidx_lat) {
+		/* Create a shared memory zone for the rxq latency buffer */
+		rxq_lat_buf_mz = rte_memzone_reserve("RXQ_LAT_BUFFER_ZONE",
+			LATENCY_MAX_QUEUES * LATENCY_CNT * sizeof(double),
+			rte_socket_id(), 0);
+		if (rxq_lat_buf_mz == NULL) {
+			PMD_DRV_LOG(ERR,
+				"Failed to allocate rxq latency buffer memzone\n");
+			return -1;
+		}
 
-	/* Create a shared memory zone for the rxq latency buffer */
-	rxq_lat_buf_mz = rte_memzone_reserve("RXQ_LAT_BUFFER_ZONE",
-		LATENCY_MAX_QUEUES * LATENCY_CNT * sizeof(double),
-		rte_socket_id(), 0);
-	if (rxq_lat_buf_mz == NULL) {
-		PMD_DRV_LOG(ERR, "Failed to allocate rxq latency buffer memzone\n");
-		return -1;
+		/* Get the virtual address of the rxq latency buffer */
+		c2h_pidx_to_cmpt_pidx_lat =
+			(double(*)[LATENCY_CNT])rxq_lat_buf_mz->addr;
 	}
-
-	/* Get the virtual address of the rxq latency buffer */
-	c2h_pidx_to_cmpt_pidx_lat =
-		(double(*)[LATENCY_CNT])rxq_lat_buf_mz->addr;
 #endif
 
 	dma_priv->reset_in_progress = 0;

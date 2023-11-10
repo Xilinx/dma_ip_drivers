@@ -1,4 +1,4 @@
-RELEASE: 2023.2.0
+RELEASE: 2023.2.1
 =================
 
 This release is based on DPDK v20.11, v21.11 and v22.11 and
@@ -131,6 +131,10 @@ CPM5
 - Added driver support for CPM4 design.
 - Added support for Tx and Rx queue statistics to enhance debugging capabilities
 - Added support for latency measurements in Tx and Rx data path to enhance debugging capabilities
+
+2023.2.1 Updates
+----------------
+- Added support for latency measurements in Tx and Rx data path for VF
 
 KNOWN ISSUE:
 ============

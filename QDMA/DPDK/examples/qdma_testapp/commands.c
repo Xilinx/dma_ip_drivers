@@ -170,6 +170,10 @@ static void cmd_help_parsed(__attribute__((unused)) void *parsed_result,
 			":Reads the field info for the specified number of registers\n"
 			"\tqueue_dump           <port-id> <queue-id>  "
 			":To dump the queue-context of a queue-number\n"
+			"\tqstats               <port-id> <queue-id>  "
+			":To dump the queue-stats of a queue-number\n"
+			"\tqstats_clr               <port-id> <queue-id>  "
+			":To clear the queue-stats of a queue-number\n"
 			"\tdesc_dump            <port-id> <queue-id>  "
 			":To dump the descriptor-fields of a "
 			"queue-number\n"
@@ -1233,6 +1237,144 @@ cmdline_parse_inst_t cmd_obj_queue_dump = {
 
 };
 
+/*Command queue-stats dump*/
+
+struct cmd_obj_qstats_result {
+	cmdline_fixed_string_t action;
+	cmdline_fixed_string_t port_id;
+	cmdline_fixed_string_t queue_id;
+};
+
+static void cmd_obj_qstats_parsed(void *parsed_result,
+			       struct cmdline *cl,
+			       __attribute__((unused)) void *data)
+{
+	struct cmd_obj_qstats_result *res = parsed_result;
+
+	cmdline_printf(cl, "queue-dump on Port:%s, queue-id:%s\n\n",
+						res->port_id, res->queue_id);
+
+	{
+		int port_id = atoi(res->port_id);
+		int qid = atoi(res->queue_id);
+		int bar_id = 0x0;
+
+		bar_id = pinfo[port_id].config_bar_idx;
+		if (bar_id < 0) {
+			cmdline_printf(cl, "Error: fetching QDMA config BAR-id "
+					"on port-id:%d not supported\n Please "
+					"enter valid port-id\n", port_id);
+			return;
+		}
+		if (port_id >= num_ports) {
+			cmdline_printf(cl, "Error: port-id:%d not supported\n "
+					"Please enter valid port-id\n",
+					port_id);
+			return;
+		}
+		if ((unsigned int)qid >= pinfo[port_id].num_queues) {
+			cmdline_printf(cl, "Error: queue-id:%d is greater than "
+					"the number of confgiured queues in "
+					"the port\n Please enter valid "
+					"queue-id\n", qid);
+			return;
+		}
+		rte_pmd_qdma_qstats(port_id, qid);
+	}
+}
+
+cmdline_parse_token_string_t cmd_obj_action_qstats =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_qstats_result, action,
+								"qstats");
+cmdline_parse_token_string_t cmd_obj_qstats_port_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_qstats_result, port_id,
+									NULL);
+cmdline_parse_token_string_t cmd_obj_qstats_queue_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_qstats_result, queue_id,
+									NULL);
+
+cmdline_parse_inst_t cmd_obj_qstats = {
+	.f = cmd_obj_qstats_parsed,  /* function to call */
+	.data = NULL,      /* 2nd arg of func */
+	.help_str = "qstats port-id queue_id",
+	.tokens = {        /* token list, NULL terminated */
+		(void *)&cmd_obj_action_qstats,
+		(void *)&cmd_obj_qstats_port_id,
+		(void *)&cmd_obj_qstats_queue_id,
+		NULL,
+	},
+
+};
+
+/*Command queue-stats-cleaar dump*/
+
+struct cmd_obj_qstats_clr_result {
+	cmdline_fixed_string_t action;
+	cmdline_fixed_string_t port_id;
+	cmdline_fixed_string_t queue_id;
+};
+
+static void cmd_obj_qstats_clr_parsed(void *parsed_result,
+			       struct cmdline *cl,
+			       __attribute__((unused)) void *data)
+{
+	struct cmd_obj_qstats_clr_result *res = parsed_result;
+
+	cmdline_printf(cl, "queue-dump on Port:%s, queue-id:%s\n\n",
+						res->port_id, res->queue_id);
+
+	{
+		int port_id = atoi(res->port_id);
+		int qid = atoi(res->queue_id);
+		int bar_id = 0x0;
+
+		bar_id = pinfo[port_id].config_bar_idx;
+		if (bar_id < 0) {
+			cmdline_printf(cl, "Error: fetching QDMA config BAR-id "
+					"on port-id:%d not supported\n Please "
+					"enter valid port-id\n", port_id);
+			return;
+		}
+		if (port_id >= num_ports) {
+			cmdline_printf(cl, "Error: port-id:%d not supported\n "
+					"Please enter valid port-id\n",
+					port_id);
+			return;
+		}
+		if ((unsigned int)qid >= pinfo[port_id].num_queues) {
+			cmdline_printf(cl, "Error: queue-id:%d is greater than "
+					"the number of confgiured queues in "
+					"the port\n Please enter valid "
+					"queue-id\n", qid);
+			return;
+		}
+		rte_pmd_qdma_qstats_clear(port_id, qid);
+	}
+}
+
+cmdline_parse_token_string_t cmd_obj_action_qstats_clr =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_qstats_clr_result, action,
+								"qstats_clr");
+cmdline_parse_token_string_t cmd_obj_qstats_clr_port_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_qstats_clr_result, port_id,
+									NULL);
+cmdline_parse_token_string_t cmd_obj_qstats_clr_queue_id =
+	TOKEN_STRING_INITIALIZER(struct cmd_obj_qstats_clr_result, queue_id,
+									NULL);
+
+cmdline_parse_inst_t cmd_obj_qstats_clr = {
+	.f = cmd_obj_qstats_clr_parsed,  /* function to call */
+	.data = NULL,      /* 2nd arg of func */
+	.help_str = "qstats_clr port-id queue_id",
+	.tokens = {        /* token list, NULL terminated */
+		(void *)&cmd_obj_action_qstats_clr,
+		(void *)&cmd_obj_qstats_clr_port_id,
+		(void *)&cmd_obj_qstats_clr_queue_id,
+		NULL,
+	},
+
+};
+
 /* Command descriptor dump */
 
 struct cmd_obj_desc_dump_result {
@@ -1375,6 +1517,8 @@ cmdline_parse_ctx_t main_ctx[] = {
 	(cmdline_parse_inst_t *)&cmd_obj_reg_dump,
 	(cmdline_parse_inst_t *)&cmd_obj_reg_info_read,
 	(cmdline_parse_inst_t *)&cmd_obj_queue_dump,
+	(cmdline_parse_inst_t *)&cmd_obj_qstats,
+	(cmdline_parse_inst_t *)&cmd_obj_qstats_clr,
 	(cmdline_parse_inst_t *)&cmd_obj_desc_dump,
 	(cmdline_parse_inst_t *)&cmd_obj_load_cmds,
 	(cmdline_parse_inst_t *)&cmd_help,
