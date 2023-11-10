@@ -4439,7 +4439,7 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	/* allocate zeroed device book keeping structure */
 	xdev = alloc_dev_instance(pdev);
 	if (!xdev)
-		return NULL;
+		goto err_alloc_dev_instance;
 	xdev->mod_name = mname;
 	xdev->user_max = *user_max;
 	xdev->h2c_channel_max = *h2c_channel_max;
@@ -4458,12 +4458,12 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = xdev_list_add(xdev);
 	if (rv < 0)
-		goto free_xdev;
+		goto err_xdev_list_add;
 
 	rv = pci_enable_device(pdev);
 	if (rv) {
 		dbg_init("pci_enable_device() failed, %d.\n", rv);
-		goto err_enable;
+		goto err_pci_enable_device;
 	}
 
 	/* keep INTx enabled */
@@ -4486,15 +4486,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = request_regions(xdev, pdev);
 	if (rv)
-		goto err_regions;
+		goto err_request_regions;
 
 	rv = map_bars(xdev, pdev);
 	if (rv)
-		goto err_map;
+		goto err_map_bars;
 
 	rv = set_dma_mask(pdev);
 	if (rv)
-		goto err_mask;
+		goto err_set_dma_mask;
 
 	check_nonzero_interrupt_status(xdev);
 	/* explicitely zero all interrupt enable masks */
@@ -4504,15 +4504,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = probe_engines(xdev);
 	if (rv)
-		goto err_mask;
+		goto err_probe_engines;
 
 	rv = enable_msi_msix(xdev, pdev);
 	if (rv < 0)
-		goto err_engines;
+		goto err_enable_msi_msix;
 
 	rv = irq_setup(xdev, pdev);
 	if (rv < 0)
-		goto err_msix;
+		goto err_irq_setup;
 
 	if (!poll_mode)
 		channel_interrupts_enable(xdev, ~0);
@@ -4527,22 +4527,24 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	return (void *)xdev;
 
-err_msix:
+err_irq_setup:
 	disable_msi_msix(xdev, pdev);
-err_engines:
+err_enable_msi_msix:
 	remove_engines(xdev);
-err_mask:
+err_probe_engines:
+err_set_dma_mask:
 	unmap_bars(xdev, pdev);
-err_map:
+err_map_bars:
 	if (xdev->got_regions)
 		pci_release_regions(pdev);
-err_regions:
+err_request_regions:
 	if (!xdev->regions_in_use)
 		pci_disable_device(pdev);
-err_enable:
+err_pci_enable_device:
 	xdev_list_remove(xdev);
-free_xdev:
+err_xdev_list_add:
 	kfree(xdev);
+err_alloc_dev_instance:
 	return NULL;
 }
 
