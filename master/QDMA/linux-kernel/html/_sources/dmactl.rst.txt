@@ -197,7 +197,7 @@ command:
 
    ``dma-ctl qdma<bbddf> q start idx <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>]
    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]
-   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en]
+   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [fetch_credit <h2c|c2h|bi|none>] [c2h_cmpl_intr_en]
    [cmpl_ovf_dis] [mm_chn <0:1>] [aperture_sz <Power of 2 aperture size>]``
 
 
@@ -219,8 +219,7 @@ command:
 - dis_cmpl_status_acc : Disable completion status accumulation \( 1: Disable, 0: Enable \)
 - dis_cmpl_status_pend_chk : Disable completion status pending check \( 1: Disable, 0: Enable \)
 - c2h_udd_en : Enable immediate data\(User Defined Data\) \( 0: Disable, 1: Enable \)
-- dis_fetch_credit: Disable fetch credit \( 1: Disable, 0: Enable \)
-- dis_cmpt_stat : Disable completion status \( 1: Disable, 0: Enable \)
+- fetch_credit : Enable fetch credit \(host-to-card \(h2c\), card-to-host \(c2h\), both \(bi\), disable \(none\)\)
 - c2h_cmpl_intr_en : Enable c2h completion interval \( 0: Disable, 1: Enable \)
 - cmpl_ovf_dis : Disable completion over flow check \( 1: Disable, 0: Enable \)
 - mm_chn : MM Channel to be used(0/1)
@@ -244,7 +243,7 @@ command:
 
    ``dma-ctl qdma<bbddf> q start list <start_idx> <N> [dir <h2c|c2h|bi>] [idx_ringsz <0:15>] [idx_bufsz <0:15>] [idx_tmr <0:15>] 
    [idx_cntr <0:15>] [trigmode <every|usr_cnt|usr|usr_tmr|dis>] [cmptsz <0|1|2|3>] [desc_bypass_en] [pfetch_en] [pfetch_bypass_en]
-   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [dis_fetch_credit] [dis_cmpt_stat] [c2h_cmpl_intr_en]
+   [dis_cmpl_status] [dis_cmpl_status_acc] [dis_cmpl_status_pend_chk] [c2h_udd_en] [fetch_credit <h2c|c2h|bi|none>] [c2h_cmpl_intr_en]
    [cmpl_ovf_dis] [mm_chn <0:1>] [aperture_sz <Power of 2 aperture size>]``
 
 This command allows the user to start a list of queues.
@@ -266,8 +265,7 @@ This command allows the user to start a list of queues.
 - dis_cmpl_status : Disable completion status update
 - dis_cmpl_status_pend_chk : Disable completion status pending check
 - c2h_udd_en : Enable immdeiate data\(User Defined Data\)
-- dis_fetch_credit: Disable fetch credit \( 1: Disable, 0: Enable \)
-- dis_cmpt_stat : Disable completion status \( 1: Disable, 0: Enable \)
+- fetch_credit : Enable fetch credit \(host-to-card \(h2c\), card-to-host \(c2h\), both \(bi\), disable \(none\)\)
 - c2h_cmpl_intr_en : Enable c2h completion interval \( 0: Disable, 1: Enable \)
 - cmpl_ovf_dis : Disable completion over flow check \( 1: Disable, 0: Enable \)
 - mm_chn : MM Channel to be used(0/1)\)

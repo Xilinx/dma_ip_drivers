@@ -83,6 +83,13 @@ To enable VF 4K queue driver support for CPM5 design, build driver with the foll
 
 	[xilinx@]# make clean & make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
 
+To enable 10 bit tag driver support for gen5x8 performance measurements for CPM5 design, build driver with the following command
+
+::
+
+	[xilinx@]# make clean & make EQDMA_CPM5_10BIT_TAG_ENABLE=1
+
+
 **Kernel modules:**
 
 +-------------------+--------------------+--------------------------------+

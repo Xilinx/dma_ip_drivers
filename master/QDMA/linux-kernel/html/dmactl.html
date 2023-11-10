@@ -643,7 +643,7 @@ Added 4 Queues.
 <blockquote>
 <div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
 <span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]</span>
-<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
+<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[fetch_credit</span> <span class="pre">&lt;h2c|c2h|bi|none&gt;]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
 <span class="pre">[cmpl_ovf_dis]</span> <span class="pre">[mm_chn</span> <span class="pre">&lt;0:1&gt;]</span> <span class="pre">[aperture_sz</span> <span class="pre">&lt;Power</span> <span class="pre">of</span> <span class="pre">2</span> <span class="pre">aperture</span> <span class="pre">size&gt;]</span></code></div></blockquote>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -663,8 +663,7 @@ Added 4 Queues.
 <li>dis_cmpl_status_acc : Disable completion status accumulation ( 1: Disable, 0: Enable )</li>
 <li>dis_cmpl_status_pend_chk : Disable completion status pending check ( 1: Disable, 0: Enable )</li>
 <li>c2h_udd_en : Enable immediate data(User Defined Data) ( 0: Disable, 1: Enable )</li>
-<li>dis_fetch_credit: Disable fetch credit ( 1: Disable, 0: Enable )</li>
-<li>dis_cmpt_stat : Disable completion status ( 1: Disable, 0: Enable )</li>
+<li>fetch_credit : Enable fetch credit (host-to-card (h2c), card-to-host (c2h), both (bi), disable (none))</li>
 <li>c2h_cmpl_intr_en : Enable c2h completion interval ( 0: Disable, 1: Enable )</li>
 <li>cmpl_ovf_dis : Disable completion over flow check ( 1: Disable, 0: Enable )</li>
 <li>mm_chn : MM Channel to be used(0/1)</li>
@@ -688,7 +687,7 @@ dma-ctl: Info: Default ring size set to 2048
 <blockquote>
 <div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
 <span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]</span>
-<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[dis_fetch_credit]</span> <span class="pre">[dis_cmpt_stat]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
+<span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[fetch_credit</span> <span class="pre">&lt;h2c|c2h|bi|none&gt;]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
 <span class="pre">[cmpl_ovf_dis]</span> <span class="pre">[mm_chn</span> <span class="pre">&lt;0:1&gt;]</span> <span class="pre">[aperture_sz</span> <span class="pre">&lt;Power</span> <span class="pre">of</span> <span class="pre">2</span> <span class="pre">aperture</span> <span class="pre">size&gt;]</span></code></div></blockquote>
 <p>This command allows the user to start a list of queues.</p>
 <p><strong>Parameters</strong></p>
@@ -708,8 +707,7 @@ dma-ctl: Info: Default ring size set to 2048
 <li>dis_cmpl_status : Disable completion status update</li>
 <li>dis_cmpl_status_pend_chk : Disable completion status pending check</li>
 <li>c2h_udd_en : Enable immdeiate data(User Defined Data)</li>
-<li>dis_fetch_credit: Disable fetch credit ( 1: Disable, 0: Enable )</li>
-<li>dis_cmpt_stat : Disable completion status ( 1: Disable, 0: Enable )</li>
+<li>fetch_credit : Enable fetch credit (host-to-card (h2c), card-to-host (c2h), both (bi), disable (none))</li>
 <li>c2h_cmpl_intr_en : Enable c2h completion interval ( 0: Disable, 1: Enable )</li>
 <li>cmpl_ovf_dis : Disable completion over flow check ( 1: Disable, 0: Enable )</li>
 <li>mm_chn : MM Channel to be used(0/1))</li>
@@ -1916,7 +1914,7 @@ CFG_BLK_IDENTIFIER                       [31, 0]   0xf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on September 29, 2023.
+        Last updated on November 10, 2023.
       </span>
 
     </p>
