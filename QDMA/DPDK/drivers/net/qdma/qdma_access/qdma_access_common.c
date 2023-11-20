@@ -1515,6 +1515,9 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 		hw_access->qdma_read_dump_queue_context =
 				&eqdma_read_dump_queue_context;
 		hw_access->qdma_dump_reg_info = &eqdma_dump_reg_info;
+		hw_access->qdma_global_csr_conf = &eqdma_global_csr_conf;
+		hw_access->qdma_global_writeback_interval_conf =
+                                        &eqdma_global_writeback_interval_conf;
 		/* All CSR and Queue space register belongs to Window 0.
 		 * Mailbox and MSIX register belongs to Window 1
 		 * Therefore, Mailbox offsets are different for EQDMA
