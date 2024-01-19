@@ -567,12 +567,20 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 #if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
-	return cdev_aio_write(iocb, io->iov, io->nr_segs, iocb->ki_pos);
+	#if	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0))
+	return cdev_aio_write(iocb, iter_iov(io), io->nr_segs, iocb->ki_pos);		// 2024011901: linux-6.4.0  - include/linux/uio.h line 72:73
+	#else
+	return cdev_aio_write(iocb, io->iov     , io->nr_segs, iocb->ki_pos);		// 2024011901: linux-6.3.13 - include/linux/uio.h line 54
+	#endif
 }
 
 static ssize_t cdev_read_iter(struct kiocb *iocb, struct iov_iter *io)
 {
-	return cdev_aio_read(iocb, io->iov, io->nr_segs, iocb->ki_pos);
+	#if	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0))
+	return cdev_aio_read (iocb, iter_iov(io), io->nr_segs, iocb->ki_pos);		// 2024011901: linux-6.4.0  - include/linux/uio.h line 72:73
+	#else
+	return cdev_aio_read (iocb, io->iov     , io->nr_segs, iocb->ki_pos);		// 2024011901: linux-6.3.13 - include/linux/uio.h line 54
+	#endif
 }
 #endif
 
@@ -780,7 +788,12 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 
 int qdma_cdev_init(void)
 {
-	qdma_class = class_create(THIS_MODULE, QDMA_CDEV_CLASS_NAME);
+	#if	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0))
+	qdma_class = class_create(             QDMA_CDEV_CLASS_NAME);		// 2024011901: linux-6.4.0  - include/linux/device/class.h line 230
+	#else
+	qdma_class = class_create(THIS_MODULE, QDMA_CDEV_CLASS_NAME);		// 2024011901: linux-6.3.13 - include/linux/device/class.h line 260:277
+	#endif
+
 	if (IS_ERR(qdma_class)) {
 		pr_err("%s: failed to create class 0x%lx.",
 			QDMA_CDEV_CLASS_NAME, (unsigned long)qdma_class);
