@@ -30,7 +30,7 @@
 #include "xdma_cdev.h"
 #include "version.h"
 
-#define DRV_MODULE_NAME		"xdma"
+#define DRV_MODULE_NAME		"xdma-chr"
 #define DRV_MODULE_DESC		"Xilinx XDMA Reference Driver"
 
 static char version[] =
