@@ -180,8 +180,11 @@ DRIVER LIMITATIONS:
 	- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
 	- FLR is not supported in the Driver for CentOS because linux kernels provided in CentOS versions does not support the driver call back registration for FLR functionality
 
-
-
+- XRT Only
+	- QDMA: Bypass user BAR check for XRT application
+		- The existing driver code assmues the presence of the user BAR as indicated in the functional example design. If this user BAR is not detected during the driver probing process,
+                  it results in a failure. However, this check is specific to example design and some customer designs might not contain user BAR. So bypassing the user BAR check to prevent
+                  driver returning error and proceed further.
 
 
 
