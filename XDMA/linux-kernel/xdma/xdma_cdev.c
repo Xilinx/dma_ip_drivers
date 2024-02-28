@@ -603,7 +603,7 @@ fail:
 
 int xdma_cdev_init(void)
 {
-	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+	g_xdma_class = class_create(XDMA_NODE_NAME);
 	if (IS_ERR(g_xdma_class)) {
 		dbg_init(XDMA_NODE_NAME ": failed to create class");
 		return -EINVAL;
