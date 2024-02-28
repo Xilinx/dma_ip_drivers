@@ -80,7 +80,7 @@ struct xvsec_ioctl_ops {
 
 struct vsec_context {
 	struct pci_dev		*pdev;
-	spinlock_t		lock;
+	struct mutex		lock;
 	struct cdev_info	char_dev;
 	int			fopen_cnt;
 	uint16_t		vsec_offset;
@@ -97,7 +97,7 @@ struct vsec_ops {
 struct context {
 	struct pci_dev			*pdev;
 	int				fopen_cnt;
-	spinlock_t			lock;
+	struct mutex			lock;
 	struct cdev_info		generic_cdev;
 	uint16_t			vsec_supported_cnt;
 	struct vsec_context		*vsec_ctx;
