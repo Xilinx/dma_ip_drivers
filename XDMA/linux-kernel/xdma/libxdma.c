@@ -3269,7 +3269,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 		sg = req->sg;
 		ep_addr = req->ep_addr + (req->offset & (aperture - 1));
 		i = req->sg_idx;
-		
+
 		for (sg = req->sg; i < sg_max && desc_idx < desc_max;
 			i++, sg = sg_next(sg)) {
 			dma_addr_t addr = sg_dma_address(sg);
@@ -3302,7 +3302,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 				ep_addr += len;
 				addr += len;
 				tlen -= len;
-				
+
 				desc_idx++;
 				desc_cnt++;
 				if (desc_idx == desc_max)
@@ -3314,7 +3314,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 			else
 				break;
 		}
-		
+
 		req->sg_offset = sg_offset;
 		req->sg_idx = i;
 
@@ -3523,7 +3523,6 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 #else
 		nents = dma_map_sg(&xdev->pdev->dev, sg, sgt->orig_nents, dir);
 #endif
-
 		if (!nents) {
 			pr_info("map sgl failed, sgt 0x%p.\n", sgt);
 			return -EIO;
@@ -4232,9 +4231,9 @@ static int set_dma_mask(struct pci_dev *pdev)
 	dbg_init("sizeof(dma_addr_t) == %ld\n", sizeof(dma_addr_t));
 	/* 64-bit addressing capability for XDMA? */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))) 
+	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64)))
 #else
-	if (!dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64))) 
+	if (!dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)))
 #endif
 	{
 		/* query for DMA transfer */
@@ -4245,11 +4244,11 @@ static int set_dma_mask(struct pci_dev *pdev)
 #endif
 		/* use 64-bit DMA */
 		dbg_init("Using a 64-bit DMA mask.\n");
-	} else 
+	} else
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) 
+	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32)))
 #else
-	if (!dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32))) 
+	if (!dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
 #endif
 	{
 		dbg_init("Could not set 64-bit DMA mask.\n");
