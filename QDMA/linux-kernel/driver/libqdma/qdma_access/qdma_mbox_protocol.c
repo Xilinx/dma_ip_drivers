@@ -1948,13 +1948,13 @@ int qdma_mbox_send(void *dev_hndl, uint8_t is_vf, uint32_t *raw_data)
 	uint16_t dst_func_id = msg->hdr.dst_func_id;
 	uint32_t mbox_base = get_mbox_offset(dev_hndl, is_vf);
 
-	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
-	if (v & F_MBOX_FN_STATUS_OUT_MSG)
-		return -QDMA_ERR_MBOX_SEND_BUSY;
-
 	if (!is_vf)
 		qdma_reg_write(dev_hndl, mbox_base + MBOX_FN_TARGET,
 				V_MBOX_FN_TARGET_ID(dst_func_id));
+
+	v = qdma_reg_read(dev_hndl, mbox_base + MBOX_FN_STATUS);
+	if (v & F_MBOX_FN_STATUS_OUT_MSG)
+		return -QDMA_ERR_MBOX_SEND_BUSY;
 
 	for (i = 0; i < MBOX_MSG_REG_MAX; i++, reg += MBOX_MSG_STEP)
 		qdma_reg_write(dev_hndl, mbox_base + reg, raw_data[i]);
