@@ -456,7 +456,12 @@ static int __init xvsec_drv_init(void)
 	if (dev_count == 0)
 		return 0;
 
-	g_xvsec_class = class_create(THIS_MODULE, XVSEC_NODE_NAME);
+	#if	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0))
+	g_xvsec_class = class_create(             XVSEC_NODE_NAME);			// 2024011901: linux-6.4.0  - include/linux/device/class.h line 230
+	#else
+	g_xvsec_class = class_create(THIS_MODULE, XVSEC_NODE_NAME);			// 2024011901: linux-6.3.13 - include/linux/device/class.h line 260:277
+	#endif
+
 	if (IS_ERR(g_xvsec_class)) {
 		pr_err("failed to create class");
 		ret = -(PTR_ERR(g_xvsec_class));

@@ -90,7 +90,7 @@ struct qdma_cdev {
 	ssize_t (*fp_aiorw)(unsigned long dev_hndl, unsigned long qhndl,
 			unsigned long count, struct qdma_request **reqv);
 	/** name of the character device*/
-	char name[0];
+	char *name;									// 2024011902
 };
 
 /**

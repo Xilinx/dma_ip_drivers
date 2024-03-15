@@ -116,10 +116,10 @@ if [ "$data_check" -eq 0 ]; then
 	exit 0
 fi
 
-#md5sum $c2h_fname
-#md5sum $h2c_fname
-diff -q $c2h_fname $h2c_fname > /dev/null
-if [ "$?" -eq "1" ]; then
+readarray -d ' ' -t c2h_md5 <<< $(md5sum -b ${c2h_fname});
+readarray -d ' ' -t h2c_md5 <<< $(md5sum -b ${h2c_fname});
+
+if [[ ${c2h_md5[0]} != ${h2c_md5[0]} ]]; then
 	echo -e "\t$xid $h2cno:$c2hno: io $sz, addr $address, off $offset," \
 		"data integrity FAILED!."
 	exit 6

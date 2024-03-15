@@ -603,7 +603,12 @@ fail:
 
 int xdma_cdev_init(void)
 {
-	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+	#if	(LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0))
+	g_xdma_class = class_create(             XDMA_NODE_NAME);			// 2024011901: linux-6.4.0  - include/linux/device/class.h line 230
+	#else
+	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);			// 2024011901: linux-6.3.13 - include/linux/device/class.h line 260:277
+	#endif
+
 	if (IS_ERR(g_xdma_class)) {
 		dbg_init(XDMA_NODE_NAME ": failed to create class");
 		return -EINVAL;
