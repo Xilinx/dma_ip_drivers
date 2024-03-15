@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ./global.sh;									# 2024031500
+
 ####################
 #
 # test settings
@@ -9,8 +11,8 @@ outdir="/tmp"
 driver_modes="0 4"		;# driver mode
 address=0
 offset=0
-io_min=64
-io_max=$((1 << 30))		;# 1GB
+io_min=$((1 << ${io_min_bit}));
+io_max=$((1 << ${io_max_bit}));
 delay=5				;# delay between each test
 
 fio_time=30

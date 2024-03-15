@@ -1,16 +1,18 @@
 #!/bin/sh
 
+source ./global.sh;									# 2024031500
+
 ##########################
 #
 # preset test parameters:
 #
 ##########################
 # dma io size
-io_list="1 10 127 128 1021 1022 1023 1024 4095 4096 4097 4098 4099 8189 8190 8191 8192"
-io_max=8192
+io_list="";     for (( i=${io_min_bit};i<=${io_max_bit};i++ )); do io_list="${io_list} $((1<<${i}))"        ; done;
+io_max=$((1 << ${io_max_bit}));
 
 # offset
-offset_list="1 2 3 4 2045 2046 2047 2048 2049 4091 4092 4093 4094 4095"
+offset_list=""; for (( i=${io_min_bit};i<=${io_max_bit};i++ )); do offset_list="${offset_list} $((1<<${i}))"; done;
 
 # starting address
 address=0
