@@ -966,10 +966,10 @@ engine_service_final_transfer(struct xdma_engine *engine,
 				}
 			}
 
-			transfer->desc_cmpl += *pdesc_completed;
 			if (!(transfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED)) {
 				return NULL;
 			}
+			transfer->desc_cmpl = *pdesc_completed;
 
 			/* mark transfer as successfully completed */
 			engine_service_shutdown(engine);
@@ -1002,6 +1002,7 @@ engine_service_final_transfer(struct xdma_engine *engine,
 			WARN_ON(*pdesc_completed > transfer->desc_num);
 		}
 		/* mark transfer as successfully completed */
+		engine_service_shutdown(engine);
 		transfer->state = TRANSFER_STATE_COMPLETED;
 		transfer->desc_cmpl = transfer->desc_num;
 		/* add dequeued number of descriptors during this run */
@@ -2327,12 +2328,7 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 /* xdma_desc_adjacent -- Set how many descriptors are adjacent to this one */
 static void xdma_desc_adjacent(struct xdma_desc *desc, u32 next_adjacent)
 {
-	/* remember reserved and control bits */
-	u32 control = le32_to_cpu(desc->control) & 0x0000f0ffUL;
-	/* merge adjacent and control field */
-	control |= 0xAD4B0000UL | (next_adjacent << 8);
-	/* write control and next_adjacent */
-	desc->control = cpu_to_le32(control);
+	desc->control = cpu_to_le32(le32_to_cpu(desc->control) | next_adjacent << 8);
 }
 
 /* xdma_desc_control -- Set complete control field of a descriptor. */
@@ -3616,8 +3612,8 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 				for (i = 0; i < xfer->desc_cmpl; i++)
 					done += result[i].length;
 
-				/* finish the whole request */
-				if (engine->eop_flush)
+				/* finish the whole request when EOP revcived */
+				if (engine->eop_flush && (xfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED))
 					nents = 0;
 			} else
 				done += xfer->len;
@@ -4439,7 +4435,7 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	/* allocate zeroed device book keeping structure */
 	xdev = alloc_dev_instance(pdev);
 	if (!xdev)
-		return NULL;
+		goto err_alloc_dev_instance;
 	xdev->mod_name = mname;
 	xdev->user_max = *user_max;
 	xdev->h2c_channel_max = *h2c_channel_max;
@@ -4458,12 +4454,12 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = xdev_list_add(xdev);
 	if (rv < 0)
-		goto free_xdev;
+		goto err_xdev_list_add;
 
 	rv = pci_enable_device(pdev);
 	if (rv) {
 		dbg_init("pci_enable_device() failed, %d.\n", rv);
-		goto err_enable;
+		goto err_pci_enable_device;
 	}
 
 	/* keep INTx enabled */
@@ -4486,15 +4482,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = request_regions(xdev, pdev);
 	if (rv)
-		goto err_regions;
+		goto err_request_regions;
 
 	rv = map_bars(xdev, pdev);
 	if (rv)
-		goto err_map;
+		goto err_map_bars;
 
 	rv = set_dma_mask(pdev);
 	if (rv)
-		goto err_mask;
+		goto err_set_dma_mask;
 
 	check_nonzero_interrupt_status(xdev);
 	/* explicitely zero all interrupt enable masks */
@@ -4504,15 +4500,15 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 
 	rv = probe_engines(xdev);
 	if (rv)
-		goto err_mask;
+		goto err_probe_engines;
 
 	rv = enable_msi_msix(xdev, pdev);
 	if (rv < 0)
-		goto err_engines;
+		goto err_enable_msi_msix;
 
 	rv = irq_setup(xdev, pdev);
 	if (rv < 0)
-		goto err_msix;
+		goto err_irq_setup;
 
 	if (!poll_mode)
 		channel_interrupts_enable(xdev, ~0);
@@ -4527,22 +4523,24 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	return (void *)xdev;
 
-err_msix:
+err_irq_setup:
 	disable_msi_msix(xdev, pdev);
-err_engines:
+err_enable_msi_msix:
 	remove_engines(xdev);
-err_mask:
+err_probe_engines:
+err_set_dma_mask:
 	unmap_bars(xdev, pdev);
-err_map:
+err_map_bars:
 	if (xdev->got_regions)
 		pci_release_regions(pdev);
-err_regions:
+err_request_regions:
 	if (!xdev->regions_in_use)
 		pci_disable_device(pdev);
-err_enable:
+err_pci_enable_device:
 	xdev_list_remove(xdev);
-free_xdev:
+err_xdev_list_add:
 	kfree(xdev);
+err_alloc_dev_instance:
 	return NULL;
 }
 
