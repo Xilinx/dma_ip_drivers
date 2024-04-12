@@ -113,7 +113,9 @@ Usage:
   - Change directory to the driver directory.
         cd xdma
   - Compile and install the kernel module driver.
-        make install
+        sudo make install
+  - Generate modules.dep and map files
+	sudo depmod
   - Change directory to the tools directory.
         cd tools
   - Compile the provided example test tools.
