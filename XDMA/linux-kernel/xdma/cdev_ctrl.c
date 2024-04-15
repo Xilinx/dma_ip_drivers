@@ -233,7 +233,9 @@ int bridge_mmap(struct file *file, struct vm_area_struct *vma)
 	 * prevent touching the pages (byte access) for swap-in,
 	 * and prevent the pages from being swapped out
 	 */
-	vma->vm_flags |= VMEM_FLAGS;
+	 
+	vm_flags_mod(vma, VMEM_FLAGS, 0);
+	// vma->__vm_flags |= VMEM_FLAGS; /* TODO: uncomment. important */	
 	/* make MMIO accessible to user space */
 	rv = io_remap_pfn_range(vma, vma->vm_start, phys >> PAGE_SHIFT,
 			vsize, vma->vm_page_prot);
