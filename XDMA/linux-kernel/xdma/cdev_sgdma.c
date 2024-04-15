@@ -232,7 +232,6 @@ static int check_transfer_align(struct xdma_engine *engine,
 
 /*
  * Map a user memory range into a scatterlist
- * inspired by vhost_scsi_map_to_sgl()
  * Returns the number of scatterlist entries used or -errno on error.
  */
 static inline void xdma_io_cb_release(struct xdma_io_cb *cb)
