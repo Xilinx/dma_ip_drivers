@@ -125,7 +125,7 @@ skip_dev_lock:
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
 	caio->iocb->ki_complete(caio->iocb, numbytes);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
-	caio->iocb->ki_complete(caio->iocb, numbytes, -EBUSY)
+	caio->iocb->ki_complete(caio->iocb, numbytes, -EBUSY);
 #else
 	aio_complete(caio->iocb, numbytes, -EBUSY);
 #endif
