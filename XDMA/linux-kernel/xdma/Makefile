@@ -43,7 +43,7 @@ clean:
 	@/bin/rm -f *.ko modules.order *.mod.c *.o *.o.ur-safe .*.o.cmd
 
 install: all
-	@rm -f /lib/modules/5.15.0-67-generic/extra/xdma.ko
+	@rm -f /lib/modules/$(shell uname -r)/extra/xdma.ko
 	@echo "installing kernel modules to /lib/modules/$(shell uname -r)/xdma ..."
 	@mkdir -p -m 755 /lib/modules/$(shell uname -r)/xdma
 	@install -v -m 644 *.ko /lib/modules/$(shell uname -r)/xdma
