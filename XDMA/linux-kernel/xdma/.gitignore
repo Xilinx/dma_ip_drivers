@@ -5,3 +5,5 @@ xdma.mod
 modules.order
 Module.symvers
 xdma.mod.c
+/xdma-gonsolo.mod
+/xdma-gonsolo.mod.c
