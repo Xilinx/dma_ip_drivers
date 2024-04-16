@@ -3,4 +3,6 @@ sudo make -j10 install
 Boot with pci=nomsi
 sudo insmod /lib/modules/6.8.5-arch1-1/xdma/xdma-gonsolo.ko poll_mode=1 interrupt_mode=2
 lsmod|grep xdma_gonsolo
+sudo dmesg
 sudo rmmod  xdma_gonsolo
+ls /dev/xdma*
