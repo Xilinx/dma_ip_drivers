@@ -7,3 +7,4 @@ Module.symvers
 xdma.mod.c
 /xdma-gonsolo.mod
 /xdma-gonsolo.mod.c
+/compile_commands.json
