@@ -119,7 +119,9 @@ static int xthread_main(void *data)
 					thp->name, thp->work_cnt);
 			/* do work */
 			list_for_each_safe(work_item, next, &thp->work_list) {
+				unlock_thread(thp);
 				thp->fproc(work_item);
+				lock_thread(thp);
 			}
 		}
 		unlock_thread(thp);
