@@ -4506,11 +4506,9 @@ void *xdma_device_open(const char *mname, struct pci_dev *pdev, int *user_max,
 	if (rv)
 		goto err_mask;
 
-	if (!poll_mode) {
-		rv = enable_msi_msix(xdev, pdev);
-		if (rv < 0)
-			goto err_engines;
-	}
+	rv = enable_msi_msix(xdev, pdev);
+	if (rv < 0)
+		goto err_engines;
 
 	rv = irq_setup(xdev, pdev);
 	if (rv < 0)
