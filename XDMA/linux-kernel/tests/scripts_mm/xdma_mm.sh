@@ -6,7 +6,8 @@
 #
 ####################
 outdir="/tmp"
-driver_modes="0 4"		;# driver mode
+# gonsolo driver_modes="0 4"		;# driver mode
+driver_modes="4"
 address=0
 offset=0
 io_min=64
