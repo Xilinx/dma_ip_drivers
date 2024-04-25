@@ -33,8 +33,7 @@ libxvsec :
 	cd libxvsec && $(MAKE)
 
 .PHONY : tools
-tools : libxvsec app
-app :
+tools : libxvsec
 	@echo "#######################";
 	@echo "####  tools        ####";
 	@echo "#######################";
