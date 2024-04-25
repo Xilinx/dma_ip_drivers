@@ -1,3 +1,7 @@
+gonsolo
+=======
+- updated to kernel 6.8.7 and make sure it works.
+
 v2020.2.0
 =========
 - renamed module parameter "enable_credit_mp" to "enable_st_c2h_credit" to 
