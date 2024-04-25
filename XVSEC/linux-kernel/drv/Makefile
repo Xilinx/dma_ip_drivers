@@ -29,7 +29,9 @@ all:
 	@mv *.symvers $(module_path)/obj/
 	@mv *.mod* $(module_path)/obj/
 	@mv *.order* $(module_path)/obj/
-	@mv .tmp* $(module_path)/obj/
+	@if test -e .tmp*; then \
+		mv .tmp* $(module_path)/obj/; \
+	fi;
 	@mv ./xvsec_mcap/*.o $(module_path)/obj/xvsec_mcap/
 	@mv ./xvsec_mcap/us/*.o $(module_path)/obj/xvsec_mcap/us/
 	@mv ./xvsec_mcap/versal/*.o $(module_path)/obj/xvsec_mcap/versal/
