@@ -1,3 +1,4 @@
+CONFIG_MODULE_SIG=n
 SHELL = /bin/bash
 #
 # optional makefile parameters:
