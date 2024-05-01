@@ -54,7 +54,7 @@ clean :
 	cd tools && $(MAKE) clean
 
 .PHONY : install
-install :
+install : tools drv
 	@echo "installing kernel modules to $(kernel_install_path) ..."
 	@mkdir -p -m 755 $(kernel_install_path)
 	@install -v -m 644 $(BUILD_DIR)/modules/*.ko $(kernel_install_path)
