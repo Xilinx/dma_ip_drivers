@@ -1,7 +1,4 @@
-# Forked Xilinx DMA IP Reference drivers
-
-The official driver didn't work for me when the kernel changed somewhere in kernel 5.x.x.
-This repository is mainly used for my raspberry pi work 
+# Xilinx DMA IP Reference drivers
 
 ## Xilinx QDMA
 
