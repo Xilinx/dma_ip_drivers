@@ -2650,7 +2650,7 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 int qdma_init_st_ctxt(unsigned long dev_hndl, char *buf, int buflen)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
-	int rv;
+	int rv = 0;
 
 	/** make sure that input buffer is not empty, else return error */
 	if (!buf || !buflen) {
