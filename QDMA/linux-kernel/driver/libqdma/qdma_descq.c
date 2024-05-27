@@ -31,6 +31,9 @@
 #include "qdma_context.h"
 #include "qdma_st_c2h.h"
 #include "qdma_access_common.h"
+#ifdef __XRT__
+#include "eqdma_soft_access.h"
+#endif
 #include "thread.h"
 #include "qdma_ul_ext.h"
 #include "version.h"
@@ -196,6 +199,22 @@ static ssize_t descq_mm_proc_request(struct qdma_descq *descq)
 				 qconf->aperture_size : QDMA_DESC_BLEN_MAX;
 	u8 keyhole_en = qconf->aperture_size ? 1 : 0;
 	u64 ep_addr_max = 0;
+#ifdef __XRT__
+	if (descq->xdev->version_info.ip_type == EQDMA_SOFT_IP) {
+		uint32_t ip_version;
+#ifndef __QDMA_VF__
+		uint8_t is_vf = 0;
+#else
+		uint8_t is_vf = 1;
+#endif
+		rv = eqdma_get_ip_version(descq->xdev, is_vf, &ip_version);
+		if (ip_version == EQDMA_IP_VERSION_5) {
+			pr_info("EQDMA Soft IP 5.0 supports descriptor length < 64K.\n");
+			aperture = qconf->aperture_size ?
+					qconf->aperture_size : SOFT_QDMA_DESC_BLEN_MAX;
+		}
+	}
+#endif
 
 	lock_descq(descq);
 	/* process completion of submitted requests */
