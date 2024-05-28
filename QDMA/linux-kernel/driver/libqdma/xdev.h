@@ -95,6 +95,18 @@ enum qdma_pf_devices {
  */
 #define QDMA_DESC_BLEN_MAX	((1 << (QDMA_DESC_BLEN_BITS)) - 1)
 
+#ifdef __XRT__
+/**
+ * number of bits to describe the SOFT DMA transfer descriptor
+ */
+#define SOFT_QDMA_DESC_BLEN_BITS   15
+
+/**
+ * maximum size of a single SOFT DMA transfer descriptor
+ */
+#define SOFT_QDMA_DESC_BLEN_MAX      (1 << (SOFT_QDMA_DESC_BLEN_BITS))
+#endif
+
 /**
  * obtain the 32 most significant (high) bits of a 32-bit or 64-bit address
  */
