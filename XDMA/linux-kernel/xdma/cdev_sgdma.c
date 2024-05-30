@@ -562,7 +562,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 	return -EIOCBQUEUED;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0) && LINUX_VERSION_CODE <= KERNEL_VERSION(6, 4, 0)
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
 	return cdev_aio_write(iocb, io->iov, io->nr_segs, io->iov_offset);
@@ -573,6 +573,19 @@ static ssize_t cdev_read_iter(struct kiocb *iocb, struct iov_iter *io)
 	return cdev_aio_read(iocb, io->iov, io->nr_segs, io->iov_offset);
 }
 #endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
+{
+	return cdev_aio_write(iocb, io->__iov, io->nr_segs, io->iov_offset);
+}
+
+static ssize_t cdev_read_iter(struct kiocb *iocb, struct iov_iter *io)
+{
+	return cdev_aio_read(iocb, io->__iov, io->nr_segs, io->iov_offset);
+}
+#endif
+
 
 static int ioctl_do_perf_start(struct xdma_engine *engine, unsigned long arg)
 {
