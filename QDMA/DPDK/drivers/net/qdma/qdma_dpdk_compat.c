@@ -305,6 +305,8 @@ int rte_pmd_qdma_dev_fp_ops_config(int port_id)
 	fpo[port_id].rxq.data = dev->data->rx_queues;
 	fpo[port_id].txq.data = dev->data->tx_queues;
 
+    PMD_DRV_LOG(ERR, "%s:%d rte_pmd_qdma_dev_fp_ops_config done .. (fpo[port_id].txq.data %p)\n",
+            __func__, __LINE__, fpo[port_id].txq.data);
 	return 0;
 #endif
 

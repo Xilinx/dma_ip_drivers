@@ -90,6 +90,12 @@ static struct rte_pci_id qdma_pci_id_tbl[] = {
 #define PCI_VENDOR_ID_XILINX 0x10ee
 #endif
 
+#ifndef PCI_VENDOR_ID_SPIRENT
+#define PCI_VENDOR_ID_SPIRENT 0x174a
+#endif
+   
+    RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_SPIRENT, 0x0c68)  /** PF 2 */
+
 	/** Gen 1 PF */
 	/** PCIe lane width x1 */
 	RTE_PCI_DEV_ID_DECL(PCI_VENDOR_ID_XILINX, 0x9011)	/** PF 0 */
@@ -643,7 +649,7 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 		dma_priv->bar_addr[dma_priv->user_bar_idx] = baseaddr;
 	}
 
-	PMD_DRV_LOG(INFO, "QDMA device driver probe:");
+	PMD_DRV_LOG(INFO, "QDMA device driver probe: (qdma_pci_dev address %p)\n",dma_priv);
 
 	qdma_dev_ops_init(dev);
 
@@ -932,6 +938,8 @@ int qdma_eth_dev_uninit(struct rte_eth_dev *dev)
 static int eth_qdma_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 				struct rte_pci_device *pci_dev)
 {
+
+    PMD_DRV_LOG(ERR, "eth_qdma_pci_probe (size of qdma_pci_dev %d)\n", sizeof(struct qdma_pci_dev));
 	return rte_eth_dev_pci_generic_probe(pci_dev,
 						sizeof(struct qdma_pci_dev),
 						qdma_eth_dev_init);

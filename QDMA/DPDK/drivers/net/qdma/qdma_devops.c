@@ -113,6 +113,7 @@ int qdma_vf_csr_read(struct rte_eth_dev *dev)
 	for (i = 0; i < QDMA_NUM_RING_SIZES; i++) {
 		qdma_dev->g_ring_sz[i] = (uint32_t)csr_info.ringsz[i];
 		qdma_dev->g_c2h_buf_sz[i] = (uint32_t)csr_info.bufsz[i];
+        PMD_DRV_LOG(ERR, "qdma_dev->g_c2h_buf_sz[%d] - (%d)", i, qdma_dev->g_c2h_buf_sz[i]);
 		qdma_dev->g_c2h_timer_cnt[i] = (uint32_t)csr_info.timer_cnt[i];
 		qdma_dev->g_c2h_cnt_th[i] = (uint32_t)csr_info.cnt_thres[i];
 #ifdef QDMA_LATENCY_OPTIMIZED
@@ -1973,12 +1974,13 @@ static struct eth_dev_ops qdma_eth_dev_ops = {
 void qdma_dev_ops_init(struct rte_eth_dev *dev)
 {
 	dev->dev_ops = &qdma_eth_dev_ops;
-	if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
+	//if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
 		qdma_set_rx_function(dev);
 		qdma_set_tx_function(dev);
 		dev->rx_queue_count = &qdma_dev_rx_queue_count;
 		dev->rx_descriptor_status = &qdma_dev_rx_descriptor_status;
 		dev->tx_descriptor_status = &qdma_dev_tx_descriptor_status;
-	}
+	//}
+    PMD_DRV_LOG(INFO, "qdma_dev_ops_init(): compeleted setting up tx and rx functions");
 }
 

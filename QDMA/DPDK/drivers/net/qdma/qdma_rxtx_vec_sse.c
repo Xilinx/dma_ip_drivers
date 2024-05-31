@@ -688,12 +688,33 @@ uint16_t qdma_recv_pkts_vec(void *rx_queue, struct rte_mbuf **rx_pkts,
 uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 1:");
+
 	struct rte_mbuf *mb;
 	uint64_t pkt_len = 0;
 	int avail, in_use, ret, nsegs;
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 2:");
+    
+    if (txq->dev != NULL)
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev %p) 2A:\n", txq->dev);
+
+    if (txq->dev->data != NULL)
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev->data %p) i 2B:\n", txq->dev->data);
+
+    PMD_DRV_LOG(ERR, "check qdma_xmit_pkts_st_vec() (txq->dev->data->dev_private %p 2cB:\n", txq->dev->data->dev_private);
+
+    if(txq->dev->data->dev_private == NULL)
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev->data->dev_private is NULL 2cA:\n");
+
+
+    if (txq->dev->data->dev_private != NULL)
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev->data->dev_private %p) 2C:\n", txq->dev->data->dev_private);
+
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 3:");
 
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
@@ -704,15 +725,19 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	}
 #endif
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 4:");
 	id = txq->q_pidx_info.pidx;
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 5:");
 	/* Make sure reads to Tx ring are synchronized before
 	 * accessing the status descriptor.
 	 */
 	rte_rmb();
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 6:");
 	cidx = txq->wb_status->cidx;
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 7:");
 #ifdef LATENCY_MEASUREMENT
 	uint32_t cidx_cnt = 0;
 	if (cidx != txq->qstats.wrb_cidx) {
@@ -739,16 +764,18 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	}
 #endif
 
-	PMD_DRV_LOG(DEBUG, "Xmit start on tx queue-id:%d, tail index:%d\n",
+	PMD_DRV_LOG(ERR, "Xmit start on tx queue-id:%d, tail index:%d\n",
 			txq->queue_id, id);
 
 	/* Free transmitted mbufs back to pool */
 	reclaim_tx_mbuf(txq, cidx, 0);
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 8:");
 	in_use = (int)id - cidx;
 	if (in_use < 0)
 		in_use += (txq->nb_tx_desc - 1);
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 9:");
 	/* Make 1 less available, otherwise if we allow all descriptors
 	 * to be filled, when nb_pkts = nb_tx_desc - 1, pidx will be same
 	 * as old pidx and HW will treat this as no new descriptors were added.
@@ -756,12 +783,14 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	 */
 	avail = txq->nb_tx_desc - 2 - in_use;
 
+    PMD_DRV_LOG(INFO, "qdma_xmit_pkts_st_vec() 10:");
 	if (unlikely(!avail)) {
 		txq->qstats.txq_full_cnt++;
-		PMD_DRV_LOG(DEBUG, "Tx queue full, in_use = %d", in_use);
+		PMD_DRV_LOG(ERR, "Tx queue full, in_use = %d", in_use);
 		return 0;
 	}
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 11:");
 	for (count = 0; count < nb_pkts; count++) {
 		mb = tx_pkts[count];
 		nsegs = mb->nb_segs;
@@ -778,11 +807,13 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 		pkt_len += rte_pktmbuf_pkt_len(mb);
 
 		ret = qdma_ul_update_st_h2c_desc_vec(txq, txq->offloads, mb);
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 12:");
 
 		if (unlikely(ret < 0))
 			break;
 	}
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 13:");
 	txq->stats.pkts += count;
 	txq->stats.bytes += pkt_len;
 
@@ -792,11 +823,13 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	txq->qstats.in_use_desc = in_use;
 	txq->qstats.nb_pkts = nb_pkts;
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 14:");
 #if (MIN_TX_PIDX_UPDATE_THRESHOLD > 1)
 	rte_spinlock_lock(&txq->pidx_update_lock);
 #endif
 	txq->tx_desc_pend += count;
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 15:");
 	/* Send PIDX update only if pending desc is more than threshold
 	 * Saves frequent Hardware transactions
 	 */
@@ -807,6 +840,7 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 
 		txq->tx_desc_pend = 0;
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 16:");
 #ifdef LATENCY_MEASUREMENT
 		/* start the timer */
 		txq->qstats.pkt_lat.prev = rte_get_timer_cycles();
@@ -814,8 +848,9 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	}
 #if (MIN_TX_PIDX_UPDATE_THRESHOLD > 1)
 	rte_spinlock_unlock(&txq->pidx_update_lock);
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 17:");
 #endif
-	PMD_DRV_LOG(DEBUG, " xmit completed with count:%d\n", count);
+	PMD_DRV_LOG(ERR, " xmit completed with count:%d\n", count);
 
 	return count;
 }
@@ -836,16 +871,25 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 uint16_t qdma_xmit_pkts_vec(void *tx_queue, struct rte_mbuf **tx_pkts,
 			uint16_t nb_pkts)
 {
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_vec() 1:");
+
+    if (tx_queue == NULL)
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_vec() tx_queue is empty  1:");
+
 	struct qdma_tx_queue *txq = tx_queue;
 	uint16_t count;
 
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_vec() 2:");
 	if (txq->status != RTE_ETH_QUEUE_STATE_STARTED)
 		return 0;
 
-	if (txq->st_mode)
-		count =	qdma_xmit_pkts_st_vec(txq, tx_pkts, nb_pkts);
-	else
+	if (txq->st_mode)   {
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_vec() 3:");
+		count =	qdma_xmit_pkts_st_vec(txq, tx_pkts, nb_pkts); }
+	else {
 		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
-
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_vec() 4:");
+    }
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts_vec() done:");
 	return count;
 }

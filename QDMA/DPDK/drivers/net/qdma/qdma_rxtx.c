@@ -1302,7 +1302,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 #if (MIN_TX_PIDX_UPDATE_THRESHOLD > 1)
 	rte_spinlock_unlock(&txq->pidx_update_lock);
 #endif
-	PMD_DRV_LOG(DEBUG, " xmit completed with count:%d\n", count);
+	PMD_DRV_LOG(INFO, " xmit completed with count:%d\n", count);
 
 	return count;
 }
@@ -1396,7 +1396,7 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 		return 0;
 	}
 
-	PMD_DRV_LOG(DEBUG, " xmit completed with count:%d", count);
+	PMD_DRV_LOG(INFO, " xmit completed with count:%d", count);
 	return count;
 }
 /**
@@ -1417,15 +1417,23 @@ uint16_t qdma_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 {
 	struct qdma_tx_queue *txq = tx_queue;
 	uint16_t count;
+    RTE_LOG(INFO, PMD, "qdma_xmit_pkts(): Enter (nb_pkts %d)\n", nb_pkts);
 
 	if (txq->status != RTE_ETH_QUEUE_STATE_STARTED)
 		return 0;
 
-	if (txq->st_mode)
-		count =	qdma_xmit_pkts_st(txq, tx_pkts, nb_pkts);
-	else
-		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
 
+	if (txq->st_mode) {
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): sending in stream mode (nb_pkts %d)\n", nb_pkts);
+		count =	qdma_xmit_pkts_st(txq, tx_pkts, nb_pkts);
+    }
+	else
+    {
+        PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): sending (nb_pkts %d)\n", nb_pkts);
+		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
+    }
+
+    PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): Exit (nb_pkts %d)\n", nb_pkts);
 	return count;
 }
 
@@ -1435,14 +1443,14 @@ qdma_set_tx_function(struct rte_eth_dev *dev)
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 
 	if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) {
-		PMD_DRV_LOG(DEBUG, "Using Vector Tx (port %d).",
-			dev->data->port_id);
+		PMD_DRV_LOG(INFO, "Using Vector Tx (port %d).",dev->data->port_id);
 		qdma_dev->tx_vec_allowed = true;
 		dev->tx_pkt_burst = qdma_xmit_pkts_vec;
+		PMD_DRV_LOG(INFO, "Using Vector Tx (dev->tx_pkt_burst %p).", dev->tx_pkt_burst);
 	} else {
-		PMD_DRV_LOG(DEBUG, "Normal Rx will be used on port %d.",
-				dev->data->port_id);
+		PMD_DRV_LOG(INFO, "Normal Tx will be used on port %d.", dev->data->port_id);
 		dev->tx_pkt_burst = qdma_xmit_pkts;
+		PMD_DRV_LOG(INFO, "Normal Tx will be used on (dev->tx_pkt_burst %p)", dev->data->port_id);
 	}
 }
 
@@ -1452,12 +1460,12 @@ qdma_set_rx_function(struct rte_eth_dev *dev)
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 
 	if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) {
-		PMD_DRV_LOG(DEBUG, "Using Vector Rx (port %d).",
+		PMD_DRV_LOG(INFO, "Using Vector Rx (port %d).",
 			dev->data->port_id);
 		qdma_dev->rx_vec_allowed = true;
 		dev->rx_pkt_burst = qdma_recv_pkts_vec;
 	} else {
-		PMD_DRV_LOG(DEBUG, "Normal Rx will be used on port %d.",
+		PMD_DRV_LOG(INFO, "Normal Rx will be used on port %d.",
 				dev->data->port_id);
 		dev->rx_pkt_burst = qdma_recv_pkts;
 	}
