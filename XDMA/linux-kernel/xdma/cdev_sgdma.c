@@ -104,12 +104,22 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 	if (caio->cmpl_cnt == caio->req_cnt) {
 		res = caio->res;
 		res2 = caio->res2;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
+#ifdef RHEL_RELEASE_VERSION
+#if RHEL_RELEASE_VERSION(9, 0) < RHEL_RELEASE_CODE
 		caio->iocb->ki_complete(caio->iocb, caio->err_cnt ? res2 : res);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+#elif RHEL_RELEASE_VERSION(8, 0) < RHEL_RELEASE_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
 #else
 		aio_complete(caio->iocb, res, res2);
+#endif
+#else
+#if KERNEL_VERSION(5, 16, 0) <= LINUX_VERSION_CODE
+		caio->iocb->ki_complete(caio->iocb, caio->err_cnt ? res2 : res);
+#elif KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
+		caio->iocb->ki_complete(caio->iocb, res, res2);
+#else
+		aio_complete(caio->iocb, res, res2);
+#endif
 #endif
 skip_tran:
 		spin_unlock(&caio->lock);
@@ -121,12 +131,22 @@ skip_tran:
 	return;
 
 skip_dev_lock:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
+#ifdef RHEL_RELEASE_VERSION
+#if RHEL_RELEASE_VERSION(9, 0) < RHEL_RELEASE_CODE
 	caio->iocb->ki_complete(caio->iocb, -EBUSY);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+#elif RHEL_RELEASE_VERSION(8, 0) < RHEL_RELEASE_CODE
+	caio->iocb->ki_complete(caio->iocb, numbytes, -EBUSY);
+#else
+		aio_complete(caio->iocb, numbytes, -EBUSY);
+#endif
+#else
+#if KERNEL_VERSION(5, 16, 0) <= LINUX_VERSION_CODE
+	caio->iocb->ki_complete(caio->iocb, -EBUSY);
+#elif KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
 	caio->iocb->ki_complete(caio->iocb, numbytes, -EBUSY);
 #else
 	aio_complete(caio->iocb, numbytes, -EBUSY);
+#endif
 #endif
 	kmem_cache_free(cdev_cache, caio);
 }
