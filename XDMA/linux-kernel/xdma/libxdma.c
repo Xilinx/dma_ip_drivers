@@ -4081,6 +4081,22 @@ int xdma_performance_submit(struct xdma_dev *xdev, struct xdma_engine *engine)
 		pr_err("Failed to set desc control\n");
 		goto err_dma_desc;
 	}
+
+	/************ support prefetching adjacent descriptors -- start ************/
+
+	/* fill in adjacent numbers */
+	transfer->desc_adjacent = transfer->desc_num - 1;
+
+	for (i = 0; i < transfer->desc_num; i++) {
+		u32 next_adj = xdma_get_next_adj(transfer->desc_num - i - 1,
+						(transfer->desc_virt + i)->next_lo);
+
+		xdma_desc_adjacent(transfer->desc_virt + i, next_adj);
+		dbg_desc("prefetch: dma desc addr: %x_%x, control:%x", transfer->desc_virt[i].next_hi, transfer->desc_virt[i].next_lo, transfer->desc_virt[i].control);
+	}
+
+	/************ support prefetching adjacent descriptors -- end ************/
+
 	/* create a linked loop */
 	xdma_desc_link(transfer->desc_virt + transfer->desc_num - 1,
 		       transfer->desc_virt, transfer->desc_bus);
