@@ -134,7 +134,13 @@ static int qdma_ul_update_st_h2c_desc_vec(void *qhndl, uint64_t q_offloads,
 static int process_cmpt_ring_vec(struct qdma_rx_queue *rxq,
 		uint16_t num_cmpt_entries)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+    struct rte_eth_dev *dev = rxq->dev;
+#endif
 	union qdma_ul_st_cmpt_ring *user_cmpt_entry;
 	uint32_t count = 0;
 	int ret = 0;
@@ -224,9 +230,9 @@ static int process_cmpt_ring_vec(struct qdma_rx_queue *rxq,
 
 	// Update the CPMT CIDX
 	rxq->cmpt_cidx_info.wrb_cidx = rx_cmpt_tail;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(rxq->dev,
-		qdma_dev->is_vf,
-		rxq->queue_id, &rxq->cmpt_cidx_info);
+	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev,
+                                                     qdma_dev->is_vf,
+                                                     rxq->queue_id, &rxq->cmpt_cidx_info);
 
 	return 0;
 }
@@ -402,7 +408,13 @@ static uint16_t prepare_packets_vec(struct qdma_rx_queue *rxq,
 /* Populate C2H ring with new buffers */
 static int rearm_c2h_ring_vec(struct qdma_rx_queue *rxq, uint16_t num_desc)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+    struct rte_eth_dev *dev = rxq->dev;
+#endif
 	struct rte_mbuf *mb;
 	struct qdma_ul_st_c2h_desc *rx_ring_st =
 			(struct qdma_ul_st_c2h_desc *)rxq->rx_ring;
@@ -492,7 +504,7 @@ static int rearm_c2h_ring_vec(struct qdma_rx_queue *rxq, uint16_t num_desc)
 			rte_mempool_in_use_count(rxq->mb_pool), rearm_descs);
 
 			rxq->q_pidx_info.pidx = id;
-			qdma_dev->hw_access->qdma_queue_pidx_update(rxq->dev,
+			qdma_dev->hw_access->qdma_queue_pidx_update(dev,
 				qdma_dev->is_vf,
 				rxq->queue_id, 1, &rxq->q_pidx_info);
 #ifdef LATENCY_MEASUREMENT
@@ -526,7 +538,7 @@ static int rearm_c2h_ring_vec(struct qdma_rx_queue *rxq, uint16_t num_desc)
 	rte_wmb();
 
 	rxq->q_pidx_info.pidx = id;
-	qdma_dev->hw_access->qdma_queue_pidx_update(rxq->dev,
+	qdma_dev->hw_access->qdma_queue_pidx_update(dev,
 		qdma_dev->is_vf,
 		rxq->queue_id, 1, &rxq->q_pidx_info);
 
@@ -697,22 +709,13 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	uint16_t count = 0, id;
     PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 2:");
     
-    if (txq->dev != NULL)
-        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev %p) 2A:\n", txq->dev);
-
-    if (txq->dev->data != NULL)
-        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev->data %p) i 2B:\n", txq->dev->data);
-
-    PMD_DRV_LOG(ERR, "check qdma_xmit_pkts_st_vec() (txq->dev->data->dev_private %p 2cB:\n", txq->dev->data->dev_private);
-
-    if(txq->dev->data->dev_private == NULL)
-        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev->data->dev_private is NULL 2cA:\n");
-
-
-    if (txq->dev->data->dev_private != NULL)
-        PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() (txq->dev->data->dev_private %p) 2C:\n", txq->dev->data->dev_private);
-
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_pci_dev *qdma_dev = txq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+    struct rte_eth_dev *dev = txq->dev;
+#endif
 
     PMD_DRV_LOG(ERR, "qdma_xmit_pkts_st_vec() 3:");
 
@@ -834,9 +837,9 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	 * Saves frequent Hardware transactions
 	 */
 	if (txq->tx_desc_pend >= MIN_TX_PIDX_UPDATE_THRESHOLD) {
-		qdma_dev->hw_access->qdma_queue_pidx_update(txq->dev,
-			qdma_dev->is_vf,
-			txq->queue_id, 0, &txq->q_pidx_info);
+		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+                                                    qdma_dev->is_vf,
+                                                    txq->queue_id, 0, &txq->q_pidx_info);
 
 		txq->tx_desc_pend = 0;
 

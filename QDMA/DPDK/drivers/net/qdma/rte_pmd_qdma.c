@@ -1299,7 +1299,11 @@ int rte_pmd_qdma_dev_cmptq_setup(int port_id, uint32_t cmpt_queue_id,
 	cmptq->queue_id = cmpt_queue_id;
 	cmptq->port_id = dev->data->port_id;
 	cmptq->func_id = qdma_dev->func_id;
+#ifdef RTE_LIBRTE_SPIRENT
+    cmptq->qdma_dev = qdma_dev;
+#else
 	cmptq->dev = dev;
+#endif
 	cmptq->st_mode = qdma_dev->q_info[cmpt_queue_id].queue_mode;
 	cmptq->triggermode = qdma_dev->q_info[cmpt_queue_id].trigger_mode;
 	cmptq->nb_cmpt_desc = nb_cmpt_desc + 1;
@@ -1772,7 +1776,7 @@ uint16_t rte_pmd_qdma_mm_cmpt_process(int port_id, uint32_t qid,
 
 	// Update the CPMT CIDX
 	cmptq->cmpt_cidx_info.wrb_cidx = cmpt_tail;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(cmptq->dev,
+	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev,
 			qdma_dev->is_vf,
 			cmptq->queue_id,
 			&cmptq->cmpt_cidx_info);

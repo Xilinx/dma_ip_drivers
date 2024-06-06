@@ -26,15 +26,23 @@
 #if defined(QDMA_DPDK_21_11) || defined(QDMA_DPDK_22_11)
 
 void qdma_dev_tx_queue_release(struct rte_eth_dev *dev,
-			       uint16_t queue_id)
+                               uint16_t queue_id)
 {
 	struct qdma_tx_queue *txq =
 	       (struct qdma_tx_queue *)dev->data->tx_queues[queue_id];
 	struct qdma_pci_dev *qdma_dev;
+    struct rte_eth_dev *eth_dev;
 
 	if (txq != NULL) {
 		PMD_DRV_LOG(INFO, "Remove H2C queue: %d", txq->queue_id);
-		qdma_dev = txq->dev->data->dev_private;
+
+#ifdef RTE_LIBRTE_SPIRENT
+        qdma_dev = txq->qdma_dev;
+        eth_dev = &rte_eth_devices[qdma_dev->port];
+#else
+		qdma_dev = dev->data->dev_private;
+        eth_dev = qdma_dev->dev;
+#endif
 
 		if (!qdma_dev->is_vf)
 			qdma_dev_decrement_active_queue(
@@ -42,9 +50,9 @@ void qdma_dev_tx_queue_release(struct rte_eth_dev *dev,
 					qdma_dev->func_id,
 					QDMA_DEV_Q_TYPE_H2C);
 		else
-			qdma_dev_notify_qdel(txq->dev, txq->queue_id +
-						qdma_dev->queue_base,
-						QDMA_DEV_Q_TYPE_H2C);
+			qdma_dev_notify_qdel(eth_dev, txq->queue_id +
+                                 qdma_dev->queue_base,
+                                 QDMA_DEV_Q_TYPE_H2C);
 		if (txq->sw_ring)
 			rte_free(txq->sw_ring);
 		if (txq->tx_mz)
@@ -60,10 +68,18 @@ void qdma_dev_rx_queue_release(struct rte_eth_dev *dev,
 	struct qdma_rx_queue *rxq =
 	       (struct qdma_rx_queue *)dev->data->rx_queues[queue_id];
 	struct qdma_pci_dev *qdma_dev = NULL;
+    struct rte_eth_dev *eth_dev;
 
 	if (rxq != NULL) {
 		PMD_DRV_LOG(INFO, "Remove C2H queue: %d", rxq->queue_id);
-		qdma_dev = rxq->dev->data->dev_private;
+
+#ifdef RTE_LIBRTE_SPIRENT
+        qdma_dev = rxq->qdma_dev;
+        eth_dev = &rte_eth_devices[qdma_dev->port];
+#else
+		qdma_dev = dev->data->dev_private;
+        eth_dev = qdma_dev->dev;
+#endif
 
 		if (!qdma_dev->is_vf) {
 			qdma_dev_decrement_active_queue(
@@ -77,12 +93,12 @@ void qdma_dev_rx_queue_release(struct rte_eth_dev *dev,
 					qdma_dev->func_id,
 					QDMA_DEV_Q_TYPE_CMPT);
 		} else {
-			qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+			qdma_dev_notify_qdel(eth_dev, rxq->queue_id +
 					qdma_dev->queue_base,
 					QDMA_DEV_Q_TYPE_C2H);
 
 			if (rxq->st_mode)
-				qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+				qdma_dev_notify_qdel(eth_dev, rxq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_CMPT);
 		}
@@ -123,16 +139,26 @@ void qdma_dev_tx_queue_release(void *tqueue)
 {
 	struct qdma_tx_queue *txq = (struct qdma_tx_queue *)tqueue;
 	struct qdma_pci_dev *qdma_dev;
+    struct rte_eth_dev *dev = NULL;
+
 	if (txq != NULL) {
 		PMD_DRV_LOG(INFO, "Remove H2C queue: %d", txq->queue_id);
-		qdma_dev = txq->dev->data->dev_private;
+
+#ifdef RTE_LIBRTE_SPIRENT
+        qdma_dev = txq->qdma_dev;
+        dev = &rte_eth_devices[qdma_dev->port];
+#else
+		qdma_dev = dev->data->dev_private;
+        dev = qdma_dev->dev;
+#endif
+
 		if (!qdma_dev->is_vf)
 			qdma_dev_decrement_active_queue(
 					qdma_dev->dma_device_index,
 					qdma_dev->func_id,
 					QDMA_DEV_Q_TYPE_H2C);
 		else
-			qdma_dev_notify_qdel(txq->dev, txq->queue_id +
+			qdma_dev_notify_qdel(dev, txq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_H2C);
 		if (txq->sw_ring)
@@ -148,9 +174,19 @@ void qdma_dev_rx_queue_release(void *rqueue)
 {
 	struct qdma_rx_queue *rxq = (struct qdma_rx_queue *)rqueue;
 	struct qdma_pci_dev *qdma_dev = NULL;
+    struct rte_eth_dev *dev = NULL;
+
 	if (rxq != NULL) {
 		PMD_DRV_LOG(INFO, "Remove C2H queue: %d", rxq->queue_id);
-		qdma_dev = rxq->dev->data->dev_private;
+
+#ifdef RTE_LIBRTE_SPIRENT
+        qdma_dev = rxq->qdma_dev;
+        dev = &rte_eth_devices[qdma_dev->port];
+#else
+		qdma_dev = dev->data->dev_private;
+        dev = rxq->dev;
+#endif
+
 		if (!qdma_dev->is_vf) {
 			qdma_dev_decrement_active_queue(
 					qdma_dev->dma_device_index,
@@ -162,11 +198,11 @@ void qdma_dev_rx_queue_release(void *rqueue)
 					qdma_dev->func_id,
 					QDMA_DEV_Q_TYPE_CMPT);
 		} else {
-			qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+			qdma_dev_notify_qdel(dev, rxq->queue_id +
 					qdma_dev->queue_base,
 					QDMA_DEV_Q_TYPE_C2H);
 			if (rxq->st_mode)
-				qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+				qdma_dev_notify_qdel(dev, rxq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_CMPT);
 		}

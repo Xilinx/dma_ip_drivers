@@ -373,11 +373,18 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 		goto rx_setup_err;
 	}
 
+#ifdef RTE_LIBRTE_SPIRENT
+    /* Reference to get back to the config in common memory */
+    rxq->qdma_dev = qdma_dev;
+#else
+    /* dev is NOT in common mapped memory */
+	rxq->dev = dev;
+#endif
+
 	rxq->queue_id = rx_queue_id;
 	rxq->port_id = dev->data->port_id;
 	rxq->func_id = qdma_dev->func_id;
 	rxq->mb_pool = mb_pool;
-	rxq->dev = dev;
 	rxq->st_mode = qdma_dev->q_info[rx_queue_id].queue_mode;
 
 	rxq->nb_rx_desc = (nb_rx_desc + 1);
@@ -761,6 +768,14 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 		goto tx_setup_err;
 	}
 
+#ifdef RTE_LIBRTE_SPIRENT
+    /* Reference to get back to the config in common memory */
+    txq->qdma_dev = qdma_dev;
+#else
+    /* dev is NOT in common mapped memory */
+	txq->dev = dev;
+#endif
+
 	txq->st_mode = qdma_dev->q_info[tx_queue_id].queue_mode;
 
 	txq->en_bypass = (qdma_dev->q_info[tx_queue_id].tx_bypass_mode) ? 1 : 0;
@@ -768,7 +783,6 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 
 	txq->nb_tx_desc = (nb_tx_desc + 1);
 	txq->queue_id = tx_queue_id;
-	txq->dev = dev;
 	txq->port_id = dev->data->port_id;
 	txq->func_id = qdma_dev->func_id;
 	txq->num_queues = dev->data->nb_tx_queues;
@@ -776,6 +790,21 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 
 	txq->ringszidx = index_of_array(qdma_dev->g_ring_sz,
 					QDMA_NUM_RING_SIZES, txq->nb_tx_desc);
+
+    PMD_DRV_LOG(INFO, "%s(%d): - (txq %p)(nb_tx_desc %d)(queue_id %d)(dev %p)(port_id %d)(func_id %d)(num_queues %d)(tx_deferred_start %d)(ringszidx %d)(magic %lx)\n", __FUNCTION__, __LINE__,
+                txq,
+                txq->nb_tx_desc,
+                txq->queue_id,
+                dev,
+                txq->port_id,
+                txq->func_id,
+                txq->num_queues,
+                txq->tx_deferred_start,
+                txq->ringszidx,
+                dev->magic
+                );
+
+
 	if (txq->ringszidx < 0) {
 		PMD_DRV_LOG(ERR, "Expected Ring size %d not found\n",
 				txq->nb_tx_desc);
@@ -1973,6 +2002,8 @@ static struct eth_dev_ops qdma_eth_dev_ops = {
 
 void qdma_dev_ops_init(struct rte_eth_dev *dev)
 {
+    PMD_DRV_LOG(INFO, "%s(%d):  (dev %p) (magic %lx)\n", __FUNCTION__, __LINE__, dev, dev->magic);
+
 	dev->dev_ops = &qdma_eth_dev_ops;
 	//if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
 		qdma_set_rx_function(dev);
@@ -1981,6 +2012,8 @@ void qdma_dev_ops_init(struct rte_eth_dev *dev)
 		dev->rx_descriptor_status = &qdma_dev_rx_descriptor_status;
 		dev->tx_descriptor_status = &qdma_dev_tx_descriptor_status;
 	//}
-    PMD_DRV_LOG(INFO, "qdma_dev_ops_init(): compeleted setting up tx and rx functions");
+
+    PMD_DRV_LOG(INFO, "%s(%d): (dev %p) (magic %lx) : completed setting up tx and rx functions\n", __FUNCTION__, __LINE__, dev, dev->magic);
+
 }
 

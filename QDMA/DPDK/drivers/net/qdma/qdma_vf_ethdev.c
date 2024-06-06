@@ -634,12 +634,12 @@ int qdma_vf_dev_close(struct rte_eth_dev *dev)
 			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove C2H queue: %d",
 							qdma_dev->func_id, qid);
 
-			qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+			qdma_dev_notify_qdel(dev, rxq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_C2H);
 
 			if (rxq->st_mode)
-				qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+				qdma_dev_notify_qdel(dev, rxq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_CMPT);
 
@@ -666,7 +666,7 @@ int qdma_vf_dev_close(struct rte_eth_dev *dev)
 			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove H2C queue: %d",
 							qdma_dev->func_id, qid);
 
-			qdma_dev_notify_qdel(txq->dev, txq->queue_id +
+			qdma_dev_notify_qdel(dev, txq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_H2C);
 			if (txq->sw_ring)
@@ -685,7 +685,7 @@ int qdma_vf_dev_close(struct rte_eth_dev *dev)
 			if (cmptq != NULL) {
 				PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove CMPT queue: %d",
 						qdma_dev->func_id, qid);
-				qdma_dev_notify_qdel(cmptq->dev,
+				qdma_dev_notify_qdel(dev,
 						cmptq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_CMPT);

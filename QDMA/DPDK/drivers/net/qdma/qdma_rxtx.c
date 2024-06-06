@@ -196,7 +196,13 @@ uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
 	uint8_t *tx_ring_st_bypass = NULL;
 	int ofd = -1, ret = 0;
 	char fln[50];
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = txq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+    struct rte_eth_dev *dev = txq->dev;
+#endif
 
 	id = txq->q_pidx_info.pidx;
 
@@ -238,7 +244,7 @@ uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
 	rte_wmb();
 
 	txq->q_pidx_info.pidx = id;
-	qdma_dev->hw_access->qdma_queue_pidx_update(txq->dev, qdma_dev->is_vf,
+	qdma_dev->hw_access->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
 		txq->queue_id, 0, &txq->q_pidx_info);
 
 	PMD_DRV_LOG(DEBUG, " xmit completed with count:%d\n", count);
@@ -259,7 +265,11 @@ void qdma_get_device_info(void *queue_hndl,
 		enum qdma_ip_type *ip_type)
 {
 	struct qdma_rx_queue *rxq = (struct qdma_rx_queue *)queue_hndl;
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+#endif
 
 	*device_type = (enum qdma_device_type)qdma_dev->device_type;
 	*ip_type = (enum qdma_ip_type)qdma_dev->ip_type;
@@ -327,7 +337,11 @@ uint64_t get_mm_h2c_ep_addr(void *queue_hndl)
 static void adjust_c2h_cntr_avgs(struct qdma_rx_queue *rxq)
 {
 	int i;
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+#endif
 
 	if (rxq->sorted_c2h_cntr_idx < 0)
 		return;
@@ -360,7 +374,11 @@ static void adjust_c2h_cntr_avgs(struct qdma_rx_queue *rxq)
 
 static void incr_c2h_cntr_th(struct qdma_rx_queue *rxq)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+#endif
 	unsigned char i, c2h_cntr_idx;
 	unsigned char c2h_cntr_val_new;
 	unsigned char c2h_cntr_val_curr;
@@ -393,7 +411,11 @@ static void incr_c2h_cntr_th(struct qdma_rx_queue *rxq)
 
 static void decr_c2h_cntr_th(struct qdma_rx_queue *rxq)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+#endif
 	unsigned char i, c2h_cntr_idx;
 	unsigned char c2h_cntr_val_new;
 	unsigned char c2h_cntr_val_curr;
@@ -456,7 +478,13 @@ static void adapt_update_counter(struct qdma_rx_queue *rxq,
 static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 		uint16_t num_cmpt_entries)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+    struct rte_eth_dev *dev = rxq->dev;
+#endif
 	union qdma_ul_st_cmpt_ring *user_cmpt_entry;
 	uint32_t count = 0;
 	int ret = 0;
@@ -546,7 +574,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 
 	// Update the CPMT CIDX
 	rxq->cmpt_cidx_info.wrb_cidx = rx_cmpt_tail;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(rxq->dev,
+	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev,
 		qdma_dev->is_vf,
 		rxq->queue_id, &rxq->cmpt_cidx_info);
 
@@ -772,7 +800,13 @@ static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
 /* Populate C2H ring with new buffers */
 static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+    struct rte_eth_dev *dev = rxq->dev;
+#endif
 	struct rte_mbuf *mb;
 	struct qdma_ul_st_c2h_desc *rx_ring_st =
 			(struct qdma_ul_st_c2h_desc *)rxq->rx_ring;
@@ -833,7 +867,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 			rte_mempool_in_use_count(rxq->mb_pool), rearm_descs);
 
 			rxq->q_pidx_info.pidx = id;
-			qdma_dev->hw_access->qdma_queue_pidx_update(rxq->dev,
+			qdma_dev->hw_access->qdma_queue_pidx_update(dev,
 				qdma_dev->is_vf,
 				rxq->queue_id, 1, &rxq->q_pidx_info);
 
@@ -864,7 +898,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 	rte_wmb();
 
 	rxq->q_pidx_info.pidx = id;
-	qdma_dev->hw_access->qdma_queue_pidx_update(rxq->dev,
+	qdma_dev->hw_access->qdma_queue_pidx_update(dev,
 		qdma_dev->is_vf,
 		rxq->queue_id, 1, &rxq->q_pidx_info);
 
@@ -1000,7 +1034,15 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq,
 	struct qdma_ul_mm_desc *desc;
 	uint32_t len;
 	int ret;
+
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = rxq->dev->data->dev_private;
+    struct rte_eth_dev *dev = rxq->dev;
+#endif
+
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(rxq->bypass_desc_sz);
 #endif
@@ -1071,7 +1113,7 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq,
 	/* update pidx pointer for MM-mode*/
 	if (count > 0) {
 		rxq->q_pidx_info.pidx = id;
-		qdma_dev->hw_access->qdma_queue_pidx_update(rxq->dev,
+		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
 			qdma_dev->is_vf,
 			rxq->queue_id, 1, &rxq->q_pidx_info);
 	}
@@ -1198,7 +1240,14 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 	int avail, in_use, ret, nsegs;
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
+
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = txq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
 	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+    struct rte_eth_dev *dev = txq->dev;
+#endif
 
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
@@ -1289,7 +1338,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 	 * Saves frequent Hardware transactions
 	 */
 	if (txq->tx_desc_pend >= MIN_TX_PIDX_UPDATE_THRESHOLD) {
-		qdma_dev->hw_access->qdma_queue_pidx_update(txq->dev,
+		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
 			qdma_dev->is_vf,
 			txq->queue_id, 0, &txq->q_pidx_info);
 
@@ -1316,8 +1365,15 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 	uint64_t	len = 0;
 	int avail, in_use;
 	int ret;
-	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
 	uint16_t cidx = 0;
+
+#ifdef RTE_LIBRTE_SPIRENT
+	struct qdma_pci_dev *qdma_dev = txq->qdma_dev;
+    struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
+#else
+	struct qdma_pci_dev *qdma_dev = txq->dev->data->dev_private;
+    struct rte_eth_dev *dev = txq->dev;
+#endif
 
 #ifdef TEST_64B_DESC_BYPASS
 	int bypass_desc_sz_idx = qmda_get_desc_sz_idx(txq->bypass_desc_sz);
@@ -1382,9 +1438,9 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 	/* update pidx pointer */
 	if (count > 0) {
 		PMD_DRV_LOG(INFO, "tx PIDX=%d", txq->q_pidx_info.pidx);
-		qdma_dev->hw_access->qdma_queue_pidx_update(txq->dev,
-			qdma_dev->is_vf,
-			txq->queue_id, 0, &txq->q_pidx_info);
+		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+                                                    qdma_dev->is_vf,
+                                                    txq->queue_id, 0, &txq->q_pidx_info);
 	}
 
 	ret = dma_wb_monitor(txq, DMA_TO_DEVICE, id);

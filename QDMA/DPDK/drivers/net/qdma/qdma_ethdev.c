@@ -555,6 +555,9 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	uint16_t num_vfs;
 	uint8_t max_pci_bus = 0;
 
+    PMD_DRV_LOG(INFO, "%s(%d): ------------------ ENTER (dev %p)(port_id %d)(port_no %d)(magic %lx)(data %p)-----------------------------", 
+                __FUNCTION__, __LINE__, dev, dev->port_id, dev->port_no, dev->magic, dev->data);
+
 	/* sanity checks */
 	if (dev == NULL)
 		return -EINVAL;
@@ -588,6 +591,11 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 
 	/* Init system & device */
 	dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
+
+#ifdef RTE_LIBRTE_SPIRENT
+    dma_priv->port = dev->port_no;
+#endif
+
 	dma_priv->is_vf = 0;
 	dma_priv->is_master = 0;
 	dma_priv->vf_online_count = 0;
@@ -649,7 +657,7 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 		dma_priv->bar_addr[dma_priv->user_bar_idx] = baseaddr;
 	}
 
-	PMD_DRV_LOG(INFO, "QDMA device driver probe: (qdma_pci_dev address %p)\n",dma_priv);
+	PMD_DRV_LOG(INFO, "QDMA device driver probe: (qdma_pci_dev address %p) (dev %p) (dev->data %p)\n",dma_priv, dev, dev->data);
 
 	qdma_dev_ops_init(dev);
 
@@ -816,6 +824,8 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 
 	dma_priv->reset_in_progress = 0;
 
+    PMD_DRV_LOG(INFO, "%s(%d): ------------------ EXIT -----------------------------", __FUNCTION__, __LINE__);
+
 	return 0;
 }
 
@@ -939,7 +949,7 @@ static int eth_qdma_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 				struct rte_pci_device *pci_dev)
 {
 
-    PMD_DRV_LOG(ERR, "eth_qdma_pci_probe (size of qdma_pci_dev %d)\n", sizeof(struct qdma_pci_dev));
+    PMD_DRV_LOG(INFO, "%s(%d): ---------------  (size of qdma_pci_dev %d)\n", __FUNCTION__, __LINE__, sizeof(struct qdma_pci_dev));
 	return rte_eth_dev_pci_generic_probe(pci_dev,
 						sizeof(struct qdma_pci_dev),
 						qdma_eth_dev_init);
