@@ -143,6 +143,12 @@ struct __attribute__ ((packed)) wb_status
 struct qdma_pkt_stats {
 	uint64_t pkts;
 	uint64_t bytes;
+#ifdef RTE_LIBRTE_SPIRENT
+    uint64_t 			FCDiscards;
+    uint64_t 			CRCErrors;
+    uint64_t 			CompFrames;
+    uint64_t 			runts;
+#endif
 };
 
 struct qdma_pkt_lat {

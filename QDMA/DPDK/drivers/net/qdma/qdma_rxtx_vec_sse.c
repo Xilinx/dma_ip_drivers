@@ -41,6 +41,10 @@
 #include "qdma_rxtx.h"
 #include "qdma_devops.h"
 
+#ifdef RTE_LIBRTE_SPIRENT
+#include "qdma_spirent.h"
+#endif
+
 #if defined RTE_ARCH_X86_64
 #include <immintrin.h>
 #include <emmintrin.h>
@@ -700,13 +704,16 @@ uint16_t qdma_recv_pkts_vec(void *rx_queue, struct rte_mbuf **rx_pkts,
 uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 		struct rte_mbuf **tx_pkts, uint16_t nb_pkts)
 {
-    PMD_DRV_LOG(ERR, "ENTER");
+
+    PMD_DRV_LOG(ERR, "ENTER (nb_pkts %d)", nb_pkts);
 
 	struct rte_mbuf *mb;
 	uint64_t pkt_len = 0;
 	int avail, in_use, ret, nsegs;
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
+    uint16_t discarded = 0;
+
     PMD_DRV_LOG(ERR, "2:");
     
 #ifdef RTE_LIBRTE_SPIRENT
@@ -796,6 +803,15 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
     PMD_DRV_LOG(ERR, "11:");
 	for (count = 0; count < nb_pkts; count++) {
 		mb = tx_pkts[count];
+
+#ifdef RTE_LIBRTE_SPIRENT
+        if(qdma_spirent_tx_oh(mb, &txq->stats)) {
+            rte_pktmbuf_free_seg(mb);
+            discarded++;
+            continue;
+        }
+#endif
+
 		nsegs = mb->nb_segs;
 		if (nsegs > avail) {
 			/* Number of segments in current mbuf are greater
@@ -817,6 +833,7 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 	}
 
     PMD_DRV_LOG(ERR, "13:");
+    count -= discarded;
 	txq->stats.pkts += count;
 	txq->stats.bytes += pkt_len;
 
@@ -832,7 +849,8 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 #endif
 	txq->tx_desc_pend += count;
 
-    PMD_DRV_LOG(ERR, "15: (qdma_dev %p) (hw_access_mbox %p) (qdma_queue_pidx_update %p)", qdma_dev, qdma_dev->hw_access_mbox, qdma_hw_access_funcs->qdma_queue_pidx_update);
+    PMD_DRV_LOG(ERR, "15: (qdma_dev %p) (hw_access_mbox %p) (qdma_queue_pidx_update %p)(txq->tx_desc_pend %d)", 
+                qdma_dev, qdma_dev->hw_access_mbox, qdma_hw_access_funcs->qdma_queue_pidx_update, txq->tx_desc_pend);
 
 	/* Send PIDX update only if pending desc is more than threshold
 	 * Saves frequent Hardware transactions
@@ -844,7 +862,8 @@ uint16_t qdma_xmit_pkts_st_vec(struct qdma_tx_queue *txq,
 
 		txq->tx_desc_pend = 0;
 
-    PMD_DRV_LOG(ERR, "16:");
+        PMD_DRV_LOG(ERR, "16:");
+
 #ifdef LATENCY_MEASUREMENT
 		/* start the timer */
 		txq->qstats.pkt_lat.prev = rte_get_timer_cycles();

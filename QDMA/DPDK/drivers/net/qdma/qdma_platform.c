@@ -136,6 +136,20 @@ void qdma_reg_write(void *dev_hndl, uint32_t reg_offst, uint32_t val)
 
 	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
 	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
+
+	*((volatile uint32_t *)(bar_addr + reg_offst)) = val;
+}
+
+void qdma_reg_write_db(void *dev_hndl, uint32_t reg_offst, uint32_t val)
+{
+	struct qdma_pci_dev *qdma_dev;
+	uint64_t bar_addr;
+
+	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
+	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
+
+    PMD_DRV_LOG(ERR, "(qdma_dev %p)(bar_addr[%d] %p)(reg_offset %x)(val %x)", qdma_dev, qdma_dev->config_bar_idx, (void *)bar_addr, reg_offst, val);
+
 	*((volatile uint32_t *)(bar_addr + reg_offst)) = val;
 }
 
@@ -157,6 +171,21 @@ uint32_t qdma_reg_read(void *dev_hndl, uint32_t reg_offst)
 	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
 	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
 	val = *((volatile uint32_t *)(bar_addr + reg_offst));
+
+	return val;
+}
+
+uint32_t qdma_reg_read_db(void *dev_hndl, uint32_t reg_offst)
+{
+	struct qdma_pci_dev *qdma_dev;
+	uint64_t bar_addr;
+	uint32_t val;
+
+	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
+	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
+	val = *((volatile uint32_t *)(bar_addr + reg_offst));
+
+    PMD_DRV_LOG(ERR, "(qdma_dev %p)(bar_addr[%d] %p)(reg_offset %x)(val %x)", qdma_dev, qdma_dev->config_bar_idx, (void *)bar_addr, reg_offst, val);
 
 	return val;
 }

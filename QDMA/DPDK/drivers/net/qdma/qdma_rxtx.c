@@ -41,6 +41,10 @@
 #include "qdma_rxtx.h"
 #include "qdma_devops.h"
 
+#ifdef RTE_LIBRTE_SPIRENT
+#include "qdma_spirent.h"
+#endif
+
 #if defined RTE_ARCH_X86_64
 #include <immintrin.h>
 #include <emmintrin.h>
@@ -1240,6 +1244,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 	int avail, in_use, ret, nsegs;
 	uint16_t cidx = 0;
 	uint16_t count = 0, id;
+    uint16_t discarded = 0;
 
 #ifdef RTE_LIBRTE_SPIRENT
 	struct qdma_pci_dev *qdma_dev = txq->qdma_dev;
@@ -1302,6 +1307,15 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 
 	for (count = 0; count < nb_pkts; count++) {
 		mb = tx_pkts[count];
+
+#ifdef RTE_LIBRTE_SPIRENT
+        if(qdma_spirent_tx_oh(mb, &txq->stats)) {
+            rte_pktmbuf_free_seg(mb);
+            discarded++;
+            continue;
+        }
+#endif
+        
 		nsegs = mb->nb_segs;
 		if (nsegs > avail) {
 			/* Number of segments in current mbuf are greater
@@ -1320,6 +1334,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 			break;
 	}
 
+    count -= discarded;
 	txq->stats.pkts += count;
 	txq->stats.bytes += pkt_len;
 
@@ -1362,6 +1377,7 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 {
 	struct rte_mbuf *mb;
 	uint32_t count, id;
+    uint32_t discarded = 0;
 	uint64_t	len = 0;
 	int avail, in_use;
 	int ret;
@@ -1416,13 +1432,22 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 	for (count = 0; count < nb_pkts; count++) {
 
 		mb = tx_pkts[count];
+
+#ifdef RTE_LIBRTE_SPIRENT
+        if(qdma_spirent_tx_oh(mb, &txq->stats)) {
+            rte_pktmbuf_free_seg(mb);
+            discarded++;
+            continue;
+        }
+#endif
+
 		txq->sw_ring[id] = mb;
 		/*Update the descriptor control feilds*/
 		qdma_ul_update_mm_h2c_desc(txq, mb);
 
 		len = rte_pktmbuf_data_len(mb);
-		PMD_DRV_LOG(DEBUG, "xmit number of bytes:%ld, count:%d ",
-				len, count);
+		PMD_DRV_LOG(DEBUG, "xmit number of bytes:%ld, count:%d, discarded: %d",
+                    len, count, discarded);
 
 #ifndef TANDEM_BOOT_SUPPORTED
 		txq->ep_addr = (txq->ep_addr + len) % DMA_BRAM_SIZE;
@@ -1452,8 +1477,8 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 		return 0;
 	}
 
-	PMD_DRV_LOG(INFO, " xmit completed with count:%d", count);
-	return count;
+	PMD_DRV_LOG(INFO, " xmit completed with count:%d, discarded %d", count, discarded);
+	return count - discarded;
 }
 /**
  * DPDK callback for transmitting packets in burst.
@@ -1489,6 +1514,9 @@ uint16_t qdma_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
     }
 
+    rte_pmd_qdma_dbg_qinfo(0, 0);
+    rte_pmd_qdma_dbg_qdesc(0, 0, 0, 10, RTE_PMD_QDMA_XDEBUG_DESC_CMPT);
+
     PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): Exit (nb_pkts %d)\n", nb_pkts);
 	return count;
 }
@@ -1498,7 +1526,9 @@ qdma_set_tx_function(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 
-	if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) {
+	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) 
+    if(0)
+    {
 		PMD_DRV_LOG(INFO, "Using Vector Tx (port %d).",dev->data->port_id);
 		qdma_dev->tx_vec_allowed = true;
 		dev->tx_pkt_burst = qdma_xmit_pkts_vec;

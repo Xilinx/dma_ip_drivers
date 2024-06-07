@@ -104,6 +104,7 @@ void qdma_resource_lock_give(void);
  * Return:	Nothing
  *****************************************************************************/
 void qdma_reg_write(void *dev_hndl, uint32_t reg_offst, uint32_t val);
+void qdma_reg_write_db(void *dev_hndl, uint32_t reg_offst, uint32_t val);
 
 /*****************************************************************************/
 /**
@@ -115,6 +116,7 @@ void qdma_reg_write(void *dev_hndl, uint32_t reg_offst, uint32_t val);
  * Return: Value read
  *****************************************************************************/
 uint32_t qdma_reg_read(void *dev_hndl, uint32_t reg_offst);
+uint32_t qdma_reg_read_db(void *dev_hndl, uint32_t reg_offst);
 
 /*****************************************************************************/
 /**
