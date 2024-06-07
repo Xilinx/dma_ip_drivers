@@ -38,7 +38,7 @@
 
 #ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
 #define PMD_DRV_LOG(level, fmt, args...) \
-	RTE_LOG(level, PMD, "%s(): " fmt "\n", __func__, ## args)
+	RTE_LOG(level, PMD, "%s(%d): " fmt "\n", __func__, __LINE__, ## args)
 #else
 #define PMD_DRV_LOG(level, fmt, args...)  do { } while (0)
 #endif

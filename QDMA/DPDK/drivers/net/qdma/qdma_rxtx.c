@@ -244,7 +244,7 @@ uint16_t qdma_xmit_64B_desc_bypass(struct qdma_tx_queue *txq,
 	rte_wmb();
 
 	txq->q_pidx_info.pidx = id;
-	qdma_dev->hw_access->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
+	qdma_hw_access_funcs->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
 		txq->queue_id, 0, &txq->q_pidx_info);
 
 	PMD_DRV_LOG(DEBUG, " xmit completed with count:%d\n", count);
@@ -574,7 +574,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,
 
 	// Update the CPMT CIDX
 	rxq->cmpt_cidx_info.wrb_cidx = rx_cmpt_tail;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev,
+	qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev,
 		qdma_dev->is_vf,
 		rxq->queue_id, &rxq->cmpt_cidx_info);
 
@@ -867,7 +867,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 			rte_mempool_in_use_count(rxq->mb_pool), rearm_descs);
 
 			rxq->q_pidx_info.pidx = id;
-			qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+			qdma_hw_access_funcs->qdma_queue_pidx_update(dev,
 				qdma_dev->is_vf,
 				rxq->queue_id, 1, &rxq->q_pidx_info);
 
@@ -898,7 +898,7 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 	rte_wmb();
 
 	rxq->q_pidx_info.pidx = id;
-	qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+	qdma_hw_access_funcs->qdma_queue_pidx_update(dev,
 		qdma_dev->is_vf,
 		rxq->queue_id, 1, &rxq->q_pidx_info);
 
@@ -1113,7 +1113,7 @@ uint16_t qdma_recv_pkts_mm(struct qdma_rx_queue *rxq,
 	/* update pidx pointer for MM-mode*/
 	if (count > 0) {
 		rxq->q_pidx_info.pidx = id;
-		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+		qdma_hw_access_funcs->qdma_queue_pidx_update(dev,
 			qdma_dev->is_vf,
 			rxq->queue_id, 1, &rxq->q_pidx_info);
 	}
@@ -1338,7 +1338,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 	 * Saves frequent Hardware transactions
 	 */
 	if (txq->tx_desc_pend >= MIN_TX_PIDX_UPDATE_THRESHOLD) {
-		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+		qdma_hw_access_funcs->qdma_queue_pidx_update(dev,
 			qdma_dev->is_vf,
 			txq->queue_id, 0, &txq->q_pidx_info);
 
@@ -1438,7 +1438,7 @@ uint16_t qdma_xmit_pkts_mm(struct qdma_tx_queue *txq,
 	/* update pidx pointer */
 	if (count > 0) {
 		PMD_DRV_LOG(INFO, "tx PIDX=%d", txq->q_pidx_info.pidx);
-		qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+		qdma_hw_access_funcs->qdma_queue_pidx_update(dev,
                                                     qdma_dev->is_vf,
                                                     txq->queue_id, 0, &txq->q_pidx_info);
 	}
@@ -1506,7 +1506,7 @@ qdma_set_tx_function(struct rte_eth_dev *dev)
 	} else {
 		PMD_DRV_LOG(INFO, "Normal Tx will be used on port %d.", dev->data->port_id);
 		dev->tx_pkt_burst = qdma_xmit_pkts;
-		PMD_DRV_LOG(INFO, "Normal Tx will be used on (dev->tx_pkt_burst %p)", dev->data->port_id);
+		PMD_DRV_LOG(INFO, "Normal Tx function (dev->tx_pkt_burst %p)", dev->tx_pkt_burst);
 	}
 }
 

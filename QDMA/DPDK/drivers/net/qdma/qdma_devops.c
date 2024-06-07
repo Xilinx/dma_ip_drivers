@@ -131,23 +131,24 @@ int qdma_pf_csr_read(struct rte_eth_dev *dev)
 {
 	int ret = 0;
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access_funcs = qdma_hw_access_funcs;
+    //struct qdma_hw_access_mbox *hw_access_mb = qdma_dev->hw_access_mbox;
 
-	ret = hw_access->qdma_global_csr_conf(dev, 0,
+	ret = hw_access_funcs->qdma_global_csr_conf(dev, 0,
 				QDMA_NUM_RING_SIZES, qdma_dev->g_ring_sz,
 		QDMA_CSR_RING_SZ, QDMA_HW_ACCESS_READ);
 	if (ret != QDMA_SUCCESS)
 		PMD_DRV_LOG(ERR, "qdma_global_csr_conf for ring size "
 				  "returned %d", ret);
 	if (qdma_dev->dev_cap.st_en || qdma_dev->dev_cap.mm_cmpt_en) {
-		ret = hw_access->qdma_global_csr_conf(dev, 0,
+		ret = hw_access_funcs->qdma_global_csr_conf(dev, 0,
 				QDMA_NUM_C2H_TIMERS, qdma_dev->g_c2h_timer_cnt,
 		QDMA_CSR_TIMER_CNT, QDMA_HW_ACCESS_READ);
 		if (ret != QDMA_SUCCESS)
 			PMD_DRV_LOG(ERR, "qdma_global_csr_conf for timer count "
 					  "returned %d", ret);
 
-		ret = hw_access->qdma_global_csr_conf(dev, 0,
+		ret = hw_access_funcs->qdma_global_csr_conf(dev, 0,
 				QDMA_NUM_C2H_COUNTERS, qdma_dev->g_c2h_cnt_th,
 		QDMA_CSR_CNT_TH, QDMA_HW_ACCESS_READ);
 		if (ret != QDMA_SUCCESS)
@@ -159,7 +160,7 @@ int qdma_pf_csr_read(struct rte_eth_dev *dev)
 	}
 
 	if (qdma_dev->dev_cap.st_en) {
-		ret = hw_access->qdma_global_csr_conf(dev, 0,
+		ret = hw_access_funcs->qdma_global_csr_conf(dev, 0,
 				QDMA_NUM_C2H_BUFFER_SIZES,
 				qdma_dev->g_c2h_buf_sz,
 				QDMA_CSR_BUF_SZ,
@@ -170,7 +171,7 @@ int qdma_pf_csr_read(struct rte_eth_dev *dev)
 	}
 
 	if (ret < 0)
-		return qdma_dev->hw_access->qdma_get_error_code(ret);
+		return  hw_access_funcs->qdma_get_error_code(ret);
 
 	return ret;
 }
@@ -186,10 +187,10 @@ static int qdma_pf_fmap_prog(struct rte_eth_dev *dev)
 	/** FMAP configuration **/
 	fmap_cfg.qbase = qdma_dev->queue_base;
 	fmap_cfg.qmax = qdma_dev->qsets_en;
-	ret = qdma_dev->hw_access->qdma_fmap_conf(dev,
+	ret = qdma_hw_access_funcs->qdma_fmap_conf(dev,
 			qdma_dev->func_id, &fmap_cfg, QDMA_HW_ACCESS_WRITE);
 	if (ret < 0)
-		return qdma_dev->hw_access->qdma_get_error_code(ret);
+		return qdma_hw_access_funcs->qdma_get_error_code(ret);
 
 	return ret;
 }
@@ -970,7 +971,7 @@ void qdma_txq_pidx_update(void *arg)
 		if (txq->tx_desc_pend) {
 			rte_spinlock_lock(&txq->pidx_update_lock);
 			if (txq->tx_desc_pend) {
-				qdma_dev->hw_access->qdma_queue_pidx_update(dev,
+				qdma_hw_access_funcs->qdma_queue_pidx_update(dev,
 					qdma_dev->is_vf,
 					qid, 0, &txq->q_pidx_info);
 
@@ -1134,7 +1135,7 @@ int qdma_dev_close(struct rte_eth_dev *dev)
 		qdma_dev_stop(dev);
 
 	memset(&fmap_cfg, 0, sizeof(struct qdma_fmap_cfg));
-	qdma_dev->hw_access->qdma_fmap_conf(dev,
+	qdma_hw_access_funcs->qdma_fmap_conf(dev,
 		qdma_dev->func_id, &fmap_cfg, QDMA_HW_ACCESS_CLEAR);
 
 	/* iterate over rx queues */
@@ -1452,7 +1453,7 @@ int qdma_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 	uint32_t queue_base =  qdma_dev->queue_base;
 	int err, bypass_desc_sz_idx;
 	struct qdma_descq_sw_ctxt q_sw_ctxt;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access_funcs = qdma_hw_access_funcs;
 
 	txq = (struct qdma_tx_queue *)dev->data->tx_queues[qid];
 
@@ -1483,14 +1484,14 @@ int qdma_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		q_sw_ctxt.desc_sz = bypass_desc_sz_idx;
 
 	/* Set SW Context */
-	err = hw_access->qdma_sw_ctx_conf(dev, 0,
+	err = hw_access_funcs->qdma_sw_ctx_conf(dev, 0,
 			(qid + queue_base), &q_sw_ctxt,
 			QDMA_HW_ACCESS_WRITE);
 	if (err < 0)
-		return qdma_dev->hw_access->qdma_get_error_code(err);
+		return hw_access_funcs->qdma_get_error_code(err);
 
 	txq->q_pidx_info.pidx = 0;
-	hw_access->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
+	hw_access_funcs->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
 		qid, 0, &txq->q_pidx_info);
 
 	dev->data->tx_queue_state[qid] = RTE_ETH_QUEUE_STATE_STARTED;
@@ -1509,7 +1510,7 @@ int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 	struct qdma_descq_sw_ctxt q_sw_ctxt;
 	struct qdma_descq_cmpt_ctxt q_cmpt_ctxt;
 	struct qdma_descq_prefetch_ctxt q_prefetch_ctxt;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access_funcs = qdma_hw_access_funcs;
 
 	rxq = (struct qdma_rx_queue *)dev->data->rx_queues[qid];
 
@@ -1590,23 +1591,23 @@ int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		q_sw_ctxt.desc_sz = bypass_desc_sz_idx;
 
 	/* Set SW Context */
-	err = hw_access->qdma_sw_ctx_conf(dev, 1, (qid + queue_base),
+	err = hw_access_funcs->qdma_sw_ctx_conf(dev, 1, (qid + queue_base),
 			&q_sw_ctxt, QDMA_HW_ACCESS_WRITE);
 	if (err < 0)
-		return qdma_dev->hw_access->qdma_get_error_code(err);
+		return hw_access_funcs->qdma_get_error_code(err);
 
 	if (rxq->st_mode) {
 		/* Set Prefetch Context */
-		err = hw_access->qdma_pfetch_ctx_conf(dev, (qid + queue_base),
+		err = hw_access_funcs->qdma_pfetch_ctx_conf(dev, (qid + queue_base),
 				&q_prefetch_ctxt, QDMA_HW_ACCESS_WRITE);
 		if (err < 0)
-			return qdma_dev->hw_access->qdma_get_error_code(err);
+			return hw_access_funcs->qdma_get_error_code(err);
 
 		/* Set Completion Context */
-		err = hw_access->qdma_cmpt_ctx_conf(dev, (qid + queue_base),
+		err = hw_access_funcs->qdma_cmpt_ctx_conf(dev, (qid + queue_base),
 				&q_cmpt_ctxt, QDMA_HW_ACCESS_WRITE);
 		if (err < 0)
-			return qdma_dev->hw_access->qdma_get_error_code(err);
+			return hw_access_funcs->qdma_get_error_code(err);
 
 		rte_wmb();
 		/* enable status desc , loading the triggermode,
@@ -1618,11 +1619,11 @@ int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		rxq->cmpt_cidx_info.trig_mode = rxq->triggermode;
 		rxq->cmpt_cidx_info.wrb_en = 1;
 		rxq->cmpt_cidx_info.wrb_cidx = 0;
-		hw_access->qdma_queue_cmpt_cidx_update(dev, qdma_dev->is_vf,
+		hw_access_funcs->qdma_queue_cmpt_cidx_update(dev, qdma_dev->is_vf,
 			qid, &rxq->cmpt_cidx_info);
 
 		rxq->q_pidx_info.pidx = (rxq->nb_rx_desc - 2);
-		hw_access->qdma_queue_pidx_update(dev, qdma_dev->is_vf, qid,
+		hw_access_funcs->qdma_queue_pidx_update(dev, qdma_dev->is_vf, qid,
 				1, &rxq->q_pidx_info);
 	}
 
@@ -2005,13 +2006,11 @@ void qdma_dev_ops_init(struct rte_eth_dev *dev)
     PMD_DRV_LOG(INFO, "%s(%d):  (dev %p) (magic %lx)\n", __FUNCTION__, __LINE__, dev, dev->magic);
 
 	dev->dev_ops = &qdma_eth_dev_ops;
-	//if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
-		qdma_set_rx_function(dev);
-		qdma_set_tx_function(dev);
-		dev->rx_queue_count = &qdma_dev_rx_queue_count;
-		dev->rx_descriptor_status = &qdma_dev_rx_descriptor_status;
-		dev->tx_descriptor_status = &qdma_dev_tx_descriptor_status;
-	//}
+    qdma_set_rx_function(dev);
+    qdma_set_tx_function(dev);
+    dev->rx_queue_count = &qdma_dev_rx_queue_count;
+    dev->rx_descriptor_status = &qdma_dev_rx_descriptor_status;
+    dev->tx_descriptor_status = &qdma_dev_tx_descriptor_status;
 
     PMD_DRV_LOG(INFO, "%s(%d): (dev %p) (magic %lx) : completed setting up tx and rx functions\n", __FUNCTION__, __LINE__, dev, dev->magic);
 

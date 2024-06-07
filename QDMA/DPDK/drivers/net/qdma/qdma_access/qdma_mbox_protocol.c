@@ -375,9 +375,9 @@ union qdma_mbox_txrx {
 static inline uint32_t get_mbox_offset(void *dev_hndl, uint8_t is_vf)
 {
 	uint32_t mbox_base;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_mbox *hw = NULL;
 
-	qdma_get_hw_access(dev_hndl, &hw);
+	qdma_get_hw_access_mbox(dev_hndl, &hw);
 	mbox_base = (is_vf) ?
 		hw->mbox_base_vf : hw->mbox_base_pf;
 
@@ -419,7 +419,7 @@ static int get_ring_idx(void *dev_hndl, uint16_t ring_sz, uint16_t *rng_idx)
 {
 	uint32_t rng_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
 	int i, rv;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 	rv = hw->qdma_global_csr_conf(dev_hndl, 0,
@@ -444,7 +444,7 @@ static int get_buf_idx(void *dev_hndl,  uint16_t buf_sz, uint16_t *buf_idx)
 {
 	uint32_t c2h_buf_sz[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
 	int i, rv;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -469,7 +469,7 @@ static int get_cntr_idx(void *dev_hndl, uint8_t cntr_val, uint8_t *cntr_idx)
 {
 	uint32_t cntr_th[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
 	int i, rv;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -495,7 +495,7 @@ static int get_tmr_idx(void *dev_hndl, uint8_t tmr_val, uint8_t *tmr_idx)
 {
 	uint32_t tmr_th[QDMA_GLOBAL_CSR_ARRAY_SZ] = { 0 };
 	int i, rv;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -655,7 +655,7 @@ static int mbox_clear_queue_contexts(void *dev_hndl, uint8_t dma_device_index,
 	int qbase;
 	uint32_t qmax;
 	enum qdma_dev_q_range q_range;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -744,7 +744,7 @@ static int mbox_invalidate_queue_contexts(void *dev_hndl,
 	int qbase;
 	uint32_t qmax;
 	enum qdma_dev_q_range q_range;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -833,7 +833,7 @@ static int mbox_write_queue_contexts(void *dev_hndl, uint8_t dma_device_index,
 	enum qdma_dev_q_range q_range;
 	struct qdma_descq_context descq_ctxt;
 	uint16_t qid_hw = qctxt->qid_hw;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -945,7 +945,7 @@ static int mbox_read_queue_contexts(void *dev_hndl, uint16_t func_id,
 			struct qdma_descq_context *ctxt)
 {
 	int rv;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 
 	qdma_get_hw_access(dev_hndl, &hw);
 
@@ -1014,7 +1014,7 @@ int qdma_mbox_pf_rcv_msg_handler(void *dev_hndl, uint8_t dma_device_index,
 	union qdma_mbox_txrx *rcv =  (union qdma_mbox_txrx *)rcv_msg;
 	union qdma_mbox_txrx *resp =  (union qdma_mbox_txrx *)resp_msg;
 	struct mbox_msg_hdr *hdr = &rcv->hdr;
-	struct qdma_hw_access *hw = NULL;
+	struct qdma_hw_access_functions *hw = NULL;
 	int rv = QDMA_SUCCESS;
 	int ret = 0;
 

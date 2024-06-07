@@ -658,7 +658,20 @@ int qdma_acc_get_num_config_regs(void *dev_hndl, enum qdma_ip_type ip_type,
 /*
  * struct qdma_hw_access - Structure to hold HW access function pointers
  */
-struct qdma_hw_access {
+
+#ifdef RTE_LIBRTE_SPIRENT
+/* 
+ * You can't have functions in a shared memory struct setup by the primary. Each secondary can have a different virtual memory map. 
+ * Functions can be at different addresses and must be set during the attach by the secondary process.
+ * Whomever did this assumed secondaries were using same binary/libs. STC uses different binaries.
+ *
+ */
+struct qdma_hw_access_functions;
+extern struct qdma_hw_access_functions *qdma_hw_access_funcs;
+
+#endif
+
+struct qdma_hw_access_functions {
 	int (*qdma_set_default_global_csr)(void *dev_hndl);
 	int (*qdma_global_csr_conf)(void *dev_hndl, uint8_t index,
 					uint8_t count, uint32_t *csr_val,
@@ -760,6 +773,11 @@ struct qdma_hw_access {
 #ifdef TANDEM_BOOT_SUPPORTED
 	int (*qdma_init_st_ctxt)(void *dev_hndl);
 #endif
+
+};
+
+/* These are not functions... */
+struct qdma_hw_access_mbox {
 	uint32_t mbox_base_pf;
 	uint32_t mbox_base_vf;
 	uint32_t qdma_max_errors;
@@ -769,20 +787,24 @@ struct qdma_hw_access {
 /**
  * qdma_hw_access_init() - Function to get the QDMA hardware
  *			access function pointers
- *	This function should be called once per device from
- *	device_open()/probe(). Caller shall allocate memory for
- *	qdma_hw_access structure and store pointer to it in their
- *	per device structure. Config BAR validation will be done
- *	inside this function
+ *	This function should be called once per process.
+ *  Virtual memory pointers for functions may be different when differing binaries
+ *  are used for primary and secondary processes.
+ *  Memory must be allocated (should probably be static since every process needs one).
+ *  Then each process must call this function to populate the function pointers.
+ *  The mailbox registers are memory mapped into the same address for all processes should
+ *  should only be required to be updated by the primary process.
  *
  * @dev_hndl: device handle
  * @is_vf: Whether PF or VF
- * @hw_access: qdma_hw_access structure pointer.
+ * @hw_access: qdma_hw_access_functions structure pointer.
+ * @mbox: qdma_hw_access_mbox mapped mailbox memory
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
 int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
-				struct qdma_hw_access *hw_access);
+                        struct qdma_hw_access_functions *hw_access,
+                        struct qdma_hw_access_mbox *mbox);
 
 /*****************************************************************************/
 /**

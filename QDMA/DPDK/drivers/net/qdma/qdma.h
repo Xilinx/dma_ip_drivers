@@ -348,6 +348,13 @@ struct queue_info {
 	int8_t		trigger_mode;
 };
 
+/****************************************************************************************
+ *
+ * Common to Primary and Secondary processes
+ * 
+ * dev->data->dev_private Private QDMA driver info
+ *
+ */
 struct qdma_pci_dev {
 	void *bar_addr[QDMA_NUM_BARS]; /* memory mapped I/O addr for BARs */
 	int config_bar_idx;
@@ -403,8 +410,13 @@ struct qdma_pci_dev {
 	uint32_t sorted_idx_c2h_cnt_th[QDMA_NUM_C2H_COUNTERS];
 #endif //QDMA_LATENCY_OPTIMIZED
 	void	**cmpt_queues;
+
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_hw_access_mbox *hw_access_mbox;  // Shared
+#else
 	/*Pointer to QDMA access layer function pointers*/
 	struct qdma_hw_access *hw_access;
+#endif
 
 	struct qdma_vf_info *vfinfo;
 	uint8_t vf_online_count;

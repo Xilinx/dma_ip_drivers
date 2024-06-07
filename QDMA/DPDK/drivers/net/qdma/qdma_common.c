@@ -140,13 +140,13 @@ void qdma_reset_rx_queue(struct qdma_rx_queue *rxq)
 void qdma_inv_rx_queue_ctxts(struct rte_eth_dev *dev,
 			     uint32_t qid, uint32_t mode)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	//struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_descq_sw_ctxt q_sw_ctxt;
 	struct qdma_descq_prefetch_ctxt q_prefetch_ctxt;
 	struct qdma_descq_cmpt_ctxt q_cmpt_ctxt;
 	struct qdma_descq_hw_ctxt q_hw_ctxt;
 	struct qdma_descq_credit_ctxt q_credit_ctxt;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access = qdma_hw_access_funcs;
 
 	hw_access->qdma_sw_ctx_conf(dev, 1, qid, &q_sw_ctxt,
 			QDMA_HW_ACCESS_INVALIDATE);
@@ -174,13 +174,13 @@ void qdma_inv_rx_queue_ctxts(struct rte_eth_dev *dev,
 void qdma_clr_rx_queue_ctxts(struct rte_eth_dev *dev,
 			     uint32_t qid, uint32_t mode)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	//struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_descq_prefetch_ctxt q_prefetch_ctxt;
 	struct qdma_descq_cmpt_ctxt q_cmpt_ctxt;
 	struct qdma_descq_hw_ctxt q_hw_ctxt;
 	struct qdma_descq_credit_ctxt q_credit_ctxt;
 	struct qdma_descq_sw_ctxt q_sw_ctxt;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access = qdma_hw_access_funcs;
 
 	hw_access->qdma_sw_ctx_conf(dev, 1, qid, &q_sw_ctxt,
 			QDMA_HW_ACCESS_CLEAR);
@@ -282,11 +282,11 @@ void qdma_reset_tx_queue(struct qdma_tx_queue *txq)
 void qdma_inv_tx_queue_ctxts(struct rte_eth_dev *dev,
 			     uint32_t qid, uint32_t mode)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	//struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_descq_sw_ctxt q_sw_ctxt;
 	struct qdma_descq_hw_ctxt q_hw_ctxt;
 	struct qdma_descq_credit_ctxt q_credit_ctxt;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access = qdma_hw_access_funcs;
 
 	hw_access->qdma_sw_ctx_conf(dev, 0, qid, &q_sw_ctxt,
 			QDMA_HW_ACCESS_INVALIDATE);
@@ -311,11 +311,11 @@ void qdma_inv_tx_queue_ctxts(struct rte_eth_dev *dev,
 void qdma_clr_tx_queue_ctxts(struct rte_eth_dev *dev,
 			     uint32_t qid, uint32_t mode)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	//struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_descq_sw_ctxt q_sw_ctxt;
 	struct qdma_descq_credit_ctxt q_credit_ctxt;
 	struct qdma_descq_hw_ctxt q_hw_ctxt;
-	struct qdma_hw_access *hw_access = qdma_dev->hw_access;
+	struct qdma_hw_access_functions *hw_access = qdma_hw_access_funcs;
 
 	hw_access->qdma_sw_ctx_conf(dev, 0, qid, &q_sw_ctxt,
 			QDMA_HW_ACCESS_CLEAR);
@@ -591,7 +591,7 @@ int qdma_identify_bars(struct rte_eth_dev *dev)
 	}
 
 	/* Find AXI Master Lite(user bar) */
-	ret = dma_priv->hw_access->qdma_get_user_bar(dev,
+	ret = qdma_hw_access_funcs->qdma_get_user_bar(dev,
 			dma_priv->is_vf, dma_priv->func_id, &usr_bar);
 	if ((ret != QDMA_SUCCESS) ||
 			(pci_dev->mem_resource[usr_bar].len == 0)) {
@@ -635,10 +635,10 @@ int qdma_get_hw_version(struct rte_eth_dev *dev)
 	struct qdma_hw_version_info version_info;
 
 	dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
-	ret = dma_priv->hw_access->qdma_get_version(dev,
+	ret = qdma_hw_access_funcs->qdma_get_version(dev,
 			dma_priv->is_vf, &version_info);
 	if (ret < 0)
-		return dma_priv->hw_access->qdma_get_error_code(ret);
+		return qdma_hw_access_funcs->qdma_get_error_code(ret);
 
 	dma_priv->rtl_version = version_info.rtl_version;
 	dma_priv->vivado_rel = version_info.vivado_release;

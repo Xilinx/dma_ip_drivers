@@ -155,7 +155,20 @@ void qdma_udelay(uint32_t delay_usec);
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw);
+void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access_functions **hw);
+
+#ifdef RTE_LIBRTE_SPIRENT
+/*****************************************************************************/
+/**
+ * qdma_get_hw_access_mbox() - function to get the qdma_hw_access
+ *
+ * @dev_hndl:   device handle
+ * @dev_cap: pointer to hold qdma_hw_access_mbox structure
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+void qdma_get_hw_access_mbox(void *dev_hndl, struct qdma_hw_access_mbox **hw);
+#endif
 
 /*****************************************************************************/
 /**

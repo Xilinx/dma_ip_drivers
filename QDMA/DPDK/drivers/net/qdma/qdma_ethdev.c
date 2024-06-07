@@ -72,12 +72,18 @@ double (*c2h_pidx_to_cmpt_pidx_lat)[LATENCY_CNT] = NULL;
 
 static void qdma_device_attributes_get(struct rte_eth_dev *dev);
 
+#ifdef RTE_LIBRTE_SPIRENT
+/* This has to be instantiated per process since it's all function pointers */
+static struct qdma_hw_access_functions qdma_hw_access_funcs_mem;
+struct qdma_hw_access_functions *qdma_hw_access_funcs = &qdma_hw_access_funcs_mem;
+#endif
+
 /* Poll for any QDMA errors */
 void qdma_check_errors(void *arg)
 {
-	struct qdma_pci_dev *qdma_dev;
-	qdma_dev = ((struct rte_eth_dev *)arg)->data->dev_private;
-	qdma_dev->hw_access->qdma_hw_error_process(arg);
+	//struct qdma_pci_dev *qdma_dev;
+	//qdma_dev = ((struct rte_eth_dev *)arg)->data->dev_private;
+	qdma_hw_access_funcs->qdma_hw_error_process(arg);
 	rte_eal_alarm_set(QDMA_ERROR_POLL_FRQ, qdma_check_errors, arg);
 }
 
@@ -278,7 +284,7 @@ static void qdma_device_attributes_get(struct rte_eth_dev *dev)
 	struct qdma_pci_dev *qdma_dev;
 
 	qdma_dev = (struct qdma_pci_dev *)dev->data->dev_private;
-	qdma_dev->hw_access->qdma_get_device_attributes(dev,
+	qdma_hw_access_funcs->qdma_get_device_attributes(dev,
 			&qdma_dev->dev_cap);
 
 	/* Check DPDK configured queues per port */
@@ -575,6 +581,12 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	 */
 	if (rte_eal_process_type() != RTE_PROC_PRIMARY) {
 		qdma_dev_ops_init(dev);
+
+#ifdef RTE_LIBRTE_SPIRENT
+        /* map the hw_access function pointers for the secodary process memory map */
+        dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
+        qdma_hw_access_init(dev, dma_priv->is_vf, qdma_hw_access_funcs, NULL);
+#endif
 		return 0;
 	}
 
@@ -623,29 +635,35 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	dma_priv->bar_addr[dma_priv->config_bar_idx] = baseaddr;
 
 	/*Assigning QDMA access layer function pointers based on the HW design*/
-	dma_priv->hw_access = rte_zmalloc("hwaccess",
-					sizeof(struct qdma_hw_access), 0);
-	if (dma_priv->hw_access == NULL) {
+	dma_priv->hw_access_mbox = rte_zmalloc("hwaccess_mbox",
+                                           sizeof(struct qdma_hw_access_mbox), 0);
+	if (dma_priv->hw_access_mbox == NULL) {
 		rte_free(dev->data->mac_addrs);
 		return -ENOMEM;
 	}
+
+#ifdef RTE_LIBRTE_SPIRENT
+	idx = qdma_hw_access_init(dev, dma_priv->is_vf, qdma_hw_access_funcs, dma_priv->hw_access_mbox);
+#else
 	idx = qdma_hw_access_init(dev, dma_priv->is_vf, dma_priv->hw_access);
+#endif
+
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
 
 	idx = qdma_get_hw_version(dev);
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
 
 	idx = qdma_identify_bars(dev);
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
@@ -675,7 +693,7 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	ret = get_max_pci_bus_num(pci_dev->addr.bus, &max_pci_bus);
 	if ((ret != QDMA_SUCCESS) && !max_pci_bus) {
 		PMD_DRV_LOG(ERR, "Failed to get max pci bus number\n");
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
@@ -685,12 +703,12 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 				qbase, dma_priv->dev_cap.num_qs,
 				&dma_priv->dma_device_index);
 	if (ret == -QDMA_ERR_NO_MEM) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -ENOMEM;
 	}
 
-	dma_priv->hw_access->qdma_get_function_number(dev,
+	qdma_hw_access_funcs->qdma_get_function_number(dev,
 			&dma_priv->func_id);
 	PMD_DRV_LOG(INFO, "PF function ID: %d", dma_priv->func_id);
 
@@ -699,26 +717,26 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	 */
 	if (ret == QDMA_SUCCESS) {
 		RTE_LOG(INFO, PMD, "QDMA PMD VERSION: %s\n", QDMA_PMD_VERSION);
-		dma_priv->hw_access->qdma_set_default_global_csr(dev);
+		qdma_hw_access_funcs->qdma_set_default_global_csr(dev);
 		for (i = 0; i < dma_priv->dev_cap.mm_channel_max; i++) {
 			if (dma_priv->dev_cap.mm_en) {
 				/* Enable MM C2H Channel */
-				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+				qdma_hw_access_funcs->qdma_mm_channel_conf(dev,
 							i, 1, 1);
 				/* Enable MM H2C Channel */
-				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+				qdma_hw_access_funcs->qdma_mm_channel_conf(dev,
 							i, 0, 1);
 			} else {
 				/* Disable MM C2H Channel */
-				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+				qdma_hw_access_funcs->qdma_mm_channel_conf(dev,
 							i, 1, 0);
 				/* Disable MM H2C Channel */
-				dma_priv->hw_access->qdma_mm_channel_conf(dev,
+				qdma_hw_access_funcs->qdma_mm_channel_conf(dev,
 							i, 0, 0);
 			}
 		}
 
-		ret = dma_priv->hw_access->qdma_init_ctxt_memory(dev);
+		ret = qdma_hw_access_funcs->qdma_init_ctxt_memory(dev);
 		if (ret < 0) {
 			PMD_DRV_LOG(ERR,
 				"%s: Failed to initialize ctxt memory, err = %d\n",
@@ -728,7 +746,7 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 
 #ifdef TANDEM_BOOT_SUPPORTED
 		if (dma_priv->en_st_mode) {
-			ret = dma_priv->hw_access->qdma_init_st_ctxt(dev);
+			ret = qdma_hw_access_funcs->qdma_init_st_ctxt(dev);
 			if (ret < 0) {
 				PMD_DRV_LOG(ERR,
 					"%s: Failed to initialize st ctxt memory, err = %d\n",
@@ -737,8 +755,8 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 			}
 		}
 #endif
-		dma_priv->hw_access->qdma_hw_error_enable(dev,
-				dma_priv->hw_access->qdma_max_errors);
+		qdma_hw_access_funcs->qdma_hw_error_enable(dev,
+				dma_priv->hw_access_mbox->qdma_max_errors);
 		if (ret < 0) {
 			PMD_DRV_LOG(ERR,
 				"%s: Failed to enable hw errors, err = %d\n",
@@ -761,7 +779,7 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 		(ret != -QDMA_ERR_RM_DEV_EXISTS)) {
 		PMD_DRV_LOG(ERR, "PF-%d(DEVFN) qdma_dev_entry_create failed: %d\n",
 			    dma_priv->func_id, ret);
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -ENOMEM;
 	}
@@ -932,9 +950,9 @@ int qdma_eth_dev_uninit(struct rte_eth_dev *dev)
 		qdma_dev->q_info = NULL;
 	}
 
-	if (qdma_dev->hw_access != NULL) {
-		rte_free(qdma_dev->hw_access);
-		qdma_dev->hw_access = NULL;
+	if (qdma_dev->hw_access_mbox != NULL) {
+		rte_free(qdma_dev->hw_access_mbox);
+		qdma_dev->hw_access_mbox = NULL;
 	}
 
 #ifdef LATENCY_MEASUREMENT
@@ -949,7 +967,7 @@ static int eth_qdma_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 				struct rte_pci_device *pci_dev)
 {
 
-    PMD_DRV_LOG(INFO, "%s(%d): ---------------  (size of qdma_pci_dev %d)\n", __FUNCTION__, __LINE__, sizeof(struct qdma_pci_dev));
+    PMD_DRV_LOG(INFO, " ---------------  (size of qdma_pci_dev %lu)\n", sizeof(struct qdma_pci_dev));
 	return rte_eth_dev_pci_generic_probe(pci_dev,
 						sizeof(struct qdma_pci_dev),
 						qdma_eth_dev_init);

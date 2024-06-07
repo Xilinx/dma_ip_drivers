@@ -213,12 +213,34 @@ void qdma_udelay(uint32_t delay_usec)
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw)
+void qdma_get_hw_access(void *dev_hndl __rte_unused, struct qdma_hw_access_functions **hw)
 {
+#ifdef RTE_LIBRTE_SPIRENT
+    *hw = qdma_hw_access_funcs;
+#else
 	struct qdma_pci_dev *qdma_dev;
 	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
 	*hw = qdma_dev->hw_access;
+#endif
 }
+
+#ifdef RTE_LIBRTE_SPIRENT
+/*****************************************************************************/
+/**
+ * qdma_get_hw_access_mbox() - function to get the qdma_hw_access_mbox
+ *
+ * @dev_hndl:   device handle
+ * @dev_cap: pointer to hold qdma_hw_access structure
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+void qdma_get_hw_access_mbox(void *dev_hndl, struct qdma_hw_access_mbox **hw)
+{
+	struct qdma_pci_dev *qdma_dev;
+	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
+	*hw = qdma_dev->hw_access_mbox;
+}
+#endif
 
 /*****************************************************************************/
 /**

@@ -1464,7 +1464,7 @@ static int qdma_vf_cmptq_context_write(struct rte_eth_dev *dev, uint16_t qid)
 	cmptq->cmpt_cidx_info.trig_mode = cmptq->triggermode;
 	cmptq->cmpt_cidx_info.wrb_en = 1;
 	cmptq->cmpt_cidx_info.wrb_cidx = 0;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev, qdma_dev->is_vf,
+	qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev, qdma_dev->is_vf,
 			qid, &cmptq->cmpt_cidx_info);
 	cmptq->status = RTE_ETH_QUEUE_STATE_STARTED;
 err_out:
@@ -1484,7 +1484,7 @@ static int qdma_pf_cmptq_context_write(struct rte_eth_dev *dev, uint32_t qid)
 	cmptq = (struct qdma_cmpt_queue *)qdma_dev->cmpt_queues[qid];
 	memset(&q_cmpt_ctxt, 0, sizeof(struct qdma_descq_cmpt_ctxt));
 	/* Clear Completion Context */
-	qdma_dev->hw_access->qdma_cmpt_ctx_conf(dev, qid,
+	qdma_hw_access_funcs->qdma_cmpt_ctx_conf(dev, qid,
 				&q_cmpt_ctxt, QDMA_HW_ACCESS_CLEAR);
 
 	switch (cmptq->cmpt_desc_len) {
@@ -1520,17 +1520,17 @@ static int qdma_pf_cmptq_context_write(struct rte_eth_dev *dev, uint32_t qid)
 		q_cmpt_ctxt.ovf_chk_dis = cmptq->dis_overflow_check;
 
 	/* Set Completion Context */
-	err = qdma_dev->hw_access->qdma_cmpt_ctx_conf(dev, (qid + queue_base),
+	err = qdma_hw_access_funcs->qdma_cmpt_ctx_conf(dev, (qid + queue_base),
 				&q_cmpt_ctxt, QDMA_HW_ACCESS_WRITE);
 	if (err < 0)
-		return qdma_dev->hw_access->qdma_get_error_code(err);
+		return qdma_hw_access_funcs->qdma_get_error_code(err);
 
 	cmptq->cmpt_cidx_info.counter_idx = cmptq->threshidx;
 	cmptq->cmpt_cidx_info.timer_idx = cmptq->timeridx;
 	cmptq->cmpt_cidx_info.trig_mode = cmptq->triggermode;
 	cmptq->cmpt_cidx_info.wrb_en = 1;
 	cmptq->cmpt_cidx_info.wrb_cidx = 0;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev, qdma_dev->is_vf,
+	qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev, qdma_dev->is_vf,
 			qid, &cmptq->cmpt_cidx_info);
 	cmptq->status = RTE_ETH_QUEUE_STATE_STARTED;
 
@@ -1594,7 +1594,7 @@ static int qdma_pf_cmptq_context_invalidate(struct rte_eth_dev *dev,
 	struct qdma_descq_cmpt_ctxt q_cmpt_ctxt;
 
 	cmptq = (struct qdma_cmpt_queue *)qdma_dev->cmpt_queues[qid];
-	qdma_dev->hw_access->qdma_cmpt_ctx_conf(dev,
+	qdma_hw_access_funcs->qdma_cmpt_ctx_conf(dev,
 			(qid + qdma_dev->queue_base),
 			&q_cmpt_ctxt, QDMA_HW_ACCESS_INVALIDATE);
 
@@ -1776,7 +1776,7 @@ uint16_t rte_pmd_qdma_mm_cmpt_process(int port_id, uint32_t qid,
 
 	// Update the CPMT CIDX
 	cmptq->cmpt_cidx_info.wrb_cidx = cmpt_tail;
-	qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev,
+	qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev,
 			qdma_dev->is_vf,
 			cmptq->queue_id,
 			&cmptq->cmpt_cidx_info);

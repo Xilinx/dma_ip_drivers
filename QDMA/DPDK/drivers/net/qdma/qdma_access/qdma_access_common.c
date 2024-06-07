@@ -1295,7 +1295,8 @@ int qdma_get_error_code(int acc_err_code)
 }
 
 int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
-				struct qdma_hw_access *hw_access)
+                        struct qdma_hw_access_functions *hw_access,
+                        struct qdma_hw_access_mbox *mbox)
 {
 	int rv = QDMA_SUCCESS;
 	enum qdma_ip ip = EQDMA_IP;
@@ -1320,7 +1321,7 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 		return rv;
 	}
 
-	qdma_memset(hw_access, 0, sizeof(struct qdma_hw_access));
+	qdma_memset(hw_access, 0, sizeof(struct qdma_hw_access_functions));
 
 	if (ip == EQDMA_IP)
 		hw_access->qdma_get_version = &eqdma_get_version;
@@ -1369,9 +1370,12 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 	hw_access->qdma_dump_config_reg_list =
 			&qdma_soft_dump_config_reg_list;
 	hw_access->qdma_dump_reg_info = &qdma_dump_reg_info;
-	hw_access->mbox_base_pf = QDMA_OFFSET_MBOX_BASE_PF;
-	hw_access->mbox_base_vf = QDMA_OFFSET_MBOX_BASE_VF;
-	hw_access->qdma_max_errors = QDMA_ERRS_ALL;
+
+    if(mbox) {
+        mbox->mbox_base_pf = QDMA_OFFSET_MBOX_BASE_PF;
+        mbox->mbox_base_vf = QDMA_OFFSET_MBOX_BASE_VF;
+        mbox->qdma_max_errors = QDMA_ERRS_ALL;
+    }
 
 	rv = hw_access->qdma_get_version(dev_hndl, is_vf, &version_info);
 	if (rv != QDMA_SUCCESS)
@@ -1431,7 +1435,9 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 		hw_access->qdma_read_dump_queue_context =
 				&qdma_cpm4_read_dump_queue_context;
 		hw_access->qdma_dump_reg_info = &qdma_cpm4_dump_reg_info;
-		hw_access->qdma_max_errors = QDMA_CPM4_ERRS_ALL;
+
+        if(mbox)
+            mbox->qdma_max_errors = QDMA_CPM4_ERRS_ALL;
 	}
 
 	if (version_info.ip_type == QDMA_VERSAL_HARD_IP &&
@@ -1475,17 +1481,20 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 		hw_access->qdma_read_dump_queue_context =
 				&eqdma_cpm5_read_dump_queue_context;
 		hw_access->qdma_dump_reg_info = &eqdma_cpm5_dump_reg_info;
-		/* All CSR and Queue space register belongs to Window 0.
-		 * Mailbox and MSIX register belongs to Window 1
-		 * Therefore, Mailbox offsets are different for EQDMA
-		 * Mailbox offset for PF : 128K + original address
-		 * Mailbox offset for VF : 16K + original address
-		 */
-		hw_access->mbox_base_pf = EQDMA_CPM5_OFFSET_MBOX_BASE_PF;
-		hw_access->mbox_base_vf = EQDMA_CPM5_OFFSET_MBOX_BASE_VF;
-		hw_access->qdma_max_errors = EQDMA_CPM5_ERRS_ALL;
 
-}
+        if (mbox != NULL) {
+            /* All CSR and Queue space register belongs to Window 0.
+             * Mailbox and MSIX register belongs to Window 1
+             * Therefore, Mailbox offsets are different for EQDMA
+             * Mailbox offset for PF : 128K + original address
+             * Mailbox offset for VF : 16K + original address
+             */
+            mbox->mbox_base_pf = EQDMA_CPM5_OFFSET_MBOX_BASE_PF;
+            mbox->mbox_base_vf = EQDMA_CPM5_OFFSET_MBOX_BASE_VF;
+            mbox->qdma_max_errors = EQDMA_CPM5_ERRS_ALL;
+        }
+
+    }
 
 	if (version_info.ip_type == EQDMA_SOFT_IP) {
 		hw_access->qdma_init_ctxt_memory = &eqdma_init_ctxt_memory;
@@ -1515,16 +1524,20 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 		hw_access->qdma_read_dump_queue_context =
 				&eqdma_read_dump_queue_context;
 		hw_access->qdma_dump_reg_info = &eqdma_dump_reg_info;
-		/* All CSR and Queue space register belongs to Window 0.
-		 * Mailbox and MSIX register belongs to Window 1
-		 * Therefore, Mailbox offsets are different for EQDMA
-		 * Mailbox offset for PF : 128K + original address
-		 * Mailbox offset for VF : 16K + original address
-		 */
-		hw_access->mbox_base_pf = EQDMA_OFFSET_MBOX_BASE_PF;
-		hw_access->mbox_base_vf = EQDMA_OFFSET_MBOX_BASE_VF;
-		hw_access->qdma_max_errors = EQDMA_ERRS_ALL;
+
+        if (mbox != NULL) {
+            /* All CSR and Queue space register belongs to Window 0.
+             * Mailbox and MSIX register belongs to Window 1
+             * Therefore, Mailbox offsets are different for EQDMA
+             * Mailbox offset for PF : 128K + original address
+             * Mailbox offset for VF : 16K + original address
+             */
+            mbox->mbox_base_pf = EQDMA_OFFSET_MBOX_BASE_PF;
+            mbox->mbox_base_vf = EQDMA_OFFSET_MBOX_BASE_VF;
+            mbox->qdma_max_errors = EQDMA_ERRS_ALL;
+        }
 	}
 
 	return QDMA_SUCCESS;
 }
+
