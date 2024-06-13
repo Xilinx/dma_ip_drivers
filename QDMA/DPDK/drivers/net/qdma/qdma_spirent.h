@@ -66,6 +66,8 @@ typedef struct ct_txover
     volatile unsigned spare2: 2;
 } __attribute__ ((__packed__)) ct_txover_t ;
 
+#define RTE_MBUF_DATA_DMA_ADDR(mb) \
+	(uint64_t) (rte_mbuf_data_iova(mb))
 
 STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_stats *stats) 
 {
@@ -81,6 +83,9 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
         return 1;
     }
     memset((void *)hdr, 0, sizeof(ct_txover_t));
+
+    uint64_t phys = (uint64_t)rte_cpu_to_le_64(RTE_MBUF_DATA_DMA_ADDR(tx_pkt));
+    PMD_DRV_LOG(ERR, "Buf Phys (0x%lx)\n", phys);
 
     int seq =0;
     int TsEn = 0;

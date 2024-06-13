@@ -1514,8 +1514,19 @@ uint16_t qdma_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
     }
 
-    rte_pmd_qdma_dbg_qinfo(0, 0);
-    rte_pmd_qdma_dbg_qdesc(0, 0, 0, 10, RTE_PMD_QDMA_XDEBUG_DESC_CMPT);
+    //rte_pmd_qdma_dbg_qinfo(0, 0);
+
+    //PMD_DRV_LOG(ERR, "****************************************************\n");
+    //rte_pmd_qdma_dbg_regdump(0);
+    //PMD_DRV_LOG(ERR, "****************************************************\n");
+
+    //Tx
+    //rte_pmd_qdma_dbg_qdesc(0, 0, 0, 5, RTE_PMD_QDMA_XDEBUG_DESC_H2C);
+
+    //Rx
+    //rte_pmd_qdma_dbg_qdesc(0, 0, 0, 5, RTE_PMD_QDMA_XDEBUG_DESC_C2H);
+
+    
 
     PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): Exit (nb_pkts %d)\n", nb_pkts);
 	return count;
@@ -1545,7 +1556,9 @@ qdma_set_rx_function(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 
-	if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) {
+	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) 
+    if(0)
+    {
 		PMD_DRV_LOG(INFO, "Using Vector Rx (port %d).",
 			dev->data->port_id);
 		qdma_dev->rx_vec_allowed = true;

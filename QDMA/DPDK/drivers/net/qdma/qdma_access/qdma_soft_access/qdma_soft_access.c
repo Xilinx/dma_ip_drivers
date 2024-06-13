@@ -4051,7 +4051,7 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 
 	qdma_reg_write_db(dev_hndl, reg_addr, reg_val);
 
-    qdma_log_error("%s(%d): EXIT", __FUNCTION__, __LINE__);
+    qdma_log_error("%s(%d): EXIT\n", __FUNCTION__, __LINE__);
 
 	return QDMA_SUCCESS;
 }
