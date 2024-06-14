@@ -561,8 +561,8 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	uint16_t num_vfs;
 	uint8_t max_pci_bus = 0;
 
-    PMD_DRV_LOG(INFO, "%s(%d): ------------------ ENTER (dev %p)(port_id %d)(port_no %d)(magic %lx)(data %p)-----------------------------", 
-                __FUNCTION__, __LINE__, dev, dev->port_id, dev->port_no, dev->magic, dev->data);
+    PMD_DRV_LOG(INFO, "%s(%d): ------------------ ENTER (dev %p)(port_id %d)(port_no %d)(data %p)-----------------------------", 
+                __FUNCTION__, __LINE__, dev, dev->port_id, dev->port_no, dev->data);
 
 	/* sanity checks */
 	if (dev == NULL)

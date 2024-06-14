@@ -792,7 +792,7 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 	txq->ringszidx = index_of_array(qdma_dev->g_ring_sz,
 					QDMA_NUM_RING_SIZES, txq->nb_tx_desc);
 
-    PMD_DRV_LOG(INFO, "%s(%d): - (txq %p)(nb_tx_desc %d)(queue_id %d)(dev %p)(port_id %d)(func_id %d)(num_queues %d)(tx_deferred_start %d)(ringszidx %d)(magic %lx)\n", __FUNCTION__, __LINE__,
+    PMD_DRV_LOG(INFO, "%s(%d): - (txq %p)(nb_tx_desc %d)(queue_id %d)(dev %p)(port_id %d)(func_id %d)(num_queues %d)(tx_deferred_start %d)(ringszidx %d)\n", __FUNCTION__, __LINE__,
                 txq,
                 txq->nb_tx_desc,
                 txq->queue_id,
@@ -801,8 +801,7 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
                 txq->func_id,
                 txq->num_queues,
                 txq->tx_deferred_start,
-                txq->ringszidx,
-                dev->magic
+                txq->ringszidx
                 );
 
 
@@ -2003,7 +2002,7 @@ static struct eth_dev_ops qdma_eth_dev_ops = {
 
 void qdma_dev_ops_init(struct rte_eth_dev *dev)
 {
-    PMD_DRV_LOG(INFO, "%s(%d):  (dev %p) (magic %lx)\n", __FUNCTION__, __LINE__, dev, dev->magic);
+    PMD_DRV_LOG(INFO, "%s(%d):  (dev %p)\n", __FUNCTION__, __LINE__, dev);
 
 	dev->dev_ops = &qdma_eth_dev_ops;
     qdma_set_rx_function(dev);
@@ -2012,7 +2011,7 @@ void qdma_dev_ops_init(struct rte_eth_dev *dev)
     dev->rx_descriptor_status = &qdma_dev_rx_descriptor_status;
     dev->tx_descriptor_status = &qdma_dev_tx_descriptor_status;
 
-    PMD_DRV_LOG(INFO, "%s(%d): (dev %p) (magic %lx) : completed setting up tx and rx functions\n", __FUNCTION__, __LINE__, dev, dev->magic);
+    PMD_DRV_LOG(INFO, "%s(%d): (dev %p): completed setting up tx and rx functions\n", __FUNCTION__, __LINE__, dev);
 
 }
 
