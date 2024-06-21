@@ -53,10 +53,8 @@
 #include "qdma_mbox_protocol.h"
 #include "qdma_mbox.h"
 
-#define xdebug_info(args...) rte_log(RTE_LOG_INFO, RTE_LOGTYPE_USER1,\
-					## args)
-#define xdebug_error(args...) rte_log(RTE_LOG_ERR, RTE_LOGTYPE_USER1,\
-					## args)
+#define xdebug_info(args...) rte_log(RTE_LOG_ERR, RTE_LOGTYPE_USER1, ## args)
+#define xdebug_error(args...) rte_log(RTE_LOG_ERR, RTE_LOGTYPE_USER1, ## args)
 
 struct xdebug_desc_param {
 	uint16_t queue;
@@ -254,6 +252,8 @@ static int qdma_config_reg_dump(uint8_t port_id)
 	struct qdma_reg_data *reg_list;
 	uint16_t num_regs = 0, group_num = 0;
 	int len = 0, rcv_len = 0, reg_len = 0;
+
+    xdebug_error("qdma_config_reg_dump: (port_id %d)(avail %d)\n", port_id, rte_eth_dev_count_avail());
 
 	if (port_id >= rte_eth_dev_count_avail()) {
 		xdebug_error("Wrong port id %d\n", port_id);
@@ -1028,12 +1028,12 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				struct qdma_ul_st_c2h_desc *rx_ring_st =
 				(struct qdma_ul_st_c2h_desc *)rxq->rx_ring;
 
-				xdebug_info("\n===== C2H ring descriptors=====\n");
+				xdebug_info("\n===== st_mod C2H ring descriptors=====\n");
 				for (x = param->start; x < param->end; x++) {
 					struct qdma_ul_st_c2h_desc *rx_st =
 						&rx_ring_st[x];
 					snprintf(str, sizeof(str),
-						"\nDescriptor ID %d\t", x);
+						"\nst_mod Descriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 					(const void *)rx_st,
 					sizeof(struct qdma_ul_st_c2h_desc));
@@ -1041,10 +1041,10 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 			} else {
 				struct qdma_ul_mm_desc *rx_ring_mm =
 					(struct qdma_ul_mm_desc *)rxq->rx_ring;
-				xdebug_info("\n====== C2H ring descriptors======\n");
+				xdebug_info("\n====== mm_mode C2H ring descriptors======\n");
 				for (x = param->start; x < param->end; x++) {
 					snprintf(str, sizeof(str),
-						"\nDescriptor ID %d\t", x);
+						"\nmm_mode Descriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 						(const void *)&rx_ring_mm[x],
 						sizeof(struct qdma_ul_mm_desc));
@@ -1089,7 +1089,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 					((uint64_t)(rxq->cmpt_ring) +
 					((uint64_t)x * rxq->cmpt_desc_len));
 				snprintf(str, sizeof(str),
-						"\nDescriptor ID %d\t", x);
+						"\nCMPT Descriptor ID %d\t", x);
 				rte_hexdump(stdout, str,
 						(const void *)cmpt_ring,
 						rxq->cmpt_desc_len);
@@ -1133,7 +1133,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				uint8_t *tx_bypass =
 					&tx_ring_bypass[x];
 				snprintf(str, sizeof(str),
-						"\nDescriptor ID %d\t", x);
+						"\nbypass Descriptor ID %d\t", x);
 				rte_hexdump(stdout, str,
 					(const void *)tx_bypass,
 					txq->bypass_desc_sz);
@@ -1145,7 +1145,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				xdebug_info("\n====== H2C ring descriptors=====\n");
 				for (x = param->start; x < param->end; x++) {
 					snprintf(str, sizeof(str),
-						"\nDescriptor ID %d\t", x);
+						"\nst_mode Descriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 					(const void *)&qdma_h2c_ring[x],
 					sizeof(struct qdma_ul_st_h2c_desc));
@@ -1156,7 +1156,7 @@ static int qdma_queue_desc_dump(uint8_t port_id,
 				xdebug_info("\n===== H2C ring descriptors=====\n");
 				for (x = param->start; x < param->end; x++) {
 					snprintf(str, sizeof(str),
-						"\nDescriptor ID %d\t", x);
+						"\nmm_mode Descriptor ID %d\t", x);
 					rte_hexdump(stdout, str,
 						(const void *)&tx_ring_mm[x],
 						sizeof(struct qdma_ul_mm_desc));
@@ -1175,12 +1175,15 @@ int rte_pmd_qdma_dbg_regdump(uint8_t port_id)
 {
 	int err;
 
+    xdebug_error("rte_pmd_qdma_dbg_regdump: (port_id %d) (avail %d)\n", port_id, rte_eth_dev_count_avail());
+
 	if (port_id >= rte_eth_dev_count_avail()) {
 		xdebug_error("Wrong port id %d\n", port_id);
 		return -EINVAL;
 	}
 
 	err = qdma_config_reg_dump(port_id);
+
 	if (err) {
 		xdebug_error("Error dumping Global registers\n");
 		return err;
@@ -1392,6 +1395,8 @@ int rte_pmd_qdma_dbg_qinfo(uint8_t port_id, uint16_t queue)
 	uint8_t st_mode;
 	int err;
 
+    RTE_LOG(INFO, PMD, "rte_pmd_qdma_dbg_qinfo(): ENTER\n");
+
 	if (port_id >= rte_eth_dev_count_avail()) {
 		xdebug_error("Wrong port id %d\n", port_id);
 		return -EINVAL;
@@ -1439,6 +1444,8 @@ int rte_pmd_qdma_dbg_qinfo(uint8_t port_id, uint16_t queue)
 		return err;
 	}
 
+    RTE_LOG(INFO, PMD, "rte_pmd_qdma_dbg_qinfo(): EXIT\n");
+
 	return 0;
 }
 
@@ -1447,6 +1454,8 @@ int rte_pmd_qdma_dbg_qdesc(uint8_t port_id, uint16_t queue, int start,
 {
 	struct xdebug_desc_param param;
 	int err;
+
+    RTE_LOG(INFO, PMD, "%s(%d): ENTER\n", __FUNCTION__, __LINE__);
 
 	if (port_id >= rte_eth_dev_count_avail()) {
 		xdebug_error("Wrong port id %d\n", port_id);
@@ -1464,5 +1473,8 @@ int rte_pmd_qdma_dbg_qdesc(uint8_t port_id, uint16_t queue, int start,
 			queue, err);
 		return err;
 	}
+
+    RTE_LOG(INFO, PMD, "%s(%d): EXIT\n", __FUNCTION__, __LINE__);
+
 	return 0;
 }

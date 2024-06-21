@@ -143,6 +143,12 @@ struct __attribute__ ((packed)) wb_status
 struct qdma_pkt_stats {
 	uint64_t pkts;
 	uint64_t bytes;
+#ifdef RTE_LIBRTE_SPIRENT
+    uint64_t 			FCDiscards;
+    uint64_t 			CRCErrors;
+    uint64_t 			CompFrames;
+    uint64_t 			runts;
+#endif
 };
 
 struct qdma_pkt_lat {
@@ -191,7 +197,13 @@ struct qdma_cmpt_queue {
 	struct qdma_ul_cmpt_ring *cmpt_ring;
 	struct wb_status    *wb_status;
 	struct qdma_q_cmpt_cidx_reg_info cmpt_cidx_info;
+
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_pci_dev *qdma_dev;   // qdma_dev = dev->data->dev_private which is in shared memory
+#else
+    // This will fail in secondary processes because each process has rte_eth_devices[] in a different virtual address
 	struct rte_eth_dev	*dev;
+#endif
 
 	uint16_t	cmpt_desc_len;
 	uint16_t	nb_cmpt_desc;
@@ -235,7 +247,12 @@ struct qdma_rx_queue {
 	struct qdma_pkt_stats	stats;
 	struct qdma_rxq_stats   qstats;
 
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_pci_dev *qdma_dev;   // qdma_dev = dev->data->dev_private which is in shared memory
+#else
+    // This will fail in secondary processes because each process has rte_eth_devices[] in a different virtual address    
 	struct rte_eth_dev	*dev;
+#endif
 
 	uint16_t		port_id; /**< Device port identifier. */
 	uint8_t			status:1;
@@ -295,7 +312,12 @@ struct qdma_tx_queue {
 	rte_spinlock_t			pidx_update_lock;
 	uint64_t			offloads; /* Tx offloads */
 
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_pci_dev *qdma_dev;   // qdma_dev = dev->data->dev_private which is in shared memory
+#else
+    // This will fail in secondary processes because each process has rte_eth_devices[] in a different virtual address
 	struct rte_eth_dev		*dev;
+#endif
 
 	uint8_t				st_mode:1;/* dma-mode: MM or ST */
 	uint8_t				tx_deferred_start:1;
@@ -332,6 +354,13 @@ struct queue_info {
 	int8_t		trigger_mode;
 };
 
+/****************************************************************************************
+ *
+ * Common to Primary and Secondary processes
+ * 
+ * dev->data->dev_private Private QDMA driver info
+ *
+ */
 struct qdma_pci_dev {
 	void *bar_addr[QDMA_NUM_BARS]; /* memory mapped I/O addr for BARs */
 	int config_bar_idx;
@@ -387,8 +416,13 @@ struct qdma_pci_dev {
 	uint32_t sorted_idx_c2h_cnt_th[QDMA_NUM_C2H_COUNTERS];
 #endif //QDMA_LATENCY_OPTIMIZED
 	void	**cmpt_queues;
+
+#ifdef RTE_LIBRTE_SPIRENT
+    struct qdma_hw_access_mbox *hw_access_mbox;  // Shared
+#else
 	/*Pointer to QDMA access layer function pointers*/
 	struct qdma_hw_access *hw_access;
+#endif
 
 	struct qdma_vf_info *vfinfo;
 	uint8_t vf_online_count;
@@ -398,6 +432,11 @@ struct qdma_pci_dev {
 
 	uint8_t rx_vec_allowed:1;
 	uint8_t tx_vec_allowed:1;
+
+#ifdef RTE_LIBRTE_SPIRENT
+    /* for indexing into the rte_ethdev table */
+    int port;
+#endif
 };
 
 void qdma_dev_ops_init(struct rte_eth_dev *dev);

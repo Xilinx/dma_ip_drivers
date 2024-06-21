@@ -104,6 +104,7 @@ void qdma_resource_lock_give(void);
  * Return:	Nothing
  *****************************************************************************/
 void qdma_reg_write(void *dev_hndl, uint32_t reg_offst, uint32_t val);
+void qdma_reg_write_db(void *dev_hndl, uint32_t reg_offst, uint32_t val);
 
 /*****************************************************************************/
 /**
@@ -115,6 +116,7 @@ void qdma_reg_write(void *dev_hndl, uint32_t reg_offst, uint32_t val);
  * Return: Value read
  *****************************************************************************/
 uint32_t qdma_reg_read(void *dev_hndl, uint32_t reg_offst);
+uint32_t qdma_reg_read_db(void *dev_hndl, uint32_t reg_offst);
 
 /*****************************************************************************/
 /**
@@ -155,7 +157,20 @@ void qdma_udelay(uint32_t delay_usec);
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw);
+void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access_functions **hw);
+
+#ifdef RTE_LIBRTE_SPIRENT
+/*****************************************************************************/
+/**
+ * qdma_get_hw_access_mbox() - function to get the qdma_hw_access
+ *
+ * @dev_hndl:   device handle
+ * @dev_cap: pointer to hold qdma_hw_access_mbox structure
+ *
+ * Return:	0   - success and < 0 - failure
+ *****************************************************************************/
+void qdma_get_hw_access_mbox(void *dev_hndl, struct qdma_hw_access_mbox **hw);
+#endif
 
 /*****************************************************************************/
 /**

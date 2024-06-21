@@ -634,12 +634,12 @@ int qdma_vf_dev_close(struct rte_eth_dev *dev)
 			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove C2H queue: %d",
 							qdma_dev->func_id, qid);
 
-			qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+			qdma_dev_notify_qdel(dev, rxq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_C2H);
 
 			if (rxq->st_mode)
-				qdma_dev_notify_qdel(rxq->dev, rxq->queue_id +
+				qdma_dev_notify_qdel(dev, rxq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_CMPT);
 
@@ -666,7 +666,7 @@ int qdma_vf_dev_close(struct rte_eth_dev *dev)
 			PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove H2C queue: %d",
 							qdma_dev->func_id, qid);
 
-			qdma_dev_notify_qdel(txq->dev, txq->queue_id +
+			qdma_dev_notify_qdel(dev, txq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_H2C);
 			if (txq->sw_ring)
@@ -685,7 +685,7 @@ int qdma_vf_dev_close(struct rte_eth_dev *dev)
 			if (cmptq != NULL) {
 				PMD_DRV_LOG(INFO, "VF-%d(DEVFN) Remove CMPT queue: %d",
 						qdma_dev->func_id, qid);
-				qdma_dev_notify_qdel(cmptq->dev,
+				qdma_dev_notify_qdel(dev,
 						cmptq->queue_id +
 						qdma_dev->queue_base,
 						QDMA_DEV_Q_TYPE_CMPT);
@@ -857,7 +857,7 @@ int qdma_vf_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		return -1;
 
 	txq->q_pidx_info.pidx = 0;
-	qdma_dev->hw_access->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
+	qdma_hw_access_funcs->qdma_queue_pidx_update(dev, qdma_dev->is_vf,
 			qid, 0, &txq->q_pidx_info);
 
 	dev->data->tx_queue_state[qid] = RTE_ETH_QUEUE_STATE_STARTED;
@@ -868,7 +868,7 @@ int qdma_vf_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 
 int qdma_vf_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 {
-	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
+	//struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 	struct qdma_rx_queue *rxq;
 	int err;
 
@@ -889,11 +889,11 @@ int qdma_vf_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		rxq->cmpt_cidx_info.timer_idx = rxq->timeridx;
 		rxq->cmpt_cidx_info.trig_mode = rxq->triggermode;
 		rxq->cmpt_cidx_info.wrb_en = 1;
-		qdma_dev->hw_access->qdma_queue_cmpt_cidx_update(dev, 1,
+		qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev, 1,
 				qid, &rxq->cmpt_cidx_info);
 
 		rxq->q_pidx_info.pidx = (rxq->nb_rx_desc - 2);
-		qdma_dev->hw_access->qdma_queue_pidx_update(dev, 1,
+		qdma_hw_access_funcs->qdma_queue_pidx_update(dev, 1,
 				qid, 1, &rxq->q_pidx_info);
 	}
 
@@ -1039,6 +1039,12 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	 */
 	if (rte_eal_process_type() != RTE_PROC_PRIMARY) {
 		dev->dev_ops = &qdma_vf_eth_dev_ops;
+
+#ifdef RTE_LIBRTE_SPIRENT
+        /* map the hw_access function pointers for the secodary process memory map */
+        dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
+        qdma_hw_access_init(dev, dma_priv->is_vf, qdma_hw_access_funcs, NULL);
+#endif
 		return 0;
 	}
 
@@ -1090,29 +1096,36 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	dma_priv->bar_addr[dma_priv->config_bar_idx] = baseaddr;
 
 	/*Assigning QDMA access layer function pointers based on the HW design*/
-	dma_priv->hw_access = rte_zmalloc("vf_hwaccess",
-			sizeof(struct qdma_hw_access), 0);
-	if (dma_priv->hw_access == NULL) {
+	dma_priv->hw_access_mbox = rte_zmalloc("vf_hwaccess_mbox",
+                                           sizeof(struct qdma_hw_access_mbox), 0);
+
+	if (dma_priv->hw_access_mbox == NULL) {
 		rte_free(dev->data->mac_addrs);
 		return -ENOMEM;
 	}
+
+#ifdef RTE_LIBRTE_SPIRENT
+	idx = qdma_hw_access_init(dev, dma_priv->is_vf, qdma_hw_access_funcs, dma_priv->hw_access_mbox);
+#else
 	idx = qdma_hw_access_init(dev, dma_priv->is_vf, dma_priv->hw_access);
+#endif
+
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
 
 	idx = qdma_get_hw_version(dev);
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
 
 	idx = qdma_identify_bars(dev);
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}
@@ -1134,7 +1147,7 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	qdma_mbox_init(dev);
 	idx = qdma_ethdev_online(dev);
 	if (idx < 0) {
-		rte_free(dma_priv->hw_access);
+		rte_free(dma_priv->hw_access_mbox);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;
 	}

@@ -47,7 +47,7 @@ includes += include_directories('qdma_access/eqdma_cpm5_access')
 
 headers += files('rte_pmd_qdma.h')
 
-deps += ['mempool_ring']
+deps += ['mempool_ring', 'spirent']
 
 sources = files(
 	'qdma_ethdev.c',
