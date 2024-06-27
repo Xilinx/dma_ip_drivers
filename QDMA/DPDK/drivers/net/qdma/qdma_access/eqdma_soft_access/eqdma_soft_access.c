@@ -34,6 +34,7 @@
 #include "eqdma_soft_access.h"
 #include "eqdma_soft_reg.h"
 #include "qdma_reg_dump.h"
+#include "../../qdma.h"
 
 #ifdef ENABLE_WPP_TRACING
 #include "eqdma_soft_access.tmh"
@@ -5748,7 +5749,7 @@ int eqdma_init_ctxt_memory(void *dev_hndl)
 	qdma_memset(data, 0, sizeof(uint32_t) * QDMA_REG_IND_CTXT_REG_COUNT);
 	eqdma_get_device_attributes(dev_hndl, &dev_info);
 
-	for (; i < dev_info.num_qs; i++) {
+	for (i = DEFAULT_QUEUE_BASE; i < dev_info.num_qs; i++) {
 		int sel = QDMA_CTXT_SEL_SW_C2H;
 		int rv;
 

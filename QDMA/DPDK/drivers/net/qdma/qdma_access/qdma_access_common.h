@@ -45,7 +45,7 @@ extern "C" {
 #define QDMA_HW_VERSION_STRING_LEN			32
 
 #ifdef RTE_LIBRTE_SPIRENT
-#undef ENABLE_INIT_CTXT_MEMORY
+#define ENABLE_INIT_CTXT_MEMORY         1
 #else
 #define ENABLE_INIT_CTXT_MEMORY			1
 #endif

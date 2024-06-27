@@ -34,6 +34,7 @@
 #include "qdma_cpm4_access.h"
 #include "qdma_cpm4_reg.h"
 #include "qdma_reg_dump.h"
+#include "../../qdma.h"
 
 #ifdef ENABLE_WPP_TRACING
 #include "qdma_cpm4_access.tmh"
@@ -4935,7 +4936,7 @@ int qdma_cpm4_init_ctxt_memory(void *dev_hndl)
 	qdma_cpm4_get_device_attributes(dev_hndl, &dev_info);
 	qdma_log_info("%s: clearing the context for all qs",
 			__func__);
-	for (; i < dev_info.num_qs; i++) {
+	for (i = DEFAULT_QUEUE_BASE; i < dev_info.num_qs; i++) {
 		int sel = QDMA_CTXT_SEL_SW_C2H;
 		int rv;
 
@@ -5007,7 +5008,7 @@ int qdma_cpm4_init_st_ctxt(void *dev_hndl)
 	qdma_memset(data, 0, sizeof(uint32_t) * QDMA_REG_IND_CTXT_REG_COUNT);
 	qdma_cpm4_get_device_attributes(dev_hndl, &dev_info);
 
-	for (; i < dev_info.num_qs; i++) {
+	for (i = DEFAULT_QUEUE_BASE; i < dev_info.num_qs; i++) {
 		int sel = QDMA_CTXT_SEL_CMPT;
 		int rv;
 
