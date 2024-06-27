@@ -2087,7 +2087,8 @@ static int eqdma_cpm5_indirect_reg_clear(void *dev_hndl,
 		enum ind_ctxt_cmd_sel sel, uint16_t hw_qid)
 {
 	union qdma_ind_ctxt_cmd cmd;
-
+    
+    //qdma_log_error("%s: (dev_hndl %p)(sel %d)(hw_qid %d)\n", __func__, dev_hndl, sel, hw_qid);
 	qdma_reg_access_lock(dev_hndl);
 
 	/* set command register */
@@ -3377,6 +3378,7 @@ static int eqdma_cpm5_sw_context_read(void *dev_hndl, uint8_t c2h,
 static int eqdma_cpm5_sw_context_clear(void *dev_hndl, uint8_t c2h,
 			  uint16_t hw_qid)
 {
+#ifdef ENABLE_INIT_CTXT_MEMORY
 	enum ind_ctxt_cmd_sel sel = c2h ?
 			QDMA_CTXT_SEL_SW_C2H : QDMA_CTXT_SEL_SW_H2C;
 
@@ -3387,6 +3389,9 @@ static int eqdma_cpm5_sw_context_clear(void *dev_hndl, uint8_t c2h,
 	}
 
 	return eqdma_cpm5_indirect_reg_clear(dev_hndl, sel, hw_qid);
+#else
+    return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -5712,6 +5717,7 @@ int eqdma_cpm5_init_ctxt_memory(void *dev_hndl)
 
 	for (; i < dev_info.num_qs; i++) {
 		int sel = QDMA_CTXT_SEL_SW_C2H;
+        //int sel = QDMA_CTXT_SEL_HW_C2H;
 		int rv;
 
 #ifdef TANDEM_BOOT_SUPPORTED

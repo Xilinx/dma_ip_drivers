@@ -57,7 +57,11 @@
 
 #define QDMA_FUNC_ID_INVALID    0xFFFF
 
+#ifdef RTE_LIBRTE_SPIRENT
+#define DEFAULT_QUEUE_BASE	(64)
+#else
 #define DEFAULT_QUEUE_BASE	(0)
+#endif
 
 #define QDMA_MAX_BURST_SIZE (128)
 #define QDMA_MIN_RXBUFF_SIZE	(256)
@@ -135,7 +139,7 @@ enum reset_state_t {
 /** MM Write-back status structure **/
 struct __attribute__ ((packed)) wb_status
 {
-	volatile uint16_t	pidx; /** in C2H WB **/
+	volatile uint16_t	pidx; /** in C2H Write Back **/
 	volatile uint16_t	cidx; /** Consumer-index **/
 	uint32_t	rsvd2; /** Reserved. **/
 };
