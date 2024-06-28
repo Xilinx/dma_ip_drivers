@@ -332,7 +332,7 @@ int index_of_array(uint32_t *arr, uint32_t n, uint32_t element)
 {
 	int index = 0;
 
-    //PMD_DRV_LOG(DEBUG, "qdma_common index_of_array: %d\n", element);
+        //PMD_DRV_LOG(DEBUG, "qdma_common index_of_array: %d\n", element);
 
 	for (index = 0; (uint32_t)index < n; index++) {
         //PMD_DRV_LOG(DEBUG, "qdma_common arr[%d] - %d\n",index, *(arr + index));

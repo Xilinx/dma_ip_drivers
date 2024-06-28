@@ -569,8 +569,8 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,	uint16_t num_cmpt_entrie
 	rxq->cmpt_cidx_info.wrb_cidx = rx_cmpt_tail;
 	qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev,	qdma_dev->is_vf, rxq->queue_id, &rxq->cmpt_cidx_info);
 
-    PMD_DRV_LOG(ERR, "(rxq->wb_status 0x%8.8x) (rxq->cmpt_cidx_info.wrb_cidx %d)", *((uint32_t *)rxq->wb_status), rxq->cmpt_cidx_info.wrb_cidx);
-    //rte_panic("debug exit");
+        PMD_DRV_LOG(ERR, "(rxq->wb_status 0x%8.8x) (rxq->cmpt_cidx_info.wrb_cidx %d)", *((uint32_t *)rxq->wb_status), rxq->cmpt_cidx_info.wrb_cidx);
+        //rte_panic("debug exit");
 
 	return 0;
 }
