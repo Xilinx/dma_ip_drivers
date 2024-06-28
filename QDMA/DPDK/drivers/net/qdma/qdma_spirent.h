@@ -125,36 +125,57 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     len = hdr->len;
     flags = hdr->flags;
 
+    if(flags || len) {
+        PMD_DRV_LOG(ERR, "Enter (len %d) (flags %x)", len, flags);
+    } else {
+        return;
+    }
+
+    {
+        FILE *f = fopen("/tmp/rx.txt", "a"); 
+        fprintf(f, "qdma_spirent_rx_oh: %p rx_pkt->data_len %d\n", rx_pkt, rx_pkt->data_len);
+        rte_pktmbuf_dump(f, rx_pkt, rx_pkt->data_len);
+        fprintf(f, "****************************************************************************************\n");
+        fclose(f);
+    }
+
     /*
      * Check for runts
      */
     if(unlikely(len < 64))
     {
-        PMD_DRV_LOG(ERR, "Runt frame (len %d)\n", len);
+        PMD_DRV_LOG(ERR, "Runt frame (len %d)", len);
         stats->runts++;
         return 1;
     }
 
     if(flags & RX_OH_FCSERR)
     {
-        PMD_DRV_LOG(ERR, "FCS Error (len %d)(flags 0x%x)\n", len, flags);
+        PMD_DRV_LOG(ERR, "FCS Error (len %d)(flags 0x%x)", len, flags);
         stats->CRCErrors++;
         return 1;
     }
 
     len += (sizeof(ct_rxover_t) - 4);
 
+#if 0
+    // QDMA did this already
     // set the mbuf length
     if (NULL == rte_pktmbuf_append(rx_pkt, (uint16_t)len)) {
         stats->FCDiscards++;
+        PMD_DRV_LOG(ERR, "Append failed");
         return 1;
     }
+#endif
+
 
     // strip the phx overhead
     rte_pktmbuf_adj(rx_pkt, sizeof(ct_rxover_t));
 
     // passing hw timestamp value to upper layers
     rte_sp_mbuf_dyn_ts(rx_pkt)->timestamp = ((uint64_t)hdr->ts_hi << 32) | hdr->ts_lo;
+
+    PMD_DRV_LOG(ERR, "Exit *** (data_len %d)", rx_pkt->data_len);
    
     return 0;
 }

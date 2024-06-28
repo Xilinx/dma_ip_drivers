@@ -44,7 +44,11 @@ extern "C" {
 /* QDMA HW version string array length */
 #define QDMA_HW_VERSION_STRING_LEN			32
 
+#ifdef RTE_LIBRTE_SPIRENT
+#define ENABLE_INIT_CTXT_MEMORY         1
+#else
 #define ENABLE_INIT_CTXT_MEMORY			1
+#endif
 
 #ifdef GCC_COMPILER
 static inline uint32_t get_trailing_zeros(uint64_t x)

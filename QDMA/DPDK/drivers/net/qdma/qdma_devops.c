@@ -545,8 +545,14 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	rxq->rx_buff_size = (uint16_t)
 				(rte_pktmbuf_data_room_size(rxq->mb_pool) -
 				RTE_PKTMBUF_HEADROOM);
+
 	/* Allocate memory for Rx descriptor ring */
 	if (rxq->st_mode) {
+
+        /*
+         * STREAM mode 
+         */
+
 		if (!qdma_dev->dev_cap.st_en) {
 			PMD_DRV_LOG(ERR, "Streaming mode not enabled "
 					"in the hardware\n");
@@ -571,8 +577,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 			sz = (rxq->nb_rx_desc) *
 					sizeof(struct qdma_ul_st_c2h_desc);
 
-		rxq->rx_mz = qdma_zone_reserve(dev, "RxHwRn", rx_queue_id,
-						sz, socket_id);
+		rxq->rx_mz = qdma_zone_reserve(dev, "RxHwRn", rx_queue_id, sz, socket_id);
 		if (!rxq->rx_mz) {
 			PMD_DRV_LOG(ERR, "Unable to allocate rxq->rx_mz "
 					"of size %d\n", sz);
@@ -584,23 +589,31 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 
 		/* Allocate memory for Rx completion(CMPT) descriptor ring */
 		sz = (rxq->nb_rx_cmpt_desc) * rxq->cmpt_desc_len;
-		rxq->rx_cmpt_mz = qdma_zone_reserve(dev, "RxHwCmptRn",
-						    rx_queue_id, sz, socket_id);
+		rxq->rx_cmpt_mz = qdma_zone_reserve(dev, "RxHwCmptRn", rx_queue_id, sz, socket_id);
 		if (!rxq->rx_cmpt_mz) {
 			PMD_DRV_LOG(ERR, "Unable to allocate rxq->rx_cmpt_mz "
 					"of size %d\n", sz);
 			err = -ENOMEM;
 			goto rx_setup_err;
 		}
-		rxq->cmpt_ring =
-			(union qdma_ul_st_cmpt_ring *)rxq->rx_cmpt_mz->addr;
+		rxq->cmpt_ring = (union qdma_ul_st_cmpt_ring *)rxq->rx_cmpt_mz->addr;
 
-		/* Write-back status structure */
-		rxq->wb_status = (struct wb_status *)((uint64_t)rxq->cmpt_ring +
-				 (((uint64_t)rxq->nb_rx_cmpt_desc - 1) *
-				  rxq->cmpt_desc_len));
+#ifdef RTE_LIBRTE_SPIRENT
+        PMD_DRV_LOG(ERR, "****************************************************************************************");
+        PMD_DRV_LOG(ERR, "wb_status (phys address %p)", (void *)((uint64_t)rxq->rx_cmpt_mz->iova + (((uint64_t)rxq->nb_rx_cmpt_desc - 1) *  rxq->cmpt_desc_len)));
+        PMD_DRV_LOG(ERR, "****************************************************************************************");        
+#endif
+
+		/* Write-back status structure is the last descriptor in the ring */
+		rxq->wb_status = (struct wb_status *)((uint64_t)rxq->cmpt_ring + (((uint64_t)rxq->nb_rx_cmpt_desc - 1) *  rxq->cmpt_desc_len));
 		memset(rxq->cmpt_ring, 0, sz);
+
 	} else {
+
+        /*
+         * MM (Memory Mapped) mode
+         */
+
 		if (!qdma_dev->dev_cap.mm_en) {
 			PMD_DRV_LOG(ERR, "Memory mapped mode not enabled "
 					"in the hardware\n");
@@ -626,14 +639,12 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 		memset(rxq->rx_ring, 0, sz);
 
 		rx_ring_bypass = (uint8_t *)rxq->rx_mz->addr;
-		if (rxq->en_bypass &&
-			(rxq->bypass_desc_sz != 0))
-			rxq->wb_status = (struct wb_status *)&
-					(rx_ring_bypass[(rxq->nb_rx_desc - 1) *
-							(rxq->bypass_desc_sz)]);
+
+        /* Bypass mode cmpt status locations (last bd in the ring) */
+		if (rxq->en_bypass && (rxq->bypass_desc_sz != 0))
+			rxq->wb_status = (struct wb_status *)&(rx_ring_bypass[(rxq->nb_rx_desc - 1) * (rxq->bypass_desc_sz)]);
 		else
-			rxq->wb_status = (struct wb_status *)&
-					 (rx_ring_mm[rxq->nb_rx_desc - 1]);
+			rxq->wb_status = (struct wb_status *)&(rx_ring_mm[rxq->nb_rx_desc - 1]);
 	}
 
 	/* allocate memory for RX software ring */
@@ -1484,7 +1495,7 @@ int qdma_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 
 	/* Set SW Context */
 	err = hw_access_funcs->qdma_sw_ctx_conf(dev, 0,
-			(qid + queue_base), &q_sw_ctxt,
+            (qid + queue_base), &q_sw_ctxt,
 			QDMA_HW_ACCESS_WRITE);
 	if (err < 0)
 		return hw_access_funcs->qdma_get_error_code(err);

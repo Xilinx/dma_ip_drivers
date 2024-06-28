@@ -34,6 +34,7 @@
 #include "eqdma_cpm5_access.h"
 #include "eqdma_cpm5_reg.h"
 #include "qdma_reg_dump.h"
+#include "../../qdma.h"
 
 #ifdef ENABLE_WPP_TRACING
 #include "eqdma_cpm5_access.tmh"
@@ -2087,6 +2088,8 @@ static int eqdma_cpm5_indirect_reg_clear(void *dev_hndl,
 		enum ind_ctxt_cmd_sel sel, uint16_t hw_qid)
 {
 	union qdma_ind_ctxt_cmd cmd;
+    
+    qdma_log_error("%s: (dev_hndl %p)(sel %d)(hw_qid %d)\n", __func__, dev_hndl, sel, hw_qid);
 
 	qdma_reg_access_lock(dev_hndl);
 
@@ -3374,9 +3377,18 @@ static int eqdma_cpm5_sw_context_read(void *dev_hndl, uint8_t c2h,
  *
  * Return:	0   - success and < 0 - failure
  *****************************************************************************/
-static int eqdma_cpm5_sw_context_clear(void *dev_hndl, uint8_t c2h,
-			  uint16_t hw_qid)
+static int eqdma_cpm5_sw_context_clear(void *dev_hndl, uint8_t c2h, uint16_t hw_qid)
 {
+#ifdef ENABLE_INIT_CTXT_MEMORY
+
+    qdma_log_error("%s: *** (dev_hndl %p)(c2h %d)(hw_qid %d)\n", __func__, dev_hndl, c2h, hw_qid);
+
+
+    if(hw_qid < DEFAULT_QUEUE_BASE) {
+        qdma_log_error("%s: skip when hw_qid is %d is < DEFAULT_QUEUE_BASE\n", __func__, hw_qid);
+        return 0;
+    }
+
 	enum ind_ctxt_cmd_sel sel = c2h ?
 			QDMA_CTXT_SEL_SW_C2H : QDMA_CTXT_SEL_SW_H2C;
 
@@ -3387,6 +3399,9 @@ static int eqdma_cpm5_sw_context_clear(void *dev_hndl, uint8_t c2h,
 	}
 
 	return eqdma_cpm5_indirect_reg_clear(dev_hndl, sel, hw_qid);
+#else
+    return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -5701,6 +5716,8 @@ int eqdma_cpm5_init_ctxt_memory(void *dev_hndl)
 	uint16_t i = 0;
 	struct qdma_dev_attributes dev_info;
 
+    qdma_log_error("%s: *** (dev_hndl %p)\n", __func__, dev_hndl);
+
 	if (!dev_hndl) {
 		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
 					__func__, -QDMA_ERR_INV_PARAM);
@@ -5710,8 +5727,9 @@ int eqdma_cpm5_init_ctxt_memory(void *dev_hndl)
 	qdma_memset(data, 0, sizeof(uint32_t) * QDMA_REG_IND_CTXT_REG_COUNT);
 	eqdma_cpm5_get_device_attributes(dev_hndl, &dev_info);
 
-	for (; i < dev_info.num_qs; i++) {
+	for (i =  DEFAULT_QUEUE_BASE; i < dev_info.num_qs; i++) {
 		int sel = QDMA_CTXT_SEL_SW_C2H;
+        //int sel = QDMA_CTXT_SEL_HW_C2H;
 		int rv;
 
 #ifdef TANDEM_BOOT_SUPPORTED
@@ -5785,7 +5803,7 @@ int eqdma_cpm5_init_st_ctxt(void *dev_hndl)
 	qdma_memset(data, 0, sizeof(uint32_t) * QDMA_REG_IND_CTXT_REG_COUNT);
 	eqdma_cpm5_get_device_attributes(dev_hndl, &dev_info);
 
-	for (; i < dev_info.num_qs; i++) {
+	for (i = DEFAULT_QUEUE_BASE; i < dev_info.num_qs; i++) {
 		int sel = QDMA_CTXT_SEL_CMPT;
 		int rv;
 
