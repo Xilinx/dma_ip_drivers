@@ -131,6 +131,14 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
         return;
     }
 
+    {
+        FILE *f = fopen("/tmp/rx.txt", "a"); 
+        fprintf(f, "qdma_spirent_rx_oh: %p rx_pkt->data_len %d\n", rx_pkt, rx_pkt->data_len);
+        rte_pktmbuf_dump(f, rx_pkt, rx_pkt->data_len);
+        fprintf(f, "****************************************************************************************\n");
+        fclose(f);
+    }
+
     /*
      * Check for runts
      */
@@ -160,15 +168,14 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     }
 #endif
 
+
     // strip the phx overhead
     rte_pktmbuf_adj(rx_pkt, sizeof(ct_rxover_t));
 
     // passing hw timestamp value to upper layers
     rte_sp_mbuf_dyn_ts(rx_pkt)->timestamp = ((uint64_t)hdr->ts_hi << 32) | hdr->ts_lo;
 
-    rte_pktmbuf_dump(stdout, rx_pkt, rx_pkt->data_len);
-
-    PMD_DRV_LOG(ERR, "Exit (data_len %d)", rx_pkt->data_len);
+    PMD_DRV_LOG(ERR, "Exit *** (data_len %d)", rx_pkt->data_len);
    
     return 0;
 }
