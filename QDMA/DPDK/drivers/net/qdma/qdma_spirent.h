@@ -128,7 +128,7 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     if(flags || len) {
         PMD_DRV_LOG(ERR, "Enter (len %d) (flags %x)", len, flags);
     } else {
-        return;
+        return 1;
     }
 
     {

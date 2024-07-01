@@ -46,6 +46,7 @@ DPDK_21 {
 	rte_pmd_qdma_dbg_regdump;
 	rte_pmd_qdma_dbg_reg_info_dump;
 	rte_pmd_qdma_dbg_qinfo;
+	rte_pmd_qdma_dbg_rx_ctxt;
 
 	rte_pmd_qdma_get_pci_func_type;
 	rte_pmd_qdma_configure_tx_bypass;

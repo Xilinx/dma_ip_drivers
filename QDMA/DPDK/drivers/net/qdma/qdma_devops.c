@@ -1086,6 +1086,11 @@ int qdma_dev_infos_get(struct rte_eth_dev *dev,
 	dev_info->max_rx_pktlen = DMA_BRAM_SIZE;
 	dev_info->max_mac_addrs = 1;
 
+#ifdef RTE_LIBRTE_SPIRENT
+    dev_info->bar[0] = qdma_dev->bar_addr[qdma_dev->config_bar_idx];
+    dev_info->bar[1] = qdma_dev->bar_addr[qdma_dev->config_bar_idx];
+#endif
+
 	return 0;
 }
 

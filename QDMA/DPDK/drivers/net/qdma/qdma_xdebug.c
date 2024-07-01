@@ -1478,3 +1478,127 @@ int rte_pmd_qdma_dbg_qdesc(uint8_t port_id, uint16_t queue, int start,
 
 	return 0;
 }
+
+#if 1
+int rte_pmd_qdma_dbg_rx_ctxt(uint8_t port_id, uint16_t queue, int start, int end) 
+{
+	struct rte_eth_dev *dev;
+    struct qdma_rx_queue *rxq;
+    int i;
+
+    dev = &rte_eth_devices[port_id];
+
+#ifdef UNUSED_STUFF
+	struct qdma_pci_dev *qdma_dev;
+	qdma_dev = dev->data->dev_private;
+	uint16_t qid;
+	qid = qdma_dev->queue_base + queue;
+#endif
+
+    rxq = (struct qdma_rx_queue *)dev->data->rx_queues[queue];
+	if (rxq == NULL) {
+		xdebug_info("Caught NULL pointer for queue_id: %d\n", queue);
+		return -1;
+	}
+
+    uint16_t rx_cmpt_tail = rxq->cmpt_cidx_info.wrb_cidx;
+
+    xdebug_info("----------------------------------------------------------------------------------------\n");    
+    xdebug_info("RX\n");
+    xdebug_info("queue          : %d\n", queue);
+    xdebug_info("port_id        : %d\n", port_id);
+    xdebug_info("rxq            : %p\n", rxq);
+    xdebug_info("rx_cmpt_tail   : %d\n", rx_cmpt_tail);
+
+    for(i=start; i< end; i++) {
+        union qdma_ul_st_cmpt_ring *user_cmpt_entry = (union qdma_ul_st_cmpt_ring *)((uint64_t)rxq->cmpt_ring +	((uint64_t)i * rxq->cmpt_desc_len));
+
+        union qdma_ul_st_cmpt_ring *cmpt_data, *cmpt_desc;
+        cmpt_desc = (union qdma_ul_st_cmpt_ring *)(user_cmpt_entry);
+        cmpt_data = (union qdma_ul_st_cmpt_ring *)(&rxq->cmpt_data[i]);
+        
+        xdebug_info("----------------------------------------------------------------------------------------\n");
+        xdebug_info("cmpt_desc (index %d)\n", i);
+        xdebug_info("data_frmt  :%d\n", cmpt_desc->data_frmt);
+        xdebug_info("color      :%d\n", cmpt_desc->color);
+        xdebug_info("err        :%d\n", cmpt_desc->err);
+        xdebug_info("desc_used  :%d\n", cmpt_desc->desc_used);
+        xdebug_info("length     :%d\n", cmpt_desc->length);
+        xdebug_info("user_rsv   :%d\n", cmpt_desc->user_rsv);
+        xdebug_info("user_def   :%d\n", cmpt_desc->user_def[0]);
+        xdebug_info("----------------------------------------------------------------------------------------\n");
+        xdebug_info("cmpt_data (index %d)\n", i);
+        xdebug_info("data_frmt  :%d\n", cmpt_data->data_frmt);
+        xdebug_info("color      :%d\n", cmpt_data->color);
+        xdebug_info("err        :%d\n", cmpt_data->err);
+        xdebug_info("desc_used  :%d\n", cmpt_data->desc_used);
+        xdebug_info("length     :%d\n", cmpt_data->length);
+        xdebug_info("user_rsv   :%d\n", cmpt_data->user_rsv);
+        xdebug_info("user_def   :%d\n", cmpt_data->user_def[0]);
+        xdebug_info("----------------------------------------------------------------------------------------\n");
+
+    }
+
+    xdebug_info("----------------------------------------------------------------------------------------\n");  
+
+    return 0;
+}
+
+#if 0
+int rte_pmd_qdma_dbg_tx_ctxt(uint8_t port_id, uint16_t queue, int start, int end) 
+{
+	struct rte_eth_dev *dev;
+	struct qdma_pci_dev *qdma_dev;
+	uint16_t qid;
+    struct qdma_tx_queue *txq;
+    int i;
+
+    dev = &rte_eth_devices[port_id];
+	qdma_dev = dev->data->dev_private;
+	qid = qdma_dev->queue_base + queue;
+
+    txq = (struct qdma_tx_queue *)dev->data->tx_queues[queue];
+	if (txq == NULL) {
+		xdebug_info("Caught NULL pointer for queue_id: %d\n", queue);
+		return -1;
+	}
+
+    uint16_t tx_cmpt_tail = txq->cmpt_cidx_info.wrb_cidx;
+    xdebug_info("----------------------------------------------------------------------------------------\n");    
+    xdebug_info("TX\n");
+    xdebug_info("queue          : %d\n", queue);
+    xdebug_info("port_id        : %d\n", port_id);
+    xdebug_info("txq            : %p\n", txq);
+    xdebug_info("tx_cmpt_tail   : %d\n", tx_cmpt_tail);
+
+    for(i=start; i< end; i++) {
+        user_cmpt_entry = (union qdma_ul_st_cmpt_ring *)((uint64_t)txq->cmpt_ring +	((uint64_t)i * txq->cmpt_desc_len));
+        union qdma_ul_st_cmpt_ring *cmpt_data, *cmpt_desc;
+        cmpt_desc = (union qdma_ul_st_cmpt_ring *)(user_cmpt_entry);
+        cmpt_data = (union qdma_ul_st_cmpt_ring *)(&txq->cmpt_data[i]);
+        
+        xdebug_info("----------------------------------------------------------------------------------------\n");
+        xdebug_info("cmpt_desc (index %d)\n", i);
+        xdebug_info("data_frmt  :%d\n", cmpt_desc->data_frmt);
+        xdebug_info("color      :%d\n", cmpt_desc->color);
+        xdebug_info("err        :%d\n", cmpt_desc->err);
+        xdebug_info("desc_used  :%d\n", cmpt_desc->desc_used);
+        xdebug_info("length     :%d\n", cmpt_desc->length);
+        xdebug_info("user_rsv   :%d\n", cmpt_desc->user_rsv);
+        xdebug_info("user_def   :%d\n", cmpt_desc->user_def[0]);
+        xdebug_info("----------------------------------------------------------------------------------------\n");
+        xdebug_info("cmpt_data (index %d)\n", i);
+        xdebug_info("data_frmt  :%d\n", cmpt_data->data_frmt);
+        xdebug_info("color      :%d\n", cmpt_data->color);
+        xdebug_info("err        :%d\n", cmpt_data->err);
+        xdebug_info("desc_used  :%d\n", cmpt_data->desc_used);
+        xdebug_info("length     :%d\n", cmpt_data->length);
+        xdebug_info("user_rsv   :%d\n", cmpt_data->user_rsv);
+        xdebug_info("user_def   :%d\n", cmpt_data->user_def[0]);
+        xdebug_info("----------------------------------------------------------------------------------------\n");
+    }
+
+    xdebug_info("----------------------------------------------------------------------------------------\n");    
+}
+#endif
+#endif

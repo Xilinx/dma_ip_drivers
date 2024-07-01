@@ -2089,7 +2089,7 @@ static int eqdma_cpm5_indirect_reg_clear(void *dev_hndl,
 {
 	union qdma_ind_ctxt_cmd cmd;
     
-    qdma_log_error("%s: (dev_hndl %p)(sel %d)(hw_qid %d)\n", __func__, dev_hndl, sel, hw_qid);
+    //qdma_log_error("%s: (dev_hndl %p)(sel %d)(hw_qid %d)\n", __func__, dev_hndl, sel, hw_qid);
 
 	qdma_reg_access_lock(dev_hndl);
 
