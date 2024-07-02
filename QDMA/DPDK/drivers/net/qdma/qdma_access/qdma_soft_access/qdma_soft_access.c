@@ -4022,8 +4022,6 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 	uint32_t reg_addr = 0;
 	uint32_t reg_val = 0;
 
-    qdma_log_error("%s(%d): ENTER", __FUNCTION__, __LINE__);
-
 	if (!dev_hndl || !reg_info) {
 		qdma_log_error("%s: dev_hndl:(%p), reg_info:(%p), err:%d\n",
 			__func__, dev_hndl, reg_info, -QDMA_ERR_INV_PARAM);
@@ -4050,8 +4048,6 @@ int qdma_queue_pidx_update(void *dev_hndl, uint8_t is_vf, uint16_t qid,
 	qdma_io_wmb();
 
 	qdma_reg_write_db(dev_hndl, reg_addr, reg_val);
-
-    qdma_log_error("%s(%d): EXIT\n", __FUNCTION__, __LINE__);
 
 	return QDMA_SUCCESS;
 }
