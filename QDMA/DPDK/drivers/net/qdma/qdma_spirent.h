@@ -107,8 +107,10 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
         hdr->seq = seq;
     }
     
-    hdr->frame_length = len - sizeof(ct_txover_t) ;
-    hdr->block_length = hdr->frame_length + sizeof(ct_txover_t);
+    hdr->frame_length = len + 4; // Plus fcs
+    hdr->block_length = len + 4 + sizeof(ct_txover_t);
+
+    rte_pktmbuf_dump(stdout, tx_pkt, tx_pkt->data_len);
 
     return 0;
 }
@@ -156,9 +158,9 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
         return 1;
     }
 
+#if 0
     len += (sizeof(ct_rxover_t) - 4);
 
-#if 0
     // QDMA did this already
     // set the mbuf length
     if (NULL == rte_pktmbuf_append(rx_pkt, (uint16_t)len)) {
