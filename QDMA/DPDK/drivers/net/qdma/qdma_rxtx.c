@@ -787,7 +787,11 @@ static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
 			mb = prepare_segmented_packet(rxq, pkt_length, &rxq->rx_tail);
 
 #ifdef RTE_LIBRTE_SPIRENT
-            qdma_spirent_rx_oh(mb, &rxq->stats);
+            if(qdma_spirent_rx_oh(mb, &rxq->stats)) {
+                /* Error, drop the frame */
+                rte_pktmbuf_free(mb);
+                continue;
+            }
 #endif
 
 			rx_pkts[count_pkts++] = mb;
@@ -1030,6 +1034,9 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 	PMD_DRV_LOG(ERR, " Recv complete with hw cidx :%d",	rxq->wb_status->cidx);
 	PMD_DRV_LOG(ERR, " Recv complete with hw pidx :%d", rxq->wb_status->pidx);
 	PMD_DRV_LOG(ERR, " Recv complete with count_pkts :%d", count_pkts);
+    if(count_pkts) {
+        PMD_DRV_LOG(ERR, " Recv complete with size : %d", rx_pkts[0]->data_len);
+    }
 
 	return count_pkts;
 }
@@ -1504,37 +1511,23 @@ uint16_t qdma_xmit_pkts(void *tx_queue, struct rte_mbuf **tx_pkts,
 {
 	struct qdma_tx_queue *txq = tx_queue;
 	uint16_t count;
-    RTE_LOG(INFO, PMD, "qdma_xmit_pkts(): Enter (nb_pkts %d)\n", nb_pkts);
+
+    RTE_LOG(DEBUG, PMD, "qdma_xmit_pkts(): Enter (nb_pkts %d)\n", nb_pkts);
 
 	if (txq->status != RTE_ETH_QUEUE_STATE_STARTED)
 		return 0;
 
 
 	if (txq->st_mode) {
-        PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): sending in stream mode (nb_pkts %d)\n", nb_pkts);
 		count =	qdma_xmit_pkts_st(txq, tx_pkts, nb_pkts);
     }
 	else
     {
-        PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): sending (nb_pkts %d)\n", nb_pkts);
 		count =	qdma_xmit_pkts_mm(txq, tx_pkts, nb_pkts);
     }
 
-    //rte_pmd_qdma_dbg_qinfo(0, 0);
+    PMD_DRV_LOG(DEBUG, "qdma_xmit_pkts(): Exit (nb_pkts %d)\n", nb_pkts);
 
-    //PMD_DRV_LOG(ERR, "****************************************************\n");
-    //rte_pmd_qdma_dbg_regdump(0);
-    //PMD_DRV_LOG(ERR, "****************************************************\n");
-
-    //Tx
-    //rte_pmd_qdma_dbg_qdesc(0, 0, 0, 5, RTE_PMD_QDMA_XDEBUG_DESC_H2C);
-
-    //Rx
-    //rte_pmd_qdma_dbg_qdesc(0, 0, 0, 5, RTE_PMD_QDMA_XDEBUG_DESC_C2H);
-
-    
-
-    PMD_DRV_LOG(ERR, "qdma_xmit_pkts(): Exit (nb_pkts %d)\n", nb_pkts);
 	return count;
 }
 
@@ -1546,14 +1539,11 @@ qdma_set_tx_function(struct rte_eth_dev *dev)
 	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) 
     if(0)
     {
-		PMD_DRV_LOG(INFO, "Using Vector Tx (port %d).",dev->data->port_id);
 		qdma_dev->tx_vec_allowed = true;
 		dev->tx_pkt_burst = qdma_xmit_pkts_vec;
-		PMD_DRV_LOG(INFO, "Using Vector Tx (dev->tx_pkt_burst %p).", dev->tx_pkt_burst);
+
 	} else {
-		PMD_DRV_LOG(INFO, "Normal Tx will be used on port %d.", dev->data->port_id);
 		dev->tx_pkt_burst = qdma_xmit_pkts;
-		PMD_DRV_LOG(INFO, "Normal Tx function (dev->tx_pkt_burst %p)", dev->tx_pkt_burst);
 	}
 }
 
@@ -1565,13 +1555,9 @@ qdma_set_rx_function(struct rte_eth_dev *dev)
 	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) 
     if(0)
     {
-		PMD_DRV_LOG(INFO, "Using Vector Rx (port %d).",
-			dev->data->port_id);
 		qdma_dev->rx_vec_allowed = true;
 		dev->rx_pkt_burst = qdma_recv_pkts_vec;
 	} else {
-		PMD_DRV_LOG(INFO, "Normal Rx will be used on port %d.",
-				dev->data->port_id);
 		dev->rx_pkt_burst = qdma_recv_pkts;
 	}
 }

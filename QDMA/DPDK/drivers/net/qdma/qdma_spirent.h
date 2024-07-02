@@ -21,6 +21,8 @@
 #define STATIC static 
 #define INLINE inline
 
+#undef DUMP_FRAMES
+
 /****************************************************************************************
  *
  * STC RX cut-through overhead
@@ -74,7 +76,9 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
     int len;
     ct_txover_t *hdr = NULL; // Keep compiler happy
 
+#ifdef DUMP_FRAMES
     rte_pktmbuf_dump(stdout, tx_pkt, tx_pkt->data_len);
+#endif
 
     len = rte_pktmbuf_pkt_len(tx_pkt);
     hdr = (ct_txover_t *)rte_pktmbuf_prepend (tx_pkt, sizeof(ct_txover_t));
@@ -85,7 +89,7 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
     memset((void *)hdr, 0, sizeof(ct_txover_t));
 
     uint64_t phys = (uint64_t)rte_cpu_to_le_64(RTE_MBUF_DATA_DMA_ADDR(tx_pkt));
-    PMD_DRV_LOG(ERR, "Buf Phys (0x%lx)\n", phys);
+
 
     int seq =0;
     int TsEn = 0;
@@ -110,7 +114,9 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
     hdr->frame_length = len + 4; // Plus fcs
     hdr->block_length = len + 4 + sizeof(ct_txover_t);
 
+#ifdef DUMP_FRAMES
     rte_pktmbuf_dump(stdout, tx_pkt, tx_pkt->data_len);
+#endif
 
     return 0;
 }
@@ -127,12 +133,18 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     len = hdr->len;
     flags = hdr->flags;
 
+    /* Bug in FPGA phx header stuff */
+    if(len <= 0) {
+        len = rx_pkt->data_len;
+    }
+
     if(flags || len) {
         PMD_DRV_LOG(ERR, "Enter (len %d) (flags %x)", len, flags);
     } else {
         return 1;
     }
 
+#ifdef DUMP_FRAMES
     {
         FILE *f = fopen("/tmp/rx.txt", "a"); 
         fprintf(f, "qdma_spirent_rx_oh: %p rx_pkt->data_len %d\n", rx_pkt, rx_pkt->data_len);
@@ -140,6 +152,7 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
         fprintf(f, "****************************************************************************************\n");
         fclose(f);
     }
+#endif
 
     /*
      * Check for runts
@@ -159,10 +172,9 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     }
 
 #if 0
-    len += (sizeof(ct_rxover_t) - 4);
-
     // QDMA did this already
     // set the mbuf length
+    len += (sizeof(ct_rxover_t) - 4);
     if (NULL == rte_pktmbuf_append(rx_pkt, (uint16_t)len)) {
         stats->FCDiscards++;
         PMD_DRV_LOG(ERR, "Append failed");
