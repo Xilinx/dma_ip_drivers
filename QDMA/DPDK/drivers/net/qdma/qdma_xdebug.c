@@ -729,6 +729,7 @@ static int qdma_c2h_context_dump(uint8_t port_id, uint16_t queue)
 	qid = qdma_dev->queue_base + queue;
 	ip_type = (enum qdma_ip_type)qdma_dev->ip_type;
 	device_type = (enum qdma_device_type)qdma_dev->device_type;
+
 	st_mode = qdma_dev->q_info[qid].queue_mode;
 	q_type = QDMA_DEV_Q_TYPE_C2H;
 
@@ -1405,7 +1406,7 @@ int rte_pmd_qdma_dbg_qinfo(uint8_t port_id, uint16_t queue)
 	dev = &rte_eth_devices[port_id];
 	qdma_dev = dev->data->dev_private;
 	qid = qdma_dev->queue_base + queue;
-	st_mode = qdma_dev->q_info[qid].queue_mode;
+	st_mode = qdma_dev->q_info[queue].queue_mode;
 
 	err = qdma_h2c_context_dump(port_id, queue);
 	if (err) {
