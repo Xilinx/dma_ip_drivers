@@ -1421,7 +1421,7 @@ int rte_pmd_qdma_dbg_qinfo(uint8_t port_id, uint16_t queue)
 		return err;
 	}
 
-	if (!st_mode && qdma_dev->dev_cap.mm_cmpt_en) {
+	if (st_mode || qdma_dev->dev_cap.mm_cmpt_en) {
 		err = qdma_cmpt_context_dump(port_id, queue);
 		if (err) {
 			xdebug_error("Error dumping %d: %d\n",
