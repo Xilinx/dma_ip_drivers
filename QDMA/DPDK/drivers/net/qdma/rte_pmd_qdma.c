@@ -1516,6 +1516,10 @@ static int qdma_pf_cmptq_context_write(struct rte_eth_dev *dev, uint32_t qid)
 	q_cmpt_ctxt.desc_sz = cmpt_desc_fmt;
 	q_cmpt_ctxt.valid = 1;
 
+#ifdef RTE_LIBRTE_SPIRENT
+    q_cmpt_ctxt.en_int = 1;
+#endif
+
 	if (qdma_dev->dev_cap.cmpt_ovf_chk_dis)
 		q_cmpt_ctxt.ovf_chk_dis = cmptq->dis_overflow_check;
 

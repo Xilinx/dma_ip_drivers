@@ -45,7 +45,11 @@ extern "C" {
 #define QDMA_HW_VERSION_STRING_LEN			32
 
 #ifdef RTE_LIBRTE_SPIRENT
-#define ENABLE_INIT_CTXT_MEMORY         1
+/* 
+ * https://xilinx.github.io/dma_ip_drivers/2019.2/linux-kernel/html/linux_dpdk_interop.html
+ * "undefine ENABLE_INIT_CTXT_MEMORY in qdma_access.c for the driver that is loaded last"
+ */
+#undef ENABLE_INIT_CTXT_MEMORY
 #else
 #define ENABLE_INIT_CTXT_MEMORY			1
 #endif
