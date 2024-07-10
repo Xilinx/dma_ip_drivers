@@ -1,0 +1,27 @@
+# ignore hidden files
+.*
+
+# ignore generated ctags/cscope files
+cscope.out.po
+cscope.out.in
+cscope.out
+cscope.files
+GTAGS
+GPATH
+GRTAGS
+tags
+TAGS
+
+# ignore python bytecode files
+*.pyc
+
+# ignore default build directory, and directories from test-meson-builds.sh
+build
+build-*
+# ignore other build directory patterns
+*-gcc*
+*-clang*
+
+# editor dross
+*~
+*.orig

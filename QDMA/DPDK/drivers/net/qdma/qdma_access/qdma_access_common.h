@@ -45,6 +45,10 @@ extern "C" {
 #define QDMA_HW_VERSION_STRING_LEN			32
 
 #ifdef RTE_LIBRTE_SPIRENT
+/* 
+ * despite the documents recommendations, we need this or we get QDMA ctxt errors when dpdkd restarts 
+ * Just make sure the queue base index is correct for cut-thru
+ */
 #define ENABLE_INIT_CTXT_MEMORY         1
 #else
 #define ENABLE_INIT_CTXT_MEMORY			1
