@@ -46,10 +46,10 @@ extern "C" {
 
 #ifdef RTE_LIBRTE_SPIRENT
 /* 
- * https://xilinx.github.io/dma_ip_drivers/2019.2/linux-kernel/html/linux_dpdk_interop.html
- * "undefine ENABLE_INIT_CTXT_MEMORY in qdma_access.c for the driver that is loaded last"
+ * despite the documents recommendations, we need this or we get QDMA ctxt errors when dpdkd restarts 
+ * Just make sure the queue base index is correct for cut-thru
  */
-#undef ENABLE_INIT_CTXT_MEMORY
+#define ENABLE_INIT_CTXT_MEMORY         1
 #else
 #define ENABLE_INIT_CTXT_MEMORY			1
 #endif
