@@ -526,6 +526,11 @@ struct xdma_engine {
 	/* Transfer list management */
 	struct list_head transfer_list;	/* queue of transfers */
 
+	/* Cancellation handling for aio engines */
+	struct list_head cancellation_list;            /* list of requests to cancell */
+	void (*cancel_one_xfer)(struct xdma_engine *); /* callback to do actual cancelling */
+	struct delayed_work work_cancel;               /* Work queue for cancellation handling */
+
 	/* Members applicable to AXI-ST C2H (cyclic) transfers */
 	struct xdma_result *cyclic_result;
 	dma_addr_t cyclic_result_bus;	/* bus addr for transfer */

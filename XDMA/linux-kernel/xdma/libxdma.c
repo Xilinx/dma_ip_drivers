@@ -1116,6 +1116,8 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 			pr_err("%s failed to read status\n", engine->name);
 			return rv;
 		}
+		if (!list_empty(&engine->transfer_list))
+			return engine_service_resume(engine);
 		return 0;
 	}
 
@@ -1200,6 +1202,42 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 done:
 	/* If polling detected an error, signal to the caller */
 	return err_flag ? -1 : 0;
+}
+
+/* engine_cancel_work(): deferred and delayed work that cancells xfers */
+static void engine_cancel_work(struct work_struct *work)
+{
+	struct delayed_work *dwork = to_delayed_work(work);
+	struct xdma_engine *engine = container_of(dwork, struct xdma_engine, work_cancel);
+	unsigned long flags;
+	int list_count = 0;
+	struct list_head *pos;
+	bool processed_cancellations = false;
+
+	if (engine->magic != MAGIC_ENGINE) {
+		pr_err("%s has invalid magic number %lx\n", engine->name, engine->magic);
+		return;
+	}
+
+	spin_lock_irqsave(&engine->lock, flags);
+
+	/* Count items in cancellation_list before draining */
+	list_for_each(pos, &engine->cancellation_list)
+		list_count++;
+
+	/* Don't schedule cancellation on engines that do not support cancellation. */
+	BUG_ON(engine->cancel_one_xfer == NULL);
+
+	while (!list_empty(&engine->cancellation_list)) {
+		engine->cancel_one_xfer(engine);
+		processed_cancellations = true;
+	}
+
+	if (processed_cancellations && engine->running) {
+		xdma_engine_stop(engine);
+	}
+
+	spin_unlock_irqrestore(&engine->lock, flags);
 }
 
 /* engine_service_work */
@@ -2880,6 +2918,9 @@ static int engine_init(struct xdma_engine *engine, struct xdma_dev *xdev,
 	/* initialize the deferred work for transfer completion */
 	INIT_WORK(&engine->work, engine_service_work);
 
+	/* initialize the deferred work for transfer cancellation */
+	INIT_DELAYED_WORK(&engine->work_cancel, engine_cancel_work);
+
 	if (dir == DMA_TO_DEVICE)
 		xdev->mask_irq_h2c |= engine->irq_bitmask;
 	else
@@ -2900,6 +2941,17 @@ static int engine_init(struct xdma_engine *engine, struct xdma_dev *xdev,
 	return 0;
 }
 
+static void sgt_dma_unmap(struct xdma_dev *xdev, struct sg_table *sgt,
+			  enum dma_data_direction dir)
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
+	pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
+#else
+	dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->orig_nents, dir);
+#endif
+	sgt->nents = 0;
+}
+
 /* transfer_destroy() - free transfer */
 static void transfer_destroy(struct xdma_dev *xdev, struct xdma_transfer *xfer)
 {
@@ -2910,14 +2962,7 @@ static void transfer_destroy(struct xdma_dev *xdev, struct xdma_transfer *xfer)
 		struct sg_table *sgt = xfer->sgt;
 
 		if (sgt->nents) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-			pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->nents,
-				     xfer->dir);
-#else
-			dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->nents,
-				     xfer->dir);
-#endif
-			sgt->nents = 0;
+			sgt_dma_unmap(xdev, sgt, xfer->dir);
 		}
 	}
 }
@@ -3446,12 +3491,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 
 unmap_sgl:
 	if (!dma_mapped && sgt->nents) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-		pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
-#else
-		dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->orig_nents, dir);
-#endif
-		sgt->nents = 0;
+		sgt_dma_unmap(xdev, sgt, dir);
 	}
 
 	if (req)
@@ -3681,12 +3721,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 
 unmap_sgl:
 	if (!dma_mapped && sgt->nents) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-		pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
-#else
-		dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->orig_nents, dir);
-#endif
-		sgt->nents = 0;
+		sgt_dma_unmap(xdev, sgt, dir);
 	}
 
 	if (req)
@@ -3806,16 +3841,13 @@ ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
 
 unmap_sgl:
 	if (!dma_mapped && sgt->nents) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-		pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
-#else
-		dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->orig_nents, dir);
-#endif
-		sgt->nents = 0;
+		sgt_dma_unmap(xdev, sgt, dir);
 	}
 
-	if (req)
+	if (req) {
 		xdma_request_free(req);
+		cb->req = NULL;
+	}
 
 	return done;
 
@@ -3927,22 +3959,7 @@ ssize_t xdma_xfer_submit_nowait(void *cb_hndl, void *dev_hndl, int channel,
 		if (rv < 0) {
 			pr_info("transfer_init failed\n");
 
-			if (!dma_mapped && sgt->nents) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-				pci_unmap_sg(xdev->pdev, sgt->sgl,
-						sgt->orig_nents, dir);
-#else
-				dma_unmap_sg(&xdev->pdev->dev, sgt->sgl,
-						sgt->orig_nents, dir);
-#endif
-				sgt->nents = 0;
-			}
-
-			/* Transfer failed return BUSY */
-			if (cb->io_done)
-				cb->io_done((unsigned long)cb, -EBUSY);
-
-			goto rel_req;
+			goto unmap_sgl;
 		}
 
 		xfer->cb = cb;
@@ -3981,17 +3998,13 @@ ssize_t xdma_xfer_submit_nowait(void *cb_hndl, void *dev_hndl, int channel,
 
 unmap_sgl:
 	if (!dma_mapped && sgt->nents) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
-		pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
-#else
-		dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->orig_nents, dir);
-#endif
-		sgt->nents = 0;
+		sgt_dma_unmap(xdev, sgt, dir);
 	}
 
-rel_req:
-	if (req)
+	if (req) {
 		xdma_request_free(req);
+		cb->req = NULL;
+	}
 
 	return rv;
 }
@@ -4170,6 +4183,8 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 		spin_lock_init(&engine->lock);
 		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
+		INIT_LIST_HEAD(&engine->cancellation_list);
+		engine->cancel_one_xfer = NULL;
 #if HAS_SWAKE_UP
 		init_swait_queue_head(&engine->shutdown_wq);
 		init_swait_queue_head(&engine->xdma_perf_wq);
@@ -4184,6 +4199,8 @@ static struct xdma_dev *alloc_dev_instance(struct pci_dev *pdev)
 		spin_lock_init(&engine->lock);
 		mutex_init(&engine->desc_lock);
 		INIT_LIST_HEAD(&engine->transfer_list);
+		INIT_LIST_HEAD(&engine->cancellation_list);
+		engine->cancel_one_xfer = NULL;
 #if HAS_SWAKE_UP
 		init_swait_queue_head(&engine->shutdown_wq);
 		init_swait_queue_head(&engine->xdma_perf_wq);

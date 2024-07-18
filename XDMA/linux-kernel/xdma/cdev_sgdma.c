@@ -71,6 +71,9 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 	if (rv < 0)
 		return;
 
+	engine = xcdev->engine;
+	xdev = xcdev->xdev;
+
 	/* Safeguarding for cancel requests */
 	lock_stat = spin_trylock(&caio->lock);
 	if (!lock_stat) {
@@ -78,13 +81,23 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 		goto skip_dev_lock;
 	}
 
-	if (false != caio->cancel) {
-		pr_err("skipping aio\n");
-		goto skip_tran;
-	}
+	/* If cancel is requested, we still need to track completion count
+	 * but skip the actual data processing. The cancel handler will
+	 * do the cleanup and notify userspace. */
 
-	engine = xcdev->engine;
-	xdev = xcdev->xdev;
+	if (false != caio->cancel) {
+		caio->cmpl_cnt++;
+
+		/* If all completions are done, reschedule cancel work immediately */
+		if (caio->cmpl_cnt == caio->req_cnt) {
+			dbg_sg("aio all transfers cancelled, rescheduling cancel work\n");
+			cancel_delayed_work(&engine->work_cancel);
+			schedule_delayed_work(&engine->work_cancel, 0);
+		}
+
+		spin_unlock(&caio->lock);
+		return;
+  }
 
 	if (!err)
 		numbytes = xdma_xfer_completion((void *)cb, xdev,
@@ -122,7 +135,6 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 #else
 		aio_complete(caio->iocb, res, res2);
 #endif
-skip_tran:
 		spin_unlock(&caio->lock);
 		kmem_cache_free(cdev_cache, caio);
 		kfree(cb);
@@ -438,6 +450,19 @@ static ssize_t char_sgdma_read(struct file *file, char __user *buf,
 	return char_sgdma_read_write(file, buf, count, pos, 0);
 }
 
+static int cdev_aio_cancel_write(struct kiocb *kiocb)
+{
+	/* NOTE: In theory, we can re-use read cancellation code, but I haven't
+	 * read the write data path, to be sure of that, and we currently don't
+	 * have a use case for that. So first recommended step to implement it
+	 * would be to use read cancellation code.
+	 *
+	 * That is why here we have explicitly error code that tells that it is
+	 * not implemented.
+	 */
+	return -ENOSYS;
+}
+
 static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 				unsigned long count, loff_t pos)
 {
@@ -469,6 +494,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 
 	caio->cb = kzalloc(count * (sizeof(struct xdma_io_cb)), GFP_KERNEL);
 
+	INIT_LIST_HEAD(&caio->entry);
 	spin_lock_init(&caio->lock);
 	iocb->private = caio;
 	caio->iocb = iocb;
@@ -486,6 +512,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		caio->cb[i].write = true;
 		caio->cb[i].private = caio;
 		caio->cb[i].io_done = async_io_handler;
+		kiocb_set_cancel_fn(iocb, cdev_aio_cancel_write);
 		rv = check_transfer_align(engine, caio->cb[i].buf,
 					caio->cb[i].len, pos, 1);
 		if (rv) {
@@ -499,15 +526,120 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 			return rv;
 
 		rv = xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
-					engine->channel, caio->cb[i].write,
-					caio->cb[i].ep_addr, &caio->cb[i].sgt,
-					0, h2c_timeout * 1000);
+					     engine->channel, caio->cb[i].write,
+					     caio->cb[i].ep_addr,
+					     &caio->cb[i].sgt, 0,
+					     h2c_timeout * 1000);
+
+		if (rv != -EIOCBQUEUED) {
+			async_io_handler((unsigned long)&caio->cb[i], rv);
+		}
 	}
 
 	if (engine->cmplthp)
 		xdma_kthread_wakeup(engine->cmplthp);
 
 	return -EIOCBQUEUED;
+}
+
+static void cdev_aio_cancel_xfer(struct xdma_engine *engine, struct xdma_transfer *xfer)
+{
+	struct xdma_transfer *xfer_iter;
+
+	list_for_each_entry(xfer_iter, &engine->transfer_list, entry)
+	{
+		if (xfer == xfer_iter) {
+			list_del(&xfer->entry);
+			break;
+		}
+	}
+
+	if (xfer->state == TRANSFER_STATE_SUBMITTED)
+		xfer->state = TRANSFER_STATE_ABORTED;
+}
+
+static void sgt_dma_unmap(struct xdma_dev *xdev, struct sg_table *sgt,
+			  enum dma_data_direction dir)
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
+	pci_unmap_sg(xdev->pdev, sgt->sgl, sgt->orig_nents, dir);
+#else
+	dma_unmap_sg(&xdev->pdev->dev, sgt->sgl, sgt->orig_nents, dir);
+#endif
+	sgt->nents = 0;
+}
+
+static void cdev_aio_do_cancel(struct xdma_engine *engine)
+{
+	struct xdma_io_cb *cb;
+	struct cdev_async_io *caio =
+	    list_entry(engine->cancellation_list.next, struct cdev_async_io, entry);
+  unsigned long i;
+
+	spin_lock(&caio->lock);
+	list_del(&caio->entry);
+
+	cb = caio->cb;
+
+	dbg_sg("Cancelling %p\n", caio->cb);
+
+	for (i = 0; i < caio->req_cnt; i++) {
+		if (cb[i].req) {
+			struct sg_table *sgt = &cb[i].sgt;
+
+			cdev_aio_cancel_xfer(engine, &cb[i].req->tfer[0]);
+			cdev_aio_cancel_xfer(engine, &cb[i].req->tfer[1]);
+
+			if (sgt->nents) {
+				sgt_dma_unmap(engine->xdev, sgt,
+					      cb[i].write ? DMA_TO_DEVICE :
+							    DMA_FROM_DEVICE);
+			}
+		}
+		char_sgdma_unmap_user_buf(&cb[i], cb[i].write);
+	}
+
+	char_sgdma_unmap_user_buf(cb, cb->write);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
+	caio->iocb->ki_complete(caio->iocb, -EIO);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+	caio->iocb->ki_complete(caio->iocb, -EIO, -EIO);
+#else
+	aio_complete(caio->iocb, res, res2);
+#endif
+
+	spin_unlock(&caio->lock);
+  kfree(cb);
+	kmem_cache_free(cdev_cache, caio);
+}
+
+static int cdev_aio_cancel_read(struct kiocb *kiocb)
+{
+	struct xdma_cdev *xcdev = (struct xdma_cdev *)kiocb->ki_filp->private_data;
+	struct cdev_async_io *caio = (struct cdev_async_io *)kiocb->private;
+	struct xdma_engine *engine = xcdev->engine;
+	unsigned long flags, flags2;
+
+	if (engine->magic != MAGIC_ENGINE) {
+		pr_err("%s has invalid magic number %lx\n", engine->name, engine->magic);
+		return -EIO;
+	}
+
+	spin_lock_irqsave(&engine->lock, flags);
+	spin_lock_irqsave(&caio->lock, flags2);
+	caio->cancel = true;
+	list_add(&caio->entry, &engine->cancellation_list);
+	spin_unlock_irqrestore(&caio->lock, flags2);
+	spin_unlock_irqrestore(&engine->lock, flags);
+
+	/* Schedule cancellation work with short delay to give chance for in-flight
+	 * completions to finish normally
+	 */
+	dbg_sg("schedule_cancel_work, %s.\n", engine->name);
+	schedule_delayed_work(&engine->work_cancel, msecs_to_jiffies(100));
+
+	return 0;
 }
 
 static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
@@ -542,6 +674,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 
 	caio->cb = kzalloc(count * (sizeof(struct xdma_io_cb)), GFP_KERNEL);
 
+	INIT_LIST_HEAD(&caio->entry);
 	spin_lock_init(&caio->lock);
 	iocb->private = caio;
 	caio->iocb = iocb;
@@ -560,6 +693,8 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		caio->cb[i].private = caio;
 		caio->cb[i].io_done = async_io_handler;
 
+		kiocb_set_cancel_fn(iocb, cdev_aio_cancel_read);
+
 		rv = check_transfer_align(engine, caio->cb[i].buf,
 					caio->cb[i].len, pos, 1);
 		if (rv) {
@@ -573,9 +708,14 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 			return rv;
 
 		rv = xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
-					engine->channel, caio->cb[i].write,
-					caio->cb[i].ep_addr, &caio->cb[i].sgt,
-					0, c2h_timeout * 1000);
+					     engine->channel, caio->cb[i].write,
+					     caio->cb[i].ep_addr,
+					     &caio->cb[i].sgt, 0,
+					     c2h_timeout * 1000);
+
+		if (rv != -EIOCBQUEUED) {
+			async_io_handler((unsigned long)&caio->cb[i], rv);
+		}
 	}
 
 	if (engine->cmplthp)
@@ -909,6 +1049,8 @@ static int char_sgdma_open(struct inode *inode, struct file *file)
 
 		engine->eop_flush = (file->f_flags & O_TRUNC) ? 1 : 0;
 	}
+
+	engine->cancel_one_xfer = cdev_aio_do_cancel;
 
 	return 0;
 }
