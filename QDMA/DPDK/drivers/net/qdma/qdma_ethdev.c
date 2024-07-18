@@ -576,6 +576,9 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	if (pci_dev == NULL)
 		return -EINVAL;
 
+    /* init the common debug control */
+    rte_pmd_qdma_dbg_init();
+
 	/* for secondary processes, we don't initialise any further as primary
 	 * has already done this work.
 	 */
