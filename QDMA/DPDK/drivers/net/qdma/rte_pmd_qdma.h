@@ -46,6 +46,9 @@
 extern "C" {
 #endif
 
+#define RTE_QDMA_DEBUG_DUMP_RX_FRAMES 0x0001
+#define RTE_QDMA_DEBUG_DUMP_TX_FRAMES 0x0002
+
 /** @defgroup rte_pmd_qdma_enums Enumerations
  */
 /** @defgroup rte_pmd_qdma_struct Data Structures
@@ -395,6 +398,16 @@ int rte_pmd_qdma_dbg_qinfo(uint8_t port_id, uint16_t queue);
  ******************************************************************************/
 int rte_pmd_qdma_dbg_qdesc(uint8_t port_id, uint16_t queue, int start,
 			int end, enum rte_pmd_qdma_xdebug_desc_type type);
+
+/******************************************************************************/
+/**
+ * Enable Disable runtime debug
+ *
+ * @param set           enable/disable
+ * @param debug_flags   debug flags
+ *
+ ******************************************************************************/
+void rte_pmd_qdma_dbg_debug_control(int set, uint32_t debug_flags);
 
 /******************************************************************************/
 /**

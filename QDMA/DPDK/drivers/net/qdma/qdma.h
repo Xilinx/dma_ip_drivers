@@ -58,6 +58,9 @@
 #define QDMA_FUNC_ID_INVALID    0xFFFF
 
 #ifdef RTE_LIBRTE_SPIRENT
+extern uint32_t *rte_qdma_debug_flags;
+void rte_pmd_qdma_dbg_debug_control(int set, uint32_t debug_flags);
+
 #define DEFAULT_QUEUE_BASE	(64)
 #else
 #define DEFAULT_QUEUE_BASE	(0)

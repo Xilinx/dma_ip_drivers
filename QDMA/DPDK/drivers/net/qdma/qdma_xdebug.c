@@ -1480,6 +1480,34 @@ int rte_pmd_qdma_dbg_qdesc(uint8_t port_id, uint16_t queue, int start,
 	return 0;
 }
 
+void rte_pmd_qdma_dbg_debug_control(int set, uint32_t debug_flags)
+{
+    RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);
+
+    if(set)
+        *rte_qdma_debug_flags |= debug_flags;
+    else
+        *rte_qdma_debug_flags &= ~debug_flags;
+
+    RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags 0x%x\n", __FUNCTION__, __LINE__, *rte_qdma_debug_flags);
+
+}   
+
+uint32_t *rte_qdma_debug_flags;
+
+void rte_pmd_qdma_dbg_init() {
+    struct rte_memzone *mz;
+    if (rte_eal_process_type() != RTE_PROC_PRIMARY) {
+        mz = rte_memzone_lookup("QDMA_DBG_FLAGS");
+    } else {
+        mz = rte_memzone_reserve("QDMA_DBG_FLAGS", sizeof(uint32_t), rte_socket_id(), 0);
+    }
+    rte_qdma_debug_flags = (uint32_t *)mz->addr;
+
+    RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);    
+}
+
+
 #if 1
 int rte_pmd_qdma_dbg_rx_ctxt(uint8_t port_id, uint16_t queue, int start, int end) 
 {

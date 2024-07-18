@@ -88,8 +88,7 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
     }
     memset((void *)hdr, 0, sizeof(ct_txover_t));
 
-    uint64_t phys = (uint64_t)rte_cpu_to_le_64(RTE_MBUF_DATA_DMA_ADDR(tx_pkt));
-
+    //uint64_t phys = (uint64_t)rte_cpu_to_le_64(RTE_MBUF_DATA_DMA_ADDR(tx_pkt));
 
     int seq =0;
     int TsEn = 0;
@@ -114,9 +113,12 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
     hdr->frame_length = len + 4; // Plus fcs
     hdr->block_length = len + 4 + sizeof(ct_txover_t);
 
-#ifdef DUMP_FRAMES
-    rte_pktmbuf_dump(stdout, tx_pkt, tx_pkt->data_len);
-#endif
+    if(*rte_qdma_debug_flags & RTE_QDMA_DEBUG_DUMP_TX_FRAMES) {
+        FILE *f = fopen("/tmp/tx.txt", "a"); 
+        rte_pktmbuf_dump(f, tx_pkt, tx_pkt->data_len);
+        fprintf(f, "****************************************************************************************\n");
+        fclose(f);
+    }
 
     return 0;
 }
@@ -144,15 +146,13 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
         return 1;
     }
 
-#ifdef DUMP_FRAMES
-    {
+    if(*rte_qdma_debug_flags & RTE_QDMA_DEBUG_DUMP_RX_FRAMES) {
         FILE *f = fopen("/tmp/rx.txt", "a"); 
         fprintf(f, "qdma_spirent_rx_oh: %p rx_pkt->data_len %d\n", rx_pkt, rx_pkt->data_len);
         rte_pktmbuf_dump(f, rx_pkt, rx_pkt->data_len);
         fprintf(f, "****************************************************************************************\n");
         fclose(f);
     }
-#endif
 
     /*
      * Check for runts
