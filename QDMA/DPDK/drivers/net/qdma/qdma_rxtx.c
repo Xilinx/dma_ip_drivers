@@ -479,7 +479,7 @@ static void adapt_update_counter(struct qdma_rx_queue *rxq,
 #endif //QDMA_LATENCY_OPTIMIZED
 
 /* ****************************************************************************************
- *  Process completion ring 
+ *  Process completion ring
  *
  * Args :
  *      rqx                 - receive queue to ne processed
@@ -783,13 +783,19 @@ static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
         //PMD_DRV_LOG(ERR, "(queue id = %d) (pkt_length %d)", rxq->queue_id, pkt_length);
 		if (pkt_length) {
 			rxq->stats.pkts++;
+#ifdef RTE_LIBRTE_SPIRENT
+			// Exclude the length of the rx overhead from the stats
+			rxq->stats.bytes += pkt_length - sizeof(ct_rxover_t);
+#else
 			rxq->stats.bytes += pkt_length;
+#endif
 			mb = prepare_segmented_packet(rxq, pkt_length, &rxq->rx_tail);
 
 #ifdef RTE_LIBRTE_SPIRENT
             if(qdma_spirent_rx_oh(mb, &rxq->stats)) {
                 /* Error, drop the frame */
                 rte_pktmbuf_free(mb);
+                ++count;
                 continue;
             }
 #endif
@@ -937,7 +943,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
     struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
     struct rte_eth_dev *dev = &rte_eth_devices[qdma_dev->port];
 	struct rte_pci_device *pci_dev = RTE_ETH_DEV_TO_PCI(dev);
-    //pci_dev->mem_resource[qdma_dev->user_bar_idx].addr; 
+    //pci_dev->mem_resource[qdma_dev->user_bar_idx].addr;
     PMD_DRV_LOG(INFO, "user_bar_idx(%d) addr(%p)\n", qdma_dev->user_bar_idx, (void *)pci_dev->mem_resource[qdma_dev->user_bar_idx].addr);
 #endif
 
@@ -1320,7 +1326,6 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 
 	for (count = 0; count < nb_pkts; count++) {
 		mb = tx_pkts[count];
-
 #ifdef RTE_LIBRTE_SPIRENT
         if(qdma_spirent_tx_oh(mb, &txq->stats)) {
             rte_pktmbuf_free_seg(mb);
@@ -1328,7 +1333,7 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
             continue;
         }
 #endif
-        
+
 		nsegs = mb->nb_segs;
 		if (nsegs > avail) {
 			/* Number of segments in current mbuf are greater
@@ -1340,7 +1345,14 @@ uint16_t qdma_xmit_pkts_st(struct qdma_tx_queue *txq,
 		avail -= nsegs;
 		id = txq->q_pidx_info.pidx;
 		txq->sw_ring[id] = mb;
+#ifdef RTE_LIBRTE_SPIRENT
+		/* qdma_spirent_tx_oh prepends the overhead needed for the cut-through
+		 * Need to remove that from the pkt length added for the stats.
+		 */
+		pkt_len += rte_pktmbuf_pkt_len(mb) - sizeof(ct_txover_t);
+#else
 		pkt_len += rte_pktmbuf_pkt_len(mb);
+#endif
 
 		ret = qdma_ul_update_st_h2c_desc(txq, txq->offloads, mb);
 		if (unlikely(ret < 0))
@@ -1536,7 +1548,7 @@ qdma_set_tx_function(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 
-	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) 
+	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128)
     if(0)
     {
 		qdma_dev->tx_vec_allowed = true;
@@ -1552,7 +1564,7 @@ qdma_set_rx_function(struct rte_eth_dev *dev)
 {
 	struct qdma_pci_dev *qdma_dev = dev->data->dev_private;
 
-	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128) 
+	//if (rte_vect_get_max_simd_bitwidth() >= RTE_VECT_SIMD_128)
     if(0)
     {
 		qdma_dev->rx_vec_allowed = true;
