@@ -1484,6 +1484,11 @@ void rte_pmd_qdma_dbg_debug_control(int set, uint32_t debug_flags)
 {
     RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);
 
+    if(!rte_qdma_debug_flags) {
+        RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p - not initialized\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);
+        return;
+    }
+
     if(set)
         *rte_qdma_debug_flags |= debug_flags;
     else
@@ -1500,11 +1505,16 @@ void rte_pmd_qdma_dbg_init() {
     if (rte_eal_process_type() != RTE_PROC_PRIMARY) {
         mz = rte_memzone_lookup("QDMA_DBG_FLAGS");
     } else {
-        mz = rte_memzone_reserve("QDMA_DBG_FLAGS", sizeof(uint32_t), rte_socket_id(), 0);
+        mz = rte_memzone_reserve("QDMA_DBG_FLAGS", sizeof(uint32_t), SOCKET_ID_ANY, 0);
     }
-    rte_qdma_debug_flags = (uint32_t *)mz->addr;
-
-    RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);    
+    
+    if(mz) {
+        rte_qdma_debug_flags = (uint32_t *)mz->addr;
+        RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);    
+    } else {
+        rte_qdma_debug_flags = NULL;
+        RTE_LOG(ERR, PMD, "%s(%d): Failed to init rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);
+    }
 }
 
 

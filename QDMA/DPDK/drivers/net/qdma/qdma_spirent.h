@@ -113,7 +113,7 @@ STATIC INLINE int qdma_spirent_tx_oh(struct rte_mbuf *tx_pkt, struct qdma_pkt_st
     hdr->frame_length = len + 4; // Plus fcs
     hdr->block_length = len + 4 + sizeof(ct_txover_t);
 
-    if(*rte_qdma_debug_flags & RTE_QDMA_DEBUG_DUMP_TX_FRAMES) {
+    if(rte_qdma_debug_flags && (*rte_qdma_debug_flags & RTE_QDMA_DEBUG_DUMP_TX_FRAMES)) {
         FILE *f = fopen("/tmp/tx.txt", "a"); 
         rte_pktmbuf_dump(f, tx_pkt, tx_pkt->data_len);
         fprintf(f, "****************************************************************************************\n");
@@ -146,7 +146,7 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
         return 1;
     }
 
-    if(*rte_qdma_debug_flags & RTE_QDMA_DEBUG_DUMP_RX_FRAMES) {
+    if(rte_qdma_debug_flags && (*rte_qdma_debug_flags & RTE_QDMA_DEBUG_DUMP_RX_FRAMES)) {
         FILE *f = fopen("/tmp/rx.txt", "a"); 
         fprintf(f, "qdma_spirent_rx_oh: %p rx_pkt->data_len %d\n", rx_pkt, rx_pkt->data_len);
         rte_pktmbuf_dump(f, rx_pkt, rx_pkt->data_len);
