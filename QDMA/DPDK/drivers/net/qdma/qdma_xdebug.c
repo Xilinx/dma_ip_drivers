@@ -1510,7 +1510,7 @@ void rte_pmd_qdma_dbg_init() {
     
     if(mz) {
         rte_qdma_debug_flags = (uint32_t *)mz->addr;
-        RTE_LOG(ERR, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);    
+        RTE_LOG(INFO, PMD, "%s(%d): rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);
     } else {
         rte_qdma_debug_flags = NULL;
         RTE_LOG(ERR, PMD, "%s(%d): Failed to init rte_qdma_debug_flags %p\n", __FUNCTION__, __LINE__, rte_qdma_debug_flags);
