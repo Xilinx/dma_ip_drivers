@@ -109,7 +109,7 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
 		caio->iocb->ki_complete(caio->iocb, res, res2);
 #else
-		aio_complete(caio->iocb, res, res2);
+		aio_complete(caio->iocb, res, caio->res2);
 #endif
 skip_tran:
 		spin_unlock(&caio->lock);
@@ -565,12 +565,20 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+	return cdev_aio_write(iocb, io->__iov, io->nr_segs, io->iov_offset);
+#else
 	return cdev_aio_write(iocb, io->iov, io->nr_segs, io->iov_offset);
+#endif
 }
 
 static ssize_t cdev_read_iter(struct kiocb *iocb, struct iov_iter *io)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+	return cdev_aio_read(iocb, io->__iov, io->nr_segs, io->iov_offset);
+#else
 	return cdev_aio_read(iocb, io->iov, io->nr_segs, io->iov_offset);
+#endif
 }
 #endif
 
