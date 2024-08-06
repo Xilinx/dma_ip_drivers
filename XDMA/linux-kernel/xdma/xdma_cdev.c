@@ -603,7 +603,15 @@ fail:
 
 int xdma_cdev_init(void)
 {
+<<<<<<< HEAD
 	g_xdma_class = class_create(XDMA_NODE_NAME); //error: too many arguments to function ‘class_create’ | struct class * __must_check class_create(const char *name);
+=======
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
+	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+#else
+	g_xdma_class = class_create(XDMA_NODE_NAME);
+#endif
+>>>>>>> eaf78c5 (some change in linux kernel6.5.0)
 	if (IS_ERR(g_xdma_class)) {
 		dbg_init(XDMA_NODE_NAME ": failed to create class");
 		return -EINVAL;
