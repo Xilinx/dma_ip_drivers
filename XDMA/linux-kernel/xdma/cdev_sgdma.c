@@ -565,28 +565,20 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
-<<<<<<< HEAD
-	return cdev_aio_write(iocb, io->__iov, io->nr_segs, io->iov_offset);
-=======
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
 	return cdev_aio_write(iocb, io->__iov, io->nr_segs, io->iov_offset);
 #else
 	return cdev_aio_write(iocb, io->iov, io->nr_segs, io->iov_offset);
 #endif
->>>>>>> eaf78c5 (some change in linux kernel6.5.0)
 }
 
 static ssize_t cdev_read_iter(struct kiocb *iocb, struct iov_iter *io)
 {
-<<<<<<< HEAD
-	return cdev_aio_read(iocb, io->__iov, io->nr_segs, io->iov_offset);
-=======
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
 	return cdev_aio_read(iocb, io->__iov, io->nr_segs, io->iov_offset);
 #else
 	return cdev_aio_read(iocb, io->iov, io->nr_segs, io->iov_offset);
 #endif
->>>>>>> eaf78c5 (some change in linux kernel6.5.0)
 }
 #endif
 
