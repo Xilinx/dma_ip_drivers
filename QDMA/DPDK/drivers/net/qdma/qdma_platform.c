@@ -148,7 +148,7 @@ void qdma_reg_write_db(void *dev_hndl, uint32_t reg_offst, uint32_t val)
 	qdma_dev = ((struct rte_eth_dev *)dev_hndl)->data->dev_private;
 	bar_addr = (uint64_t)qdma_dev->bar_addr[qdma_dev->config_bar_idx];
 
-    PMD_DRV_LOG(ERR, "(qdma_dev %p)(bar_addr[%d] %p)(reg_offset %x)(val %x)", qdma_dev, qdma_dev->config_bar_idx, (void *)bar_addr, reg_offst, val);
+
 
 	*((volatile uint32_t *)(bar_addr + reg_offst)) = val;
 }

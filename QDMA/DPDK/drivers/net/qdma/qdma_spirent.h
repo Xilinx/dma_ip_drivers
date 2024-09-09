@@ -141,7 +141,7 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     }
 
     if(flags || len) {
-        PMD_DRV_LOG(ERR, "Enter (len %d) (flags %x)", len, flags);
+        PMD_DRV_LOG(DEBUG, "Enter (len %d) (flags %x)", len, flags);
     } else {
         return 1;
     }
@@ -189,7 +189,7 @@ STATIC INLINE int qdma_spirent_rx_oh(struct rte_mbuf *rx_pkt, struct qdma_pkt_st
     // passing hw timestamp value to upper layers
     rte_sp_mbuf_dyn_ts(rx_pkt)->timestamp = ((uint64_t)hdr->ts_hi << 32) | hdr->ts_lo;
 
-    PMD_DRV_LOG(ERR, "Exit *** (data_len %d)", rx_pkt->data_len);
+    PMD_DRV_LOG(DEBUG, "Exit *** (data_len %d)", rx_pkt->data_len);
    
     return 0;
 }

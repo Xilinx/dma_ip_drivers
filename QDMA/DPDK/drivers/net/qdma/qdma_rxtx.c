@@ -501,12 +501,12 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,	uint16_t num_cmpt_entrie
 	int ret = 0;
 	uint16_t rx_cmpt_tail = rxq->cmpt_cidx_info.wrb_cidx;  /* Consumer index tail (SW) */
 
-    PMD_DRV_LOG(ERR, "(rxq->wb_status 0x%8.8x) (rxq->cmpt_cidx_info.wrb_cidx %d)", *((uint32_t *)rxq->wb_status), rxq->cmpt_cidx_info.wrb_cidx);
+    PMD_DRV_LOG(DEBUG, "(rxq->wb_status 0x%8.8x) (rxq->cmpt_cidx_info.wrb_cidx %d)", *((uint32_t *)rxq->wb_status), rxq->cmpt_cidx_info.wrb_cidx);
 
 	if (likely(!rxq->dump_immediate_data)) {
-        PMD_DRV_LOG(ERR, "HERE");
+
 		if ((rx_cmpt_tail + num_cmpt_entries) < (rxq->nb_rx_cmpt_desc - 1)) {
-            PMD_DRV_LOG(ERR, "HERE");
+
 			for (count = 0; count < num_cmpt_entries; count++) {
 				user_cmpt_entry = (union qdma_ul_st_cmpt_ring *)((uint64_t)rxq->cmpt_ring +	((uint64_t)rx_cmpt_tail * rxq->cmpt_desc_len));
 				ret = qdma_extract_st_cmpt_info(user_cmpt_entry, &rxq->cmpt_data[count]);
@@ -518,7 +518,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,	uint16_t num_cmpt_entrie
 				rx_cmpt_tail++;
 			}
 		} else {
-            PMD_DRV_LOG(ERR, "HERE");
+
 			while (count < num_cmpt_entries) {
 				user_cmpt_entry = (union qdma_ul_st_cmpt_ring *)((uint64_t)rxq->cmpt_ring +	((uint64_t)rx_cmpt_tail * rxq->cmpt_desc_len));
 				ret = qdma_extract_st_cmpt_info(user_cmpt_entry, &rxq->cmpt_data[count]);
@@ -537,7 +537,7 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,	uint16_t num_cmpt_entrie
 			}
 		}
 	} else {
-        PMD_DRV_LOG(ERR, "HERE");
+
 		while (count < num_cmpt_entries) {
 			user_cmpt_entry = (union qdma_ul_st_cmpt_ring *)((uint64_t)rxq->cmpt_ring +	((uint64_t)rx_cmpt_tail * rxq->cmpt_desc_len));
 			ret = qdma_ul_extract_st_cmpt_info(user_cmpt_entry,	&rxq->cmpt_data[count]);
@@ -568,9 +568,6 @@ static int process_cmpt_ring(struct qdma_rx_queue *rxq,	uint16_t num_cmpt_entrie
 	// Update the CPMT CIDX
 	rxq->cmpt_cidx_info.wrb_cidx = rx_cmpt_tail;
 	qdma_hw_access_funcs->qdma_queue_cmpt_cidx_update(dev,	qdma_dev->is_vf, rxq->queue_id, &rxq->cmpt_cidx_info);
-
-        PMD_DRV_LOG(ERR, "(rxq->wb_status 0x%8.8x) (rxq->cmpt_cidx_info.wrb_cidx %d)", *((uint32_t *)rxq->wb_status), rxq->cmpt_cidx_info.wrb_cidx);
-        //rte_panic("debug exit");
 
 	return 0;
 }
@@ -776,11 +773,8 @@ static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
 	uint16_t pkt_length;
 	uint16_t count = 0;
 
-    //PMD_DRV_LOG(ERR, "(queue id = %d) (nb_pkts %d)", rxq->queue_id, nb_pkts);
-
 	while (count < nb_pkts) {
 		pkt_length = qdma_ul_get_cmpt_pkt_len(&rxq->cmpt_data[count]);
-        //PMD_DRV_LOG(ERR, "(queue id = %d) (pkt_length %d)", rxq->queue_id, pkt_length);
 		if (pkt_length) {
 			rxq->stats.pkts++;
 #ifdef RTE_LIBRTE_SPIRENT
@@ -804,8 +798,6 @@ static uint16_t prepare_packets(struct qdma_rx_queue *rxq,
 		}
 		count++;
 	}
-
-    PMD_DRV_LOG(ERR, "(queue id = %d) (count_pkts %d)",rxq->queue_id, count_pkts);
 
 	return count_pkts;
 }
@@ -918,6 +910,31 @@ static int rearm_c2h_ring(struct qdma_rx_queue *rxq, uint16_t num_desc)
 	return 0;
 }
 
+
+#ifdef RTE_LIBRTE_SPIRENT
+/* Replenish descriptors even when there is nothing to receive (overflow condition) */
+void qdma_sp_rearm_pkts_st(struct qdma_rx_queue *rxq) 
+{
+    uint16_t c2h_pidx;
+    uint16_t pending_desc;
+
+   	c2h_pidx = rxq->q_pidx_info.pidx;
+	pending_desc = rxq->rx_tail - c2h_pidx - 1;
+	if (rxq->rx_tail < (c2h_pidx + 1))
+		pending_desc = rxq->nb_rx_desc - 2 + rxq->rx_tail -
+				c2h_pidx; 
+
+	/* 
+     * Batch the PIDX updates, this minimizes overhead on
+	 * descriptor engine
+	 */
+	if (pending_desc >= MIN_RX_PIDX_UPDATE_THRESHOLD)
+		rearm_c2h_ring(rxq, pending_desc);
+    
+}
+#endif
+
+
 /* Receive API for Streaming mode */
 uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 		struct rte_mbuf **rx_pkts, uint16_t nb_pkts)
@@ -936,8 +953,6 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
         PMD_DRV_LOG(ERR, "recv not started on rx queue-id :%d, on tail rx_tail:%d\n", rxq->queue_id, rxq->rx_tail);
 		return 0;
     }
-
-	//PMD_DRV_LOG(ERR, "recv start on rx queue-id :%d, on tail index:%d number of pkts %d", rxq->queue_id, rxq->rx_tail, nb_pkts);
 
 #ifdef RTE_LIBRTE_SPIRENT
     struct qdma_pci_dev *qdma_dev = rxq->qdma_dev;
@@ -977,6 +992,12 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 
 	if (nb_pkts_avail == 0) {
 		PMD_DRV_LOG(DEBUG, "nb_pkts_avail = 0\n");
+
+#ifdef RTE_LIBRTE_SPIRENT
+        /* Replenish descriptors even when there is nothing to receive (overflow condition) */
+        qdma_sp_rearm_pkts_st(rxq);
+#endif
+
 		return 0;
 	}
 
@@ -1037,12 +1058,14 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 		rte_mempool_in_use_count(rxq->mb_pool), count_pkts);
 #endif //DUMP_MEMPOOL_USAGE_STATS
 
+#if 0
 	PMD_DRV_LOG(ERR, " Recv complete with hw cidx :%d",	rxq->wb_status->cidx);
 	PMD_DRV_LOG(ERR, " Recv complete with hw pidx :%d", rxq->wb_status->pidx);
 	PMD_DRV_LOG(ERR, " Recv complete with count_pkts :%d", count_pkts);
     if(count_pkts) {
         PMD_DRV_LOG(ERR, " Recv complete with size : %d", rx_pkts[0]->data_len);
     }
+#endif
 
 	return count_pkts;
 }
