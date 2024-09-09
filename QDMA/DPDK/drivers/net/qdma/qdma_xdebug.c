@@ -201,7 +201,11 @@ static int qdma_c2h_struct_dump(uint8_t port_id, uint16_t queue)
 		xdebug_info("\t\t timeridx            :%x\n",
 				rx_q->timeridx);
 		xdebug_info("\t\t triggermode         :%x\n",
-				rx_q->triggermode);
+                rx_q->triggermode);
+        xdebug_info("\t\t mbuf_avail_count   :%d\n",
+                rte_mempool_avail_count(rx_q->mb_pool));
+        xdebug_info("\t\t mbuf_in_use_count   :%d\n",
+                rte_mempool_in_use_count(rx_q->mb_pool));
 	}
 
 	return 0;
