@@ -36,7 +36,7 @@
 
 #include <rte_log.h>
 
-#define RTE_LIBRTE_QDMA_DEBUG_DRIVER
+#undef RTE_LIBRTE_QDMA_DEBUG_DRIVER
 
 #ifdef RTE_LIBRTE_QDMA_DEBUG_DRIVER
 #define PMD_DRV_LOG(level, fmt, args...) \
