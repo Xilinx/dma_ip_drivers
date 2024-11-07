@@ -177,6 +177,36 @@ int char_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
+loff_t char_llseek(struct file *file, loff_t off, int whence)
+{
+	loff_t newpos = 0;
+
+	switch (whence) {
+	case 0: /* SEEK_SET */
+		newpos = off;
+		break;
+	case 1: /* SEEK_CUR */
+		newpos = file->f_pos + off;
+		break;
+	case 2: /* SEEK_END, @TODO should work from end of address space */
+		newpos = UINT_MAX + off;
+		break;
+	default: /* can't happen */
+		return -EINVAL;
+	}
+	if (newpos < 0)
+		return -EINVAL;
+	file->f_pos = newpos;
+	dbg_fops("%s: pos=%lld\n", __func__, (signed long long)newpos);
+
+#if 0
+	pr_err("0x%p, off %lld, whence %d -> pos %lld.\n",
+		file, (signed long long)off, whence, (signed long long)off);
+#endif
+
+	return newpos;
+}
+
 /*
  * Called when the device goes from used to unused.
  */

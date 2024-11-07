@@ -256,6 +256,7 @@ static const struct file_operations ctrl_fops = {
 	.write = char_ctrl_write,
 	.mmap = bridge_mmap,
 	.unlocked_ioctl = char_ctrl_ioctl,
+	.llseek = char_llseek,
 };
 
 void cdev_ctrl_init(struct xdma_cdev *xcdev)

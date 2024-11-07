@@ -190,6 +190,7 @@ static const struct file_operations bypass_fops = {
 	.read = char_bypass_read,
 	.write = char_bypass_write,
 	.mmap = bridge_mmap,
+	.llseek = char_llseek,
 };
 
 void cdev_bypass_init(struct xdma_cdev *xcdev)

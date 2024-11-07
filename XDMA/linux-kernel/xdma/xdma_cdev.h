@@ -34,6 +34,7 @@ void xdma_cdev_cleanup(void);
 int xdma_cdev_init(void);
 
 int char_open(struct inode *inode, struct file *file);
+loff_t char_llseek(struct file *file, loff_t off, int whence);
 int char_close(struct inode *inode, struct file *file);
 int xcdev_check(const char *fname, struct xdma_cdev *xcdev, bool check_engine);
 void cdev_ctrl_init(struct xdma_cdev *xcdev);
