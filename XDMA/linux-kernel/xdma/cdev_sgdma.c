@@ -350,7 +350,10 @@ static ssize_t char_sgdma_read_write(struct file *file, const char __user *buf,
 			write, engine->dir);
 		return -EINVAL;
 	}
-
+	/*sanity checks for offsets. alignment check is redundunt, but doesn't hurt*/
+	rv=position_check(xdev->bar_size[xcdev->bar], *pos, engine->addr_align);
+	if (rv < 0)
+		return rv;
 	rv = check_transfer_align(engine, buf, count, *pos, 1);
 	if (rv) {
 		pr_info("Invalid transfer alignment detected\n");

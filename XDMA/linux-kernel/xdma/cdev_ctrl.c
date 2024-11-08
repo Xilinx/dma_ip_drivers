@@ -46,10 +46,10 @@ static ssize_t char_ctrl_read(struct file *fp, char __user *buf, size_t count,
 	if (rv < 0)
 		return rv;
 	xdev = xcdev->xdev;
-
-	/* only 32-bit aligned and 32-bit multiples */
-	if (*pos & 3)
-		return -EPROTO;
+	/*sanity checks for offsets*/
+	rv=position_check(xdev->bar_size[xcdev->bar], *pos, 4);
+	if (rv < 0)
+		return rv;
 	/* first address is BAR base plus file position offset */
 	reg = xdev->bar[xcdev->bar] + *pos;
 	//w = read_register(reg);
@@ -77,10 +77,10 @@ static ssize_t char_ctrl_write(struct file *file, const char __user *buf,
 	if (rv < 0)
 		return rv;
 	xdev = xcdev->xdev;
-
-	/* only 32-bit aligned and 32-bit multiples */
-	if (*pos & 3)
-		return -EPROTO;
+	/*sanity checks for offsets*/
+	rv=position_check(xdev->bar_size[xcdev->bar], *pos, 4);
+	if (rv < 0)
+		return rv;
 
 	/* first address is BAR base plus file position offset */
 	reg = xdev->bar[xcdev->bar] + *pos;

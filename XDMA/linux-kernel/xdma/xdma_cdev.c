@@ -159,6 +159,26 @@ int xcdev_check(const char *fname, struct xdma_cdev *xcdev, bool check_engine)
 
 	return 0;
 }
+//implementation of common sanity checks for file offset (position)
+int position_check(loff_t bar_size, loff_t pos, loff_t align)
+{
+	if (unlikely(pos < 0))
+	{	
+		pr_err("Negative address %lld\n", pos);
+		return -EINVAL;
+	}
+	if (unlikely(pos >= bar_size))
+	{
+		pr_err("Attempted to access address 0x%llx (%lld) that exceeds mapped BAR space size of %lld\n", pos, pos, bar_size);
+		return -ENXIO;
+	}
+	if (unlikely(pos & (align - 1)))
+	{	
+		pr_crit("Address 0x%llx (%lld) is not aligned to %lld bytes\n", pos, pos, align); 
+		return -EPROTO;
+	}
+	return 0;
+}
 
 int char_open(struct inode *inode, struct file *file)
 {

@@ -81,6 +81,11 @@ static ssize_t char_bypass_read(struct file *file, char __user *buf,
 
 	dbg_sg("In %s()\n", __func__);
 
+	/*sanity checks for offsets*/
+	rc=position_check(xdev->bar_size[xcdev->bar], *pos, engine->addr_align);
+	if (rc < 0)
+		return rc;	
+
 	if (count & 3) {
 		dbg_sg("Buffer size must be a multiple of 4 bytes\n");
 		return -EINVAL;
@@ -132,7 +137,11 @@ static ssize_t char_bypass_write(struct file *file, const char __user *buf,
 		return rc;
 	xdev = xcdev->xdev;
 	engine = xcdev->engine;
-
+	
+	/*sanity checks for offsets*/
+	rc=position_check(xdev->bar_size[xcdev->bar], *pos, engine->addr_align);
+	if (rc < 0)
+		return rc;
 	if (count & 3) {
 		dbg_sg("Buffer size must be a multiple of 4 bytes\n");
 		return -EINVAL;

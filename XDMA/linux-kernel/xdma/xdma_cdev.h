@@ -37,6 +37,7 @@ int char_open(struct inode *inode, struct file *file);
 loff_t char_llseek(struct file *file, loff_t off, int whence);
 int char_close(struct inode *inode, struct file *file);
 int xcdev_check(const char *fname, struct xdma_cdev *xcdev, bool check_engine);
+int position_check(loff_t bar_size, loff_t pos, loff_t align);
 void cdev_ctrl_init(struct xdma_cdev *xcdev);
 void cdev_xvc_init(struct xdma_cdev *xcdev);
 void cdev_event_init(struct xdma_cdev *xcdev);
