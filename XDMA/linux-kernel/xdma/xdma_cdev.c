@@ -179,6 +179,8 @@ int char_open(struct inode *inode, struct file *file)
 
 loff_t char_llseek(struct file *file, loff_t off, int whence)
 {
+	struct xdma_cdev *xcdev = (struct xdma_cdev *)(file->private_data);
+	struct xdma_dev *xdev = xcdev->xdev;
 	loff_t newpos = 0;
 
 	switch (whence) {
@@ -188,8 +190,8 @@ loff_t char_llseek(struct file *file, loff_t off, int whence)
 	case 1: /* SEEK_CUR */
 		newpos = file->f_pos + off;
 		break;
-	case 2: /* SEEK_END, @TODO should work from end of address space */
-		newpos = UINT_MAX + off;
+	case 2: /* SEEK_END*/
+		newpos = xdev->bar_size[xcdev->bar]  + off;
 		break;
 	default: /* can't happen */
 		return -EINVAL;

@@ -1729,7 +1729,7 @@ static int map_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 			rv = -EINVAL;
 			goto fail;
 		}
-
+		xdev->bar_size[i] = bar_len;
 		/* Try to identify BAR as XDMA control BAR */
 		if ((bar_len >= XDMA_BAR_SIZE) && (xdev->config_bar_idx < 0)) {
 			if (is_config_bar(xdev, i)) {
