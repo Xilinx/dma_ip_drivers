@@ -1709,6 +1709,7 @@ static int map_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 			dev_name(&dev->dev), XDMA_CONFIG_BAR_NUM);
 		return -EINVAL;
 	}
+	xdev->bar_size[i] = rv;
 	xdev->config_bar_idx = XDMA_CONFIG_BAR_NUM;
 
 	return 0;
