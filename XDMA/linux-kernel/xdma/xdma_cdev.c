@@ -603,7 +603,17 @@ fail:
 
 int xdma_cdev_init(void)
 {
-	g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+#if defined(RHEL_RELEASE_CODE)
+    #if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 4))
+        g_xdma_class = class_create(XDMA_NODE_NAME);
+    #else
+        g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+    #endif
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+        g_xdma_class = class_create(XDMA_NODE_NAME);
+#else
+        g_xdma_class = class_create(THIS_MODULE, XDMA_NODE_NAME);
+#endif
 	if (IS_ERR(g_xdma_class)) {
 		dbg_init(XDMA_NODE_NAME ": failed to create class");
 		return -EINVAL;
