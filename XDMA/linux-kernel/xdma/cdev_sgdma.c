@@ -155,35 +155,7 @@ skip_dev_lock:
 /*
  * character device file operations for SG DMA engine
  */
-static loff_t char_sgdma_llseek(struct file *file, loff_t off, int whence)
-{
-	loff_t newpos = 0;
 
-	switch (whence) {
-	case 0: /* SEEK_SET */
-		newpos = off;
-		break;
-	case 1: /* SEEK_CUR */
-		newpos = file->f_pos + off;
-		break;
-	case 2: /* SEEK_END, @TODO should work from end of address space */
-		newpos = UINT_MAX + off;
-		break;
-	default: /* can't happen */
-		return -EINVAL;
-	}
-	if (newpos < 0)
-		return -EINVAL;
-	file->f_pos = newpos;
-	dbg_fops("%s: pos=%lld\n", __func__, (signed long long)newpos);
-
-#if 0
-	pr_err("0x%p, off %lld, whence %d -> pos %lld.\n",
-		file, (signed long long)off, whence, (signed long long)off);
-#endif
-
-	return newpos;
-}
 
 /* char_sgdma_read_write() -- Read from or write to the device
  *
@@ -398,7 +370,10 @@ static ssize_t char_sgdma_read_write(struct file *file, const char __user *buf,
 			write, engine->dir);
 		return -EINVAL;
 	}
-
+	/*sanity checks for offsets. alignment check is redundunt, but doesn't hurt*/
+	rv=position_check(xdev->bar_size[xcdev->bar], *pos, engine->addr_align);
+	if (rv < 0)
+		return rv;
 	rv = check_transfer_align(engine, buf, count, *pos, 1);
 	if (rv) {
 		pr_info("Invalid transfer alignment detected\n");
@@ -945,7 +920,7 @@ static const struct file_operations sgdma_fops = {
 	.aio_read = cdev_aio_read,
 #endif
 	.unlocked_ioctl = char_sgdma_ioctl,
-	.llseek = char_sgdma_llseek,
+	.llseek = char_llseek,
 };
 
 void cdev_sgdma_init(struct xdma_cdev *xcdev)
