@@ -7,13 +7,13 @@ for your Xilinx FPGA hardware design.
 Operating System Support:
 =========================
 Operating System Architecture: x86_64
-Linux kernel:	3.10+
+Linux kernel:	3.10, 4.18.0, 5.14.0, 5.15, 6.8
 RHEL/CentOS:	7.6, 7.7, 7.8, 7.9,
 		8.1, 8.2
 ALMA OS:	8.10, 9.4
 Ubuntu:		16.04.5 LTS, 16.04.6 LTS
 		18.04.1 LTS, 18.04.2 LTS, 18.04.4 LTS3, 18.04.5 LTS
-		20.04 LTS, 20.04.1 LTS, 24.04 LTS
+		20.04 LTS, 20.04.1 LTS, 22.04 LTS, 24.04 LTS
 
 HW Requirement:
 ===============
