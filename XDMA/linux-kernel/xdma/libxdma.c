@@ -2327,12 +2327,7 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 /* xdma_desc_adjacent -- Set how many descriptors are adjacent to this one */
 static void xdma_desc_adjacent(struct xdma_desc *desc, u32 next_adjacent)
 {
-	/* remember reserved and control bits */
-	u32 control = le32_to_cpu(desc->control) & 0x0000f0ffUL;
-	/* merge adjacent and control field */
-	control |= 0xAD4B0000UL | (next_adjacent << 8);
-	/* write control and next_adjacent */
-	desc->control = cpu_to_le32(control);
+	desc->control = cpu_to_le32(le32_to_cpu(desc->control) | next_adjacent << 8);
 }
 
 /* xdma_desc_control -- Set complete control field of a descriptor. */
