@@ -261,6 +261,6 @@ _____________________________________________________________________________
 
     [ref1]: https://www.xilinx.com/products/intellectual-property/pcie-dma.html
     [ref2]: https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf
-    [ref3]: https://developer.microsoft.com/en-us/windows/hardware/windows-driver-kit
-    [ref4]: https://msdn.microsoft.com/en-us/windows/hardware/drivers/develop/building-a-driver
-    [ref5]: https://msdn.microsoft.com/en-us/windows/hardware/drivers/install/the-testsigning-boot-configuration-option
+    [ref3]: see Microsoft developer documentation on windows driver kit
+    [ref4]: see Microsoft documentation on msdn for building a driver
+    [ref5]: see Microsoft documentation on msdn for how test signing boot configuration option
