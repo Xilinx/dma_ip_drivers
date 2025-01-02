@@ -1,3 +1,7 @@
+v2024.1.0
+========
+- added support for AlmaOS 9.4 and Ubuntu 24.04
+
 v2020.2.0
 =========
 - renamed module parameter "enable_credit_mp" to "enable_st_c2h_credit" to 
