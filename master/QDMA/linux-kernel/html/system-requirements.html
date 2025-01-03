@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -434,8 +434,8 @@
 <div class="section" id="xilinx-accelerator-card">
 <h2>Xilinx Accelerator Card<a class="headerlink" href="#xilinx-accelerator-card" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>VCU1525</li>
-<li>U200</li>
+<li>VCU118</li>
+<li>Versal CPM4 XCVC1902</li>
 <li>Versal CPM5 XCVP1202</li>
 </ol>
 </div>
@@ -460,10 +460,10 @@ For VM testing, host system must support virtualization and it must be enabled i
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Operating System</td>
-<td>Ubuntu 18.04 LTS</td>
+<td>Ubuntu 24.04 LTS</td>
 </tr>
 <tr class="row-odd"><td>Linux Kernel</td>
-<td>4.15.0-23-generic</td>
+<td>6.8.0-36-generic</td>
 </tr>
 <tr class="row-even"><td>RAM</td>
 <td>64GB on local NUMA node</td>
@@ -472,7 +472,7 @@ For VM testing, host system must support virtualization and it must be enabled i
 <td>KVM</td>
 </tr>
 <tr class="row-even"><td>Qemu Version</td>
-<td>QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.15)</td>
+<td>QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.2)</td>
 </tr>
 </tbody>
 </table>
@@ -498,16 +498,16 @@ For VM testing, host system must support virtualization and it must be enabled i
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Operating System</td>
-<td>Ubuntu 18.04 LTS</td>
+<td>Ubuntu 24.04 LTS</td>
 </tr>
 <tr class="row-odd"><td>Linux Kernel</td>
-<td>4.15.1-20-generic</td>
+<td>6.8.0-36-generic</td>
 </tr>
 <tr class="row-even"><td>RAM</td>
-<td>4GB</td>
+<td>32GB</td>
 </tr>
 <tr class="row-odd"><td>Cores</td>
-<td>4</td>
+<td>32</td>
 </tr>
 </tbody>
 </table>
@@ -528,7 +528,7 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td rowspan="5">CentOS</td>
+<tr class="row-even"><td rowspan="6">CentOS</td>
 <td>7.6-1810 (RHEL 7.6)</td>
 <td>3.10.0-957</td>
 </tr>
@@ -544,23 +544,29 @@ For VM testing, host system must support virtualization and it must be enabled i
 <tr class="row-even"><td>9</td>
 <td>5.14.0-283</td>
 </tr>
-<tr class="row-odd"><td rowspan="5">Fedora</td>
+<tr class="row-odd"><td>Stream-9</td>
+<td>5.14.0-452</td>
+</tr>
+<tr class="row-even"><td rowspan="6">Fedora</td>
 <td>30</td>
 <td>5.0.9-301</td>
 </tr>
-<tr class="row-even"><td>31</td>
+<tr class="row-odd"><td>31</td>
 <td>5.3.7-301</td>
 </tr>
-<tr class="row-odd"><td>33</td>
+<tr class="row-even"><td>33</td>
 <td>5.8.15-301</td>
 </tr>
-<tr class="row-even"><td>36</td>
+<tr class="row-odd"><td>36</td>
 <td>5.17.5-300</td>
 </tr>
-<tr class="row-odd"><td>37</td>
+<tr class="row-even"><td>37</td>
 <td>6.2.8-200</td>
 </tr>
-<tr class="row-even"><td rowspan="4">Ubuntu</td>
+<tr class="row-odd"><td>40</td>
+<td>6.8.10-300</td>
+</tr>
+<tr class="row-even"><td rowspan="5">Ubuntu</td>
 <td>16.04</td>
 <td>4.15.0-101</td>
 </tr>
@@ -572,6 +578,13 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tr>
 <tr class="row-odd"><td>22.04</td>
 <td>5.15.0-41</td>
+</tr>
+<tr class="row-even"><td>24.04</td>
+<td>6.8.0-36</td>
+</tr>
+<tr class="row-odd"><td>AlmaLinux</td>
+<td>9.4</td>
+<td>5.14.0-503</td>
 </tr>
 </tbody>
 </table>
@@ -590,7 +603,7 @@ For VM testing, host system must support virtualization and it must be enabled i
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td rowspan="7">&#160;</td>
+<tr class="row-even"><td rowspan="9">&#160;</td>
 <td>3.16.66</td>
 </tr>
 <tr class="row-odd"><td>4.4.196</td>
@@ -604,6 +617,10 @@ For VM testing, host system must support virtualization and it must be enabled i
 <tr class="row-odd"><td>5.13</td>
 </tr>
 <tr class="row-even"><td>5.17</td>
+</tr>
+<tr class="row-odd"><td>6.5</td>
+</tr>
+<tr class="row-even"><td>6.8</td>
 </tr>
 </tbody>
 </table>
@@ -660,7 +677,7 @@ in the supported kernels list above or if the Kernel Source doesn’t have the f
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on December 30, 2024.
       </span>
 
     </p>
@@ -738,7 +755,7 @@ in the supported kernels list above or if the Kernel Source doesn’t have the f
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

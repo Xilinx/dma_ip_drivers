@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -453,7 +453,7 @@ Once modified, the driver must be un-installed and recompiled.</p>
 <p>In order to compile the Xilinx QDMA software, configured and compiled Linux kernel source tree is required.
 Linux QDMA driver is dependent on <code class="docutils literal"><span class="pre">libaio</span></code>. Hence, make sure to install <code class="docutils literal"><span class="pre">libaio</span></code> before compiling the QDMA driver.
 Example command is provided on Ubuntu. Follow the similar procedure for other OS flavors.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# sudo apt-get install libaio libaio-devel
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# sudo apt-get install libaio-dev manpages-dev
 </pre></div>
 </div>
 <p>The source tree may contain only header files, or a complete tree. The source tree needs to be configured and the header files need to be compiled.
@@ -502,15 +502,15 @@ exposes character driver interface to perform QDMA transfers</td>
 <p>Upon executing make, A sub-directory <code class="docutils literal"><span class="pre">bin</span></code> is created with the list of executable listed in below tables.
 Individual executables can also be built with commands listed against each component in below tables.</p>
 <p>Optionally to enable debug mode for more detailed logs, build with the following command</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp; make DEBUG=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp;&amp; make DEBUG=1
 </pre></div>
 </div>
 <p>To enable VF 4K queue driver support for CPM5 design, build driver with the following command</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp; make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp;&amp; make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
 </pre></div>
 </div>
 <p>To enable 10 bit tag driver support for gen5x8 performance measurements for CPM5 design, build driver with the following command</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp; make EQDMA_CPM5_10BIT_TAG_ENABLE=1
+<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# make clean &amp;&amp; make EQDMA_CPM5_10BIT_TAG_ENABLE=1
 </pre></div>
 </div>
 <p><strong>Kernel modules:</strong></p>
@@ -585,7 +585,7 @@ Applications can be compiled individually as mentioned after entering the respec
 <li><code class="docutils literal"><span class="pre">make</span> <span class="pre">install-apps</span></code> installs the applications in <code class="docutils literal"><span class="pre">/user/local/sbin</span></code>.</li>
 <li><code class="docutils literal"><span class="pre">make</span> <span class="pre">install-mods</span></code> copies the <code class="docutils literal"><span class="pre">qdma-pf.ko</span></code> and <code class="docutils literal"><span class="pre">qdma-vf.ko</span></code> in <code class="docutils literal"><span class="pre">/lib/modules/&lt;kernel</span> <span class="pre">version&gt;/qdma/</span></code></li>
 </ul>
-<p>Ex: <code class="docutils literal"><span class="pre">/lib/modules/4.15.0-51-generic/qdma/</span></code></p>
+<p>Ex: <code class="docutils literal"><span class="pre">/lib/modules/6.8.0-36-generic/qdma/</span></code></p>
 </div>
 <div class="section" id="loading-the-qdma-driver-module">
 <h2>Loading the QDMA Driver Module<a class="headerlink" href="#loading-the-qdma-driver-module" title="Permalink to this headline">¶</a></h2>
@@ -768,7 +768,7 @@ blacklist qdma-vf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on December 30, 2024.
       </span>
 
     </p>
@@ -846,7 +846,7 @@ blacklist qdma-vf
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

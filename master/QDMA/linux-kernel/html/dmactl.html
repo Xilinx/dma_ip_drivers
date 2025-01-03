@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -1859,25 +1859,25 @@ CFG_BLK_IDENTIFIER_1                     [19,16]   0x3
 CFG_BLK_IDENTIFIER_RSVD_1                [15, 8]   0x0
 CFG_BLK_IDENTIFIER_VERSION               [ 7, 0]   0x1
 
-CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x51       81
-CFG_BLK_IDENTIFIER                       [31, 7]   0x0
-CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
-CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
-CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x1
+CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x52       82
+CFG_BLK_PCIE_MAX_PLD_SIZE_RSVD_1         [31, 7]   0x0
+CFG_BLK_PCIE_MAX_PLD_SIZE_PROG           [ 6, 4]   0x5
+CFG_BLK_PCIE_MAX_PLD_SIZE_RSVD_2         [    3]   0x0
+CFG_BLK_PCIE_MAX_PLD_SIZE_ISSUED         [ 2, 0]   0x2
 
 CFG_BLK_PCIE_MAX_READ_REQ_SIZE           0xc       0x52       82
-CFG_BLK_IDENTIFIER                       [31, 7]   0x0
-CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
-CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
-CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x2
+CFG_BLK_PCIE_MAX_READ_REQ_SIZE_RSVD_1    [31, 7]   0x0
+CFG_BLK_PCIE_MAX_READ_REQ_SIZE_PROG      [ 6, 4]   0x5
+CFG_BLK_PCIE_MAX_READ_REQ_SIZE_RSVD_2    [    3]   0x0
+CFG_BLK_PCIE_MAX_READ_REQ_SIZE_ISSUED    [ 2, 0]   0x2
 
-CFG_BLK_SYSTEM_ID                        0x10      0xff01     65281
-CFG_BLK_IDENTIFIER                       [31,17]   0x0
-CFG_BLK_IDENTIFIER_1                     [   16]   0x0
-CFG_BLK_IDENTIFIER_RSVD_1                [15, 0]   0xff01
+CFG_BLK_SYSTEM_ID                        0x10      0x1ff01    130817
+CFG_BLK_SYSTEM_ID_RSVD_1                 [31,17]   0x0
+CFG_BLK_SYSTEM_ID_INST_TYPE              [   16]   0x1
+CFG_BLK_SYSTEM_ID                        [15, 0]   0xff01
 
 CFG_BLK_MSIX_ENABLE                      0x14      0xf        15
-CFG_BLK_IDENTIFIER                       [31, 0]   0xf
+CFG_BLK_MSIX_ENABLE                      [31, 0]   0xf
 </pre></div>
 </div>
 </div>
@@ -1914,7 +1914,7 @@ CFG_BLK_IDENTIFIER                       [31, 0]   0xf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on December 30, 2024.
       </span>
 
     </p>
@@ -1992,7 +1992,7 @@ CFG_BLK_IDENTIFIER                       [31, 0]   0xf
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

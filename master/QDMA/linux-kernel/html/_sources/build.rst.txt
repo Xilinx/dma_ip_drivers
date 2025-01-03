@@ -33,7 +33,7 @@ Example command is provided on Ubuntu. Follow the similar procedure for other OS
 
 ::
 
-	[xilinx@]# sudo apt-get install libaio libaio-devel
+	[xilinx@]# sudo apt-get install libaio-dev manpages-dev
 	
 
 The source tree may contain only header files, or a complete tree. The source tree needs to be configured and the header files need to be compiled.
@@ -75,19 +75,19 @@ Optionally to enable debug mode for more detailed logs, build with the following
 
 ::
 	
-	[xilinx@]# make clean & make DEBUG=1
+	[xilinx@]# make clean && make DEBUG=1
 
 To enable VF 4K queue driver support for CPM5 design, build driver with the following command
 
 ::
 
-	[xilinx@]# make clean & make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
+	[xilinx@]# make clean && make EQDMA_CPM5_VF_GT_256Q_SUPPORTED=1
 
 To enable 10 bit tag driver support for gen5x8 performance measurements for CPM5 design, build driver with the following command
 
 ::
 
-	[xilinx@]# make clean & make EQDMA_CPM5_10BIT_TAG_ENABLE=1
+	[xilinx@]# make clean && make EQDMA_CPM5_10BIT_TAG_ENABLE=1
 
 
 **Kernel modules:**
@@ -130,7 +130,7 @@ Install the executable by running "make install"
 
 -   ``make install-mods`` copies the ``qdma-pf.ko`` and ``qdma-vf.ko`` in ``/lib/modules/<kernel version>/qdma/``  
 
-Ex: ``/lib/modules/4.15.0-51-generic/qdma/``
+Ex: ``/lib/modules/6.8.0-36-generic/qdma/``
 
 
 Loading the QDMA Driver Module

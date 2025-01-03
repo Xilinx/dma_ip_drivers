@@ -6,8 +6,8 @@ System Requirements
 Xilinx Accelerator Card
 -----------------------
 
-1. VCU1525
-2. U200
+1. VCU118
+2. Versal CPM4 XCVC1902
 3. Versal CPM5 XCVP1202
 
 Host Platform
@@ -26,15 +26,15 @@ Linux QDMA Driver release is verified on following Host system configuration for
 +--------------------------+-------------------------------------------------------------+
 | Host System              | Configuration Details                                       |
 +==========================+=============================================================+
-| Operating System         | Ubuntu 18.04 LTS                                            |
+| Operating System         | Ubuntu 24.04 LTS                                            |
 +--------------------------+-------------------------------------------------------------+
-| Linux Kernel             | 4.15.0-23-generic                                           |
+| Linux Kernel             | 6.8.0-36-generic                                            |
 +--------------------------+-------------------------------------------------------------+
 | RAM                      | 64GB on local NUMA node                                     |
 +--------------------------+-------------------------------------------------------------+
 | Hypervisor               | KVM                                                         |
 +--------------------------+-------------------------------------------------------------+
-| Qemu Version             | QEMU emulator version 2.5.0 (Debian 1:2.5+dfsg-5ubuntu10.15)|
+| Qemu Version             | QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.2)  |
 +--------------------------+-------------------------------------------------------------+
 
 **Notes**: 
@@ -53,10 +53,10 @@ Linux QDMA VF Driver release is verified on following Guest system configuration
 ========================= ==================================
 Guest System(VM)          Configuration Details             
 ========================= ==================================
-Operating System          Ubuntu 18.04 LTS
-Linux Kernel              4.15.1-20-generic
-RAM 			          4GB
-Cores              	      4
+Operating System          Ubuntu 24.04 LTS
+Linux Kernel              6.8.0-36-generic
+RAM 			          32GB
+Cores              	      32
 ========================= ==================================
 
 
@@ -67,7 +67,7 @@ Linux QDMA Driver is supported on the following linux distributions
 
 
 +-------------------------+---------------------+----------------+
-| Linux Distribution      | Version             | Kernel Version |          
+| Linux Distribution      | Version             | Kernel Version |
 +=========================+=====================+================+
 | CentOS                  |7.6-1810 (RHEL 7.6)  |3.10.0-957      |
 |                         +---------------------+----------------+
@@ -78,6 +78,8 @@ Linux QDMA Driver is supported on the following linux distributions
 |                         |8.3-2011 (RHEL 8.3)  |4.18.0-348      |
 |                         +---------------------+----------------+
 |                         |9                    |5.14.0-283      |
+|                         +---------------------+----------------+
+|                         |Stream-9             |5.14.0-452      |
 +-------------------------+---------------------+----------------+
 |Fedora                   |30                   |5.0.9-301       |
 |                         +---------------------+----------------+
@@ -88,6 +90,8 @@ Linux QDMA Driver is supported on the following linux distributions
 |                         |36                   |5.17.5-300      |
 |                         +---------------------+----------------+
 |                         |37                   |6.2.8-200       |
+|                         +---------------------+----------------+
+|                         |40                   |6.8.10-300      |
 +-------------------------+---------------------+----------------+
 |Ubuntu                   |16.04                |4.15.0-101      |
 |                         +---------------------+----------------+
@@ -96,6 +100,10 @@ Linux QDMA Driver is supported on the following linux distributions
 |                         |20.04                |5.4.0-31        |
 |                         +---------------------+----------------+
 |                         |22.04                |5.15.0-41       |
+|                         +---------------------+----------------+
+|                         |24.04                |6.8.0-36        |
++-------------------------+---------------------+----------------+
+|AlmaLinux                |9.4                  |5.14.0-503      |
 +-------------------------+---------------------+----------------+
 
 
@@ -120,6 +128,10 @@ Linux QDMA Driver is verified on following kernel.org Linux kernel versions
 |                         | 5.13            |
 |                         +-----------------+
 |                         | 5.17            |
+|                         +-----------------+
+|                         | 6.5             |
+|                         +-----------------+
+|                         | 6.8             |
 +-------------------------+-----------------+
 
 The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.

@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -438,13 +438,14 @@
   -c (--config) config file that has configuration for IO
 </pre></div>
 </div>
+<p><strong>Note</strong>: dma-latency application is supported only with functional design.</p>
 <p>Example</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-latency -c dmalat.conf
-dma-ctl qdma06000 global_csr | grep Global| cut -d : -f 2 &gt; glbl_rng_sz
-qdma06000-ST-0 H2C added.
+dma-ctl qdma65000 global_csr | grep Global| cut -d : -f 2 &gt; glbl_rng_sz
+qdma65000-ST-0 H2C added.
 Added 1 Queues.
 1 Queues started, idx 0 ~ 0.
-qdma06000-ST-0 C2H added.
+qdma65000-ST-0 C2H added.
 Added 1 Queues.
 1 Queues started, idx 0 ~ 0.
 dmautils(1) threads
@@ -452,14 +453,14 @@ Stopped Queues 0 -&gt; 0.
 Deleted Queues 0 -&gt; 0.
 Stopped Queues 0 -&gt; 0.
 Deleted Queues 0 -&gt; 0.
-qdma06000:statistics
+qdma65000:statistics
 Total MM H2C packets processed = 0
 Total MM C2H packets processed = 0
-Total ST H2C packets processed = 2288284
-Total ST C2H packets processed = 2288284
-Min Ping Pong Latency = 0
-Max Ping Pong Latency = 0
-Avg Ping Pong Latency = 0
+Total ST H2C packets processed = 2605186
+Total ST C2H packets processed = 2605186
+Min Ping Pong Latency = 7746
+Max Ping Pong Latency = 34642
+Avg Ping Pong Latency = 8906
 [xilinx@]#
 </pre></div>
 </div>
@@ -535,7 +536,7 @@ pci_device=00
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on December 30, 2024.
       </span>
 
     </p>
@@ -613,7 +614,7 @@ pci_device=00
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

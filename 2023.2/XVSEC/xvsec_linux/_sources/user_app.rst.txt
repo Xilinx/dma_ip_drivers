@@ -1,0 +1,180 @@
+.. _usr_app:
+
+User Application
+================
+
+“xvsecctl” command options
+--------------------------
+
+xvsecctl support common VSEC functionality and MCAP functionality.
+This section describes the details of each option provided for xvsecctl commands
+
++--------------------------+---------------------------+---------------------------------+-----------------+
+| **Formt**                | **Parameter**             | **Description/Range**           +   **Devices**   +
++==========================+===========================+=================================+=================+
+|                               **XVSEC Common Options**                                                   |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -h/H                     | --                        | Prints the usage of the tool    |      All        |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -b <bus number>          | Bus number                | PCI bus number                  |      All        |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -F <device number>       | Device number             | Device number in the PCI bus    |      All        |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -l                       | --                        | List the supported VSECs        |      All        |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -v                       | --                        | Prints the verbose information  |      All        |
+|                          |                           | about the device                |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -c <capability ID>       | Capability Identifier     | This ID can be identified from  |      All        |
++--------------------------+---------------------------+---------------------------------+-----------------+
+|   **XVSEC-MCAP Common Options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 0, 1, 2)**                    |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -m                       | --                        | Reset                           | US,US+,Versal   |
+|                          |                           | the MCAP module                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -d                       | --                        | Print the MCAP                  | US,US+,Versal   |
+|                          |                           | Registers                       |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -a <offset> <access>     | **offset:** MCAP VSEC     |                                 |                 |
+| [data]                   | offset                    | Read the data at given          |                 |
+|                          |                           | VSEC offset                     |                 |
+|                          | **access:**               |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | - b -- for byte access    | (or)                            |                 |
+|                          |                           |                                 |                 |
+|                          | - h -- for short access   | Writes the given data at        | US,US+,Versal   |
+|                          |                           | given VSEC offset               |                 |
+|                          | - w -- for word access    |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **data:**                 |                                 |                 |
+|                          | Data to perform write     |                                 |                 |
+|                          | operation /               |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | NA to perform read        |                                 |                 |
+|                          | operation                 |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+|      **XVSEC-MCAP Ultrascale Specific Options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 0,1)**        |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -r                       | --                        | Reset the                       |     US,US+      |
+|                          |                           | configuration logic area        |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -f                       | --                        | Reset both                      |                 |
+|                          |                           | configuration logic and         |     US,US+      |
+|                          |                           | MCAP module                     |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -D                       | --                        | Print Read Data                 |     US,US+      |
+|                          |                           | Registers                       |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -o                       | --                        | Print FPGA                      |     US,US+      |
+|                          |                           | configuration registers         |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -C <partial clear file>  | **Partial clear file:**   |                                 |                 |
+|                          | Clear bitstream to        | Program the partial clear       |                 |
+|                          | program                   | bitstream                       |                 |
+|                          |                           |                                 |     US,US+      |
+|                          | Supported formats are     |                                 |                 |
+|                          | **.bit**, **.bin**,       |                                 |                 |
+|                          | **.rbt**                  |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -p <bit stream>          | **Bitstream:**            |                                 |                 |
+|                          | bitstream file to         | Program the bitstream           |                 |
+|                          | program                   |                                 |                 |
+|                          |                           |                                 |     US,US+      |
+|                          | Supported formats are     |                                 |                 |
+|                          | **.bit**, **.bin**,       |                                 |                 |
+|                          | **.rbt**                  |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -s <register number>     | **register number:**      |                                 |                 |
+| [w] [data]               | Valid FPGA CFG Reg No     | Read the data at given          |                 |
+|                          |                           | register number                 |                 |
+|                          |                           |                                 |                 |
+|                          | **w:**  command which     |                                 |                 |
+|                          | indicates write operation | (or)                            |     US,US+      |
+|                          |                           |                                 |                 |
+|                          |                           | Writes the data at given        |                 |
+|                          | **data:**                 | register number with given data |                 |
+|                          | data to write at          |                                 |                 |
+|                          | given register            |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+|      **XVSEC-MCAP Versal Specific Options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 2)**              |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -p mode <32b/128b>       | **mode:** 32 bit/128bit   |                                 |                 |
+|                          |                           |                                 |                 |
+| type <fixed/incr>        |                           | Programs the PDI                |                 |
+|                          |                           |                                 |                 |
+| <address> <PDI file>     | **type:**                 |                                 |                 |
+|                          |                           |                                 |                 |
+| [tr_mode <slow/fast>]    |  fixed - Address is fixed |                                 |      Versal     |
+|                          |  for each datum           |                                 |                 |
+| [sbi <address>]          |                           |                                 |                 |
+|                          |                           |                                 |                 |
+|                          |  incr - Increment address |                                 |                 |
+|                          |  for each datum           |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **address:**              |                                 |                 |
+|                          | Address to load the PDI   |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **PDI file:**             |                                 |                 |
+|                          | PDI file to be programmed |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **tr_mode:**              |                                 |                 |
+|                          | Optional download mode    |                                 |                 |
+|                          | (Slow/Fast)               |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **sbi:**                  |                                 |                 |
+|                          | Address of the Slave Boot |                                 |                 |
+|                          | Interface                 |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | (if target is SBI)        |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -t type <fixed/incr>     | **type:**                 |                                 |                 |
+| <address> <len> <file>   |                           |                                 |                 |
+|                          |  fixed - Address is fixed |  Reads the contents at given    |      Versal     |
+|                          |  for each datum           |                                 |                 |
+|                          |                           |  address for the given length   |                 |
+|                          |  incr - Increment address |                                 |                 |
+|                          |  for each datum           |  into given file                |                 |
+|                          |                           |                                 |                 |
+|                          | **address:**              |                                 |                 |
+|                          | Address to read           |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **len:**                  |                                 |                 |
+|                          | size in bytes to read     |                                 |                 |
+|                          |                           |                                 |                 |
+|                          |                           |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **file:**                 |                                 |                 |
+|                          | Name of the file to store |                                 |                 |
+|                          | the data                  |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -x mode <32b/128b>       | **mode:** 32 bit/128bit   |                                 |                 |
+| <address>                |                           |  Access the AXI Registers       |                 |
+| [w [data]]               | **address:**              |                                 |                 |
+|                          | AXI Address to read/write |                                 |                 |
+|                          |                           |                                 |      Versal     |
+|                          | **w [data]:**             |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | Write operation with data |                                 |                 |
+|                          |                           |                                 |                 |
+|                          | **w:** is not valid for   |                                 |                 |
+|                          | read                      |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -q axi_cache <data>      | **axi_cache:** value      |                                 |                 |
+| axi_prot <data>          | to program at axi_cache   |  Set the AXI cache and          |                 |
+|                          | register                  |  protections bits               |                 |
+|                          |                           |                                 |      Versal     |
+|                          | **axi_prot:** value       |                                 |                 |
+|                          | to program at axi_prot    |                                 |                 |
+|                          | register                  |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+
+Note:
+	- <> is a mandatory parameter to the requested operation
+	- [] is an optional parameter to the requested operation
+	- Except for -p and -C options, all other options are supported one at a time. i.e.,It is not suggested to request two options in a single command, in such scenario only option will get executed
