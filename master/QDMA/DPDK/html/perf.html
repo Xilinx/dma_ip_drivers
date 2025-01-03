@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -315,7 +315,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -347,7 +347,10 @@
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building QDMA DPDK Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="userguide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev-guide.html">Developers Guide</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">QDMA DPDK Performance</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">QDMA DPDK Performance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#xilinx-dpdk-pktgen-extension-command-line-options">Xilinx DPDK-Pktgen Extension Command-line Options</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -421,6 +424,36 @@
   <div class="section" id="qdma-dpdk-performance">
 <h1>QDMA DPDK Performance<a class="headerlink" href="#qdma-dpdk-performance" title="Permalink to this headline">¶</a></h1>
 <p>Refer to <a class="reference external" href="https://www.xilinx.com/support/answers/71453.html">QDMA_Performance_Answer_Record</a> for detailed performance results and test environment.</p>
+<div class="section" id="xilinx-dpdk-pktgen-extension-command-line-options">
+<h2>Xilinx DPDK-Pktgen Extension Command-line Options<a class="headerlink" href="#xilinx-dpdk-pktgen-extension-command-line-options" title="Permalink to this headline">¶</a></h2>
+<p>Xilinx provided -9 and -w command-line options used for performance measurement.</p>
+<p>To enable -9 and -w command-line options found in performance AR71453, apply the pktgen patch file based on DPDK version to your DPDK Driver.</p>
+<p>Refer to <a class="reference internal" href="build.html#sw-dpdk"><span class="std std-ref">Xilinx QDMA DPDK Software database structure</span></a> for the details of each DPDK version pktgen patch files.</p>
+<p>Below Table describes the Command-line Options usecase.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Command-line</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-9</td>
+<td>The ‘-9’ option is the extension added by Xilinx to enable
+dpdk-pktgen to support  packet sizes beyond 1518 bytes.
+The dpdk-pktgen Application was also modified to disable
+the Packet Classification.</td>
+</tr>
+<tr class="row-odd"><td>-w</td>
+<td>The ‘-w’ EAL option is specified to enable or disable
+prefetch and to change the completion descriptor length.</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 
 
@@ -451,7 +484,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on January 01, 2025.
       </span>
 
     </p>
@@ -529,7 +562,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

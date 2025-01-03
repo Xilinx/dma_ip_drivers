@@ -81,6 +81,7 @@ For details on CPM4 and CPM5 Hardware Features refer to QDMA_Hard_Product_Guide_
 Software Features
 ---------------------
 
+* Support DPDK v23.11 LTS
 * Support DPDK v22.11 LTS
 * Support DPDK v21.11 LTS
 * Support DPDK v20.11 LTS

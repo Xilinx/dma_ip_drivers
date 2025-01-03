@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -462,7 +462,7 @@ and <code class="docutils literal"><span class="pre">xilinx_qdma_vf</span></code
 <p>Once modified, the driver and application must be recompiled.</p>
 </div>
 <div class="section" id="xilinx-qdma-dpdk-software-database-structure">
-<h2>Xilinx QDMA DPDK Software database structure<a class="headerlink" href="#xilinx-qdma-dpdk-software-database-structure" title="Permalink to this headline">¶</a></h2>
+<span id="sw-dpdk"></span><h2>Xilinx QDMA DPDK Software database structure<a class="headerlink" href="#xilinx-qdma-dpdk-software-database-structure" title="Permalink to this headline">¶</a></h2>
 <p>Below Table describes the DPDK software database structure and its contents
 on the Xilinx GitHub <a class="reference external" href="https://github.com/Xilinx/dma_ip_drivers">https://github.com/Xilinx/dma_ip_drivers</a>, subdirectory QDMA/DPDK.</p>
 <table border="1" class="docutils">
@@ -502,31 +502,41 @@ packet size classification logic to remove application
 overhead in performance measurement. This patch is used for
 performance testing with dpdk-pktgen application.</td>
 </tr>
-<tr class="row-even"><td>RELEASE.txt</td>
+<tr class="row-even"><td>tools/0001-PKTGEN-24.03.1-
+Patch-to-add-Jumbo-packet
+-support.patch</td>
+<td>This is dpdk-pktgen patch based on DPDK v23.11.
+This patch extends dpdk-pktgen application to handle packets
+with packet sizes more than 1518 bytes and it disables the
+packet size classification logic to remove application
+overhead in performance measurement. This patch is used for
+performance testing with dpdk-pktgen application.</td>
+</tr>
+<tr class="row-odd"><td>RELEASE.txt</td>
 <td>Release Notes</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="setup-download-and-modifications">
 <h3>Setup: Download and modifications<a class="headerlink" href="#setup-download-and-modifications" title="Permalink to this headline">¶</a></h3>
-<p>The reference driver code requires DPDK v22.11/v21.11/v20.11.
+<p>The reference driver code requires DPDK v23.11/v22.11/v21.11/v20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.</p>
-<p>Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU1525
+<p>Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU118
 is installed. Henceforth, this area is referred as &lt;dpdk_sw_database&gt;.</p>
-<p>Create a directory for the DPDK download on the server where the VCU1525
+<p>Create a directory for the DPDK download on the server where the VCU118
 is installed and move to this directory.</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>mkdir &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
 cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
 git clone http://dpdk.org/git/dpdk-stable
 cd dpdk-stable
-git checkout v22.11/v21.11/v20.11
+git checkout v23.11/v22.11/v21.11/v20.11
 git clone git://dpdk.org/dpdk-kmods
 cp -r &lt;dpdk_sw_database&gt;/drivers/net/qdma ./drivers/net/
 cp -r &lt;dpdk_sw_database&gt;/examples/qdma_testapp ./examples/
 </pre></div>
 </div>
-<p>Additionally, make below changes to the DPDK v22.11/v21.11/v20.11 tree to build QDMA driver,
+<p>Additionally, make below changes to the DPDK v23.11/v22.11/v21.11/v20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -535,8 +545,7 @@ support 2K queues and populate Xilinx devices for binding.</p>
 <ol class="loweralpha simple">
 <li>To support 2K queues and 256 PCIe functions for QDMA5.0, update below configurations in <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code></li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_MEMZONE 40960
-#define RTE_MAX_VFIO_CONTAINERS 256
+<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_VFIO_CONTAINERS 256
 #define RTE_MAX_QUEUES_PER_PORT 2048
 </pre></div>
 </div>
@@ -547,7 +556,7 @@ support 2K queues and populate Xilinx devices for binding.</p>
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="3">
-<li>Add below lines to <code class="docutils literal"><span class="pre">./config/meson.build</span></code> in DPDK v22.11/v21.11/v20.11 tree</li>
+<li>Modify below lines in <code class="docutils literal"><span class="pre">./config/meson.build</span></code> in DPDK v23.11/v22.11/v21.11/v20.11 tree</li>
 </ol>
 <div class="highlight-none"><div class="highlight"><pre><span></span># Set maximum Ethernet ports to 256
 dpdk_conf.set(&#39;RTE_MAX_ETHPORTS&#39;, 256)
@@ -571,10 +580,11 @@ dpdk_conf.set(&#39;RTE_MAX_VFIO_GROUPS&#39;, 256)
 <ol class="loweralpha simple" start="6">
 <li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/qdma/meson.build</span></code>, to support required DPDK framework version</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
+<div class="highlight-none"><div class="highlight"><pre><span></span># Use QDMA_DPDK_23_11 compiler flag for DPDK v23.11
+# Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
 # Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
 # Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
-cflags += [&#39;-DQDMA_DPDK_22_11&#39;]
+cflags += [&#39;-DQDMA_DPDK_23_11&#39;]
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
@@ -749,7 +759,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on January 01, 2025.
       </span>
 
     </p>
@@ -827,7 +837,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

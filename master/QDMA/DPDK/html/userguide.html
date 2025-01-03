@@ -42,7 +42,7 @@
       <script type="text/javascript">
           var DOCUMENTATION_OPTIONS = {
               URL_ROOT:'./',
-              VERSION:'2023.2',
+              VERSION:'2024.1',
               LANGUAGE:'None',
               COLLAPSE_INDEX:false,
               FILE_SUFFIX:'.html',
@@ -316,7 +316,7 @@
             
             
               <div class="version">
-                2023.2
+                2024.1
               </div>
             
           
@@ -1022,9 +1022,30 @@ echo 0000:81:08.4 &gt; /sys/bus/pci/drivers/vfio-pci/bind
 <li>Attach the VFs (here, 81:00.4 and 81:08.4) to VM via vfio-pci using QEMU with below command.</li>
 </ol>
 <div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
--device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -device vfio-pci,host=81:08.4 -vnc :5556 &amp;
+-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4, -device vfio-pci,host=81:08.4 -vnc :5556 &amp;
 </pre></div>
 </div>
+<p><strong>Notes</strong>:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>If Qemu fails to  launch VM with the above command, with “VF token required for access” error, Update Qemu to version 8.2.4. This version supports passing vf-token to VM.
+Run below steps to register VF token.</li>
+<li>VF token can be passed to DPDK by using EAL parameter - -vfio-vf-token. Run below command to pass vf-token across all PF and VF ports.(Use the uuid generated earlier
+as outlined under “Driver binding with vfio-pci” section)</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0xf --vfio-vf-token=&lt;uuid&gt; -n 4
+</pre></div>
+</div>
+<p>After running the above command, exit from the application as VFs need to be attached to VM. vf-token should be same for PF’s and VF’s.</p>
+<ol class="arabic simple" start="3">
+<li>Now launch VM using following command with vf-token parameter</li>
+</ol>
+<div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt; -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22
+-device vfio-pci,host=0000:81:00.4,vf-token=&lt;uuid&gt;, -device vfio-pci,host=0000:81:08.4,vf-token=&lt;uuid&gt; -vnc :5556 &amp;
+</pre></div>
+</div>
+<p>Before running any dpdk application in VM, ensure to run qdma_testapp on host system with vf-token as shown in step 2, to handle mailbox events.</p>
+</div></blockquote>
 <p>Follow below steps inside VM to bind the functions with vfio-pci</p>
 <ol class="arabic simple">
 <li>Once the VM is launched, execute steps as outlined in section <a class="reference internal" href="build.html#build-dpdk"><span class="std std-ref">Building QDMA DPDK Software</span></a> to build DPDK on VM</li>
@@ -1071,7 +1092,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on November 10, 2023.
+        Last updated on January 01, 2025.
       </span>
 
     </p>
@@ -1149,7 +1170,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2023 Advanced Micro Devices Inc.
+                                  &copy; 2022-2024 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

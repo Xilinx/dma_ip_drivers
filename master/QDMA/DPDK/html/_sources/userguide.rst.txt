@@ -686,12 +686,39 @@ Add the Vendor Id and Device Id to vfio-pci and bind the VFs to vfio-pci as belo
 	echo 0000:81:08.4 > /sys/bus/pci/devices/0000:81:08.4/driver/unbind
 	echo 0000:81:08.4 > /sys/bus/pci/drivers/vfio-pci/bind
 
+
 2. Attach the VFs (here, 81:00.4 and 81:08.4) to VM via vfio-pci using QEMU with below command.
 
 ::
 
 		qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda <vm_image.qcow2>
-		-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -device vfio-pci,host=81:08.4 -vnc :5556 &
+		-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4, -device vfio-pci,host=81:08.4 -vnc :5556 &
+
+
+**Notes**:
+
+        1. If Qemu fails to  launch VM with the above command, with "VF token required for access" error, Update Qemu to version 8.2.4. This version supports passing vf-token to VM.
+           Run below steps to register VF token.
+
+
+        2. VF token can be passed to DPDK by using EAL parameter - -vfio-vf-token. Run below command to pass vf-token across all PF and VF ports.(Use the uuid generated earlier
+           as outlined under "Driver binding with vfio-pci" section)
+
+        ::
+
+                ./build/qdma_testapp -c 0xf --vfio-vf-token=<uuid> -n 4
+
+        After running the above command, exit from the application as VFs need to be attached to VM. vf-token should be same for PF's and VF's.
+
+
+        3. Now launch VM using following command with vf-token parameter
+
+        ::
+
+                qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda <vm_image.qcow2> -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22
+                -device vfio-pci,host=0000:81:00.4,vf-token=<uuid>, -device vfio-pci,host=0000:81:08.4,vf-token=<uuid> -vnc :5556 &
+
+        Before running any dpdk application in VM, ensure to run qdma_testapp on host system with vf-token as shown in step 2, to handle mailbox events.
 
 
 Follow below steps inside VM to bind the functions with vfio-pci

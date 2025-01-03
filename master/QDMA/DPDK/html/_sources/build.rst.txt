@@ -37,6 +37,8 @@ To modify the PCIe Device ID in the driver,
 
 Once modified, the driver and application must be recompiled.
 
+.. _sw_dpdk:
+
 Xilinx QDMA DPDK Software database structure
 --------------------------------------------
 
@@ -64,20 +66,27 @@ on the Xilinx GitHub https://github.com/Xilinx/dma_ip_drivers, subdirectory QDMA
 |                             | overhead in performance measurement. This patch is used for      |
 |                             | performance testing with dpdk-pktgen application.                |
 +-----------------------------+------------------------------------------------------------------+
+| tools/0001-PKTGEN-24.03.1-  | This is dpdk-pktgen patch based on DPDK v23.11.                  |
+| Patch-to-add-Jumbo-packet   | This patch extends dpdk-pktgen application to handle packets     |
+| -support.patch              | with packet sizes more than 1518 bytes and it disables the       |
+|                             | packet size classification logic to remove application           |
+|                             | overhead in performance measurement. This patch is used for      |
+|                             | performance testing with dpdk-pktgen application.                |
++-----------------------------+------------------------------------------------------------------+
 | RELEASE.txt                 | Release Notes                                                    |
 +-----------------------------+------------------------------------------------------------------+
 
 Setup: Download and modifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The reference driver code requires DPDK v22.11/v21.11/v20.11.
+The reference driver code requires DPDK v23.11/v22.11/v21.11/v20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.
 
-Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU1525
+Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU118
 is installed. Henceforth, this area is referred as <dpdk_sw_database>.
 
-Create a directory for the DPDK download on the server where the VCU1525
+Create a directory for the DPDK download on the server where the VCU118
 is installed and move to this directory.
 
 ::
@@ -86,12 +95,12 @@ is installed and move to this directory.
 	cd <server_dir>/<dpdk_test_area>
 	git clone http://dpdk.org/git/dpdk-stable
 	cd dpdk-stable
-	git checkout v22.11/v21.11/v20.11
+	git checkout v23.11/v22.11/v21.11/v20.11
 	git clone git://dpdk.org/dpdk-kmods
 	cp -r <dpdk_sw_database>/drivers/net/qdma ./drivers/net/
 	cp -r <dpdk_sw_database>/examples/qdma_testapp ./examples/
 
-Additionally, make below changes to the DPDK v22.11/v21.11/v20.11 tree to build QDMA driver,
+Additionally, make below changes to the DPDK v23.11/v22.11/v21.11/v20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.
 
 	1. To build QDMA driver
@@ -100,7 +109,6 @@ support 2K queues and populate Xilinx devices for binding.
 
 	::
 
-		#define RTE_MAX_MEMZONE 40960
 		#define RTE_MAX_VFIO_CONTAINERS 256
 		#define RTE_MAX_QUEUES_PER_PORT 2048
 
@@ -110,7 +118,7 @@ support 2K queues and populate Xilinx devices for binding.
 
 		#define RTE_MAX_QUEUES_PER_PORT 4096
 
-	c. Add below lines to ``./config/meson.build`` in DPDK v22.11/v21.11/v20.11 tree
+	c. Modify below lines in ``./config/meson.build`` in DPDK v23.11/v22.11/v21.11/v20.11 tree
 
 	::
 
@@ -136,10 +144,11 @@ support 2K queues and populate Xilinx devices for binding.
 
 	::
 
+		# Use QDMA_DPDK_23_11 compiler flag for DPDK v23.11
 		# Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
 		# Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
 		# Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
-		cflags += ['-DQDMA_DPDK_22_11']
+		cflags += ['-DQDMA_DPDK_23_11']
 
 
 	2. To add Xilinx devices for device binding, add below lines to	``./usertools/dpdk-devbind.py`` after cavium_pkx class, where PCI base class for devices are listed.

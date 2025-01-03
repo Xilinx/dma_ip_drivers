@@ -1,5 +1,28 @@
 QDMA DPDK Performance
----------------------
+=====================
 Refer to QDMA_Performance_Answer_Record_ for detailed performance results and test environment.
 
 .. _QDMA_Performance_Answer_Record: https://www.xilinx.com/support/answers/71453.html
+
+Xilinx DPDK-Pktgen Extension Command-line Options
+-------------------------------------------------
+
+Xilinx provided -9 and -w command-line options used for performance measurement.
+
+To enable -9 and -w command-line options found in performance AR71453, apply the pktgen patch file based on DPDK version to your DPDK Driver.
+
+Refer to :ref:`sw_dpdk` for the details of each DPDK version pktgen patch files.
+
+Below Table describes the Command-line Options usecase.
+
++------------------+-----------------------------------------------------------+
+| Command-line     | Description                                               |
++==================+===========================================================+
+| -9               | The '-9' option is the extension added by Xilinx to enable|
+|                  | dpdk-pktgen to support  packet sizes beyond 1518 bytes.   |
+|                  | The dpdk-pktgen Application was also modified to disable  |
+|                  | the Packet Classification.                                |
++------------------+-----------------------------------------------------------+
+| -w               | The '-w' EAL option is specified to enable or disable     |
+|                  | prefetch and to change the completion descriptor length.  |
++------------------+-----------------------------------------------------------+
