@@ -1,3 +1,22 @@
+RELEASE: 2024.1
+=================
+
+This release is based on DPDK v20.11, v21.11, v22.11 and v23.11 and
+contains QDMA poll mode driver and QDMA test application.
+
+This release is validated for
+	- On VCU118 for QDMA5.0 2022.1 example design
+	- On XCVP1202 for CPM5 2022.1 example design
+	- On XCVC1902 for CPM4 2022.1 example design
+
+This release includes patch files for dpdk-pktgen v20.12.0, v22.04.1 and v24.03.1 that extends
+dpdk-pktgen application to handle packets with packet sizes more than 1518 bytes
+and it disables the packet size classification logic in dpdk-pktgen to remove
+application overhead in performance measurement.This patch is used for
+performance testing with dpdk-pktgen application.
+
+The driver is validated against dpdk-pktgen and testpmd applications for API compliance.
+
 RELEASE: 2023.2.1
 =================
 
@@ -136,6 +155,10 @@ CPM5
 ----------------
 - Added support for latency measurements in Tx and Rx data path for VF
 
+2024.1 Updates
+--------------
+- Migrated QDMA dpdk driver to Support DPDK framework v23.11
+
 KNOWN ISSUE:
 ============
 - CPM4:
@@ -165,7 +188,7 @@ DRIVER LIMITATIONS:
  *   BSD LICENSE
  *
  *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- *   Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ *   Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions

@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -822,6 +822,7 @@ static int qdma_vf_dev_configure(struct rte_eth_dev *dev)
 		qdma_dev->q_info[qid].rx_bypass_mode =
 						qdma_dev->c2h_bypass_mode;
 		qdma_dev->q_info[qid].trigger_mode = qdma_dev->trigger_mode;
+		qdma_dev->q_info[qid].en_prefetch = qdma_dev->en_desc_prefetch;
 		qdma_dev->q_info[qid].timer_count =
 					qdma_dev->timer_count;
 	}
@@ -1078,12 +1079,6 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	dma_priv->bypass_bar_idx = BAR_ID_INVALID;
 	dma_priv->user_bar_idx = BAR_ID_INVALID;
 
-	if (qdma_check_kvargs(dev->device->devargs, dma_priv)) {
-		PMD_DRV_LOG(INFO, "devargs failed\n");
-		rte_free(dev->data->mac_addrs);
-		return -EINVAL;
-	}
-
 	/* Store BAR address and length of Config BAR */
 	baseaddr = (uint8_t *)
 			pci_dev->mem_resource[dma_priv->config_bar_idx].addr;
@@ -1134,6 +1129,13 @@ static int eth_qdma_vf_dev_init(struct rte_eth_dev *dev)
 	qdma_mbox_init(dev);
 	idx = qdma_ethdev_online(dev);
 	if (idx < 0) {
+		rte_free(dma_priv->hw_access);
+		rte_free(dev->data->mac_addrs);
+		return -EINVAL;
+	}
+
+	if (qdma_check_kvargs(dev->device->devargs, dma_priv)) {
+		PMD_DRV_LOG(INFO, "devargs failed\n");
 		rte_free(dma_priv->hw_access);
 		rte_free(dev->data->mac_addrs);
 		return -EINVAL;

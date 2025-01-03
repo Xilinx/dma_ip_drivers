@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -32,6 +32,7 @@
  */
 
 #include "qdma_cpm4_reg.h"
+#include "qdma_cpm4_access.h"
 #include "qdma_reg_dump.h"
 
 #ifdef ENABLE_WPP_TRACING

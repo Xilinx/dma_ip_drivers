@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -364,63 +364,81 @@ struct qdma_descq_prefetch_ctxt {
  * struct qdma_descq_cmpt_ctxt - descq completion context config data structure
  */
 struct qdma_descq_cmpt_ctxt {
+	union __lower_dword__ {
+		uint32_t reg;
+		struct {
+			/** @en_stat_desc - Enable Completion Status writes */
+			uint8_t en_stat_desc :1;
+			/** @en_int - Enable Completion interrupts */
+			uint8_t en_int :1;
+			/** @trig_mode - Interrupt and Completion
+			 * Status Write Trigger Mode
+			 */
+			uint8_t trig_mode :3;
+			/** @fnc_id - Function ID */
+			uint8_t fnc_id :8;
+			/** @counter_idx - Index to counter register */
+			uint8_t counter_idx :4;
+			/** @timer_idx - Index to timer register */
+			uint8_t timer_idx :4;
+			/** @in_st - Interrupt State */
+			uint8_t in_st :2;
+			/** @color - initial color bit to be used on
+			 * Completion
+			 */
+			uint8_t color :1;
+			/** @ringsz_idx - Completion ring size index to
+			 * ring size registers
+			 */
+			uint8_t ringsz_idx :4;
+		} bit;
+	} lower_dword;
 	/** @bs_addr - completion ring base address */
 	uint64_t bs_addr;
-	/** @vec - Interrupt Vector */
-	uint16_t vec;
 	/** @pidx_l - producer index low */
 	uint16_t pidx;
 	/** @cidx - consumer index */
 	uint16_t cidx;
-	/** @en_stat_desc - Enable Completion Status writes */
-	uint8_t en_stat_desc;
-	/** @en_int - Enable Completion interrupts */
-	uint8_t en_int;
-	/** @trig_mode - Interrupt and Completion Status Write Trigger Mode */
-	uint8_t trig_mode;
-	/** @fnc_id - Function ID */
-	uint8_t fnc_id;
-	/** @counter_idx - Index to counter register */
-	uint8_t counter_idx;
-	/** @timer_idx - Index to timer register */
-	uint8_t timer_idx;
-	/** @in_st - Interrupt State */
-	uint8_t in_st;
-	/** @color - initial color bit to be used on Completion */
-	uint8_t color;
-	/** @ringsz_idx - Completion ring size index to ring size registers */
-	uint8_t ringsz_idx;
-	/** @desc_sz  -descriptor size */
-	uint8_t desc_sz;
-	/** @valid  - context valid */
-	uint8_t valid;
-	/** @err - error status */
-	uint8_t err;
-	/**
-	 * @user_trig_pend - user logic initiated interrupt is
-	 * pending to be generate
-	 */
-	uint8_t user_trig_pend;
-	/** @timer_running - timer is running on this queue */
-	uint8_t timer_running;
-	/** @full_upd - Full update */
-	uint8_t full_upd;
-	/** @ovf_chk_dis - Completion Ring Overflow Check Disable */
-	uint8_t ovf_chk_dis;
-	/** @at -Address Translation */
-	uint8_t at;
-	/** @int_aggr -Interrupt Aggregation */
-	uint8_t int_aggr;
-	/** @dis_intr_on_vf - Disbale interrupt with VF */
-	uint8_t dis_intr_on_vf;
-	/** @vio - queue is in VirtIO mode */
-	uint8_t vio;
-	/** @dir_c2h - DMA direction is C2H */
-	uint8_t dir_c2h;
-	/** @host_id - Host ID */
-	uint8_t host_id;
+	union __higher_dword__ {
+		uint32_t reg;
+		struct {
+			/** @desc_sz  -descriptor size */
+			uint8_t desc_sz :2;
+			/** @valid  - context valid */
+			uint8_t valid :1;
+			/** @err - error status */
+			uint8_t err :2;
+			/**
+			 * @user_trig_pend - user logic initiated interrupt is
+			 * pending to be generate
+			 */
+			uint8_t user_trig_pend :1;
+			/** @timer_running - timer is running on this queue */
+			uint8_t timer_running :1;
+			/** @full_upd - Full update */
+			uint8_t full_upd :1;
+			/** @ovf_chk_dis - Completion Ring Overflow
+			 * Check Disable
+			 */
+			uint8_t ovf_chk_dis :1;
+			 /** @at -Address Translation */
+			uint8_t at : 1;
+			/** @vec - Interrupt Vector */
+			uint16_t vec: 11;
+			/** @int_aggr -Interrupt Aggregation */
+			uint8_t int_aggr :1;
+			/** @dis_intr_on_vf - Disbale interrupt with VF */
+			uint8_t dis_intr_on_vf :1;
+			/** @dir_c2h - DMA direction is C2H */
+			uint8_t dir_c2h :1;
+			/** @host_id - Host ID */
+			uint8_t host_id :3;
+		} bit;
+	} higher_dword;
 	/** @pasid - PASID */
 	uint32_t pasid;
+	/** @vio - queue is in VirtIO mode */
+	uint8_t vio;
 	/** @pasid_en - PASID Enable */
 	uint8_t pasid_en;
 	/** @vio_eop - Virtio End-of-packet */
