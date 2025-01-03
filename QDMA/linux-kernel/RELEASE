@@ -1,3 +1,11 @@
+RELEASE: 2024.1.0
+=================
+
+This release is validated
+	- On VCU118 for QDMA5.0 2022.1 example design
+	- On XCVP1202 for CPM5 2022.1 example design
+	- On XCVC1902 for CPM4 2022.1 example design
+
 RELEASE: 2023.2.1
 =================
 
@@ -153,6 +161,14 @@ CPM5
 ----------------
 - Added driver support to enable 10 bit tag for CPM5 design.
 
+2024.1.0 Updates
+----------------
+- Added support for kernel version 6.4.x.
+- Added support for Fedora40 & Centos-Stream9 distros.
+- Added support for AlmaLinux 9.4
+- Reduced descriptor data transfer length to 32KB for EQDMA Soft 5.0 design.
+- Fixed bugs in driver.
+
 KNOWN ISSUES:
 =============
 - CPM4 Only
@@ -180,8 +196,8 @@ DRIVER LIMITATIONS:
 	- For optimal QDMA streaming performance, packet buffers of the descriptor ring should be aligned to at least 256 bytes.
 	- FLR is not supported in the Driver for CentOS because linux kernels provided in CentOS versions does not support the driver call back registration for FLR functionality
 
-- XRT Only
-	- QDMA: Bypass user BAR check for XRT application
+- EQDMA Soft IP 5.0
+	- QDMA: Fix user BAR check issue
 		- The existing driver code assmues the presence of the user BAR as indicated in the functional example design. If this user BAR is not detected during the driver probing process,
                   it results in a failure. However, this check is specific to example design and some customer designs might not contain user BAR. So bypassing the user BAR check to prevent
                   driver returning error and proceed further.
@@ -192,7 +208,7 @@ DRIVER LIMITATIONS:
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,

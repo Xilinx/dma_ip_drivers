@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -120,7 +120,7 @@ void qdma_mbox_cleanup(struct xlnx_dma_dev *xdev);
 void qdma_mbox_stop(struct xlnx_dma_dev *xdev);
 void qdma_mbox_start(struct xlnx_dma_dev *xdev);
 void qdma_mbox_poll_start(struct xlnx_dma_dev *xdev);
-bool qdma_mbox_is_irq_availabe(struct xlnx_dma_dev *xdev);
+bool qdma_mbox_is_irq_available(struct xlnx_dma_dev *xdev);
 
 
 /*****************************************************************************/

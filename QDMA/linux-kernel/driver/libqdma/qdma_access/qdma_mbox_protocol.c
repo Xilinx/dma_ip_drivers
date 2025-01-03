@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -610,22 +610,27 @@ static int mbox_compose_cmpt_context(void *dev_hndl,
 	/* writeback context */
 
 	cmpt_ctxt->bs_addr = qctxt->descq_conf.cmpt_ring_bs_addr;
-	cmpt_ctxt->en_stat_desc = qctxt->descq_conf.cmpl_stat_en;
-	cmpt_ctxt->en_int = qctxt->descq_conf.cmpt_int_en;
-	cmpt_ctxt->trig_mode = qctxt->descq_conf.triggermode;
-	cmpt_ctxt->fnc_id = qctxt->descq_conf.func_id;
-	cmpt_ctxt->timer_idx = tmr_idx;
-	cmpt_ctxt->counter_idx = cntr_idx;
-	cmpt_ctxt->color = 1;
-	cmpt_ctxt->ringsz_idx = rng_idx;
+	cmpt_ctxt->lower_dword.bit.en_stat_desc =
+				qctxt->descq_conf.cmpl_stat_en;
+	cmpt_ctxt->lower_dword.bit.en_int = qctxt->descq_conf.cmpt_int_en;
+	cmpt_ctxt->lower_dword.bit.trig_mode = qctxt->descq_conf.triggermode;
+	cmpt_ctxt->lower_dword.bit.fnc_id = qctxt->descq_conf.func_id;
+	cmpt_ctxt->lower_dword.bit.timer_idx = tmr_idx;
+	cmpt_ctxt->lower_dword.bit.counter_idx = cntr_idx;
+	cmpt_ctxt->lower_dword.bit.color = 1;
+	cmpt_ctxt->lower_dword.bit.ringsz_idx = rng_idx;
 
-	cmpt_ctxt->desc_sz = qctxt->descq_conf.cmpt_desc_sz;
+	cmpt_ctxt->higher_dword.bit.desc_sz = qctxt->descq_conf.cmpt_desc_sz;
 
-	cmpt_ctxt->valid = 1;
+	cmpt_ctxt->higher_dword.bit.valid = 1;
 
-	cmpt_ctxt->ovf_chk_dis = qctxt->descq_conf.dis_overflow_check;
-	cmpt_ctxt->vec = qctxt->descq_conf.intr_id;
-	cmpt_ctxt->int_aggr = qctxt->descq_conf.intr_aggr;
+	if ((qctxt->st) && (qctxt->c2h))
+		cmpt_ctxt->higher_dword.bit.dir_c2h = 1;
+
+	cmpt_ctxt->higher_dword.bit.ovf_chk_dis =
+		qctxt->descq_conf.dis_overflow_check;
+	cmpt_ctxt->higher_dword.bit.vec = qctxt->descq_conf.intr_id;
+	cmpt_ctxt->higher_dword.bit.int_aggr = qctxt->descq_conf.intr_aggr;
 
 	return QDMA_SUCCESS;
 }

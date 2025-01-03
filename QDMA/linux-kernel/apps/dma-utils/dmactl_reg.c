@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2019 - 2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2024,  Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -204,8 +205,8 @@ static void print_repeated_reg(uint32_t *bar, struct xreg_info *xreg,
 
 	for (i = start; i < end; i++) {
 		uint32_t addr = xreg->addr + (i * step);
-		char name[40];
-		snprintf(name, 40, "%s_%d",
+		char name[45];
+		snprintf(name, 45, "%s_%d",
 				xreg->name, i);
 
 		if (xcmd == NULL) {

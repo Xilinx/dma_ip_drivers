@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -95,17 +95,17 @@ enum qdma_pf_devices {
  */
 #define QDMA_DESC_BLEN_MAX	((1 << (QDMA_DESC_BLEN_BITS)) - 1)
 
-#ifdef __XRT__
 /**
- * number of bits to describe the SOFT DMA transfer descriptor
+ * number of bits to describe the DMA transfer descriptor for EQDMA Soft 5.0
  */
-#define SOFT_QDMA_DESC_BLEN_BITS   15
+#define SOFT_EQDMA_DESC_BLEN_BITS  15
 
 /**
- * maximum size of a single SOFT DMA transfer descriptor
+ * maximum size of a single DMA transfer descriptor for EQDMA Soft 5.0
  */
-#define SOFT_QDMA_DESC_BLEN_MAX      (1 << (SOFT_QDMA_DESC_BLEN_BITS))
-#endif
+#define SOFT_EQDMA_DESC_BLEN_MAX      (1 << (SOFT_EQDMA_DESC_BLEN_BITS))
+
+#define SOFT_EQDMA_DESC_MAX_LEN (2 << (SOFT_EQDMA_DESC_BLEN_BITS))
 
 /**
  * obtain the 32 most significant (high) bits of a 32-bit or 64-bit address
