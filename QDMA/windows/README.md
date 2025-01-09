@@ -256,6 +256,7 @@ _____________________________________________________________________________
 
     * Driver installation gives warning due to test signature.
     * Driver is not fully tuned to achieve maximum IP performance
+    * The provided example drivers are intended for testing or to be used as a reference, for driver development and will not receive further support for issues or queries.
 
 7.  References
 
