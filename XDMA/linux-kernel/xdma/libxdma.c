@@ -3428,7 +3428,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 			transfer_dump(xfer);
 			sgt_dump(sgt);
 #endif
-			rv = -ERESTARTSYS;
+			rv = -ETIMEDOUT;
 			break;
 		}
 
@@ -3658,7 +3658,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			transfer_dump(xfer);
 			sgt_dump(sgt);
 #endif
-			rv = -ERESTARTSYS;
+			rv = -ETIMEDOUT;
 			break;
 		}
 
@@ -3789,7 +3789,7 @@ ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
 			transfer_dump(xfer);
 			sgt_dump(sgt);
 #endif
-			rv = -ERESTARTSYS;
+			rv = -ETIMEDOUT;
 			break;
 		}
 
