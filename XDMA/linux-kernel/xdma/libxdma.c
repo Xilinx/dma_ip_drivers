@@ -413,7 +413,7 @@ static int engine_reg_dump(struct xdma_engine *engine)
 static void engine_status_dump(struct xdma_engine *engine)
 {
 	u32 v = engine->status;
-	char buffer[256];
+	char buffer[400];
 	char *buf = buffer;
 	int len = 0;
 
