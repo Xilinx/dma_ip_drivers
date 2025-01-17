@@ -417,7 +417,7 @@ static void engine_status_dump(struct xdma_engine *engine)
 	char *buf = buffer;
 	int len = 0;
 
-	len = sprintf(buf, "SG engine %s status: 0x%08x: ", engine->name, v);
+	len = sprintf(buf, "SG engine %.16s status: 0x%08x: ", engine->name, v);
 
 	if ((v & XDMA_STAT_BUSY))
 		len += sprintf(buf + len, "BUSY,");
