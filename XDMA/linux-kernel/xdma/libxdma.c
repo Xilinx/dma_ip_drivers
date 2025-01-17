@@ -433,7 +433,7 @@ static void engine_status_dump(struct xdma_engine *engine)
 		if ((v & XDMA_STAT_MAGIC_STOPPED))
 			len += sprintf(buf + len, "MAGIC_STOPPED ");
 		if ((v & XDMA_STAT_INVALID_LEN))
-			len += sprintf(buf + len, "INVLIAD_LEN ");
+			len += sprintf(buf + len, "INVALID_LEN ");
 		if ((v & XDMA_STAT_IDLE_STOPPED))
 			len += sprintf(buf + len, "IDLE_STOPPED ");
 		buf[len - 1] = ',';
