@@ -54,6 +54,32 @@ MODULE_PARM_DESC(desc_blen_max,
 
 #define XDMA_PERF_NUM_DESC 128
 
+/* Functions:
+   * wait_event_interruptible_timeout
+   * swait_event_interruptible_timeout_exclusive
+   * wait_event_interruptible
+   * swait_event_interruptible_exclusive
+   could return prematurely (-ERESTARTSYS) if interrupted by a signal, this case must be handled by kernel module */
+#define xlx_wait_event_interruptible_timeout(wq, condition, timeout) \
+({\
+	int __ret = 0;  \
+	unsigned long expire = timeout + jiffies; \
+	do { \
+		__ret = _xlx_wait_event_interruptible_timeout(wq, condition, \
+							timeout); \
+	} while ((__ret < 0) && (jiffies < expire)); \
+       __ret; \
+})
+
+#define xlx_wait_event_interruptible(wq, condition) \
+({\
+	int __ret = 0;  \
+	do { \
+		__ret = _xlx_wait_event_interruptible(wq, condition); \
+	} while (__ret < 0); \
+       __ret; \
+})
+
 /* Kernel version adaptative code */
 #if HAS_SWAKE_UP_ONE
 /* since 4.18, using simple wait queues is not recommended
@@ -61,31 +87,21 @@ MODULE_PARM_DESC(desc_blen_max,
  * and will likely be removed in future kernel versions
  */
 #define xlx_wake_up	swake_up_one
-#define xlx_wait_event_interruptible_timeout \
+#define _xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout_exclusive
-#define xlx_wait_event_interruptible \
+#define _xlx_wait_event_interruptible \
 			swait_event_interruptible_exclusive
 #elif HAS_SWAKE_UP
 #define xlx_wake_up	swake_up
-#define xlx_wait_event_interruptible_timeout \
+#define _xlx_wait_event_interruptible_timeout \
 			swait_event_interruptible_timeout
-#define xlx_wait_event_interruptible \
+#define _xlx_wait_event_interruptible \
 			swait_event_interruptible
 #else
 #define xlx_wake_up	wake_up_interruptible
-/* wait_event_interruptible_timeout() could return prematurely (-ERESTARTSYS)
- * if it is interrupted by a signal */
-#define xlx_wait_event_interruptible_timeout(wq, condition, timeout) \
-({\
-	int __ret = 0;  \
-	unsigned long expire = timeout + jiffies; \
-	do { \
-		__ret = wait_event_interruptible_timeout(wq, condition, \
-							timeout); \
-	} while ((__ret < 0) && (jiffies < expire)); \
-       __ret; \
-})
-#define xlx_wait_event_interruptible \
+#define _xlx_wait_event_interruptible_timeout \
+           wait_event_interruptible_timeout
+#define _xlx_wait_event_interruptible \
 			wait_event_interruptible
 #endif
 
