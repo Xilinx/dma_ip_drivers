@@ -30,7 +30,9 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
-#include </usr/include/pthread.h>
+// SPIRENT for Fedora. But this is incorrect for crosscompile anyway
+//#include </usr/include/pthread.h>
+#include <pthread.h>
 #include <libaio.h>
 #include <sys/sysinfo.h>
 #include <sys/uio.h>
