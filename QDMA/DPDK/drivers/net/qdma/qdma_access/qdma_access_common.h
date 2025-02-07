@@ -45,8 +45,8 @@ extern "C" {
 #define QDMA_HW_VERSION_STRING_LEN			32
 
 #ifdef RTE_LIBRTE_SPIRENT
-/* 
- * despite the documents recommendations, we need this or we get QDMA ctxt errors when dpdkd restarts 
+/*
+ * despite the documents recommendations, we need this or we get QDMA ctxt errors when dpdkd restarts
  * Just make sure the queue base index is correct for cut-thru
  */
 #define ENABLE_INIT_CTXT_MEMORY         1
@@ -435,6 +435,10 @@ struct qdma_descq_cmpt_ctxt {
 	uint8_t vio_eop;
 	/** @sh_cmpt - Shared Completion Queue */
 	uint8_t sh_cmpt;
+#ifdef RTE_LIBRTE_SPIRENT
+	/** @port_id - Port ID */
+	uint8_t port_id;
+#endif
 };
 
 /**
@@ -668,8 +672,8 @@ int qdma_acc_get_num_config_regs(void *dev_hndl, enum qdma_ip_type ip_type,
  */
 
 #ifdef RTE_LIBRTE_SPIRENT
-/* 
- * You can't have functions in a shared memory struct setup by the primary. Each secondary can have a different virtual memory map. 
+/*
+ * You can't have functions in a shared memory struct setup by the primary. Each secondary can have a different virtual memory map.
  * Functions can be at different addresses and must be set during the attach by the secondary process.
  * Whomever did this assumed secondaries were using same binary/libs. STC uses different binaries.
  *

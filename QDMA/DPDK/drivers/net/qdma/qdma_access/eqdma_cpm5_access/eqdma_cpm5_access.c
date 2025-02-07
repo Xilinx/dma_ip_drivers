@@ -1624,6 +1624,9 @@ static struct qctx_entry eqdma_cpm5_cmpt_ctxt_entries[] = {
 	{"c2h Direction", 0},
 	{"Base Addr Low[5:2]", 0},
 	{"Shared Completion Queue", 0},
+#ifdef RTE_LIBRTE_SPIRENT
+	{"Port ID", 0},
+#endif
 };
 
 static struct qctx_entry eqdma_cpm5_c2h_pftch_ctxt_entries[] = {
@@ -2088,7 +2091,7 @@ static int eqdma_cpm5_indirect_reg_clear(void *dev_hndl,
 		enum ind_ctxt_cmd_sel sel, uint16_t hw_qid)
 {
 	union qdma_ind_ctxt_cmd cmd;
-    
+
     //qdma_log_error("%s: (dev_hndl %p)(sel %d)(hw_qid %d)\n", __func__, dev_hndl, sel, hw_qid);
 
 	qdma_reg_access_lock(dev_hndl);
@@ -2300,6 +2303,9 @@ static void eqdma_cpm5_fill_cmpt_ctxt(struct qdma_descq_cmpt_ctxt
 				EQDMA_CPM5_COMPL_CTXT_BADDR_LOW_MASK,
 				cmpt_ctxt->bs_addr);
 	eqdma_cpm5_cmpt_ctxt_entries[i++].value = cmpt_ctxt->sh_cmpt;
+#ifdef RTE_LIBRTE_SPIRENT
+	eqdma_cpm5_cmpt_ctxt_entries[i++].value = cmpt_ctxt->port_id;
+#endif
 }
 
 /*
@@ -3807,7 +3813,12 @@ static int eqdma_cpm5_cmpt_context_write(void *dev_hndl, uint16_t hw_qid,
 		FIELD_SET(CMPL_CTXT_DATA_W5_BADDR4_LOW_MASK,
 				baddr4_low) |
 		FIELD_SET(CMPL_CTXT_DATA_W5_VIO_EOP_MASK, ctxt->vio_eop) |
+#ifdef RTE_LIBRTE_SPIRENT
+		FIELD_SET(CMPL_CTXT_DATA_W5_SH_CMPT_MASK, ctxt->sh_cmpt) |
+		FIELD_SET(CMPL_CTXT_DATA_W5_PORT_ID_MASK, ctxt->port_id);
+#else
 		FIELD_SET(CMPL_CTXT_DATA_W5_SH_CMPT_MASK, ctxt->sh_cmpt);
+#endif
 
 	return eqdma_cpm5_indirect_reg_write(dev_hndl, sel, hw_qid,
 			cmpt_ctxt, num_words_count);
@@ -3920,6 +3931,10 @@ static int eqdma_cpm5_cmpt_context_read(void *dev_hndl, uint16_t hw_qid,
 			cmpt_ctxt[5]);
 	ctxt->sh_cmpt = (uint8_t)FIELD_GET(CMPL_CTXT_DATA_W5_SH_CMPT_MASK,
 			cmpt_ctxt[5]);
+#ifdef RTE_LIBRTE_SPIRENT
+	ctxt->port_id = (uint8_t)FIELD_GET(CMPL_CTXT_DATA_W5_PORT_ID_MASK,
+			cmpt_ctxt[5]);
+#endif
 
 	ctxt->bs_addr =
 		FIELD_SET(EQDMA_CPM5_COMPL_CTXT_BADDR_HIGH_L_MASK,

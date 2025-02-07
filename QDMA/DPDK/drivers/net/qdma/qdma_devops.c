@@ -383,7 +383,11 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 #endif
 
 	rxq->queue_id = rx_queue_id;
+#ifdef RTE_LIBRTE_SPIRENT
+	rxq->port_id = rx_queue_id;
+#else
 	rxq->port_id = dev->data->port_id;
+#endif
 	rxq->func_id = qdma_dev->func_id;
 	rxq->mb_pool = mb_pool;
 	rxq->st_mode = qdma_dev->q_info[rx_queue_id].queue_mode;
@@ -550,7 +554,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 	if (rxq->st_mode) {
 
         /*
-         * STREAM mode 
+         * STREAM mode
          */
 
 		if (!qdma_dev->dev_cap.st_en) {
@@ -601,7 +605,7 @@ int qdma_dev_rx_queue_setup(struct rte_eth_dev *dev, uint16_t rx_queue_id,
 #ifdef RTE_LIBRTE_SPIRENT
         PMD_DRV_LOG(ERR, "****************************************************************************************");
         PMD_DRV_LOG(ERR, "wb_status (phys address %p)", (void *)((uint64_t)rxq->rx_cmpt_mz->iova + (((uint64_t)rxq->nb_rx_cmpt_desc - 1) *  rxq->cmpt_desc_len)));
-        PMD_DRV_LOG(ERR, "****************************************************************************************");        
+        PMD_DRV_LOG(ERR, "****************************************************************************************");
 #endif
 
 		/* Write-back status structure is the last descriptor in the ring */
@@ -795,7 +799,12 @@ int qdma_dev_tx_queue_setup(struct rte_eth_dev *dev, uint16_t tx_queue_id,
 
 	txq->nb_tx_desc = (nb_tx_desc + 1);
 	txq->queue_id = tx_queue_id;
+#ifdef RTE_LIBRTE_SPIRENT
+	/* We use the port ID to indicate which port the packet is for on the cut-through */
+	txq->port_id = tx_queue_id;
+#else
 	txq->port_id = dev->data->port_id;
+#endif
 	txq->func_id = qdma_dev->func_id;
 	txq->num_queues = dev->data->nb_tx_queues;
 	txq->tx_deferred_start = tx_conf->tx_deferred_start;
@@ -1494,6 +1503,10 @@ int qdma_dev_tx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 	q_sw_ctxt.wbk_en = 1;
 	q_sw_ctxt.ring_bs_addr = (uint64_t)txq->tx_mz->iova;
 
+#ifdef RTE_LIBRTE_SPIRENT
+	q_sw_ctxt.port_id = qid;
+#endif
+
 	if (txq->en_bypass &&
 		(txq->bypass_desc_sz != 0))
 		q_sw_ctxt.desc_sz = bypass_desc_sz_idx;
@@ -1583,6 +1596,10 @@ int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		q_cmpt_ctxt.valid = 1;
 
 #ifdef RTE_LIBRTE_SPIRENT
+		q_prefetch_ctxt.port_id = qid;
+		q_sw_ctxt.port_id = qid;
+		q_cmpt_ctxt.port_id = qid;
+
 		// Turn on interrupts for the UIO driver
 		q_cmpt_ctxt.en_int = 1;
 #endif
