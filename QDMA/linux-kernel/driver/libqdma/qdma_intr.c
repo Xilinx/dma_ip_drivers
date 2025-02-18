@@ -602,7 +602,11 @@ int intr_setup(struct xlnx_dma_dev *xdev)
 
 #ifndef MBOX_INTERRUPT_DISABLE
 	/** Dedicate 1 vector for mailbox interrupts */
+#ifndef __QDMA_VF__
 	if (xdev->dev_cap.mailbox_en && qdma_mbox_is_irq_available(xdev))
+#else
+	if (qdma_mbox_is_irq_available(xdev))
+#endif
 		num_vecs_req++;
 #endif
 
@@ -658,7 +662,11 @@ int intr_setup(struct xlnx_dma_dev *xdev)
 	i = 0; /* This is mandatory, do not delete */
 
 #ifndef MBOX_INTERRUPT_DISABLE
+#ifndef __QDMA_VF__
 	if (xdev->dev_cap.mailbox_en && qdma_mbox_is_irq_available(xdev)) {
+#else
+	if (qdma_mbox_is_irq_available(xdev)) {
+#endif
 		/* Mail box interrupt */
 		rv = intr_vector_setup(xdev, i, INTR_TYPE_MBOX,
 				mbox_intr_handler);
