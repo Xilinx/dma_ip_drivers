@@ -159,6 +159,26 @@ int xcdev_check(const char *fname, struct xdma_cdev *xcdev, bool check_engine)
 
 	return 0;
 }
+//implementation of common sanity checks for file offset (position)
+int position_check(loff_t bar_size, loff_t pos, loff_t align)
+{
+	if (unlikely(pos < 0))
+	{	
+		pr_err("Negative address %lld\n", pos);
+		return -EINVAL;
+	}
+	if (unlikely(pos >= bar_size))
+	{
+		pr_err("Attempted to access address 0x%llx (%lld) that exceeds mapped BAR space size of %lld\n", pos, pos, bar_size);
+		return -ENXIO;
+	}
+	if (unlikely(pos & (align - 1)))
+	{	
+		pr_crit("Address 0x%llx (%lld) is not aligned to %lld bytes\n", pos, pos, align); 
+		return -EPROTO;
+	}
+	return 0;
+}
 
 int char_open(struct inode *inode, struct file *file)
 {
@@ -175,6 +195,38 @@ int char_open(struct inode *inode, struct file *file)
 	file->private_data = xcdev;
 
 	return 0;
+}
+
+loff_t char_llseek(struct file *file, loff_t off, int whence)
+{
+	struct xdma_cdev *xcdev = (struct xdma_cdev *)(file->private_data);
+	struct xdma_dev *xdev = xcdev->xdev;
+	loff_t newpos = 0;
+
+	switch (whence) {
+	case 0: /* SEEK_SET */
+		newpos = off;
+		break;
+	case 1: /* SEEK_CUR */
+		newpos = file->f_pos + off;
+		break;
+	case 2: /* SEEK_END*/
+		newpos = xdev->bar_size[xcdev->bar]  + off;
+		break;
+	default: /* can't happen */
+		return -EINVAL;
+	}
+	if (newpos < 0)
+		return -EINVAL;
+	file->f_pos = newpos;
+	dbg_fops("%s: pos=%lld\n", __func__, (signed long long)newpos);
+
+#if 0
+	pr_err("0x%p, off %lld, whence %d -> pos %lld.\n",
+		file, (signed long long)off, whence, (signed long long)off);
+#endif
+
+	return newpos;
 }
 
 /*
