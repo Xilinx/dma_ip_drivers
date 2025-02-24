@@ -780,7 +780,11 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 
 int qdma_cdev_init(void)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0)
 	qdma_class = class_create(THIS_MODULE, QDMA_CDEV_CLASS_NAME);
+#else
+    qdma_class = class_create(QDMA_CDEV_CLASS_NAME);
+#endif
 	if (IS_ERR(qdma_class)) {
 		pr_err("%s: failed to create class 0x%lx.",
 			QDMA_CDEV_CLASS_NAME, (unsigned long)qdma_class);
