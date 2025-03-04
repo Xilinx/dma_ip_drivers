@@ -1600,6 +1600,12 @@ int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		q_sw_ctxt.port_id = qid;
 		q_cmpt_ctxt.port_id = qid;
 
+		// Use the qid for the interrupt vector index
+		// to separate the interrupt for each port to
+		// a separate MSI.
+		q_sw_ctxt.vec = qid;
+		q_cmpt_ctxt.vec = qid;
+
 		// Turn on interrupts for the UIO driver
 		q_cmpt_ctxt.en_int = 1;
 #endif
