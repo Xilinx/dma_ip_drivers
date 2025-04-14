@@ -119,7 +119,9 @@ static int xthread_main(void *data)
 					thp->name, thp->work_cnt);
 			/* do work */
 			list_for_each_safe(work_item, next, &thp->work_list) {
+				unlock_thread(thp);
 				thp->fproc(work_item);
+				lock_thread(thp);
 			}
 		}
 		unlock_thread(thp);
@@ -158,7 +160,7 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 	INIT_LIST_HEAD(&thp->work_list);
 	init_waitqueue_head(&thp->waitq);
 
-	node = cpu_to_node(thp->cpu);
+		node = cpu_to_node(thp->cpu);
 	pr_debug("node : %d\n", node);
 
 	thp->task = kthread_create_on_node(xthread_main, (void *)thp,
@@ -170,7 +172,7 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 		return -EFAULT;
 	}
 
-	kthread_bind(thp->task, thp->cpu);
+		kthread_bind(thp->task, thp->cpu);
 
 	pr_debug_thread("kthread 0x%p, %s, cpu %u, task 0x%p.\n",
 		thp, thp->name, thp->cpu, thp->task);
