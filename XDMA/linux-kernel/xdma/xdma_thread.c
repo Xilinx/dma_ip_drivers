@@ -160,7 +160,7 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 	INIT_LIST_HEAD(&thp->work_list);
 	init_waitqueue_head(&thp->waitq);
 
-		node = cpu_to_node(thp->cpu);
+	node = cpu_to_node(thp->cpu);
 	pr_debug("node : %d\n", node);
 
 	thp->task = kthread_create_on_node(xthread_main, (void *)thp,
@@ -239,22 +239,22 @@ void xdma_thread_remove_work(struct xdma_engine *engine)
 void xdma_thread_add_work(struct xdma_engine *engine)
 {
 	struct xdma_kthread *thp = cs_threads;
-	unsigned int v = 0;
-	int i, idx = thread_cnt;
+	unsigned int max_work_cnt = 0;
+	int idx = 0;
 	unsigned long flags;
-
+	int i; // can't declare in for() because of outdated C standard
 
 	/* Polled mode only */
 	for (i = 0; i < thread_cnt; i++, thp++) {
 		lock_thread(thp);
-		if (idx == thread_cnt) {
-			v = thp->work_cnt;
-			idx = i;
+		if (i == 0) {	// this skips thread for CPU0 if other CPUs' threads work_cnt is 0
+			max_work_cnt = thp->work_cnt;
+			idx = i;	// idx is already 0 here
 		} else if (!thp->work_cnt) {
 			idx = i;
 			unlock_thread(thp);
 			break;
-		} else if (thp->work_cnt < v)
+		} else if (thp->work_cnt < max_work_cnt)
 			idx = i;
 		unlock_thread(thp);
 	}
@@ -268,7 +268,6 @@ void xdma_thread_add_work(struct xdma_engine *engine)
 
 	pr_info("%s 0x%p assigned to cmpl status thread %s,%u.\n",
 		engine->name, engine, thp->name, thp->work_cnt);
-
 
 	spin_lock_irqsave(&engine->lock, flags);
 	engine->cmplthp = thp;
