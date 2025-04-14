@@ -34,6 +34,14 @@
 
 
 /* Module Parameters */
+#ifdef XDMA_CONFIG_BAR_NUM
+static int config_bar_num=XDMA_CONFIG_BAR_NUM;
+#else 
+static int config_bar_num=-1;
+#endif
+module_param(config_bar_num, int, 0444);/*no point to make it writable*/
+MODULE_PARM_DESC(config_bar_num, "Input the config block BAR number");
+
 static unsigned int poll_mode;
 module_param(poll_mode, uint, 0644);
 MODULE_PARM_DESC(poll_mode, "Set 1 for hw polling, default is 0 (interrupts)");
@@ -1588,16 +1596,24 @@ static int map_single_bar(struct xdma_dev *xdev, struct pci_dev *dev, int idx)
 	return (int)map_len;
 }
 
-static int is_config_bar(struct xdma_dev *xdev, int idx)
+static bool is_config_bar(struct xdma_dev *xdev, int idx, int len)
 {
 	u32 irq_id = 0;
 	u32 cfg_id = 0;
-	int flag = 0;
 	u32 mask = 0xffff0000; /* Compare only XDMA ID's not Version number */
+	
 	struct interrupt_regs *irq_regs =
 		(struct interrupt_regs *)(xdev->bar[idx] + XDMA_OFS_INT_CTRL);
 	struct config_regs *cfg_regs =
 		(struct config_regs *)(xdev->bar[idx] + XDMA_OFS_CONFIG);
+		
+	if (len<XDMA_BAR_SIZE)
+	{
+		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x, len=%d\n",
+			 idx, irq_id, cfg_id, len);
+		dbg_init("Hardware was not probed."); 
+		return false; 
+	}
 
 	irq_id = read_register(&irq_regs->identifier);
 	cfg_id = read_register(&cfg_regs->identifier);
@@ -1605,17 +1621,16 @@ static int is_config_bar(struct xdma_dev *xdev, int idx)
 	if (((irq_id & mask) == IRQ_BLOCK_ID) &&
 	    ((cfg_id & mask) == CONFIG_BLOCK_ID)) {
 		dbg_init("BAR %d is the XDMA config BAR\n", idx);
-		flag = 1;
+		return true;
 	} else {
-		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x.\n",
-			 idx, irq_id, cfg_id);
-		flag = 0;
+		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x, len=%d\n",
+			 idx, irq_id, cfg_id, len);
+		return false;
 	}
 
-	return flag;
 }
 
-#ifndef XDMA_CONFIG_BAR_NUM
+
 static int identify_bars(struct xdma_dev *xdev, int *bar_id_list, int num_bars,
 			 int config_bar_pos)
 {
@@ -1647,45 +1662,97 @@ static int identify_bars(struct xdma_dev *xdev, int *bar_id_list, int num_bars,
 		 config_bar_pos);
 
 	switch (num_bars) {
+	case 0:
+	/* no bars were identified - probably wrong device*/
+		pr_crit("No BARs were detected!");
+		return -ENODEV;
 	case 1:
-		/* Only one BAR present - no extra work necessary */
+		/* Only one BAR present - it must be config bar, but verify */
+									
+		if(config_bar_pos<0)
+		{					/*     \/ temporary workaround, should pass real bar length*/
+			if(is_config_bar(xdev, bar_id_list[0], XDMA_BAR_SIZE ))
+				xdev->config_bar_idx=bar_id_list[0];
+			else
+				goto no_config_bar;
+		}
+		
 		break;
 
 	case 2:
+		if(config_bar_pos<0)
+		{
+			pr_notice("Config bar num was invalid or not set. Falling back to autodetection");
+			/*  \/config bar 0 was already probed                       \/ temporary workaround, should pass real bar length*/
+			if((config_bar_num!=0)&&is_config_bar(xdev, bar_id_list[0], XDMA_BAR_SIZE ))
+			{
+				xdev->config_bar_idx=bar_id_list[0];
+				config_bar_pos=0;
+			}					/*     \/ temporary workaround, should pass real bar length*/
+			else if(is_config_bar(xdev, bar_id_list[1], XDMA_BAR_SIZE ))
+			{
+				xdev->config_bar_idx=bar_id_list[1];
+				config_bar_pos=1;
+			}
+			else
+				goto no_config_bar;
+		}
+		
 		if (config_bar_pos == 0) {
 			xdev->bypass_bar_idx = bar_id_list[1];
 		} else if (config_bar_pos == 1) {
 			xdev->user_bar_idx = bar_id_list[0];
 		} else {
-			pr_info("2, XDMA config BAR unexpected %d.\n",
+			pr_warn("2 BARs, XDMA config BAR unexpected %d.\n",
 				config_bar_pos);
 		}
 		break;
 
 	case 3:
 	case 4:
+		if(config_bar_pos<0)
+		{//config bar must be in the middle - verify by probing expected position
+			if ((num_bars==3)&&is_config_bar(xdev, bar_id_list[1], XDMA_BAR_SIZE))
+			{
+				xdev->config_bar_idx=bar_id_list[1];
+				config_bar_pos=1;
+			}
+			else if ((num_bars==4)&&is_config_bar(xdev, bar_id_list[2], XDMA_BAR_SIZE))
+			{
+				xdev->config_bar_idx=bar_id_list[2];
+				config_bar_pos=2;
+			}
+			else 
+				goto no_config_bar;
+		}
 		if ((config_bar_pos == 1) || (config_bar_pos == 2)) {
 			/* user bar at bar #0 */
 			xdev->user_bar_idx = bar_id_list[0];
 			/* bypass bar at the last bar */
 			xdev->bypass_bar_idx = bar_id_list[num_bars - 1];
 		} else {
-			pr_info("3/4, XDMA config BAR unexpected %d.\n",
+			pr_warn("3/4 BARs, XDMA config BAR unexpected %d.\n",
 				config_bar_pos);
 		}
 		break;
 
 	default:
+		if(xdev->config_bar_idx<0)
+			goto no_config_bar;
 		/* Should not occur - warn user but safe to continue */
-		pr_info("Unexpected # BARs (%d), XDMA config BAR only.\n",
+		pr_warn("Unexpected # BARs (%d), XDMA config BAR only.\n",
 			num_bars);
 		break;
 	}
 	pr_info("%d BARs: config %d, user %d, bypass %d.\n", num_bars,
-		config_bar_pos, xdev->user_bar_idx, xdev->bypass_bar_idx);
+		xdev->config_bar_idx, xdev->user_bar_idx, xdev->bypass_bar_idx);
 	return 0;
+	
+no_config_bar:
+	pr_err("Failed to detect XDMA config BAR\n");
+	return -EINVAL;
 }
-#endif
+
 
 /* map_bars() -- map device regions into kernel virtual address space
  *
@@ -1695,34 +1762,22 @@ static int identify_bars(struct xdma_dev *xdev, int *bar_id_list, int num_bars,
 static int map_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 {
 	int rv;
-
-#ifdef XDMA_CONFIG_BAR_NUM
-	rv = map_single_bar(xdev, dev, XDMA_CONFIG_BAR_NUM);
-	if (rv <= 0) {
-		pr_info("%s, map config bar %d failed, %d.\n",
-			dev_name(&dev->dev), XDMA_CONFIG_BAR_NUM, rv);
-		return -EINVAL;
-	}
-
-	if (is_config_bar(xdev, XDMA_CONFIG_BAR_NUM) == 0) {
-		pr_info("%s, unable to identify config bar %d.\n",
-			dev_name(&dev->dev), XDMA_CONFIG_BAR_NUM);
-		return -EINVAL;
-	}
-	xdev->config_bar_idx = XDMA_CONFIG_BAR_NUM;
-
-	return 0;
-#else
 	int i;
 	int bar_id_list[XDMA_BAR_NUM];
 	int bar_id_idx = 0;
-	int config_bar_pos = 0;
+	int config_bar_pos = -1;
 
 	/* iterate through all the BARs */
 	for (i = 0; i < XDMA_BAR_NUM; i++) {
-		int bar_len;
-
-		bar_len = map_single_bar(xdev, dev, i);
+		int bar_len = map_single_bar(xdev, dev, i);
+		/* if config_bar_num was set, make sure that the input was really set to config BAR*/
+		if( (i==config_bar_num)&&is_config_bar(xdev, config_bar_num, bar_len) )
+		{
+			xdev->config_bar_idx = config_bar_num;
+			config_bar_pos = bar_id_idx;
+		}
+		
+		
 		if (bar_len == 0) {
 			continue;
 		} else if (bar_len < 0) {
@@ -1730,31 +1785,15 @@ static int map_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 			goto fail;
 		}
 
-		/* Try to identify BAR as XDMA control BAR */
-		if ((bar_len >= XDMA_BAR_SIZE) && (xdev->config_bar_idx < 0)) {
-			if (is_config_bar(xdev, i)) {
-				xdev->config_bar_idx = i;
-				config_bar_pos = bar_id_idx;
-				pr_info("config bar %d, pos %d.\n",
-					xdev->config_bar_idx, config_bar_pos);
-			}
-		}
 
 		bar_id_list[bar_id_idx] = i;
 		bar_id_idx++;
 	}
 
-	/* The XDMA config BAR must always be present */
-	if (xdev->config_bar_idx < 0) {
-		pr_info("Failed to detect XDMA config BAR\n");
-		rv = -EINVAL;
-		goto fail;
-	}
-
 	rv = identify_bars(xdev, bar_id_list, bar_id_idx, config_bar_pos);
 	if (rv < 0) {
 		pr_err("Failed to identify bars\n");
-		return rv;
+		goto fail;
 	}
 
 	/* successfully mapped all required BAR regions */
@@ -1764,7 +1803,6 @@ fail:
 	/* unwind; unmap any BARs that we did map */
 	unmap_bars(xdev, dev);
 	return rv;
-#endif
 }
 
 /*
