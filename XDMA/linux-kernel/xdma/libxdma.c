@@ -1554,49 +1554,40 @@ static void unmap_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 	}
 }
 
-static int map_single_bar(struct xdma_dev *xdev, struct pci_dev *dev, int idx)
+static int map_single_bar(struct xdma_dev *xdev, struct pci_dev *dev, int idx, resource_size_t *bar_len)
 {
 	resource_size_t bar_start;
-	resource_size_t bar_len;
-	resource_size_t map_len;
 
 	bar_start = pci_resource_start(dev, idx);
-	bar_len = pci_resource_len(dev, idx);
-	map_len = bar_len;
+	*bar_len = pci_resource_len(dev, idx);
 
 	xdev->bar[idx] = NULL;
 
 	/* do not map BARs with length 0. Note that start MAY be 0! */
-	if (!bar_len) {
+	if (*bar_len==0) {
 		//pr_info("BAR #%d is not present - skipping\n", idx);
 		return 0;
 	}
 
-	/* BAR size exceeds maximum desired mapping? */
-	if (bar_len > INT_MAX) {
-		pr_info("Limit BAR %d mapping from %llu to %d bytes\n", idx,
-			(u64)bar_len, INT_MAX);
-		map_len = (resource_size_t)INT_MAX;
-	}
 	/*
 	 * map the full device memory or IO region into kernel virtual
 	 * address space
 	 */
-	dbg_init("BAR%d: %llu bytes to be mapped.\n", idx, (u64)map_len);
-	xdev->bar[idx] = pci_iomap(dev, idx, map_len);
+	dbg_init("BAR%d: %llu bytes to be mapped.\n", idx, *bar_len);
+	xdev->bar[idx] = pci_iomap(dev, idx, *bar_len);
 
 	if (!xdev->bar[idx]) {
 		pr_info("Could not map BAR %d.\n", idx);
 		return -1;
 	}
 
-	pr_info("BAR%d at 0x%llx mapped at 0x%p, length=%llu(/%llu)\n", idx,
-		(u64)bar_start, xdev->bar[idx], (u64)map_len, (u64)bar_len);
+	pr_info("BAR%d at 0x%llx mapped at 0x%p, length=%llu\n", idx,
+		(u64)bar_start, xdev->bar[idx],  *bar_len);
 
-	return (int)map_len;
+	return 0;
 }
 
-static bool is_config_bar(struct xdma_dev *xdev, int idx, int len)
+static bool is_config_bar(struct xdma_dev *xdev, int idx, resource_size_t len)
 {
 	u32 irq_id = 0;
 	u32 cfg_id = 0;
@@ -1609,7 +1600,7 @@ static bool is_config_bar(struct xdma_dev *xdev, int idx, int len)
 		
 	if (len<XDMA_BAR_SIZE)
 	{
-		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x, len=%d\n",
+		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x, len=%llu\n",
 			 idx, irq_id, cfg_id, len);
 		dbg_init("Hardware was not probed."); 
 		return false; 
@@ -1623,7 +1614,7 @@ static bool is_config_bar(struct xdma_dev *xdev, int idx, int len)
 		dbg_init("BAR %d is the XDMA config BAR\n", idx);
 		return true;
 	} else {
-		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x, len=%d\n",
+		dbg_init("BAR %d is NOT the XDMA config BAR: 0x%x, 0x%x, len=%llu\n",
 			 idx, irq_id, cfg_id, len);
 		return false;
 	}
@@ -1769,7 +1760,8 @@ static int map_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 
 	/* iterate through all the BARs */
 	for (i = 0; i < XDMA_BAR_NUM; i++) {
-		int bar_len = map_single_bar(xdev, dev, i);
+		resource_size_t bar_len =0;
+		rv=map_single_bar(xdev, dev, i, &bar_len);
 		/* if config_bar_num was set, make sure that the input was really set to config BAR*/
 		if( (i==config_bar_num)&&is_config_bar(xdev, config_bar_num, bar_len) )
 		{
@@ -1780,7 +1772,7 @@ static int map_bars(struct xdma_dev *xdev, struct pci_dev *dev)
 		
 		if (bar_len == 0) {
 			continue;
-		} else if (bar_len < 0) {
+		} else if (rv< 0) {
 			rv = -EINVAL;
 			goto fail;
 		}
