@@ -351,7 +351,7 @@ static ssize_t char_sgdma_read_write(struct file *file, const char __user *buf,
 		return -EINVAL;
 	}
 	/*sanity checks for offsets. alignment check is redundunt, but doesn't hurt*/
-	rv=position_check(xdev->bar_size[xcdev->bar], *pos, engine->addr_align);
+	rv=position_check(~(((loff_t) 1)<<((sizeof(loff_t))*8-1))/*max loff_t*/, *pos, engine->addr_align);
 	if (rv < 0)
 		return rv;
 	rv = check_transfer_align(engine, buf, count, *pos, 1);
