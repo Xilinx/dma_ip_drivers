@@ -176,3 +176,64 @@ Frequently asked questions:
      driver can be modified such that some channels are interrupt driven while
      others are polling driven. Refer to the poll mode section of PG195 for
      additional information on using the PCIe DMA IP in poll mode. 
+
+  Q: How to improve the driver performance and/or latency in poll mode?
+  A: First of all, get a baseline by measuring performance and/or latency in 
+     interrupt mode and standard poll mode. Then see if your design can actually
+     provide more than this (i.e. AXI peripherals can supply/consume data immediately,
+     either directly or through a buffer). If you have several "slow" peripherals,
+     you can try increasing number of C2H or H2C channels. While one channel is
+     busy waiting its data, the other channel can do its job. Note that having
+     multiple channels if your peripherals can supply/consume data immediately 
+     will not increase performance and thus only wastes resources.
+
+     Now, after you tweaked your design and become familiar with its capabilities,
+     you can tweak the driver' poll settings which are defined as following:
+        /* Advanced Poll Mode flags */
+        #define POLL_ENABLE                        (1 << 0)
+        #define POLL_ENABLE_THREAD_SCHED_FIFO      (1 << 1)
+        #define POLL_DISABLE_THREAD_TO_CPU_BINGING (1 << 2)
+        #define POLL_SINGLE_THREAD                 (1 << 3)
+
+    Set POLL_ENABLE_THREAD_SCHED_FIFO for RT kernel to increase poll threads
+    priorities. This should improve driver latencies by not allowing lower priority
+    tasks to preempt XDMA polling. The possible downside is that lower priority tasks
+    may get less CPU time while polling is active.
+
+    Set POLL_DISABLE_THREAD_TO_CPU_BINGING to disable thread to CPU binding in the
+    driver. This allows you to manually bind poll threads to certain CPU cores
+    like this:
+        # Get Poll Thread PID by looking for cmpl_status_th threads
+        ps -eaf | grep cmpl_status_th
+        # Bind thread to certain CPUs 
+        taskset -p <CPU Mask> <Poll Thread PID>
+    Alternatively, you can use a tool that dynamically binds poll threads to certain
+    CPU cores. The idea behind this tweak is that migrating a task from one CPU core
+    to another is an expensive task. Having no task migration can give you a huge
+    performance and/or latency benefits on certain systems. Bind userspace threads
+    that work with corresponding DMA channels to the corresponding CPUs to get 
+    the best result. Use a profiling tool (like lttng) to visualize the scheduling
+    details.
+    Note that if you set this flag, you really should bind poll threads to certain CPU 
+    cores, otherwise you allow the system to do that for you and it probably will not 
+    do a very good job.
+
+    Set POLL_SINGLE_THREAD to limit number of poll threads to 1. Having a single 
+    thread is the most effective way to interact with XDMA because it eliminates or 
+    significantly reduces the amount of context switches and task migrations,
+    reducing overhead and giving your workload the maximum CPU time it can get on
+    your system. Note that if you set this flag, you probably want your userspace 
+    app to interact with XDMA within a single userspace thread too, and you also
+    would want to use POLL_DISABLE_THREAD_TO_CPU_BINGING flag and bind both poll
+    thread and userspace thread to the same CPU core. Also note that the driver
+    effectively becomes single channel, so if you are accessing a "slow" AXI peripheral,
+    it will decrease overall performance, and having multiple H2C or C2H channels 
+    will not improve the performance in this case.
+
+    Overall, to get the maximum performance you should understand your design
+    requirements and implementation details and know what bottlenecks are you
+    trying to fix with certain flags. To use all flags:
+
+        Change: insmod xdma/xdma.ko poll_mode=1
+        To:     insmod xdma/xdma.ko poll_mode=15
+                <add your CPU pinning code>

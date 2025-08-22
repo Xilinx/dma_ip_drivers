@@ -36,7 +36,11 @@
 /* Module Parameters */
 static unsigned int poll_mode;
 module_param(poll_mode, uint, 0644);
-MODULE_PARM_DESC(poll_mode, "Set 1 for hw polling, default is 0 (interrupts)");
+MODULE_PARM_DESC(poll_mode, "Set 1 for hw polling, default is 0 (interrupts)\n"
+                            "Advanced flags:\n"
+						    "POLL_ENABLE_THREAD_SCHED_FIFO      (1 << 1)\n"
+                            "POLL_DISABLE_THREAD_TO_CPU_BINGING (1 << 2)\n"
+                            "POLL_SINGLE_THREAD                 (1 << 3)\n");
 
 static unsigned int interrupt_mode;
 module_param(interrupt_mode, uint, 0644);
@@ -111,7 +115,7 @@ static inline int xdev_list_add(struct xdma_dev *xdev)
 		xdev->idx = 0;
 		if (poll_mode) {
 			int rv = xdma_threads_create(xdev->h2c_channel_max +
-					xdev->c2h_channel_max);
+					xdev->c2h_channel_max, poll_mode);
 			if (rv < 0) {
 				mutex_unlock(&xdev_mutex);
 				return rv;
