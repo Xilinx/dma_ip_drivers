@@ -27,6 +27,7 @@
 #include <linux/timer.h>
 #include <linux/delay.h>
 #include <linux/sched.h>
+#include <linux/vmalloc.h>
 
 #include "qdma_compat.h"
 #include "xdev.h"
