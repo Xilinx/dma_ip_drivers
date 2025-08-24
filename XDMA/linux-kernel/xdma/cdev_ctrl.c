@@ -115,8 +115,13 @@ static long version_ioctl(struct xdma_cdev *xcdev, void __user *arg)
 	obj.subsystem_device = xdev->pdev->subsystem_device;
 	obj.feature_id = xdev->feature_id;
 	obj.driver_version = DRV_MOD_VERSION_NUMBER;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(4, 19, 0)
 	obj.domain = 0;
 	obj.bus = PCI_BUS_NUM(xdev->pdev->devfn);
+#else
+	obj.domain = xdev->pdev->slot->number;
+	obj.bus = xdev->pdev->bus->number;
+#endif
 	obj.dev = PCI_SLOT(xdev->pdev->devfn);
 	obj.func = PCI_FUNC(xdev->pdev->devfn);
 	if (copy_to_user(arg, &obj, sizeof(struct xdma_ioc_info)))
@@ -194,9 +199,9 @@ int bridge_mmap(struct file *file, struct vm_area_struct *vma)
 	struct xdma_dev *xdev;
 	struct xdma_cdev *xcdev = (struct xdma_cdev *)file->private_data;
 	unsigned long off;
-	unsigned long phys;
+	resource_size_t phys;
 	unsigned long vsize;
-	unsigned long psize;
+	resource_size_t psize;
 	int rv;
 
 	rv = xcdev_check(__func__, xcdev, 0);
