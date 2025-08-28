@@ -68,16 +68,18 @@ else # bundled install
 	docs_install_path ?= $(install_path)/doc
 endif
 
+udev_rules_path ?= /etc/udev/rules.d
+
 .PHONY: eval.mak
 
 .PHONY: default
 default: apps driver post
 
 .PHONY: install
-install: install-apps install-dev install-mods
+install: install-apps install-udev install-dev install-mods
 
 .PHONY: uninstall
-uninstall: uninstall-apps uninstall-dev uninstall-mods
+uninstall: uninstall-apps uninstall-udev uninstall-dev uninstall-mods
 
 .PHONY: apps
 apps:
@@ -121,6 +123,18 @@ install-mods:
 	@install -v -m 644 $(bin_dir)/*.ko /lib/modules/$(shell uname -r)/qdma
 	@depmod -a || true
 
+
+.PHONY: install-udev
+install-udev:
+	@mkdir -p -m 755 $(udev_rules_path)
+	@install -v -m 755 udev/50-qdma.rules $(udev_rules_path)
+	@echo "reloadeing udev rules:"
+	@udevadm control --reload-rules
+	@udevadm trigger
+
+.PHONY: uninstall-udev
+uninstall-udev:
+	@/bin/rm -f $(udev_rules_path)/50-qdma.rules
 
 .PHONY: install-apps
 install-apps:
