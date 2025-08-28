@@ -413,11 +413,11 @@ static int engine_reg_dump(struct xdma_engine *engine)
 static void engine_status_dump(struct xdma_engine *engine)
 {
 	u32 v = engine->status;
-	char buffer[256];
+	char buffer[400];
 	char *buf = buffer;
 	int len = 0;
 
-	len = sprintf(buf, "SG engine %s status: 0x%08x: ", engine->name, v);
+	len = sprintf(buf, "SG engine %.16s status: 0x%08x: ", engine->name, v);
 
 	if ((v & XDMA_STAT_BUSY))
 		len += sprintf(buf + len, "BUSY,");
@@ -433,7 +433,7 @@ static void engine_status_dump(struct xdma_engine *engine)
 		if ((v & XDMA_STAT_MAGIC_STOPPED))
 			len += sprintf(buf + len, "MAGIC_STOPPED ");
 		if ((v & XDMA_STAT_INVALID_LEN))
-			len += sprintf(buf + len, "INVLIAD_LEN ");
+			len += sprintf(buf + len, "INVALID_LEN ");
 		if ((v & XDMA_STAT_IDLE_STOPPED))
 			len += sprintf(buf + len, "IDLE_STOPPED ");
 		buf[len - 1] = ',';
