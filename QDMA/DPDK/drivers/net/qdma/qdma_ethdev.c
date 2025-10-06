@@ -608,7 +608,11 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	dma_priv = (struct qdma_pci_dev *)dev->data->dev_private;
 
 #ifdef RTE_LIBRTE_SPIRENT
-    dma_priv->port = dev->port_no;
+	/*
+	 * port_id seems like it is set correctly. Since we're calling rte_eth_dev_pci_generic_probe in
+	 * eth_qdma_pci_probe, port_no is always set to zero.
+	 */
+	dma_priv->port = dev->port_id;
 #endif
 
 	dma_priv->is_vf = 0;
