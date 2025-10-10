@@ -97,7 +97,7 @@
 #define XDMA_ENGINE_CREDIT_XFER_MAX_DESC	0x3FF
 
 /* maximum size of a single DMA transfer descriptor */
-#define XDMA_DESC_BLEN_BITS	27
+#define XDMA_DESC_BLEN_BITS	28
 #define XDMA_DESC_BLEN_MAX	((1 << (XDMA_DESC_BLEN_BITS)) - 1)
 
 /* bits of the SG DMA control register */

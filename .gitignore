@@ -1,0 +1,100 @@
+# Linux Kernel Module Build Files
+*.o
+*.ko
+*.mod
+*.mod.c
+*.order
+*.symvers
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+
+# Kernel module specific
+*.ko.unsigned
+*.ko.cmd
+
+# Object files
+*.o.cmd
+*.mod.o
+*.mod.o.cmd
+
+# Compiled binaries (tools)
+XDMA/linux-kernel/tools/dma_from_device
+XDMA/linux-kernel/tools/dma_to_device
+XDMA/linux-kernel/tools/performance
+XDMA/linux-kernel/tools/reg_rw
+XDMA/linux-kernel/tools/test_chrdev
+XDMA/linux-kernel/tools/*.o
+
+# Editor and IDE files
+*.swp
+*.swo
+*~
+.*.sw?
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+
+# Backup files
+*.bak
+*.orig
+*~
+
+# Dependency files
+*.d
+
+# Generated documentation
+*.html
+*.pdf
+/Documentation/DocBook/
+
+# Patch files
+*.patch
+*.diff
+
+# Compressed files
+*.tar
+*.tar.gz
+*.tar.bz2
+*.zip
+
+# Core dumps
+core
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# C/C++ build artifacts
+*.a
+*.la
+*.lo
+.libs/
+.deps/
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Log files
+*.log
+*.out
+*.err
+
+# Test results
+test_results/
+*.test
+
+# Personal notes and documentation
+DRIVER_STATUS.md
+notes.txt
+TODO.txt
