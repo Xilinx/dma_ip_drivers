@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -646,9 +646,7 @@ int qdma_get_hw_version(struct rte_eth_dev *dev)
 		version_info.qdma_rtl_version_str);
 	PMD_DRV_LOG(INFO, "QDMA DEVICE TYPE : %s\n",
 		version_info.qdma_device_type_str);
-	PMD_DRV_LOG(INFO, "QDMA VIVADO RELEASE ID : %s\n",
-		version_info.qdma_vivado_release_id_str);
-	if (version_info.ip_type == QDMA_VERSAL_HARD_IP) {
+		if (version_info.ip_type == QDMA_VERSAL_HARD_IP) {
 		PMD_DRV_LOG(INFO, "QDMA VERSAL IP TYPE : %s\n",
 			version_info.qdma_ip_type_str);
 	}

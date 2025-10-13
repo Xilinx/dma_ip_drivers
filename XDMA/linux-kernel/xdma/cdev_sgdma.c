@@ -775,8 +775,7 @@ static int ioctl_do_align_get(struct xdma_engine *engine, unsigned long arg)
 	return put_user(engine->addr_align, (int __user *)arg);
 }
 
-
-static int ioctl_do_aperture_dma(struct xdma_engine *engine, unsigned long arg,
+static int ioctl_do_aperture_dma(struct xdma_dev *xdev, struct xdma_engine *engine, unsigned long arg,
 				bool write)
 {
 	struct xdma_aperture_ioctl io;
@@ -819,9 +818,16 @@ static int ioctl_do_aperture_dma(struct xdma_engine *engine, unsigned long arg,
 		return rv;
 
 	io.error = 0;
-	res = xdma_xfer_aperture(engine, write, io.ep_addr, io.aperture,
-				&cb.sgt, 0, write ? h2c_timeout * 1000 :
-						c2h_timeout * 1000);
+	if (io.aperture == io.len) {
+		/* Use read/write interface for full aperture transfers */
+		res = xdma_xfer_submit(xdev, engine->channel, write, io.ep_addr,
+					&cb.sgt, 0, write ? h2c_timeout * 1000 :
+							c2h_timeout * 1000);
+	} else {
+		res = xdma_xfer_aperture(engine, write, io.ep_addr, io.aperture,
+					&cb.sgt, 0, write ? h2c_timeout * 1000 :
+							c2h_timeout * 1000);
+	}
 
 	char_sgdma_unmap_user_buf(&cb, write);
 	if (res < 0)
@@ -831,6 +837,68 @@ static int ioctl_do_aperture_dma(struct xdma_engine *engine, unsigned long arg,
 
 	rv = copy_to_user((struct xdma_aperture_ioctl __user *)arg, &io,
 				sizeof(struct xdma_aperture_ioctl));
+	if (rv < 0) {
+		dbg_tfr("%s failed to copy to user space 0x%lx, %ld\n",
+			engine->name, arg, res);
+		return -EINVAL;
+	}
+
+	return io.error;
+}
+	
+static int ioctl_do_submit_dma(struct xdma_dev *xdev, struct xdma_engine *engine, unsigned long arg, bool write)
+{
+	struct xdma_submit_ioctl io;
+	struct xdma_io_cb cb;
+	ssize_t res;
+	int rv;
+
+	rv = copy_from_user(&io, (struct xdma_submit_ioctl __user *)arg,
+				sizeof(struct xdma_submit_ioctl));
+	if (rv < 0) {
+		dbg_tfr("%s failed to copy from user space 0x%lx\n",
+			engine->name, arg);
+		return -EINVAL;
+	}
+
+	dbg_tfr("%s, Submit W %d, buf 0x%lx,%lu, ep %llu.\n",
+		engine->name, write, io.buffer, io.len, io.ep_addr);
+
+	if ((write && engine->dir != DMA_TO_DEVICE) ||
+	    (!write && engine->dir != DMA_FROM_DEVICE)) {
+		pr_err("r/w mismatch. W %d, dir %d.\n", write, engine->dir);
+		return -EINVAL;
+	}
+
+	rv = check_transfer_align(engine, (char *)io.buffer, io.len,
+				io.ep_addr, 1);
+	if (rv) {
+		pr_info("Invalid transfer alignment detected\n");
+		return rv;
+	}
+
+	memset(&cb, 0, sizeof(struct xdma_io_cb));
+	cb.buf = (char __user *)io.buffer;
+	cb.len = io.len;
+	cb.ep_addr = io.ep_addr;
+	cb.write = write;
+	rv = char_sgdma_map_user_buf_to_sgl(&cb, write);
+	if (rv < 0)
+		return rv;
+
+	io.error = 0;
+	res = xdma_xfer_submit(xdev, engine->channel, write, io.ep_addr,
+				&cb.sgt, 0, write ? h2c_timeout * 1000 :
+						c2h_timeout * 1000);
+
+	char_sgdma_unmap_user_buf(&cb, write);
+	if (res < 0)
+		io.error = res;
+	else
+		io.done = res;
+
+	rv = copy_to_user((struct xdma_submit_ioctl __user *)arg, &io,
+				sizeof(struct xdma_submit_ioctl));
 	if (rv < 0) {
 		dbg_tfr("%s failed to copy to user space 0x%lx, %ld\n",
 			engine->name, arg, res);
@@ -876,10 +944,16 @@ static long char_sgdma_ioctl(struct file *file, unsigned int cmd,
 		rv = ioctl_do_align_get(engine, arg);
 		break;
 	case IOCTL_XDMA_APERTURE_R:
-		rv = ioctl_do_aperture_dma(engine, arg, 0);
+		rv = ioctl_do_aperture_dma(xdev, engine, arg, 0);
 		break;
 	case IOCTL_XDMA_APERTURE_W:
-		rv = ioctl_do_aperture_dma(engine, arg, 1);
+		rv = ioctl_do_aperture_dma(xdev, engine, arg, 1);
+		break;
+	case IOCTL_XDMA_SUBMIT_R:
+		rv = ioctl_do_submit_dma(xdev, engine, arg, 0);
+		break;
+	case IOCTL_XDMA_SUBMIT_W:
+		rv = ioctl_do_submit_dma(xdev, engine, arg, 1);
 		break;
 	default:
 		dbg_perf("Unsupported operation\n");

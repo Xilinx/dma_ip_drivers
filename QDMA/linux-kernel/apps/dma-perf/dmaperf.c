@@ -3,7 +3,7 @@
  * to enable the user to execute the QDMA functionality
  *
  * Copyright (c) 2018-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -319,8 +319,8 @@ static int arg_read_int_array(char *s, unsigned int *v, unsigned int max_arr_siz
     char *elem;
     int cnt = 0;
 
-    memset(str, '\0', slen + 1);
-    strncpy(str, s + 1, slen - trail_blanks - 2);
+    memset(str, '\0', slen - trail_blanks + 1);
+    strncpy(str, s + 1, slen - trail_blanks - 1);
     str[slen] = '\0';
 
     elem = strtok(str, " ,");/* space or comma separated */
@@ -781,6 +781,7 @@ static void parse_config_file(const char *cfg_fname)
 	char rng_sz[100] = {'\0'};
 	char rng_sz_path[200] = {'\0'};
     	int rng_sz_fd, ret = 0;
+	struct stat st;
 
 	fp = fopen(cfg_fname, "r");
 	if (fp == NULL)
@@ -804,7 +805,7 @@ static void parse_config_file(const char *cfg_fname)
 			else if(!strncmp(value, "st", 2))
 				mode = Q_MODE_ST;
 			else {
-				printf("Error: Unkown mode");
+				printf("Error: Unknown mode\n");
 				goto prase_cleanup;
 			}
 		} else if (!strncmp(config, "dir", 3)) {
@@ -815,7 +816,7 @@ static void parse_config_file(const char *cfg_fname)
 			else if(!strncmp(value, "bi", 2))
 				dir = Q_DIR_BI;
 			else {
-				printf("Error: Unkown dir");
+				printf("Error: Unknown dir\n");
 				goto prase_cleanup;
 			}
 		} else if (!strncmp(config, "name", 3)) {
@@ -1089,6 +1090,12 @@ static void parse_config_file(const char *cfg_fname)
 	system(rng_sz_path);
 	snprintf(rng_sz_path, 200, "glbl_rng_sz");
 
+	stat(rng_sz_path, &st);
+	if (st.st_size == 0) {
+		printf("Error: Global csr get failed\n");
+		exit(1);
+	}
+
 	rng_sz_fd = open(rng_sz_path, O_RDONLY);
 	if (rng_sz_fd < 0) {
 		printf("Could not open %s\n", rng_sz_path);
@@ -1123,6 +1130,7 @@ static void parse_config_file(const char *cfg_fname)
 
 prase_cleanup:
 	fclose(fp);
+	exit(1);
 }
 
 #define MAX_AIO_EVENTS 65536
@@ -1738,7 +1746,7 @@ static void io_proc_cleanup(struct io_info *_info)
 {
 	unsigned int i;
 	unsigned int q_offset;
-	unsigned int dir_factor = (dir == Q_DIR_BI) ? 1 : 2;
+	unsigned int dir_factor = (dir == Q_DIR_BI) ? 2 : 1;
 	unsigned int q_lst_idx_base;
 	unsigned char is_q_stop = (_info->q_ctrl && _info->q_started);
 	int reg_value = 0;

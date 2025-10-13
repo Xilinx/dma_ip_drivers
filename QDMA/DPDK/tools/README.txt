@@ -1,3 +1,5 @@
+0001-PKTGEN-24.03.1-Patch-to-add-Jumbo-packet-support.patch
+is the patch file over dpdk-pktgen v23.11.0 and
 0001-PKTGEN-22.04.1-Patch-to-add-Jumbo-packet-support.patch
 is the patch file over dpdk-pktgen v22.11.0 and
 0001-PKTGEN-20.12.0-Patch-to-add-Jumbo-packet-support.patch
@@ -14,7 +16,7 @@ This patch is used for performance testing with dpdk-pktgen application.
  *   BSD LICENSE
  *
  *   Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- *   Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ *   Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions

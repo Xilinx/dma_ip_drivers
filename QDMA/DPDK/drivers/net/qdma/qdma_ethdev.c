@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -596,13 +596,6 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 	dma_priv->bypass_bar_idx = BAR_ID_INVALID;
 	dma_priv->user_bar_idx = BAR_ID_INVALID;
 
-	/* Check and handle device devargs*/
-	if (qdma_check_kvargs(dev->device->devargs, dma_priv)) {
-		PMD_DRV_LOG(INFO, "devargs failed\n");
-		rte_free(dev->data->mac_addrs);
-		return -EINVAL;
-	}
-
 	/* Store BAR address and length of Config BAR */
 	baseaddr = (uint8_t *)
 			pci_dev->mem_resource[dma_priv->config_bar_idx].addr;
@@ -649,6 +642,13 @@ int qdma_eth_dev_init(struct rte_eth_dev *dev)
 
 	/* Getting the device attributes from the Hardware */
 	qdma_device_attributes_get(dev);
+
+	/* Check and handle device devargs*/
+	if (qdma_check_kvargs(dev->device->devargs, dma_priv)) {
+		PMD_DRV_LOG(INFO, "devargs failed\n");
+		rte_free(dev->data->mac_addrs);
+		return -EINVAL;
+	}
 
 	/* Setting default Mode to RTE_PMD_QDMA_TRIG_MODE_USER_TIMER */
 	dma_priv->trigger_mode = RTE_PMD_QDMA_TRIG_MODE_USER_TIMER;

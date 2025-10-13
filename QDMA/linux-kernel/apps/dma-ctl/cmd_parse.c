@@ -3,7 +3,7 @@
  * to enable the user to execute the QDMA functionality
  *
  * Copyright (c) 2018-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -28,6 +28,12 @@ static int read_range(int argc, char *argv[], int i, unsigned int *v1,
 
 static const char *progname;
 #define DESC_SIZE_64B		3
+
+#ifdef CONFIG_PCI_DOMAINS_GENERIC
+#define BUS_DEVICE_FUNC_MAX_LEN 15
+#else
+#define BUS_DEVICE_FUNC_MAX_LEN 11
+#endif
 
 #define Q_ADD_ATTR_IGNORE_MASK ~((1 << QPARM_IDX)  | \
 				(1 << QPARM_MODE)  | \
@@ -271,7 +277,7 @@ static int parse_ifname(char *name, struct xcmd_info *xcmd)
 	char *p;
 
 	/* qdmaN of qdmavfN*/
-	if (len > 11) {
+	if (len > BUS_DEVICE_FUNC_MAX_LEN) {
 		warnx("interface name %s too long, expect qdma<N>.\n", name);
 		return -EINVAL;
 	}

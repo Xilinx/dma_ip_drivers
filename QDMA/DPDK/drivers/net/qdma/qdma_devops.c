@@ -2,7 +2,7 @@
  * BSD LICENSE
  *
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1523,20 +1523,22 @@ int qdma_dev_rx_queue_start(struct rte_eth_dev *dev, uint16_t qid)
 		q_prefetch_ctxt.valid = 1;
 
 #ifdef QDMA_LATENCY_OPTIMIZED
-		q_cmpt_ctxt.full_upd = 1;
+		q_cmpt_ctxt.higher_dword.bit.full_upd = 1;
 #endif //QDMA_LATENCY_OPTIMIZED
-		q_cmpt_ctxt.en_stat_desc = 1;
-		q_cmpt_ctxt.trig_mode = rxq->triggermode;
-		q_cmpt_ctxt.fnc_id = rxq->func_id;
-		q_cmpt_ctxt.counter_idx = rxq->threshidx;
-		q_cmpt_ctxt.timer_idx = rxq->timeridx;
-		q_cmpt_ctxt.color = CMPT_DEFAULT_COLOR_BIT;
-		q_cmpt_ctxt.ringsz_idx = rxq->cmpt_ringszidx;
+		q_cmpt_ctxt.lower_dword.bit.en_stat_desc = 1;
+		q_cmpt_ctxt.lower_dword.bit.trig_mode = rxq->triggermode;
+		q_cmpt_ctxt.lower_dword.bit.fnc_id = rxq->func_id;
+		q_cmpt_ctxt.lower_dword.bit.counter_idx = rxq->threshidx;
+		q_cmpt_ctxt.lower_dword.bit.timer_idx = rxq->timeridx;
+		q_cmpt_ctxt.lower_dword.bit.color = CMPT_DEFAULT_COLOR_BIT;
+		q_cmpt_ctxt.lower_dword.bit.ringsz_idx = rxq->cmpt_ringszidx;
 		q_cmpt_ctxt.bs_addr = (uint64_t)rxq->rx_cmpt_mz->iova;
-		q_cmpt_ctxt.desc_sz = cmpt_desc_fmt;
-		q_cmpt_ctxt.valid = 1;
+		q_cmpt_ctxt.higher_dword.bit.desc_sz = cmpt_desc_fmt;
+		q_cmpt_ctxt.higher_dword.bit.valid = 1;
+		q_cmpt_ctxt.higher_dword.bit.dir_c2h = 1;
 		if (qdma_dev->dev_cap.cmpt_ovf_chk_dis)
-			q_cmpt_ctxt.ovf_chk_dis = rxq->dis_overflow_check;
+			q_cmpt_ctxt.higher_dword.bit.ovf_chk_dis =
+						rxq->dis_overflow_check;
 
 
 		q_sw_ctxt.desc_sz = SW_DESC_CNTXT_C2H_STREAM_DMA;

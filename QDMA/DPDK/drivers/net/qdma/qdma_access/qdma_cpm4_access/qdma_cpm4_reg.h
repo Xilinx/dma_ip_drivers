@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -88,8 +88,6 @@ extern "C" {
 							sizeof(arr[0]))
 
 
-uint32_t qdma_cpm4_config_num_regs_get(void);
-struct xreg_info *qdma_cpm4_config_regs_get(void);
 #define QDMA_CPM4_CFG_BLK_IDENTIFIER_ADDR              0x00
 #define CFG_BLK_IDENTIFIER_MASK                           GENMASK(31, 20)
 #define CFG_BLK_IDENTIFIER_1_MASK                         GENMASK(19, 16)

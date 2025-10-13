@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -39,7 +39,7 @@
 static int xnl_dev_list(struct sk_buff *skb2, struct genl_info *info);
 
 #ifdef RHEL_RELEASE_VERSION
-#if RHEL_RELEASE_VERSION(8, 3) > RHEL_RELEASE_CODE
+#if RHEL_RELEASE_VERSION(9, 99) >= RHEL_RELEASE_CODE
 static struct nla_policy xnl_policy[XNL_ATTR_MAX] = {
 	[XNL_ATTR_GENMSG] =		{ .type = NLA_NUL_STRING },
 
@@ -70,6 +70,9 @@ static struct nla_policy xnl_policy[XNL_ATTR_MAX] = {
 	[XNL_ATTR_REG_ADDR] =		{ .type = NLA_U32 },
 	[XNL_ATTR_REG_VAL] =		{ .type = NLA_U32 },
 
+	[XNL_ATTR_CSR_INDEX] =          { .type = NLA_U32 },
+	[XNL_ATTR_CSR_COUNT] =          { .type = NLA_U32 },
+
 	[XNL_ATTR_QIDX] =		{ .type = NLA_U32 },
 	[XNL_ATTR_NUM_Q] =		{ .type = NLA_U32 },
 	[XNL_ATTR_QFLAG] =		{ .type = NLA_U32 },
@@ -86,6 +89,9 @@ static struct nla_policy xnl_policy[XNL_ATTR_MAX] = {
 	[XNL_ATTR_RANGE_END] =		{ .type = NLA_U32 },
 
 	[XNL_ATTR_INTR_VECTOR_IDX] =	{ .type = NLA_U32 },
+	[XNL_ATTR_INTR_VECTOR_START_IDX] =      { .type = NLA_U32 },
+	[XNL_ATTR_INTR_VECTOR_END_IDX] =        { .type = NLA_U32 },
+	[XNL_ATTR_RSP_BUF_LEN] =        { .type = NLA_U32 },
 	[XNL_ATTR_PIPE_GL_MAX] =	{ .type = NLA_U32 },
 	[XNL_ATTR_PIPE_FLOW_ID] =	{ .type = NLA_U32 },
 	[XNL_ATTR_PIPE_SLR_ID] =	{ .type = NLA_U32 },
@@ -95,10 +101,18 @@ static struct nla_policy xnl_policy[XNL_ATTR_MAX] = {
 	[XNL_ATTR_Q_STATE]   =		{ .type = NLA_U32 },
 	[XNL_ATTR_ERROR]   =		{ .type = NLA_U32 },
 	[XNL_ATTR_PING_PONG_EN]   =	{ .type = NLA_U32 },
+	[XNL_ATTR_APERTURE_SZ]   =      { .type = NLA_U32 },
+	[XNL_ATTR_DEV_STAT_PING_PONG_LATMIN1]   =       { .type = NLA_U32 },
+	[XNL_ATTR_DEV_STAT_PING_PONG_LATMIN2]   =       { .type = NLA_U32 },
+	[XNL_ATTR_DEV_STAT_PING_PONG_LATMAX1]   =       { .type = NLA_U32 },
+	[XNL_ATTR_DEV_STAT_PING_PONG_LATMAX2]   =       { .type = NLA_U32 },
+	[XNL_ATTR_DEV_STAT_PING_PONG_LATAVG1]   =       { .type = NLA_U32 },
+	[XNL_ATTR_DEV_STAT_PING_PONG_LATAVG2]   =       { .type = NLA_U32 },
 	[XNL_ATTR_DEV]		=	{ .type = NLA_BINARY,
 					  .len = QDMA_DEV_ATTR_STRUCT_SIZE, },
 	[XNL_ATTR_GLOBAL_CSR]		=	{ .type = NLA_BINARY,
 				.len = QDMA_DEV_GLOBAL_CSR_STRUCT_SIZE, },
+	[XNL_ATTR_NUM_REGS]     =      { .type = NLA_U32 },
 #ifdef ERR_DEBUG
 	[XNL_ATTR_QPARAM_ERR_INFO] =    { .type = NLA_U32 },
 #endif
@@ -179,6 +193,7 @@ static struct nla_policy xnl_policy[XNL_ATTR_MAX] = {
 					  .len = QDMA_DEV_ATTR_STRUCT_SIZE, },
 	[XNL_ATTR_GLOBAL_CSR]		=	{ .type = NLA_BINARY,
 				.len = QDMA_DEV_GLOBAL_CSR_STRUCT_SIZE, },
+	[XNL_ATTR_NUM_REGS]     =      { .type = NLA_U32 },
 #ifdef ERR_DEBUG
 	[XNL_ATTR_QPARAM_ERR_INFO] =    { .type = NLA_U32 },
 #endif
@@ -222,7 +237,7 @@ static int xnl_err_induce(struct sk_buff *skb2, struct genl_info *info);
 #endif
 
 #ifdef RHEL_RELEASE_VERSION
-#if RHEL_RELEASE_VERSION(8, 3) > RHEL_RELEASE_CODE
+#if RHEL_RELEASE_VERSION(9, 99) >= RHEL_RELEASE_CODE
 #define GENL_OPS_POLICY
 #endif
 #else
@@ -1075,10 +1090,6 @@ static int xnl_dev_version_capabilities(struct sk_buff *skb2,
 			"=============Hardware Version============\n\n");
 	rv += snprintf(buf + rv, buflen - rv,
 			"RTL Version         : %s\n", ver_info.rtl_version_str);
-	rv += snprintf(buf + rv,
-			buflen - rv,
-			"Vivado ReleaseID    : %s\n",
-			ver_info.vivado_release_str);
 	rv += snprintf(buf + rv,
 			buflen - rv,
 			"QDMA Device Type    : %s\n",

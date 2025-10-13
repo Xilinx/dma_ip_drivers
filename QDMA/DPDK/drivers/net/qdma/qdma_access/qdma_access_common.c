@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -681,11 +681,24 @@ int qdma_acc_reg_dump_buf_len(void *dev_hndl, enum qdma_ip_type ip_type,
 	return rv;
 }
 
+int qdma_reginfo_dump_buf_len(int *n_regs, struct xreg_info *config_regs)
+{
+	int i = 0, bitfield_val = 0;
+	uint32_t len = 0;
+
+	for (i = 0; i < *n_regs; i++)
+		bitfield_val += config_regs[i].num_bitfields;
+	len = (((*n_regs + 1) * DEBGFS_REG_LINE_SZ) +
+			((bitfield_val + 1) * DEBGFS_LINE_SZ));
+	return len;
+}
+
 int qdma_acc_reg_info_len(void *dev_hndl, enum qdma_ip_type ip_type,
 		enum qdma_device_type device_type, int *buflen, int *num_regs)
 {
 	uint32_t len = 0;
 	int rv = 0;
+	struct xreg_info *config_regs = NULL;
 
 	if (!dev_hndl) {
 		qdma_log_error("%s: dev_handle is NULL, err:%d\n",
@@ -717,11 +730,13 @@ int qdma_acc_reg_info_len(void *dev_hndl, enum qdma_ip_type ip_type,
 		break;
 	case QDMA_VERSAL_HARD_IP:
 		if (device_type == QDMA_DEVICE_VERSAL_CPM4) {
-			len = qdma_cpm4_reg_dump_buf_len();
-			*num_regs = (int)((len / REG_DUMP_SIZE_PER_LINE) - 1);
+			*num_regs = (int)qdma_cpm4_config_num_regs_get();
+			config_regs = qdma_cpm4_config_regs_get();
+			len = qdma_reginfo_dump_buf_len(num_regs, config_regs);
 		} else if (device_type == QDMA_DEVICE_VERSAL_CPM5) {
-			len = eqdma_cpm5_reg_dump_buf_len();
-			*num_regs = (int)((len / REG_DUMP_SIZE_PER_LINE) - 1);
+			*num_regs = (int)eqdma_cpm5_config_num_regs_get();
+			config_regs  = eqdma_cpm5_config_regs_get();
+			len = qdma_reginfo_dump_buf_len(num_regs, config_regs);
 		} else {
 			qdma_log_error("%s: Invalid device type, err = %d",
 				__func__, -QDMA_ERR_INV_PARAM);
@@ -729,8 +744,9 @@ int qdma_acc_reg_info_len(void *dev_hndl, enum qdma_ip_type ip_type,
 		}
 		break;
 	case EQDMA_SOFT_IP:
-		len = eqdma_reg_dump_buf_len();
-		*num_regs = (int)((len / REG_DUMP_SIZE_PER_LINE) - 1);
+		*num_regs = (int)eqdma_config_num_regs_get();
+		config_regs = eqdma_config_regs_get();
+		len = qdma_reginfo_dump_buf_len(num_regs, config_regs);
 		break;
 	default:
 		qdma_log_error("%s: Invalid version number, err = %d",
@@ -1382,9 +1398,6 @@ int qdma_hw_access_init(void *dev_hndl, uint8_t is_vf,
 
 	qdma_log_info("IP Type: %s\n",
 		qdma_get_ip_type(dev_hndl, is_vf, version_info.ip_type));
-
-	qdma_log_info("Vivado Release: %s\n",
-		qdma_get_vivado_release_id(version_info.vivado_release));
 
 	if (version_info.ip_type == QDMA_VERSAL_HARD_IP &&
 			version_info.device_type == QDMA_DEVICE_VERSAL_CPM4) {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * BSD LICENSE
  *
@@ -39,6 +39,8 @@ extern "C" {
 #endif
 
 #include "qdma_platform.h"
+
+#define DEBGFS_REG_LINE_SZ              (74)
 
 /**
  * enum eqdma_cpm5_error_idx - qdma errors
@@ -353,6 +355,11 @@ uint32_t eqdma_cpm5_get_config_num_regs(void);
 
 struct xreg_info *eqdma_cpm5_get_config_regs(void);
 
+uint32_t eqdma_cpm5_config_num_regs_get(void);
+
+struct xreg_info *eqdma_cpm5_config_regs_get(void);
+
+int qdma_reginfo_dump_buf_len(int *n_regs, struct xreg_info *config_regs);
 #ifdef __cplusplus
 }
 #endif

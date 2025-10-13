@@ -67,6 +67,16 @@ struct xdma_aperture_ioctl {
 	unsigned long done;
 };
 
+struct xdma_submit_ioctl {
+	uint64_t ep_addr;
+	int channel;
+	unsigned long buffer;
+	size_t len;
+	int timeout_ms;
+	int error;
+	size_t done;
+};
+
 
 /* IOCTL codes */
 
@@ -78,5 +88,7 @@ struct xdma_aperture_ioctl {
 #define IOCTL_XDMA_ALIGN_GET    _IOR('q', 6, int)
 #define IOCTL_XDMA_APERTURE_R   _IOW('q', 7, struct xdma_aperture_ioctl *)
 #define IOCTL_XDMA_APERTURE_W   _IOW('q', 8, struct xdma_aperture_ioctl *)
+#define IOCTL_XDMA_SUBMIT_R     _IOW('q', 9, struct xdma_submit_ioctl *)
+#define IOCTL_XDMA_SUBMIT_W     _IOW('q', 10, struct xdma_submit_ioctl *)
 
 #endif /* _XDMA_IOCALLS_POSIX_H_ */

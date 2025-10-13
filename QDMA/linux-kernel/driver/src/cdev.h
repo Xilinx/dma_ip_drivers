@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -90,7 +90,7 @@ struct qdma_cdev {
 	ssize_t (*fp_aiorw)(unsigned long dev_hndl, unsigned long qhndl,
 			unsigned long count, struct qdma_request **reqv);
 	/** name of the character device*/
-	char name[0];
+	char name[QDMA_QUEUE_NAME_MAXLEN];
 };
 
 /**

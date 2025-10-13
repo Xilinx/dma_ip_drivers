@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -27,6 +27,7 @@
 #include <linux/timer.h>
 #include <linux/delay.h>
 #include <linux/sched.h>
+#include <linux/vmalloc.h>
 
 #include "qdma_compat.h"
 #include "xdev.h"
@@ -442,7 +443,7 @@ static void mbox_timer_handler(unsigned long arg)
 		queue_work(mbox->workq, &mbox->tx_work);
 }
 
-bool qdma_mbox_is_irq_availabe(struct xlnx_dma_dev *xdev)
+bool qdma_mbox_is_irq_available(struct xlnx_dma_dev *xdev)
 {
 	/*MBOX is available in all QDMA Soft Devices for vivado release >
 	 * 2019.1
@@ -489,7 +490,11 @@ void qdma_mbox_stop(struct xlnx_dma_dev *xdev)
 	} while (retry_count != 0);
 	mbox_timer_stop(&xdev->mbox);
 	pr_debug("func_id=%d retry_count=%d\n", xdev->func_id, retry_count);
-	if (qdma_mbox_is_irq_availabe(xdev)) {
+#ifndef __QDMA_VF__
+	if (xdev->dev_cap.mailbox_en && qdma_mbox_is_irq_available(xdev)) {
+#else
+	if (qdma_mbox_is_irq_available(xdev)) {
+#endif
 		if (!xdev->mbox.rx_poll)
 			qdma_mbox_disable_interrupts(xdev, QDMA_DEV);
 	}
@@ -574,7 +579,11 @@ int qdma_mbox_init(struct xlnx_dma_dev *xdev)
 #endif
 	/* ack any received messages in the Q */
 	qdma_mbox_hw_init(xdev, QDMA_DEV);
-	if (qdma_mbox_is_irq_availabe(xdev)) {
+#ifndef __QDMA_VF__
+	if (xdev->dev_cap.mailbox_en && qdma_mbox_is_irq_available(xdev)) {
+#else
+	if (qdma_mbox_is_irq_available(xdev)) {
+#endif
 		if ((xdev->conf.qdma_drv_mode != POLL_MODE) &&
 			(xdev->conf.qdma_drv_mode != LEGACY_INTR_MODE)) {
 			mbox->rx_poll = 0;

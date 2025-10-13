@@ -3163,7 +3163,6 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 	unsigned int maxlen = min_t(unsigned int, aperture, desc_blen_max);
 	unsigned int sg_max;
 	unsigned int tlen = 0;
-	u64 ep_addr_max = ep_addr + aperture - 1;
 	ssize_t done = 0;
 	int i, rv = 0;
 
@@ -3267,7 +3266,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 
 		/* build transfer */
 		sg = req->sg;
-		ep_addr = req->ep_addr + (req->offset & (aperture - 1));
+		ep_addr = req->ep_addr + req->offset;
 		i = req->sg_idx;
 		
 		for (sg = req->sg; i < sg_max && desc_idx < desc_max;
@@ -3283,12 +3282,6 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 			while (tlen) {
 				unsigned int len = min_t(unsigned int, tlen,
 								 maxlen);
-
-				if (ep_addr > ep_addr_max)
-					ep_addr = req->ep_addr;
-
-				if ((ep_addr + len) > ep_addr_max)
-					len = ep_addr_max - ep_addr + 1;
 
 				xdma_desc_set(engine->desc + desc_idx, addr,
 						ep_addr, len, dir);
@@ -3621,6 +3614,8 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 					nents = 0;
 			} else
 				done += xfer->len;
+
+			req->ep_addr += xfer->len;
 
 			break;
 		case TRANSFER_STATE_FAILED:

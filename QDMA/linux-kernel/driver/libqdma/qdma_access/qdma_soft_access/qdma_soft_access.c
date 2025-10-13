@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -1737,30 +1737,31 @@ static void qdma_fill_sw_ctxt(struct qdma_descq_sw_ctxt *sw_ctxt)
  */
 static void qdma_fill_cmpt_ctxt(struct qdma_descq_cmpt_ctxt *cmpt_ctxt)
 {
-	cmpt_ctxt_entries[0].value = cmpt_ctxt->en_stat_desc;
-	cmpt_ctxt_entries[1].value = cmpt_ctxt->en_int;
-	cmpt_ctxt_entries[2].value = cmpt_ctxt->trig_mode;
-	cmpt_ctxt_entries[3].value = cmpt_ctxt->fnc_id;
-	cmpt_ctxt_entries[4].value = cmpt_ctxt->counter_idx;
-	cmpt_ctxt_entries[5].value = cmpt_ctxt->timer_idx;
-	cmpt_ctxt_entries[6].value = cmpt_ctxt->in_st;
-	cmpt_ctxt_entries[7].value = cmpt_ctxt->color;
-	cmpt_ctxt_entries[8].value = cmpt_ctxt->ringsz_idx;
+	cmpt_ctxt_entries[0].value = cmpt_ctxt->lower_dword.bit.en_stat_desc;
+	cmpt_ctxt_entries[1].value = cmpt_ctxt->lower_dword.bit.en_int;
+	cmpt_ctxt_entries[2].value = cmpt_ctxt->lower_dword.bit.trig_mode;
+	cmpt_ctxt_entries[3].value = cmpt_ctxt->lower_dword.bit.fnc_id;
+	cmpt_ctxt_entries[4].value = cmpt_ctxt->lower_dword.bit.counter_idx;
+	cmpt_ctxt_entries[5].value = cmpt_ctxt->lower_dword.bit.timer_idx;
+	cmpt_ctxt_entries[6].value = cmpt_ctxt->lower_dword.bit.in_st;
+	cmpt_ctxt_entries[7].value = cmpt_ctxt->lower_dword.bit.color;
+	cmpt_ctxt_entries[8].value = cmpt_ctxt->lower_dword.bit.ringsz_idx;
 	cmpt_ctxt_entries[9].value = cmpt_ctxt->bs_addr & 0xFFFFFFFF;
 	cmpt_ctxt_entries[10].value =
 		(cmpt_ctxt->bs_addr >> 32) & 0xFFFFFFFF;
-	cmpt_ctxt_entries[11].value = cmpt_ctxt->desc_sz;
+	cmpt_ctxt_entries[11].value = cmpt_ctxt->higher_dword.bit.desc_sz;
 	cmpt_ctxt_entries[12].value = cmpt_ctxt->pidx;
 	cmpt_ctxt_entries[13].value = cmpt_ctxt->cidx;
-	cmpt_ctxt_entries[14].value = cmpt_ctxt->valid;
-	cmpt_ctxt_entries[15].value = cmpt_ctxt->err;
-	cmpt_ctxt_entries[16].value = cmpt_ctxt->user_trig_pend;
-	cmpt_ctxt_entries[17].value = cmpt_ctxt->timer_running;
-	cmpt_ctxt_entries[18].value = cmpt_ctxt->full_upd;
-	cmpt_ctxt_entries[19].value = cmpt_ctxt->ovf_chk_dis;
-	cmpt_ctxt_entries[20].value = cmpt_ctxt->at;
-	cmpt_ctxt_entries[21].value = cmpt_ctxt->vec;
-	cmpt_ctxt_entries[22].value = cmpt_ctxt->int_aggr;
+	cmpt_ctxt_entries[14].value = cmpt_ctxt->higher_dword.bit.valid;
+	cmpt_ctxt_entries[15].value = cmpt_ctxt->higher_dword.bit.err;
+	cmpt_ctxt_entries[16].value =
+				cmpt_ctxt->higher_dword.bit.user_trig_pend;
+	cmpt_ctxt_entries[17].value = cmpt_ctxt->higher_dword.bit.timer_running;
+	cmpt_ctxt_entries[18].value = cmpt_ctxt->higher_dword.bit.full_upd;
+	cmpt_ctxt_entries[19].value = cmpt_ctxt->higher_dword.bit.ovf_chk_dis;
+	cmpt_ctxt_entries[20].value = cmpt_ctxt->higher_dword.bit.at;
+	cmpt_ctxt_entries[21].value = cmpt_ctxt->higher_dword.bit.vec;
+	cmpt_ctxt_entries[22].value = cmpt_ctxt->higher_dword.bit.int_aggr;
 }
 
 /*
@@ -3140,10 +3141,11 @@ static int qdma_cmpt_context_write(void *dev_hndl, uint16_t hw_qid,
 		return -QDMA_ERR_INV_PARAM;
 	}
 
-	if (ctxt->trig_mode > QDMA_CMPT_UPDATE_TRIG_MODE_TMR_CNTR) {
+	if (ctxt->lower_dword.bit.trig_mode >
+			QDMA_CMPT_UPDATE_TRIG_MODE_TMR_CNTR) {
 		qdma_log_error("%s: trig_mode(%d) > (%d) is invalid, err:%d\n",
 					__func__,
-					ctxt->trig_mode,
+					ctxt->lower_dword.bit.trig_mode,
 					QDMA_CMPT_UPDATE_TRIG_MODE_TMR_CNTR,
 					-QDMA_ERR_INV_PARAM);
 		return -QDMA_ERR_INV_PARAM;
@@ -3158,43 +3160,57 @@ static int qdma_cmpt_context_write(void *dev_hndl, uint16_t hw_qid,
 
 	cmpt_ctxt[num_words_count++] =
 		FIELD_SET(QDMA_COMPL_CTXT_W0_EN_STAT_DESC_MASK,
-				ctxt->en_stat_desc) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_EN_INT_MASK, ctxt->en_int) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_TRIG_MODE_MASK, ctxt->trig_mode) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_FNC_ID_MASK, ctxt->fnc_id) |
+				ctxt->lower_dword.bit.en_stat_desc) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_EN_INT_MASK,
+				ctxt->lower_dword.bit.en_int) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_TRIG_MODE_MASK,
+				ctxt->lower_dword.bit.trig_mode) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_FNC_ID_MASK,
+				ctxt->lower_dword.bit.fnc_id) |
 		FIELD_SET(QDMA_COMPL_CTXT_W0_COUNTER_IDX_MASK,
-				ctxt->counter_idx) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_TIMER_IDX_MASK, ctxt->timer_idx) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_INT_ST_MASK, ctxt->in_st) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_COLOR_MASK, ctxt->color) |
-		FIELD_SET(QDMA_COMPL_CTXT_W0_RING_SZ_MASK, ctxt->ringsz_idx);
+				ctxt->lower_dword.bit.counter_idx) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_TIMER_IDX_MASK,
+				ctxt->lower_dword.bit.timer_idx) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_INT_ST_MASK,
+				ctxt->lower_dword.bit.in_st) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_COLOR_MASK,
+				ctxt->lower_dword.bit.color) |
+		FIELD_SET(QDMA_COMPL_CTXT_W0_RING_SZ_MASK,
+				ctxt->lower_dword.bit.ringsz_idx);
 
 	cmpt_ctxt[num_words_count++] =
 		FIELD_SET(QDMA_COMPL_CTXT_W1_BADDR_64_L_MASK, baddr_l);
 
 	cmpt_ctxt[num_words_count++] =
 		FIELD_SET(QDMA_COMPL_CTXT_W2_BADDR_64_H_MASK, baddr_h) |
-		FIELD_SET(QDMA_COMPL_CTXT_W2_DESC_SIZE_MASK, ctxt->desc_sz) |
+		FIELD_SET(QDMA_COMPL_CTXT_W2_DESC_SIZE_MASK,
+				ctxt->higher_dword.bit.desc_sz) |
 		FIELD_SET(QDMA_COMPL_CTXT_W2_PIDX_L_MASK, pidx_l);
 
 
 	cmpt_ctxt[num_words_count++] =
 		FIELD_SET(QDMA_COMPL_CTXT_W3_PIDX_H_MASK, pidx_h) |
 		FIELD_SET(QDMA_COMPL_CTXT_W3_CIDX_MASK, ctxt->cidx) |
-		FIELD_SET(QDMA_COMPL_CTXT_W3_VALID_MASK, ctxt->valid) |
-		FIELD_SET(QDMA_COMPL_CTXT_W3_ERR_MASK, ctxt->err) |
+		FIELD_SET(QDMA_COMPL_CTXT_W3_VALID_MASK,
+				ctxt->higher_dword.bit.valid) |
+		FIELD_SET(QDMA_COMPL_CTXT_W3_ERR_MASK,
+				ctxt->higher_dword.bit.err) |
 		FIELD_SET(QDMA_COMPL_CTXT_W3_USR_TRG_PND_MASK,
-				ctxt->user_trig_pend);
+				ctxt->higher_dword.bit.user_trig_pend);
 
 	cmpt_ctxt[num_words_count++] =
 		FIELD_SET(QDMA_COMPL_CTXT_W4_TMR_RUN_MASK,
-				ctxt->timer_running) |
-		FIELD_SET(QDMA_COMPL_CTXT_W4_FULL_UPDT_MASK, ctxt->full_upd) |
+				ctxt->higher_dword.bit.timer_running) |
+		FIELD_SET(QDMA_COMPL_CTXT_W4_FULL_UPDT_MASK,
+				ctxt->higher_dword.bit.full_upd) |
 		FIELD_SET(QDMA_COMPL_CTXT_W4_OVF_CHK_DIS_MASK,
-				ctxt->ovf_chk_dis) |
-		FIELD_SET(QDMA_COMPL_CTXT_W4_AT_MASK, ctxt->at) |
-		FIELD_SET(QDMA_COMPL_CTXT_W4_INTR_VEC_MASK, ctxt->vec) |
-		FIELD_SET(QDMA_COMPL_CTXT_W4_INTR_AGGR_MASK, ctxt->int_aggr);
+				ctxt->higher_dword.bit.ovf_chk_dis) |
+		FIELD_SET(QDMA_COMPL_CTXT_W4_AT_MASK,
+				ctxt->higher_dword.bit.at) |
+		FIELD_SET(QDMA_COMPL_CTXT_W4_INTR_VEC_MASK,
+				ctxt->higher_dword.bit.vec) |
+		FIELD_SET(QDMA_COMPL_CTXT_W4_INTR_AGGR_MASK,
+				ctxt->higher_dword.bit.int_aggr);
 
 	return qdma_indirect_reg_write(dev_hndl, sel, hw_qid,
 			cmpt_ctxt, num_words_count);
@@ -3229,34 +3245,35 @@ static int qdma_cmpt_context_read(void *dev_hndl, uint16_t hw_qid,
 	if (rv < 0)
 		return rv;
 
-	ctxt->en_stat_desc =
+	ctxt->lower_dword.bit.en_stat_desc =
 		FIELD_GET(QDMA_COMPL_CTXT_W0_EN_STAT_DESC_MASK, cmpt_ctxt[0]);
-	ctxt->en_int = FIELD_GET(QDMA_COMPL_CTXT_W0_EN_INT_MASK, cmpt_ctxt[0]);
-	ctxt->trig_mode =
+	ctxt->lower_dword.bit.en_int =
+		FIELD_GET(QDMA_COMPL_CTXT_W0_EN_INT_MASK, cmpt_ctxt[0]);
+	ctxt->lower_dword.bit.trig_mode =
 		FIELD_GET(QDMA_COMPL_CTXT_W0_TRIG_MODE_MASK, cmpt_ctxt[0]);
-	ctxt->fnc_id =
+	ctxt->lower_dword.bit.fnc_id =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W0_FNC_ID_MASK,
 			cmpt_ctxt[0]));
-	ctxt->counter_idx =
+	ctxt->lower_dword.bit.counter_idx =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W0_COUNTER_IDX_MASK,
 			cmpt_ctxt[0]));
-	ctxt->timer_idx =
+	ctxt->lower_dword.bit.timer_idx =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W0_TIMER_IDX_MASK,
 			cmpt_ctxt[0]));
-	ctxt->in_st =
+	ctxt->lower_dword.bit.in_st =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W0_INT_ST_MASK,
 			cmpt_ctxt[0]));
-	ctxt->color =
+	ctxt->lower_dword.bit.color =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W0_COLOR_MASK,
 			cmpt_ctxt[0]));
-	ctxt->ringsz_idx =
+	ctxt->lower_dword.bit.ringsz_idx =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W0_RING_SZ_MASK,
 			cmpt_ctxt[0]));
 
 	baddr_l = FIELD_GET(QDMA_COMPL_CTXT_W1_BADDR_64_L_MASK, cmpt_ctxt[1]);
 
 	baddr_h = FIELD_GET(QDMA_COMPL_CTXT_W2_BADDR_64_H_MASK, cmpt_ctxt[2]);
-	ctxt->desc_sz =
+	ctxt->higher_dword.bit.desc_sz =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W2_DESC_SIZE_MASK,
 			cmpt_ctxt[2]));
 	pidx_l = FIELD_GET(QDMA_COMPL_CTXT_W2_PIDX_L_MASK, cmpt_ctxt[2]);
@@ -3265,23 +3282,25 @@ static int qdma_cmpt_context_read(void *dev_hndl, uint16_t hw_qid,
 	ctxt->cidx =
 		(uint16_t)(FIELD_GET(QDMA_COMPL_CTXT_W3_CIDX_MASK,
 			cmpt_ctxt[3]));
-	ctxt->valid =
+	ctxt->higher_dword.bit.valid =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W3_VALID_MASK,
 			cmpt_ctxt[3]));
-	ctxt->err =
+	ctxt->higher_dword.bit.err =
 		(uint8_t)(FIELD_GET(QDMA_COMPL_CTXT_W3_ERR_MASK, cmpt_ctxt[3]));
-	ctxt->user_trig_pend = (uint8_t)
+	ctxt->higher_dword.bit.user_trig_pend = (uint8_t)
 		(FIELD_GET(QDMA_COMPL_CTXT_W3_USR_TRG_PND_MASK, cmpt_ctxt[3]));
 
-	ctxt->timer_running =
+	ctxt->higher_dword.bit.timer_running =
 		FIELD_GET(QDMA_COMPL_CTXT_W4_TMR_RUN_MASK, cmpt_ctxt[4]);
-	ctxt->full_upd =
+	ctxt->higher_dword.bit.full_upd =
 		FIELD_GET(QDMA_COMPL_CTXT_W4_FULL_UPDT_MASK, cmpt_ctxt[4]);
-	ctxt->ovf_chk_dis =
+	ctxt->higher_dword.bit.ovf_chk_dis =
 		FIELD_GET(QDMA_COMPL_CTXT_W4_OVF_CHK_DIS_MASK, cmpt_ctxt[4]);
-	ctxt->at = FIELD_GET(QDMA_COMPL_CTXT_W4_AT_MASK, cmpt_ctxt[4]);
-	ctxt->vec = FIELD_GET(QDMA_COMPL_CTXT_W4_INTR_VEC_MASK, cmpt_ctxt[4]);
-	ctxt->int_aggr = (uint8_t)
+	ctxt->higher_dword.bit.at =
+		FIELD_GET(QDMA_COMPL_CTXT_W4_AT_MASK, cmpt_ctxt[4]);
+	ctxt->higher_dword.bit.vec =
+		FIELD_GET(QDMA_COMPL_CTXT_W4_INTR_VEC_MASK, cmpt_ctxt[4]);
+	ctxt->higher_dword.bit.int_aggr = (uint8_t)
 		(FIELD_GET(QDMA_COMPL_CTXT_W4_INTR_AGGR_MASK, cmpt_ctxt[4]));
 
 	ctxt->bs_addr =

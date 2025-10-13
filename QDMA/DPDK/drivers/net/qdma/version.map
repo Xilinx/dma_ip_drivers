@@ -1,37 +1,4 @@
-/*-
- * BSD LICENSE
- *
- * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023, Advanced Micro Devices, Inc. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in
- *     the documentation and/or other materials provided with the
- *     distribution.
- *   * Neither the name of the copyright holder nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-DPDK_21 {
+DPDK_24 {
 	global:
 
 	rte_pmd_qdma_set_immediate_data_state;
@@ -65,102 +32,18 @@ DPDK_21 {
 	rte_pmd_qdma_qstats_clear;
 	rte_pmd_qdma_dev_close;
 	rte_pmd_qdma_dev_fp_ops_config;
+	rte_pmd_qdma_compat_pci_write_reg;
+	rte_pmd_qdma_compat_pci_read_reg;
+	rte_pmd_qdma_compat_memzone_reserve_aligned;
+	rte_pmd_qdma_get_bdf;
+	rte_pmd_qdma_dev_remove;
+	rte_pmd_qdma_get_dev_id;
+	rte_pmd_qdma_dev_started;
+	rte_pmd_qdma_eth_dev_to_pci;
+	rte_pmd_qdma_get_device;
+	rte_pmd_qdma_validate_dev;
 
 	local: *;
 };
 
-DPDK_22 {
-        global:
 
-        rte_pmd_qdma_set_immediate_data_state;
-        rte_pmd_qdma_get_bar_details;
-        rte_pmd_qdma_get_queue_base;
-        rte_pmd_qdma_set_queue_mode;
-        rte_pmd_qdma_get_device_capabilities;
-        qdma_pci_read_reg;
-        qdma_pci_write_reg;
-        rte_pmd_qdma_set_mm_endpoint_addr;
-        rte_pmd_qdma_dbg_qdesc;
-        rte_pmd_qdma_dbg_regdump;
-        rte_pmd_qdma_dbg_reg_info_dump;
-        rte_pmd_qdma_dbg_qinfo;
-
-        rte_pmd_qdma_get_pci_func_type;
-        rte_pmd_qdma_configure_tx_bypass;
-        rte_pmd_qdma_configure_rx_bypass;
-        rte_pmd_qdma_set_cmpt_descriptor_size;
-        rte_pmd_qdma_set_c2h_descriptor_prefetch;
-        rte_pmd_qdma_set_cmpt_overflow_check;
-        rte_pmd_qdma_set_cmpt_trigger_mode;
-        rte_pmd_qdma_set_cmpt_timer;
-        rte_pmd_qdma_get_immediate_data_state;
-        rte_pmd_qdma_dev_cmptq_setup;
-        rte_pmd_qdma_dev_cmptq_start;
-        rte_pmd_qdma_mm_cmpt_process;
-        rte_pmd_qdma_dev_cmptq_stop;
-        rte_pmd_qdma_dbg_qdevice;
-        rte_pmd_qdma_qstats;
-        rte_pmd_qdma_qstats_clear;
-        rte_pmd_qdma_dev_close;
-        rte_pmd_qdma_dev_fp_ops_config;
-        rte_pmd_qdma_compat_pci_write_reg;
-        rte_pmd_qdma_compat_pci_read_reg;
-        rte_pmd_qdma_compat_memzone_reserve_aligned;
-        rte_pmd_qdma_get_bdf;
-        rte_pmd_qdma_dev_remove;
-        rte_pmd_qdma_get_dev_id;
-        rte_pmd_qdma_dev_started;
-        rte_pmd_qdma_eth_dev_to_pci;
-		rte_pmd_qdma_get_device;
-        rte_pmd_qdma_validate_dev;
-
-        local: *;
-};
-
-DPDK_23 {
-        global:
-
-        rte_pmd_qdma_set_immediate_data_state;
-        rte_pmd_qdma_get_bar_details;
-        rte_pmd_qdma_get_queue_base;
-        rte_pmd_qdma_set_queue_mode;
-        rte_pmd_qdma_get_device_capabilities;
-        qdma_pci_read_reg;
-        qdma_pci_write_reg;
-        rte_pmd_qdma_set_mm_endpoint_addr;
-        rte_pmd_qdma_dbg_qdesc;
-        rte_pmd_qdma_dbg_regdump;
-        rte_pmd_qdma_dbg_reg_info_dump;
-        rte_pmd_qdma_dbg_qinfo;
-
-        rte_pmd_qdma_get_pci_func_type;
-        rte_pmd_qdma_configure_tx_bypass;
-        rte_pmd_qdma_configure_rx_bypass;
-        rte_pmd_qdma_set_cmpt_descriptor_size;
-        rte_pmd_qdma_set_c2h_descriptor_prefetch;
-        rte_pmd_qdma_set_cmpt_overflow_check;
-        rte_pmd_qdma_set_cmpt_trigger_mode;
-        rte_pmd_qdma_set_cmpt_timer;
-        rte_pmd_qdma_get_immediate_data_state;
-        rte_pmd_qdma_dev_cmptq_setup;
-        rte_pmd_qdma_dev_cmptq_start;
-        rte_pmd_qdma_mm_cmpt_process;
-        rte_pmd_qdma_dev_cmptq_stop;
-        rte_pmd_qdma_dbg_qdevice;
-        rte_pmd_qdma_qstats;
-        rte_pmd_qdma_qstats_clear;
-        rte_pmd_qdma_dev_close;
-        rte_pmd_qdma_dev_fp_ops_config;
-        rte_pmd_qdma_compat_pci_write_reg;
-        rte_pmd_qdma_compat_pci_read_reg;
-        rte_pmd_qdma_compat_memzone_reserve_aligned;
-        rte_pmd_qdma_get_bdf;
-        rte_pmd_qdma_dev_remove;
-        rte_pmd_qdma_get_dev_id;
-        rte_pmd_qdma_dev_started;
-        rte_pmd_qdma_eth_dev_to_pci;
-		rte_pmd_qdma_get_device;
-        rte_pmd_qdma_validate_dev;
-
-        local: *;
-};

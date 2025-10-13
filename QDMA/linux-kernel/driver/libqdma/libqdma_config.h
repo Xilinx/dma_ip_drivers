@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -43,6 +43,10 @@
  * Maximum number of QDMA devices in the system
  */
 #define MAX_DMA_DEV 32
+
+#ifdef CONFIG_PCI_DOMAINS_GENERIC
+#define PCI_SHIFT_DOMAIN 20
+#endif
 
 /**
  * Shift for bus 'B' in B:D:F
