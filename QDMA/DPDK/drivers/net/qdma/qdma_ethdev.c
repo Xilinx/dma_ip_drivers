@@ -55,6 +55,8 @@
 #include "qdma_mbox.h"
 #include "qdma_devops.h"
 
+extern void rte_pmd_qdma_dbg_init();
+
 /* Poll for QDMA errors every 1 second */
 #define QDMA_ERROR_POLL_FRQ (1000000)
 
