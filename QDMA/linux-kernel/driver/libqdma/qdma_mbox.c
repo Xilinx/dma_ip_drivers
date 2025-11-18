@@ -308,7 +308,11 @@ static int mbox_rcv_one_msg(struct qdma_mbox *mbox)
 
 static inline void mbox_timer_stop(struct qdma_mbox *mbox)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 15, 0)
 	del_timer(&mbox->timer);
+#else
+	timer_delete(&mbox->timer);
+#endif
 }
 
 static inline void mbox_timer_start(struct qdma_mbox *mbox)
@@ -432,7 +436,9 @@ static void mbox_timer_handler(struct timer_list *t)
 static void mbox_timer_handler(unsigned long arg)
 #endif
 {
-#if KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE
+#if LINUX_VERSION_CODE > KERNEL_VERSION(6, 16, 0)
+	struct qdma_mbox *mbox = timer_container_of(mbox, t, timer);
+#elif KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE
 	struct qdma_mbox *mbox = from_timer(mbox, t, timer);
 #else
 	struct qdma_mbox *mbox = (struct qdma_mbox *)arg;
