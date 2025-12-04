@@ -231,6 +231,12 @@
 	#define VMEM_FLAGS (VM_IO | VM_RESERVED)
 #endif
 
+/* Advanced Poll Mode flags */
+#define POLL_ENABLE                        (1 << 0)
+#define POLL_ENABLE_THREAD_SCHED_FIFO      (1 << 1)
+#define POLL_DISABLE_THREAD_TO_CPU_BINGING (1 << 2)
+#define POLL_SINGLE_THREAD                 (1 << 3)
+
 #ifdef __LIBXDMA_DEBUG__
 #define dbg_io		pr_err
 #define dbg_fops	pr_err

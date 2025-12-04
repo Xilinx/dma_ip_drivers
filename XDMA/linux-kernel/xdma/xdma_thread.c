@@ -119,7 +119,9 @@ static int xthread_main(void *data)
 					thp->name, thp->work_cnt);
 			/* do work */
 			list_for_each_safe(work_item, next, &thp->work_list) {
+				unlock_thread(thp);
 				thp->fproc(work_item);
+				lock_thread(thp);
 			}
 		}
 		unlock_thread(thp);
@@ -136,7 +138,7 @@ static int xthread_main(void *data)
 }
 
 
-int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
+int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id, unsigned int poll_mode)
 {
 	int len;
 	int node;
@@ -158,7 +160,12 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 	INIT_LIST_HEAD(&thp->work_list);
 	init_waitqueue_head(&thp->waitq);
 
-	node = cpu_to_node(thp->cpu);
+	if (poll_mode | POLL_DISABLE_THREAD_TO_CPU_BINGING) {
+		node = NUMA_NO_NODE;
+	}
+	else {
+		node = cpu_to_node(thp->cpu);
+	}
 	pr_debug("node : %d\n", node);
 
 	thp->task = kthread_create_on_node(xthread_main, (void *)thp,
@@ -170,7 +177,13 @@ int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id)
 		return -EFAULT;
 	}
 
-	kthread_bind(thp->task, thp->cpu);
+	if (!(poll_mode | POLL_DISABLE_THREAD_TO_CPU_BINGING)) {
+		kthread_bind(thp->task, thp->cpu);
+	}
+
+	if (poll_mode | POLL_ENABLE_THREAD_SCHED_FIFO) {
+		sched_set_fifo(thp->task);
+	}
 
 	pr_debug_thread("kthread 0x%p, %s, cpu %u, task 0x%p.\n",
 		thp, thp->name, thp->cpu, thp->task);
@@ -237,22 +250,22 @@ void xdma_thread_remove_work(struct xdma_engine *engine)
 void xdma_thread_add_work(struct xdma_engine *engine)
 {
 	struct xdma_kthread *thp = cs_threads;
-	unsigned int v = 0;
-	int i, idx = thread_cnt;
+	unsigned int max_work_cnt = 0;
+	int idx = 0;
 	unsigned long flags;
-
+	int i; // can't declare in for() because of outdated C standard
 
 	/* Polled mode only */
 	for (i = 0; i < thread_cnt; i++, thp++) {
 		lock_thread(thp);
-		if (idx == thread_cnt) {
-			v = thp->work_cnt;
-			idx = i;
+		if (i == 0) {	// this skips thread for CPU0 if other CPUs' threads work_cnt is 0
+			max_work_cnt = thp->work_cnt;
+			idx = i;	// idx is already 0 here
 		} else if (!thp->work_cnt) {
 			idx = i;
 			unlock_thread(thp);
 			break;
-		} else if (thp->work_cnt < v)
+		} else if (thp->work_cnt < max_work_cnt)
 			idx = i;
 		unlock_thread(thp);
 	}
@@ -267,21 +280,28 @@ void xdma_thread_add_work(struct xdma_engine *engine)
 	pr_info("%s 0x%p assigned to cmpl status thread %s,%u.\n",
 		engine->name, engine, thp->name, thp->work_cnt);
 
-
 	spin_lock_irqsave(&engine->lock, flags);
 	engine->cmplthp = thp;
 	spin_unlock_irqrestore(&engine->lock, flags);
 }
 
-int xdma_threads_create(unsigned int num_threads)
+int xdma_threads_create(unsigned int num_channels, unsigned int poll_mode)
 {
 	struct xdma_kthread *thp;
 	int rv;
 	int cpu;
+	unsigned int num_threads;
 
 	if (thread_cnt) {
 		pr_warn("threads already created!");
 		return 0;
+	}
+
+	if (poll_mode | POLL_SINGLE_THREAD) {
+		num_threads = 1;
+	}
+	else {
+		num_threads = num_channels;
 	}
 
 	cs_threads = kzalloc(num_threads * sizeof(struct xdma_kthread),
@@ -299,7 +319,7 @@ int xdma_threads_create(unsigned int num_threads)
 		thp->timeout = 0;
 		thp->fproc = xdma_thread_cmpl_status_proc;
 		thp->fpending = xdma_thread_cmpl_status_pend;
-		rv = xdma_kthread_start(thp, "cmpl_status_th", thread_cnt);
+		rv = xdma_kthread_start(thp, "cmpl_status_th", thread_cnt, poll_mode);
 		if (rv < 0)
 			goto cleanup_threads;
 
