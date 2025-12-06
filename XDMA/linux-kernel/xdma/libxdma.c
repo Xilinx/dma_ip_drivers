@@ -3463,7 +3463,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			 struct sg_table *sgt, bool dma_mapped, int timeout_ms)
 {
 	struct xdma_dev *xdev = (struct xdma_dev *)dev_hndl;
-	struct xdma_engine *engine;
+	struct xdma_engine *engine = NULL;
 	int rv = 0, tfer_idx = 0, i;
 	ssize_t done = 0;
 	struct scatterlist *sg = sgt->sgl;
