@@ -33,7 +33,6 @@
 #include <linux/uaccess.h>
 #include <linux/delay.h>
 
-
 #include "version.h"
 #include "xvsec_drv.h"
 #include "xvsec_drv_int.h"
@@ -359,7 +358,7 @@ static const struct file_operations xvsec_gen_fops = {
 };
 
 
-static int xvsec_initialize(struct pci_dev *pdev, struct context *dev_ctx)
+int xvsec_initialize(struct pci_dev *pdev, struct context *dev_ctx)
 {
 	int ret = 0;
 	int status;
@@ -403,7 +402,7 @@ static int xvsec_initialize(struct pci_dev *pdev, struct context *dev_ctx)
 }
 EXPORT_SYMBOL_GPL(xvsec_initialize);
 
-static int xvsec_deinitialize(struct context *dev_ctx)
+int xvsec_deinitialize(struct context *dev_ctx)
 {
 	int ret = 0;
 	uint16_t index;
