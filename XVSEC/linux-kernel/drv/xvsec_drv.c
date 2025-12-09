@@ -454,7 +454,11 @@ static int __init xvsec_drv_init(void)
 	if (dev_count == 0)
 		return 0;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+	g_xvsec_class = class_create(XVSEC_NODE_NAME);
+#else
 	g_xvsec_class = class_create(THIS_MODULE, XVSEC_NODE_NAME);
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0) */
 	if (IS_ERR(g_xvsec_class)) {
 		pr_err("failed to create class");
 		ret = -(PTR_ERR(g_xvsec_class));
