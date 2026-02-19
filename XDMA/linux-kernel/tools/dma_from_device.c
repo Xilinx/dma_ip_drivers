@@ -263,7 +263,8 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 
 		/* subtract the start time from the end time */
 		timespec_sub(&ts_end, &ts_start);
-		total_time += ts_end.tv_nsec;
+		const long NS_PER_SEC = 1000000000;
+		total_time += ts_end.tv_sec * NS_PER_SEC + ts_end.tv_nsec;
 		/* a bit less accurate but side-effects are accounted for */
 		if (verbose)
 		fprintf(stdout,
