@@ -20,14 +20,18 @@ topdir := $(shell cd $(src)/.. && pwd)
 
 TARGET_MODULE:=xdma
 
-EXTRA_CFLAGS := -I$(topdir)/include $(XVC_FLAGS)
+E_CFLAGS := -I$(topdir)/include $(XVC_FLAGS)
 ifeq ($(DEBUG),1)
-	EXTRA_CFLAGS += -D__LIBXDMA_DEBUG__
+	E_CFLAGS += -D__LIBXDMA_DEBUG__
 endif
 ifneq ($(config_bar_num),)
-	EXTRA_CFLAGS += -DXDMA_CONFIG_BAR_NUM=$(config_bar_num)
+	E_CFLAGS += -DXDMA_CONFIG_BAR_NUM=$(config_bar_num)
 endif
-#EXTRA_CFLAGS += -DINTERNAL_TESTING
+#E_CFLAGS += -DINTERNAL_TESTING
+
+# for backwards compatibility
+EXTRA_CFLAGS += $(E_CFLAGS)
+ccflags-y += $(E_CFLAGS)
 
 ifneq ($(KERNELRELEASE),)
 	$(TARGET_MODULE)-objs := libxdma.o xdma_cdev.o cdev_ctrl.o cdev_events.o cdev_sgdma.o cdev_xvc.o cdev_bypass.o xdma_mod.o xdma_thread.o

@@ -35,13 +35,17 @@ include $(srcdir)/../make_rules/common_flags.mk
 $(info srcdir = $(srcdir).)
 $(info KSRC = $(KSRC).)
 
-EXTRA_CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror
-EXTRA_CFLAGS += $(FLAGS) $(CPPFLAGS)
-EXTRA_CFLAGS += -I$(srcdir)/../include
-EXTRA_CFLAGS += -I$(KSRC)/../include
-EXTRA_CFLAGS += -I.
+E_CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror
+E_CFLAGS += $(FLAGS) $(CPPFLAGS)
+E_CFLAGS += -I$(srcdir)/../include
+E_CFLAGS += -I$(KSRC)/../include
+E_CFLAGS += -I.
 
-#EXTRA_CFLAGS += -DDEBUG
+#E_CFLAGS += -DDEBUG
+# for backwards compatiblity
+EXTRA_CFLAGS += $(E_CFLAGS)
+ccflags-y += $(E_CFLAGES)
+
 
 ifneq ($(modulesymfile),)
   override symverfile = symverfile="$(topdir)/$(modulesymfile) \
