@@ -566,7 +566,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 			return rv;
 		}
 
-		rv = char_sgdma_map_user_buf_to_sgl(&caio->cb[i], true);
+		rv = char_sgdma_map_user_buf_to_sgl(&caio->cb[i], false);
 		if (rv < 0)
 			return rv;
 
