@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; MDB5-DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=25a71103" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User Applications" href="user-applications.html" />
+    <link rel="prev" title="Introduction" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5-DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#system-requirements">System Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#host-platform">Host Platform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#host-system-configuration">Host System Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#build-and-install">Build and Install</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#controller-driver-setup">Controller Driver Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#client-driver-setup">Client Driver Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#client-apps-setup">Client Apps Setup</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers-guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5-DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<section id="system-requirements">
+<h2>System Requirements<a class="headerlink" href="#system-requirements" title="Link to this heading"></a></h2>
+<section id="host-platform">
+<h3>Host Platform<a class="headerlink" href="#host-platform" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>x86_64 host system with at least one Gen5 x4 PCIe slot</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">libaio</span></code> must be installed to compile client apps</p></li>
+</ul>
+</section>
+<section id="host-system-configuration">
+<h3>Host System Configuration<a class="headerlink" href="#host-system-configuration" title="Link to this heading"></a></h3>
+<p>The MDB5-DMA driver release is verified on the following host system configuration:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Host System</p></th>
+<th class="head"><p>Configuration Details</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Operating System</p></td>
+<td><p>Ubuntu 26.04 LTS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Linux Kernel</p></td>
+<td><p>v7.0.6</p></td>
+</tr>
+<tr class="row-even"><td><p>PCIe Slot</p></td>
+<td><p>Gen5 x4</p></td>
+</tr>
+<tr class="row-odd"><td><p>RAM</p></td>
+<td><p>8GB</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For optimal performance with 8 Read/Write Channels, it is recommended to have at least 8GB RAM on the same CPU node and a Gen5 x4 PCIe slot. However, the driver should function on any Linux distribution with the appropriate kernel version and required kernel configuration options enabled.</p>
+</div>
+</section>
+</section>
+<section id="build-and-install">
+<h2>Build and Install<a class="headerlink" href="#build-and-install" title="Link to this heading"></a></h2>
+<section id="controller-driver-setup">
+<h3>Controller Driver Setup<a class="headerlink" href="#controller-driver-setup" title="Link to this heading"></a></h3>
+<p>The AMD MDB5 support patches were merged into mainline Linux in <strong>v7.1-rc3</strong>. The setup path depends on the kernel version:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Current Kernel</p></th>
+<th class="head"><p>Action Required</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>v7.1 or above</p></td>
+<td><p>No patching needed. AMD MDB5 support is already built in.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Below v7.1</p></td>
+<td><p>Build and install kernel v7.0.6 from source. Follow the steps below.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kernel v7.1 or above</strong></p>
+<p>The MDB5-DMA sources are already part of the Linux kernel. so user does not need to patch the kernel separately. However, user must enable certain configurations in Linux kernel otherwise MDB5-DMA will not function. Verify the kernel configurations using the steps below.</p>
+<p><strong>Required Configuration Options</strong></p>
+<p>The following kernel configuration options must be enabled for MDB5-DMA to function properly:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CONFIG_DMA_ENGINE=y
+CONFIG_PCI=y
+CONFIG_PCI_MSI=y
+CONFIG_DW_EDMA=y
+CONFIG_DW_EDMA_PCIE=y
+</pre></div>
+</div>
+<p><strong>Checking Current Kernel Configuration</strong></p>
+<p>Check if the mentioned options are enabled in the current kernel configuration as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cat<span class="w"> </span>/boot/config-<span class="sb">`</span>uname<span class="w"> </span>-r<span class="sb">`</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;^(CONFIG_DMA_ENGINE|CONFIG_PCI|CONFIG_PCI_MSI|CONFIG_DW_EDMA|CONFIG_DW_EDMA_PCIE)=&quot;</span>
+<span class="nv">CONFIG_PCI</span><span class="o">=</span>y
+<span class="nv">CONFIG_PCI_MSI</span><span class="o">=</span>y
+<span class="nv">CONFIG_DMA_ENGINE</span><span class="o">=</span>y
+<span class="nv">CONFIG_DW_EDMA</span><span class="o">=</span>y
+<span class="nv">CONFIG_DW_EDMA_PCIE</span><span class="o">=</span>y
+</pre></div>
+</div>
+<p>If the output of the command matches as shown above (all options showing <code class="docutils literal notranslate"><span class="pre">=y</span></code>), the kernel is correctly configured. If any of the options are missing or show <code class="docutils literal notranslate"><span class="pre">=n</span></code> or <code class="docutils literal notranslate"><span class="pre">=m</span></code> from the output, those options must be enabled and the kernel recompiled to enable AMD-MDB5 functionality.</p>
+<p><strong>Configuration Options Explained</strong></p>
+<p>The following table describes each configuration option:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Configuration Option</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DMA_ENGINE</span></code></p></td>
+<td><p>Enables the Linux DMA Engine framework for managing DMA controllers</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PCI</span></code></p></td>
+<td><p>Enables PCI bus support required for PCIe devices</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_PCI_MSI</span></code></p></td>
+<td><p>Enables Message Signaled Interrupts support for PCIe devices</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DW_EDMA</span></code></p></td>
+<td><p>Enables DesignWare Enhanced DMA controller support</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONFIG_DW_EDMA_PCIE</span></code></p></td>
+<td><p>Enables DesignWare Enhanced DMA PCIe endpoint support</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>MDB5-DMA will not function unless all required configuration options are enabled in the kernel. If any options are missing or disabled, the kernel must be recompiled and reinstalled with these options enabled.</p>
+</div>
+<p><strong>Kernel Build from Source (Below v7.1)</strong></p>
+<p>On kernel versions below v7.1, the user must patch, build, and install kernel v7.0.6 from source. The patches are compiled directly into the kernel image. No out-of-tree module build is needed after rebooting.</p>
+<p><strong>Prerequisites</strong></p>
+<p>Install the tools required to build the kernel:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>build-essential<span class="w"> </span>libncurses-dev<span class="w"> </span>bison<span class="w"> </span>flex<span class="w"> </span>libssl-dev<span class="w"> </span>libelf-dev<span class="w"> </span>dwarves<span class="w"> </span>zstd<span class="w"> </span>bc
+</pre></div>
+</div>
+<p><strong>Step 1: Download Kernel v7.0.6 Source</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>wget<span class="w"> </span>https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.0.6.tar.xz
+$<span class="w"> </span>tar<span class="w"> </span>-xf<span class="w"> </span>linux-7.0.6.tar.xz
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>linux-7.0.6/
+</pre></div>
+</div>
+<p><strong>Step 2: Configure the Kernel</strong></p>
+<p>Use the current running kernel’s config as the base to preserve all existing settings:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cp<span class="w"> </span>/boot/config-<span class="k">$(</span>uname<span class="w"> </span>-r<span class="k">)</span><span class="w"> </span>.config
+$<span class="w"> </span>make<span class="w"> </span>olddefconfig
+</pre></div>
+</div>
+<p>Run the below steps to ensure the required DMA options are enabled:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>scripts/config<span class="w"> </span>--enable<span class="w"> </span>CONFIG_DMA_ENGINE
+$<span class="w"> </span>scripts/config<span class="w"> </span>--enable<span class="w"> </span>CONFIG_DW_EDMA
+$<span class="w"> </span>scripts/config<span class="w"> </span>--enable<span class="w"> </span>CONFIG_DW_EDMA_PCIE
+$<span class="w"> </span>make<span class="w"> </span>olddefconfig
+</pre></div>
+</div>
+<p>Run this command to verify the enabled options in config file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;^(CONFIG_DMA_ENGINE|CONFIG_PCI|CONFIG_PCI_MSI|CONFIG_DW_EDMA|CONFIG_DW_EDMA_PCIE)=&quot;</span><span class="w"> </span>.config
+<span class="nv">CONFIG_PCI</span><span class="o">=</span>y
+<span class="nv">CONFIG_PCI_MSI</span><span class="o">=</span>y
+<span class="nv">CONFIG_DMA_ENGINE</span><span class="o">=</span>y
+<span class="nv">CONFIG_DW_EDMA</span><span class="o">=</span>y
+<span class="nv">CONFIG_DW_EDMA_PCIE</span><span class="o">=</span>y
+</pre></div>
+</div>
+<p><strong>Step 3: Apply AMD MDB5 Patches</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>wget<span class="w"> </span>-O<span class="w"> </span><span class="m">0001</span>-dw-edma-add-amd-mdb-endpoint-support.patch<span class="w"> </span>https://lore.kernel.org/all/20260318070403.1634706-2-devendra.verma@amd.com/raw
+$<span class="w"> </span>wget<span class="w"> </span>-O<span class="w"> </span><span class="m">0002</span>-dw-edma-add-non-ll-mode.patch<span class="w"> </span>https://lore.kernel.org/all/20260318070403.1634706-3-devendra.verma@amd.com/raw
+$<span class="w"> </span>patch<span class="w"> </span>-p1<span class="w"> </span>-i<span class="w"> </span><span class="m">0001</span>-dw-edma-add-amd-mdb-endpoint-support.patch
+$<span class="w"> </span>patch<span class="w"> </span>-p1<span class="w"> </span>-i<span class="w"> </span><span class="m">0002</span>-dw-edma-add-non-ll-mode.patch
+</pre></div>
+</div>
+<p><strong>Step 4: Build and Install the Kernel</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make<span class="w"> </span>olddefconfig
+$<span class="w"> </span>make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+$<span class="w"> </span>sudo<span class="w"> </span>make<span class="w"> </span>modules_install
+$<span class="w"> </span>sudo<span class="w"> </span>make<span class="w"> </span>install
+</pre></div>
+</div>
+<p><strong>Step 5: Update GRUB and Reboot</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>update-grub
+$<span class="w"> </span>sudo<span class="w"> </span>reboot
+</pre></div>
+</div>
+<p>After reboot, verify the new kernel is running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>uname<span class="w"> </span>-r
+<span class="c1"># Should show: 7.0.6</span>
+</pre></div>
+</div>
+<p>The AMD MDB5 patches are now built into the kernel.</p>
+</section>
+<section id="client-driver-setup">
+<h3>Client Driver Setup<a class="headerlink" href="#client-driver-setup" title="Link to this heading"></a></h3>
+<p>The MDB5-DMA client driver must be compiled and installed to provide user-space applications with access to the DMA controller. This driver creates character device nodes that enable communication between user applications and the kernel-space controller driver.</p>
+<p>To compile the client driver, navigate to the client driver directory and build the loadable kernel module:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ cd &lt;path-to-mdb5-ep-drivers&gt;/client-driver
+$ make
+</pre></div>
+</div>
+<p>This command generates the client-driver loadable module, <code class="docutils literal notranslate"><span class="pre">mdb5-dmaclient-drv.ko</span></code>, which can be found in <code class="docutils literal notranslate"><span class="pre">$(pwd)/bin/`uname</span> <span class="pre">-p`/mdb5-dmaclient-drv.ko</span></code> and can be installed as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ modprobe ./bin/`uname -p`/mdb5-dmaclient-drv.ko device_dbdf=&quot;0000:01:00.0&quot; dma_dev_id=1
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">device_dbdf</span></code> = “Domain:Bus:Device.Function”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dma_dev_id</span></code> = Unique index the Linux kernel uses to register DMA channels in the format <code class="docutils literal notranslate"><span class="pre">dma&lt;dma_dev_id&gt;chan&lt;index&gt;</span></code></p></li>
+</ul>
+<p>The dma_dev_id can be found using the following command:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>find /sys -name &quot;dma*&quot; | grep &quot;Domain:Bus:Device.Function&quot;
+</pre></div>
+</div>
+</section>
+<section id="client-apps-setup">
+<h3>Client Apps Setup<a class="headerlink" href="#client-apps-setup" title="Link to this heading"></a></h3>
+<p>The MDB5-DMA client applications provide command-line utilities for configuring, testing, and managing DMA transfers. These applications require compilation and have dependencies that must be satisfied before building.</p>
+<p>First, ensure that <code class="docutils literal notranslate"><span class="pre">libaio</span></code> development libraries are installed on Ubuntu-based systems:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ apt -y install libaio-dev
+</pre></div>
+</div>
+<p>Then compile the client applications:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ cd &lt;path-to-mdb5-ep-drivers&gt;/client-apps
+$ make
+</pre></div>
+</div>
+<p>This command generates the DMA user-space applications in the following directory:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ ls &lt;path-to-mdb5-ep-drivers&gt;/client-apps/bin
+  dma-ctl dma-from-device dma-to-device dma-xfer
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="user-applications.html" class="btn btn-neutral float-right" title="User Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on May 21, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

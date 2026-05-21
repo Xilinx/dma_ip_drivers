@@ -1,0 +1,176 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction &mdash; MDB5-DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=25a71103" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            MDB5-DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers-guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">MDB5-DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
+<p>MDB5-DMA (Multimedia DMA Bridge) enables configuration and data transfer capabilities to a DMA controller through a Linux driver and user-space application. This documentation outlines the design and components involved in enabling DMA operations, including kernel-level drivers, supporting utilities, and user-space applications.</p>
+<p>For hardware specifications and detailed register information, refer to the <a class="reference external" href="https://docs.amd.com/r/en-US/am026-versal-ai-edge-prime-gen2-trm/">MDB5-DMA Hardware Documentation</a>.</p>
+<section id="mdb5-dma-hardware-features">
+<h2>MDB5-DMA Hardware Features<a class="headerlink" href="#mdb5-dma-hardware-features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Memory-to-Memory Transfers</p></li>
+<li><p>Maximum DMA transfer size: 4GB; minimum transfer size: 1 byte</p></li>
+<li><p>Support for 8 Read and 8 Write Channels</p></li>
+<li><p>Doorbell register access support</p></li>
+<li><p>Linked-list and Non Linked-list Mode</p></li>
+<li><p>Full Duplex Operation</p></li>
+<li><p>Separate Tags for DMA Transfers</p></li>
+<li><p>MSI Interrupt Generation</p></li>
+<li><p>Reordering of DMA Transfer completions</p></li>
+</ul>
+</section>
+<section id="mdb5-dma-software-features">
+<h2>MDB5-DMA Software Features<a class="headerlink" href="#mdb5-dma-software-features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Simple DMA transfers</p></li>
+<li><p>Scatter-Gather DMA transfers</p></li>
+<li><p>MSI Interrupt support</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><strong>MDB5-DMA Limitations:</strong></p>
+<ul class="simple">
+<li><p>Does not have streaming transfer support (only memory-to-memory transfer supported)</p></li>
+<li><p>Does not have virtualization support.</p></li>
+</ul>
+</div>
+</section>
+<section id="mdb5-dma-software-components">
+<h2>MDB5-DMA Software Components<a class="headerlink" href="#mdb5-dma-software-components" title="Link to this heading"></a></h2>
+<section id="controller-driver">
+<h3>Controller Driver<a class="headerlink" href="#controller-driver" title="Link to this heading"></a></h3>
+<p>The Controller Driver is an open-source component integrated into the Linux kernel. It directly manages the MDB5-DMA Controller through the DMAEngine framework. The driver exposes standard DMA APIs while handling the hardware-specific details of the controller. It manages 16 channels: 8 read and 8 write channels.</p>
+<p>The Controller Driver source code is available at: <a class="reference external" href="https://elixir.bootlin.com/linux/v6.8/source/drivers/dma/dw-edma">dw-edma Linux kernel driver</a>.</p>
+</section>
+<section id="client-driver">
+<h3>Client Driver<a class="headerlink" href="#client-driver" title="Link to this heading"></a></h3>
+<p>The Client Driver is a custom character driver developed to interface with the Controller Driver, enabling user-space configuration and control of MDB5-DMA channels. It provides character device nodes that allow user-space applications to configure the MDB5-DMA controller and control data transfer on a per-channel basis.</p>
+</section>
+<section id="user-applications">
+<h3>User Applications<a class="headerlink" href="#user-applications" title="Link to this heading"></a></h3>
+<p>The user-space applications provide a set of command-line applications to configure, manage, test, and monitor the various functionalities and features of the MDB5-DMA controller. These user-space applications communicate with the Client Driver through the character driver interface to perform the functionalities. <code class="docutils literal notranslate"><span class="pre">dma-utils</span></code> provides common functions for all the applications to use. See the <a class="reference internal" href="api-reference.html"><span class="doc">API Reference</span></a> section for detailed documentation of the dma-utils library.</p>
+<p>The command-line applications include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dma-ctl</span></code>: to configure and control MDB5-DMA devices</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dma-to-device</span></code>: to perform H2C data transfer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dma-from-device</span></code>: to perform C2H data transfer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dma-xfer</span></code>: to demonstrate data transfer using configuration file</p></li>
+</ul>
+</section>
+</section>
+<section id="mdb5-dma-architecture">
+<h2>MDB5-DMA Architecture<a class="headerlink" href="#mdb5-dma-architecture" title="Link to this heading"></a></h2>
+<p>To begin with, it could be mentioned that the diagram serves as an illustration of the MDB5-DMA software stack, demonstrating how a user application leverages the driver interface to interact with the client driver. This client driver, in turn, communicates with the DMA controller driver, and the process continues in a similar manner</p>
+<img alt="DMA flow" class="flowchart-svg align-center" src="_images/architecture-block.drawio.svg" />
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on May 21, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

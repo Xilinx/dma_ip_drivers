@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Functions &mdash; MDB5-DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=25a71103" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=0122b612"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Troubleshooting and Debugging" href="troubleshoot.html" />
+    <link rel="prev" title="Data Structures" href="structures.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5-DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers-guide.html">Developers Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api-reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="definitions.html">Definitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enumerations.html">Enumerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structures.html">Data Structures</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Global Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5-DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api-reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Global Functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="global-functions">
+<h1>Global Functions<a class="headerlink" href="#global-functions" title="Link to this heading"></a></h1>
+<p>This section documents the public API functions provided by the dma-utils</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dmautils_sync_xfer</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_chan_dir</span><span class="w"> </span><span class="n">chan_dir</span><span class="p">,</span>
+<span class="w">                            </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">xfer_len</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">base</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Performs synchronous data transfers through device nodes.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> — Device node path (e.g., <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_write00</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chan_dir</span></code> — Transfer direction (<code class="docutils literal notranslate"><span class="pre">MDB5_CHAN_DIR_TO_DEV</span></code> or <code class="docutils literal notranslate"><span class="pre">MDB5_CHAN_DIR_FROM_DEV</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">buf</span></code> — Data buffer pointer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xfer_len</span></code> — Transfer size in bytes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code> — Device memory offset</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Number of bytes transferred on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dmautils_async_xfer</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">,</span><span class="w"> </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_chan_dir</span><span class="w"> </span><span class="n">chan_dir</span><span class="p">,</span>
+<span class="w">                             </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">xfer_len</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">base</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Performs asynchronous data transfers through device nodes.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> — Device node path (e.g., <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_write00</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chan_dir</span></code> — Transfer direction (<code class="docutils literal notranslate"><span class="pre">MDB5_CHAN_DIR_TO_DEV</span></code> or <code class="docutils literal notranslate"><span class="pre">MDB5_CHAN_DIR_FROM_DEV</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">buf</span></code> — Data buffer pointer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xfer_len</span></code> — Transfer size in bytes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code> — Device memory offset</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Number of bytes transferred on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">prepare_node_name</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">fmt</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ch_num</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Prepares the name of an MDB5-DMA node. This function constructs the name of an MDB5-DMA node based on the format string and channel number.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code> — Pointer to the buffer where the node name will be stored</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fmt</span></code> — Format string indicating the type of node (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;write&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;read&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ctrl&quot;</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ch_num</span></code> — Channel number</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>None</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="nf">is_file_available</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">pathname</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Checks if a file or device node exists and is accessible.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pathname</span></code> — Path to check</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">true</span></code> if accessible, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dma_reg_read</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Reads a register from BAR0 using memory-mapped I/O. This function reads a register offset of BAR0 using memory-mapped I/O. It logs an error message if the read operation fails and logs the register offset and data if the read operation is successful.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">arg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_reg</span></code> containing offset, data, and PCI BDF</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dma_reg_write</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Writes data to a register in BAR0 using memory-mapped I/O. This function writes data to register offset of BAR0 using memory-mapped I/O. It then reads back the data to verify the write operation.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">arg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_reg</span></code> containing offset, data, and PCI BDF</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">reg_read_mmap</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_reg</span><span class="w"> </span><span class="o">*</span><span class="n">reg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Reads from a BAR0 register offset using memory-mapped I/O. Low-level function for direct register access.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_reg</span></code> containing register information</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">reg_write_mmap</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_reg</span><span class="w"> </span><span class="o">*</span><span class="n">reg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Writes data to BAR0 register offset using memory-mapped I/O. Low-level function for direct register access.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_reg</span></code> containing register information</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dma_stats_read</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Reads MDB5-DMA read/write channel statistics. This function reads the statistics of MDB5-DMA read/write channel. It passes <code class="docutils literal notranslate"><span class="pre">stat_addr</span></code> physical address to kernel through ioctl operation to retrieve the statistics.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">arg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_ioctl</span></code> containing control information</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dma_transfer_mode</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Sets the transfer mode for an MDB5-DMA channel. This function configures the transfer mode for a MDB5-DMA read/write channel to Scatter-Gather (Linked-list) Mode or Simple (Non Linked-list) Mode.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">arg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_ioctl</span></code> containing mode configuration</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">mdb5_dma_aperture_sz</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Sets the aperture size for an MDB5-DMA channel. This function configures the aperture size for a MDB5-DMA read/write channel. Assumes that transfer mode is set to Scatter-Gather (Linked-list) DMA before performing the operation.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">arg</span></code> — Pointer to <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mdb5_dma_ioctl</span></code> containing aperture configuration</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">ssize_t</span><span class="w"> </span><span class="nf">read_to_buffer</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">fname</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">base</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Reads data from a file into a buffer. This function reads a specified amount of data from a file, starting at a given base offset, into a provided buffer.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fname</span></code> — File name for error reporting</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fd</span></code> — File descriptor</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">buffer</span></code> — Destination buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> — Number of bytes to read</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code> — Base offset in the file to start reading from</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Number of bytes read on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">ssize_t</span><span class="w"> </span><span class="nf">write_from_buffer</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">fname</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="p">,</span>
+<span class="w">                         </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">base</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Writes data from a buffer to a file. This function writes a specified amount of data from a provided buffer to a file, starting at a given base offset.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fname</span></code> — File name for error reporting</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fd</span></code> — File descriptor</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">buffer</span></code> — Source buffer containing data to be written</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> — Number of bytes to write</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base</span></code> — Base offset in the file to start writing to</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Number of bytes written on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint64_t</span><span class="w"> </span><span class="nf">getopt_integer</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">optarg</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Converts string arguments to 64-bit integers with hex/decimal support.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">optarg</span></code> — String to convert (supports <code class="docutils literal notranslate"><span class="pre">0x</span></code> prefix for hex)</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Parsed integer value</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">dump_throughput_result</span><span class="p">(</span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">result</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Displays bandwidth calculation results in appropriate units (GB/sec, MB/sec, KB/sec, or Bytes/sec).</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> — Transfer size in bytes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">result</span></code> — Bandwidth result in bytes/second</p></li>
+</ul>
+<p><strong>Returns:</strong><br />
+None</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">arg_read_int</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">v</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Parse 32-bit integer values from strings with error checking.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code> — String to parse</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v</span></code> — Pointer to output variable for parsed value</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">arg_read_int_ull</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="o">*</span><span class="n">v</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Parse 64-bit integer values from strings with error checking.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code> — String to parse</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">v</span></code> — Pointer to output variable for parsed value</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>0 on success, negative error code on failure</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">strip_comments</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">word</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Removes comments (lines starting with #) from configuration parsing.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">word</span></code> — Input string</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Processed string or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if comment line</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">strip_blanks</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="o">*</span><span class="n">blanks</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Removes leading whitespace from a string.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">word</span></code> — Input string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blanks</span></code> — Pointer to store number of blanks removed</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Pointer to string with leading blanks removed</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">copy_value</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">dst</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">max_len</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Copies non-whitespace characters from source to destination.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">src</span></code> — Source string</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dst</span></code> — Destination buffer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_len</span></code> — Maximum length to copy</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>Number of characters copied</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">get_chan_mode</span><span class="p">(</span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_chan_mode</span><span class="w"> </span><span class="n">chan_mode</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Converts channel mode enumeration to string representation.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">chan_mode</span></code> — Channel mode enumeration value</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>String representation or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for invalid values</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">get_transfer_mode</span><span class="p">(</span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_transfer_mode</span><span class="w"> </span><span class="n">mode</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Converts transfer mode enumeration to string representation.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span></code> — Transfer mode enumeration value</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>String representation or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for invalid values</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">get_chan_dir</span><span class="p">(</span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_chan_dir</span><span class="w"> </span><span class="n">dir</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Converts channel direction enumeration to string representation.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> — Channel direction enumeration value</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>String representation or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for invalid values</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">get_io_type</span><span class="p">(</span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_io_type</span><span class="w"> </span><span class="n">io_type</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Converts I/O type enum to string representation.</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">io_type</span></code> — I/O type enumeration value</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>String representation or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for invalid values</p>
+<hr class="docutils" />
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">timespec_sub</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="n">t2</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Description:</strong></p>
+<p>Subtracts timespec t2 from t1. Both t1 and t2 must already be normalized (i.e., 0 &lt;= nsec &lt; 1000000000).</p>
+<p><strong>Parameters:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t1</span></code> — Pointer to minuend timespec (result stored here)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t2</span></code> — Pointer to subtrahend timespec</p></li>
+</ul>
+<p><strong>Returns:</strong></p>
+<p>None (result stored in <code class="docutils literal notranslate"><span class="pre">t1</span></code>)</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="structures.html" class="btn btn-neutral float-left" title="Data Structures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="troubleshoot.html" class="btn btn-neutral float-right" title="Troubleshooting and Debugging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on May 18, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
