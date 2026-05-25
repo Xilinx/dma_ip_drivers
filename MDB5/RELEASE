@@ -1,0 +1,11 @@
+RELEASE: 2025.2
+===============
+
+This release of MDB5 2025.2 supports the following features:
+- Support for MM mode DMA data transfers
+- 8 Read / 8 Write Channel Support
+- Linked List mode support
+- Non-Linked List mode support
+- Aperture mode support
+- MSI Interrupt Support
+
