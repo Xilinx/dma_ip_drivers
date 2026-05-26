@@ -59,7 +59,7 @@ static ssize_t char_events_read(struct file *file, char __user *buf,
 
 	/* wait_event_interruptible() was interrupted by a signal */
 	if (rv == -ERESTARTSYS)
-		return -ERESTARTSYS;
+		return -EAGAIN;
 
 	/* atomically decide which events are passed to the user */
 	spin_lock_irqsave(&user_irq->events_lock, flags);
