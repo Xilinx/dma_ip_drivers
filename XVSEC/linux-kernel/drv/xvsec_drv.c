@@ -221,7 +221,7 @@ static int xvsec_gen_open(struct inode *inode, struct file *filep)
 	dev_ctx = container_of(inode->i_cdev,
 			struct context, generic_cdev.cdev);
 
-	spin_lock(&dev_ctx->lock);
+	mutex_lock(&dev_ctx->lock);
 
 	if (dev_ctx->fopen_cnt != 0) {
 		ret = -(EBUSY);
@@ -242,7 +242,7 @@ static int xvsec_gen_open(struct inode *inode, struct file *filep)
 	pr_info("%s success\n", __func__);
 
 CLEANUP:
-	spin_unlock(&dev_ctx->lock);
+	mutex_unlock(&dev_ctx->lock);
 	return ret;
 }
 
@@ -251,7 +251,7 @@ static int xvsec_gen_close(struct inode *inode, struct file *filep)
 	struct file_priv *priv = filep->private_data;
 	struct context   *dev_ctx = (struct context *)priv->dev_ctx;
 
-	spin_lock(&dev_ctx->lock);
+	mutex_lock(&dev_ctx->lock);
 	if (dev_ctx->fopen_cnt == 0) {
 		pr_warn("File Open/close mismatch\n");
 	} else {
@@ -259,7 +259,7 @@ static int xvsec_gen_close(struct inode *inode, struct file *filep)
 		pr_info("%s success\n", __func__);
 	}
 	kfree(priv);
-	spin_unlock(&dev_ctx->lock);
+	mutex_unlock(&dev_ctx->lock);
 
 	return 0;
 }
@@ -273,11 +273,11 @@ static long xvsec_ioc_get_cap_list(struct file *filep,
 
 	pr_debug("ioctl : IOC_XVSEC_GET_CAP_LIST\n");
 
-	spin_lock(&dev_ctx->lock);
+	mutex_lock(&dev_ctx->lock);
 	ret = copy_to_user((void __user *)arg,
 		(void *)&dev_ctx->capabilities,
 		sizeof(struct xvsec_capabilities));
-	spin_unlock(&dev_ctx->lock);
+	mutex_unlock(&dev_ctx->lock);
 
 	return ret;
 }
@@ -312,9 +312,9 @@ static long xvsec_ioc_get_device_info(struct file *filep,
 
 	pr_debug("ioctl : IOC_GET_DEVICE_INFO\n");
 
-	spin_lock(&dev_ctx->lock);
+	mutex_lock(&dev_ctx->lock);
 	ret = xvsec_get_dev_info(dev_ctx, &dev_info);
-	spin_unlock(&dev_ctx->lock);
+	mutex_unlock(&dev_ctx->lock);
 
 	if (ret < 0)
 		goto CLEANUP;
@@ -382,7 +382,7 @@ static int xvsec_initialize(struct pci_dev *pdev, struct context *dev_ctx)
 		return ret;
 	}
 
-	spin_lock_init(&dev_ctx->lock);
+	mutex_init(&dev_ctx->lock);
 	ret = xvsec_cdev_create(pdev,
 		&dev_ctx->generic_cdev, &xvsec_gen_fops, NULL);
 	if (ret < 0) {

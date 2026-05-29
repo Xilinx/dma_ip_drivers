@@ -160,7 +160,7 @@ static int xvsec_mcap_open(struct inode *inode, struct file *filep)
 
 	pr_info("%s: mcap_ctx address : %p\n", __func__, mcap_ctx);
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 
 	if (mcap_ctx->fopen_cnt != 0) {
 		ret = -(EBUSY);
@@ -180,7 +180,7 @@ static int xvsec_mcap_open(struct inode *inode, struct file *filep)
 	pr_debug("%s success\n", __func__);
 
 CLEANUP:
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 	return	ret;
 }
 
@@ -189,7 +189,7 @@ static int xvsec_mcap_close(struct inode *inode, struct file *filep)
 	struct file_priv_mcap	*priv = filep->private_data;
 	struct vsec_context *mcap_ctx = (struct vsec_context *)priv->ctx;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 
 	if (mcap_ctx->fopen_cnt == 0) {
 		pr_warn("File Open/close mismatch\n");
@@ -199,7 +199,7 @@ static int xvsec_mcap_close(struct inode *inode, struct file *filep)
 	}
 	kfree(priv);
 
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	return 0;
 }
@@ -236,9 +236,9 @@ static long xvsec_ioc_mcap_reset(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_RESET\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->reset(mcap_ctx);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	return ret;
 
@@ -256,9 +256,9 @@ static long xvsec_ioc_mcap_module_reset(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_MODULE_RESET\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->module_reset(mcap_ctx);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	return ret;
 }
@@ -275,9 +275,9 @@ static long xvsec_ioc_mcap_full_reset(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_FULL_RESET\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->full_reset(mcap_ctx);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	return ret;
 }
@@ -296,9 +296,9 @@ static long xvsec_ioc_get_mcap_revision(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_GET_REVISION\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->get_revision(mcap_ctx, &vsec_id, &rev_id);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret == 0) {
 		pr_debug("vsec_id: %d, rev_id: %d\n", vsec_id, rev_id);
@@ -322,9 +322,9 @@ static long xvsec_ioc_get_data_regs(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_GET_DATA_REGISTERS\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->get_data_regs(mcap_ctx, read_data_reg);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	memset(read_data_reg, 0, sizeof(read_data_reg));
 	if (ret == 0) {
@@ -351,9 +351,9 @@ static long xvsec_ioc_get_regs(struct file *filep,
 
 	memset(&mcap_regs, 0, sizeof(union mcap_regs));
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->get_regs(mcap_ctx, &mcap_regs);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret == 0) {
 		ret = copy_to_user((void __user *)arg,
@@ -378,9 +378,9 @@ static long xvsec_ioc_get_fpga_regs(struct file *filep,
 
 	memset(&fpga_cfg_regs, 0, sizeof(union fpga_cfg_regs));
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->get_fpga_regs(mcap_ctx, &fpga_cfg_regs);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret == 0) {
 		ret = copy_to_user((void __user *)arg,
@@ -409,9 +409,9 @@ static long xvsec_ioc_prog_bitstream(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->program_bitstream(mcap_ctx, &bit_files);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret < 0)
 		goto CLEANUP;
@@ -442,9 +442,9 @@ static long xvsec_ioc_rd_dev_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->rd_cfg_addr(mcap_ctx, &rw_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret < 0)
 		goto CLEANUP;
@@ -475,9 +475,9 @@ static long xvsec_ioc_wr_dev_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->wr_cfg_addr(mcap_ctx, &rw_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 CLEANUP:
 	return ret;
@@ -502,9 +502,9 @@ static long xvsec_ioc_rd_fpga_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->fpga_rd_cfg_addr(mcap_ctx, &fpga_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret != 0)
 		goto CLEANUP;
@@ -534,9 +534,9 @@ static long xvsec_ioc_wr_fpga_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->fpga_wr_cfg_addr(mcap_ctx, &fpga_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 CLEANUP:
 	return ret;
 }
@@ -560,9 +560,9 @@ static long xvsec_ioc_read_axi_reg(struct file *filep,
 		goto CLEANUP;
 
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->axi_rd_addr(mcap_ctx, &axi_rd_info);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret == 0) {
 		ret = copy_to_user((void __user *)arg,
@@ -592,9 +592,9 @@ static long xvsec_ioc_write_axi_reg(struct file *filep,
 		goto CLEANUP;
 
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->axi_wr_addr(mcap_ctx, &axi_wr_info);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 CLEANUP:
 	return ret;
@@ -619,9 +619,9 @@ static long xvsec_ioc_file_download(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->file_download(mcap_ctx, &file_args);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	rv = copy_to_user((void __user *)arg, (void *)&file_args,
 			sizeof(union file_download_upload));
@@ -652,9 +652,9 @@ static long xvsec_ioc_file_upload(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->file_upload(mcap_ctx, &file_args);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	rv = copy_to_user((void __user *)arg, (void *)&file_args,
 			sizeof(union file_download_upload));
@@ -684,9 +684,9 @@ static long xvsec_ioc_set_axi_attr(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->lock);
 	ret = mcap_fops->set_axi_cache_attr(mcap_ctx, &axi_attr_info);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->lock);
 
 	if (ret != 0)
 		goto CLEANUP;
@@ -769,7 +769,7 @@ int xvsec_mcap_module_init(struct vsec_context *mcap_ctx)
 
 	pr_info("%s: mcap_ctx address : %p\n", __func__, mcap_ctx);
 
-	spin_lock_init(&mcap_ctx->lock);
+	mutex_init(&mcap_ctx->lock);
 	mcap_priv_ctx = kzalloc(sizeof(struct mcap_priv_ctx), GFP_KERNEL);
 	if (mcap_priv_ctx == NULL)
 		return -(ENOMEM);
