@@ -115,8 +115,8 @@ static long version_ioctl(struct xdma_cdev *xcdev, void __user *arg)
 	obj.subsystem_device = xdev->pdev->subsystem_device;
 	obj.feature_id = xdev->feature_id;
 	obj.driver_version = DRV_MOD_VERSION_NUMBER;
-	obj.domain = 0;
-	obj.bus = PCI_BUS_NUM(xdev->pdev->devfn);
+	obj.domain = xdev->pdev->slot->number;
+	obj.bus = xdev->pdev->bus->number;
 	obj.dev = PCI_SLOT(xdev->pdev->devfn);
 	obj.func = PCI_FUNC(xdev->pdev->devfn);
 	if (copy_to_user(arg, &obj, sizeof(struct xdma_ioc_info)))
