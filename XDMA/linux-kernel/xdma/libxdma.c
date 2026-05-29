@@ -31,7 +31,16 @@
 #include "libxdma_api.h"
 #include "cdev_sgdma.h"
 #include "xdma_thread.h"
+#include "version.h"
 
+
+#ifdef CONFIG_XDMA_DISABLE_CDEV
+// Define info here to prevent warnings when compiled without CDEV
+MODULE_LICENSE("Dual BSD/GPL");
+MODULE_AUTHOR("Xilinx, Inc.");
+MODULE_DESCRIPTION("Xilinx PCIe DMA library");
+MODULE_VERSION(DRV_MODULE_VERSION);
+#endif
 
 /* Module Parameters */
 static unsigned int poll_mode;
