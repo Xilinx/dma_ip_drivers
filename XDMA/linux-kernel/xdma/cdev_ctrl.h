@@ -59,6 +59,11 @@ struct xdma_ioc_base {
 	unsigned int command;
 };
 
+struct xdma_ioc_pci {
+	unsigned char number;
+	char name[48];
+};
+
 struct xdma_ioc_info {
 	struct xdma_ioc_base	base;
 	unsigned short		vendor;
@@ -72,6 +77,7 @@ struct xdma_ioc_info {
 	unsigned char		bus;
 	unsigned char		dev;
 	unsigned char		func;
+	struct xdma_ioc_pci	pci;
 };
 
 /* IOCTL codes */

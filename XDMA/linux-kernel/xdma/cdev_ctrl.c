@@ -119,6 +119,9 @@ static long version_ioctl(struct xdma_cdev *xcdev, void __user *arg)
 	obj.bus = PCI_BUS_NUM(xdev->pdev->devfn);
 	obj.dev = PCI_SLOT(xdev->pdev->devfn);
 	obj.func = PCI_FUNC(xdev->pdev->devfn);
+	obj.pci.number = xdev->pdev->bus->number;
+	memcpy(obj.pci.name, dev_name(&(xdev->pdev)->dev), sizeof(obj.pci.name));
+
 	if (copy_to_user(arg, &obj, sizeof(struct xdma_ioc_info)))
 		return -EFAULT;
 	return 0;
