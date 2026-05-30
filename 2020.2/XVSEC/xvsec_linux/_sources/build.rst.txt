@@ -67,9 +67,8 @@ Individual executables can also be built with commands listed against each compo
 
 Install built artifacts by running "make install"
 
--   The ``xvsecctl`` tool is installed in ``/user/local/sbin``.
-
--   The XVSEC module is installed in ``/lib/modules/<linux_kernel_version>/updates/kernel/drivers/xvsec``.
+	- The ``xvsecctl`` tool is installed in ``/user/local/sbin``.
+	- The XVSEC module is installed in ``/lib/modules/<linux_kernel_version>/updates/kernel/drivers/xvsec``.
 
 
 Loading the XVSEC Driver Module
@@ -82,7 +81,16 @@ The XVSEC driver does not have any module parameters and hence can be loaded dir
 
 ::
 
-	[xilinx@]# insmod xvsec.ko
+	[xilinx@]# modprobe xvsec
+
+Now the XVSEC software is ready for use.
+
+The eaxmple for the system having VCU1525(US+) card connected on bus 0x03 and device number 0x00 will have char dev nodes as below :
+
+	- Default generic char device node - /dev/xvsec0300.
+	- For US+ MCAP specific functionalities - /dev/xvsec0300_mcap.
+
+
 
 Unloading the XVSEC Driver Module
 ---------------------------------
@@ -91,4 +99,4 @@ The driver can be unloaded directly as shown below
 
 ::
 
-	[xilinx@]# rmmod xvsec.ko
+	[xilinx@]# rmmod xvsec

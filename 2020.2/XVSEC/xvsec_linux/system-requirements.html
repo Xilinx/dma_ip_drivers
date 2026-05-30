@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,6 +57,8 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Building and Installing the XVSEC Driver Software" href="build.html" />
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">System Requirements</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#xilinx-accelerator-cards">Xilinx Accelerator Cards</a></li>
@@ -413,33 +417,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="system-requirements">
-<span id="sys-req"></span><h1>System Requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="xilinx-accelerator-cards">
-<h2>Xilinx Accelerator Cards<a class="headerlink" href="#xilinx-accelerator-cards" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt><strong>1. US/US+ devices</strong></dt><dd><ul class="simple">
+  <section id="system-requirements">
+<span id="sys-req"></span><h1>System Requirements<a class="headerlink" href="#system-requirements" title="Permalink to this heading">¶</a></h1>
+<section id="xilinx-accelerator-cards">
+<h2>Xilinx Accelerator Cards<a class="headerlink" href="#xilinx-accelerator-cards" title="Permalink to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>US/US+ devices</dt><dd><ul class="simple">
 <li><p>VCU1525</p></li>
 </ul>
 </dd>
-<dt><strong>2. Versal devices</strong></dt><dd><ul class="simple">
+</dl>
+</li>
+<li><dl class="simple">
+<dt>S80 Versal devices</dt><dd><ul class="simple">
 <li><p>VCK5000</p></li>
 </ul>
 </dd>
 </dl>
-</div>
-<div class="section" id="host-platform">
-<h2>Host Platform<a class="headerlink" href="#host-platform" title="Permalink to this headline">¶</a></h2>
+</li>
+<li><dl class="simple">
+<dt>H10 Versal devices</dt><dd><ul class="simple">
+<li><p>XCVP1021</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</section>
+<section id="host-platform">
+<h2>Host Platform<a class="headerlink" href="#host-platform" title="Permalink to this heading">¶</a></h2>
 <p>x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 16GB RAM</p>
-</div>
-<div class="section" id="host-system-configuration">
-<h2>Host System Configuration<a class="headerlink" href="#host-system-configuration" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="host-system-configuration">
+<h2>Host System Configuration<a class="headerlink" href="#host-system-configuration" title="Permalink to this heading">¶</a></h2>
 <p>Linux XVSEC Driver release is verified on following Host system configuration</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Host System</p></th>
 <th class="head"><p>Configuration Details</p></th>
@@ -458,14 +471,16 @@
 </tbody>
 </table>
 <p>The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.</p>
-<ul class="simple">
+<blockquote>
+<div><ul class="simple">
 <li><p>Timer Functions</p></li>
 <li><p>PCIe Functions</p></li>
 <li><p>Kernel Memory functions</p></li>
 <li><p>Memory and GFP Functions</p></li>
 </ul>
-</div>
-</div>
+</div></blockquote>
+</section>
+</section>
 
 
            </div>
@@ -497,7 +512,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 21, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -575,7 +590,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

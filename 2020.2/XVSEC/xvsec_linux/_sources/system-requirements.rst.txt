@@ -7,12 +7,13 @@ Xilinx Accelerator Cards
 ------------------------
 
 1. US/US+ devices
-
-- VCU1525
+	- VCU1525
 
 2. S80 Versal devices
+	- VCK5000
 
-- VCK5000
+3. H10 Versal devices
+	- XCVP1021
 
 Host Platform
 -------------
@@ -37,8 +38,8 @@ Linux XVSEC Driver release is verified on following Host system configuration
 
 The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.
 
-- Timer Functions
-- PCIe Functions
-- Kernel Memory functions
-- Memory and GFP Functions
+	- Timer Functions
+	- PCIe Functions
+	- Kernel Memory functions
+	- Memory and GFP Functions
 

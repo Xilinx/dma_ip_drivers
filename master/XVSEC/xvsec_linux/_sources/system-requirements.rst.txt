@@ -6,14 +6,17 @@ System Requirements
 Xilinx Accelerator Cards
 ------------------------
 
-1. US/US+ devices
+1. :steelblue:`US/US+ devices`
 	- VCU1525
-
-2. S80 Versal devices
+   
+2. :steelblue:`S80 Versal devices`
 	- VCK5000
 
-3. H10 Versal devices
+3. :steelblue:`H10 Versal devices`
 	- XCVP1021
+
+4. :steelblue:`Spartan UltraScale+ devices`
+        - SU200P 
 
 Host Platform
 -------------
@@ -29,11 +32,11 @@ Linux XVSEC Driver release is verified on following Host system configuration
 +--------------------------+-------------------------------------------------------------+
 | Host System              | Configuration Details                                       |
 +==========================+=============================================================+
-| Operating System         | Ubuntu 18.04 LTS, Ubuntu 16.04 LTS                          |
+| Operating System         | Ubuntu 22.04.1 LTS                                          |
 +--------------------------+-------------------------------------------------------------+
-| Linux Kernel             | 4.15.0-23-generic, 4.4.0-93-generic                         |
+| Linux Kernel             | 6.8.0-65-generic                                            |
 +--------------------------+-------------------------------------------------------------+
-| RAM                      | 16GB                                                        |
+| RAM                      | 125GB                                                       |
 +--------------------------+-------------------------------------------------------------+
 
 The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.

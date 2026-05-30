@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,6 +57,8 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Functions" href="xvsec_linux_api_export_functions.html" />
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -343,9 +347,9 @@
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_enums.html">Enumerations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_var.html">Exported Variables</a></li>
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_structs.html">Data Structures</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Unions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#union-axi-cache-attr">union _axi_cache_attr</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#union-axi-reg-data">union _axi_reg_data</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Data Structures</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#struct-axi-cache-attr">struct _axi_cache_attr</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#struct-axi-reg-data">struct _axi_reg_data</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="xvsec_linux_api_export_functions.html">Functions</a></li>
@@ -409,7 +413,7 @@
         
           <li><a href="xvsec_linux_api_export.html">XVSEC Linux User Space APIs</a> &raquo;</li>
         
-      <li>Unions</li>
+      <li>Data Structures</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -428,37 +432,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="unions">
-<span id="cid-xvsec-api-union"></span><span id="doxid-group-xvsec-api-union"></span><h1>Unions<a class="headerlink" href="#unions" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="union-axi-cache-attr">
-<span id="cid-axi-cache-attr"></span><span id="doxid-union-axi-cache-attr"></span><span id="index-0"></span><h2>union _axi_cache_attr<a class="headerlink" href="#union-axi-cache-attr" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec.h&quot;</span></pre>
+  <section id="data-structures">
+<span id="cid-xvsec-api-union"></span><span id="doxid-group-xvsec-api-union"></span><h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">¶</a></h1>
+<section id="struct-axi-cache-attr">
+<span id="cid-axi-cache-attr"></span><span id="doxid-union-axi-cache-attr"></span><span id="index-0"></span><h2>struct _axi_cache_attr<a class="headerlink" href="#struct-axi-cache-attr" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>AXI cache and protection settings V2 corresponds to Versal devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-cache"><span id="doxid-union-axi-cache-attr-1a56b6bcb1f89dd7b63f9fbd3c31ac3762"></span><span></span><span class="kt">uint8_t</span> <span class="n">axi_cache</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-cache"><span id="doxid-union-axi-cache-attr-1a56b6bcb1f89dd7b63f9fbd3c31ac3762"></span><span></span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">axi_cache</span></pre>
 <p>AXI cache bits</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-prot"><span id="doxid-union-axi-cache-attr-1afd1a2f5ec1f2ced520fb34d48d67d194"></span><span></span><span class="kt">uint8_t</span> <span class="n">axi_prot</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-axi-prot"><span id="doxid-union-axi-cache-attr-1afd1a2f5ec1f2ced520fb34d48d67d194"></span><span></span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">axi_prot</span></pre>
 <p>AXI protection bits</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-v2"><span id="doxid-union-axi-cache-attr-1a9b9fd7f0ea507cfb9579dc59a6f36ad8"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v2</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-cache-attr-v2"><span id="doxid-union-axi-cache-attr-1a9b9fd7f0ea507cfb9579dc59a6f36ad8"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
 <p>AXI cache attributes for Versal devices</p>
-</div>
-<div class="section" id="union-axi-reg-data">
-<span id="cid-axi-reg-data"></span><span id="doxid-union-axi-reg-data"></span><span id="index-1"></span><h2>union _axi_reg_data<a class="headerlink" href="#union-axi-reg-data" title="Permalink to this headline">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec.h&quot;</span></pre>
+</section>
+<section id="struct-axi-reg-data">
+<span id="cid-axi-reg-data"></span><span id="doxid-union-axi-reg-data"></span><span id="index-1"></span><h2>struct _axi_reg_data<a class="headerlink" href="#struct-axi-reg-data" title="Permalink to this heading">¶</a></h2>
+<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec.h&quot;</span></pre>
 <p class="rubric">Overview</p>
 <p>AXI register access structure (for Read &amp; Writes) V2 corresponds to Versal devices.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-mode"><span id="doxid-union-axi-reg-data-1a9372f12521b1133d69f883f248f72bc9"></span><span></span><span class="n">axi_access_mode_t</span> <span class="n">mode</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-mode"><span id="doxid-union-axi-reg-data-1a9372f12521b1133d69f883f248f72bc9"></span><span></span><span class="n">axi_access_mode_t</span><span class="w"> </span><span class="n">mode</span></pre>
 <p>Holds the AXI sub-device operating mode (32 bit mode/128 bit mode), 128 bit mode only supported for write operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-address"><span id="doxid-union-axi-reg-data-1abe1786eb264a8d93b5d3271e694f1c80"></span><span></span><span class="kt">uint32_t</span> <span class="n">address</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-address"><span id="doxid-union-axi-reg-data-1abe1786eb264a8d93b5d3271e694f1c80"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">address</span></pre>
 <p>AXI register address</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-data"><span id="doxid-union-axi-reg-data-1aba7c8db2f5c6dce5e8a7ecac86b2664b"></span><span></span><span class="kt">uint32_t</span> <span class="n">data</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-data"><span id="doxid-union-axi-reg-data-1aba7c8db2f5c6dce5e8a7ecac86b2664b"></span><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></pre>
 <p>data field holds the data to write into the provided address for Write operation. Holds the data at the provided address for read operation</p>
-<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-v2"><span id="doxid-union-axi-reg-data-1a58a9fe15100bc9fad37d4cd7e59b9cbc"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span> <span class="nc">v2</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-axi-reg-data-v2"><span id="doxid-union-axi-reg-data-1a58a9fe15100bc9fad37d4cd7e59b9cbc"></span><span></span><span class="n">unnamed</span><span class="o">-</span><span class="k">struct</span><span class="w"> </span><span class="nc">v2</span></pre>
 <p>AXI register access parameters for Versal devices</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -490,7 +494,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 14, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -568,7 +572,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

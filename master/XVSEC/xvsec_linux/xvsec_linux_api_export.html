@@ -6,8 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
+		
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -41,11 +40,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -57,8 +55,7 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Definitions" href="xvsec_linux_api_export_defines.html" />
@@ -310,7 +307,7 @@
             
             
               <div class="version">
-                2020.2
+                2026.1
               </div>
             
           
@@ -335,7 +332,7 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -426,8 +423,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="xvsec-linux-user-space-apis">
-<h1>XVSEC Linux User Space APIs<a class="headerlink" href="#xvsec-linux-user-space-apis" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="xvsec-linux-user-space-apis">
+<h1>XVSEC Linux User Space APIs<a class="headerlink" href="#xvsec-linux-user-space-apis" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="xvsec_linux_api_export_defines.html">Definitions</a><ul>
@@ -451,6 +448,7 @@
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-cap-list-t">struct xvsec_cap_list_t</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-cap-t">struct xvsec_cap_t</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-fpga-cfg-regs-t">struct xvsec_fpga_cfg_regs_t</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-mcap-cfg-reg-t">struct xvsec_mcap_cfg_reg_t</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-mcap-ctl-reg-t">struct xvsec_mcap_ctl_reg_t</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-mcap-regs-t">struct xvsec_mcap_regs_t</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_structs.html#struct-xvsec-mcap-sts-reg-t">struct xvsec_mcap_sts_reg_t</a></li>
@@ -478,6 +476,7 @@
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcap-access-config-reg">xvsec_mcap_access_config_reg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcap-access-fpga-config-reg">xvsec_mcap_access_fpga_config_reg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcap-configure-fpga">xvsec_mcap_configure_fpga</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcapv3-configure-fpga">xvsec_mcapv3_configure_fpga</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcap-access-axi-reg">xvsec_mcap_access_axi_reg</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcap-file-download">xvsec_mcap_file_download</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xvsec_linux_api_export_functions.html#xvsec-mcap-file-upload">xvsec_mcap_file_upload</a></li>
@@ -487,7 +486,7 @@
 </li>
 </ul>
 </div>
-</section>
+</div>
 
 
            </div>
@@ -519,7 +518,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 11, 2022.
+        Last updated on April 23, 2026.
       </span>
 
     </p>
@@ -597,7 +596,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2018-2026, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

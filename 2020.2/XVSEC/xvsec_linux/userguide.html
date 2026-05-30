@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,6 +57,8 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Developers Guide" href="devguide.html" />
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -342,6 +346,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#generic-xvsecctl-utility-commands"><strong>Generic xvsecctl utility commands</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#us-us-mcap-specific-options"><strong>US/US+ MCAP Specific Options</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#versal-mcap-specific-options"><strong>Versal MCAP Specific Options</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#design-requirements"><strong>Design Requirements</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-usage"><strong>Example usage</strong></a></li>
 </ul>
 </li>
 </ul>
@@ -420,11 +426,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="user-guide">
-<span id="userguide"></span><h1>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h1>
+  <section id="user-guide">
+<span id="userguide"></span><h1>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this heading">¶</a></h1>
 <p>This section describes the details on usage of the XVSEC IP</p>
-<div class="section" id="control-xvsec-through-xvsecctl-application">
-<h2><strong>Control XVSEC through “xvsecctl” application</strong><a class="headerlink" href="#control-xvsec-through-xvsecctl-application" title="Permalink to this headline">¶</a></h2>
+<section id="control-xvsec-through-xvsecctl-application">
+<h2><strong>Control XVSEC through “xvsecctl” application</strong><a class="headerlink" href="#control-xvsec-through-xvsecctl-application" title="Permalink to this heading">¶</a></h2>
 <p>XVSEC SW includes a command-line utility called <code class="docutils literal notranslate"><span class="pre">xvsecctl</span></code> to manage the driver which gets built with driver and allows controlling of vendor specific functionality.</p>
 <p>It supports the following functionalities</p>
 <ul class="simple">
@@ -493,23 +499,27 @@
 </ul>
 <p>This version of the driver has the following limitation: <strong>Only MCAP VSEC is supported</strong></p>
 <p>Some MCAP functional usecases supported by xvsecctl application are given below</p>
-<div class="section" id="xvsec-control-application-xvsecctl">
-<h3>XVSEC Control Application (xvsecctl)<a class="headerlink" href="#xvsec-control-application-xvsecctl" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="get-the-list-of-vsecs-supported-by-device">
-<h4><strong>Get the list of VSECs supported by device</strong><a class="headerlink" href="#get-the-list-of-vsecs-supported-by-device" title="Permalink to this headline">¶</a></h4>
-<ul class="simple">
+<section id="xvsec-control-application-xvsecctl">
+<h3>XVSEC Control Application (xvsecctl)<a class="headerlink" href="#xvsec-control-application-xvsecctl" title="Permalink to this heading">¶</a></h3>
+<section id="get-the-list-of-vsecs-supported-by-device">
+<h4><strong>Get the list of VSECs supported by device</strong><a class="headerlink" href="#get-the-list-of-vsecs-supported-by-device" title="Permalink to this heading">¶</a></h4>
+<blockquote>
+<div><ul class="simple">
 <li><p>List the devices using lspci to cross check the devices are detected as PCIe devices</p></li>
 <li><p>login with root credentials and execute the below command to list the devices.</p></li>
 </ul>
+</div></blockquote>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@] # lspci | grep -i Xilinx
 
 65:00.0 Serial controller: Xilinx Corporation Device 9034
 </pre></div>
 </div>
-</div>
-<div class="section" id="generic-xvsecctl-utility-commands">
-<h4><strong>Generic xvsecctl utility commands</strong><a class="headerlink" href="#generic-xvsecctl-utility-commands" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">Note:</span> <span class="pre">Following</span> <span class="pre">parameters</span> <span class="pre">are</span> <span class="pre">common</span> <span class="pre">for</span> <span class="pre">all</span> <span class="pre">the</span> <span class="pre">commands.</span></code></p>
+</section>
+<section id="generic-xvsecctl-utility-commands">
+<h4><strong>Generic xvsecctl utility commands</strong><a class="headerlink" href="#generic-xvsecctl-utility-commands" title="Permalink to this heading">¶</a></h4>
+<p><strong>1. List XVSEC Capabilities</strong></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">xvsecctl</span> <span class="pre">-b</span> <span class="pre">&lt;bus_no&gt;</span> <span class="pre">-F</span> <span class="pre">&lt;dev_no&gt;</span> <span class="pre">-l</span></code></p>
+<p><strong>Parameters</strong></p>
 <dl class="simple">
 <dt>b &lt;bus_no&gt;:</dt><dd><ul class="simple">
 <li><p>Specify PCI bus no on which device sits</p></li>
@@ -520,8 +530,6 @@
 </ul>
 </dd>
 </dl>
-<p><strong>1. List XVSEC Capabilities</strong></p>
-<p>command: <code class="docutils literal notranslate"><span class="pre">xvsecctl</span> <span class="pre">-b</span> <span class="pre">&lt;bus_no&gt;</span> <span class="pre">-F</span> <span class="pre">&lt;dev_no&gt;</span> <span class="pre">-l</span></code></p>
 <p>Description:
 Lists the supported VSECs</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# ./xvsecctl -b 0x65 -F 0x0 -l
@@ -555,9 +563,9 @@ is_msi_enabled   = 0x0
 is_msix_enabled  = 0x0
 </pre></div>
 </div>
-</div>
-<div class="section" id="us-us-mcap-specific-options">
-<h4><strong>US/US+ MCAP Specific Options</strong><a class="headerlink" href="#us-us-mcap-specific-options" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="us-us-mcap-specific-options">
+<h4><strong>US/US+ MCAP Specific Options</strong><a class="headerlink" href="#us-us-mcap-specific-options" title="Permalink to this heading">¶</a></h4>
 <p><strong>1. MCAP Reset</strong></p>
 <p>command: <code class="docutils literal notranslate"><span class="pre">./xvsecctl</span> <span class="pre">-b</span> <span class="pre">&lt;bus_no&gt;</span> <span class="pre">-F</span> <span class="pre">&lt;dev_no&gt;</span> <span class="pre">-c</span> <span class="pre">0x1</span> <span class="pre">-r</span></code></p>
 <p>Description:
@@ -760,9 +768,36 @@ MCAP version: 1
 FPGA configuration successful
 </pre></div>
 </div>
-</div>
-<div class="section" id="versal-mcap-specific-options">
-<h4><strong>Versal MCAP Specific Options</strong><a class="headerlink" href="#versal-mcap-specific-options" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="versal-mcap-specific-options">
+<h4><strong>Versal MCAP Specific Options</strong><a class="headerlink" href="#versal-mcap-specific-options" title="Permalink to this heading">¶</a></h4>
+</section>
+<section id="design-requirements">
+<h4><strong>Design Requirements</strong><a class="headerlink" href="#design-requirements" title="Permalink to this heading">¶</a></h4>
+<p>The capability to load reconfigurable, partial bitstreams for DFX regions in the PL or Stage 2 bitstreams to employ the Tandem PCIe boot methodology via the combined hardware and software solution of the Xilinx MCAP for Versal devices is carried over from Ultrascale/Ultrascale+ devices, but differs significantly from previous generations.  While Ultrascale/Ultrascale+ devices had a dedicated connection to the configuration engine, Versal devices access the configuration engine via a generic connection to the NOC.  This means that there are design requirements that must be followed to enable the MCAP feature for Versal devices and successfully use the MCAP VSEC software.  For detailed information, refer to PG346 or PG347, but the design requirements are listed here for brevity.</p>
+<ol class="arabic">
+<li><p>Enable the MCAP capability and the “CPM to NOC” port via the CIPS GUI’s CPM module in the block design</p></li>
+<li><p>Enable the “NOC to PMC” port via the CIPS GUI’s PS PMC module in the block design</p></li>
+<li><p>Instantiate the AXI NOC IP and connect the CPM master to the PMC slave in the BD</p></li>
+<li><p>Assume the CPM master connects to the AXI NOC’s S00_AXI port and the PMC slave connects to the AXI NOC’s M00_AXI port.  Issue the following configuration TCL command.</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>set_property CONFIG.REMAPS {M00_AXI {{0xF122_0000 0x1_0122_0000 64K} {0xF210_0000 0x1_0210_0000 64K}}} [get_bd_intf_pins /axi_noc_0/S00_AXI]</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Using the IPI Address Editor tab, assign the pspmc_0_psv_pmc_slave_boot_stream and the pspmc_0_psv_pmc_slave_boot PMC slaves to the CPM master</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>assign_bd_address -offset 0xF1220000 -range 0x00010000 -target_address_space [get_bd_addr_spaces versal_cips_0/CPM_PCIE_NOC_0] [get_bd_addr_segs versal_cips_0/NOC_PMC_AXI_0/pspmc_0_psv_pmc_slave_boot] -force</p></li>
+<li><p>assign_bd_address -offset 0xF2100000 -range 0x00010000 -target_address_space [get_bd_addr_spaces versal_cips_0/CPM_PCIE_NOC_0] [get_bd_addr_segs versal_cips_0/NOC_PMC_AXI_0/pspmc_0_psv_pmc_slave_boot_stream] -force</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="example-usage">
+<h4><strong>Example usage</strong><a class="headerlink" href="#example-usage" title="Permalink to this heading">¶</a></h4>
 <p><strong>1. MCAP Module Reset</strong></p>
 <p>command: <code class="docutils literal notranslate"><span class="pre">./xvsecctl</span> <span class="pre">-b</span> <span class="pre">&lt;bus_no&gt;</span> <span class="pre">-F</span> <span class="pre">&lt;dev_no&gt;</span> <span class="pre">-c</span> <span class="pre">0x1</span> <span class="pre">-m</span></code></p>
 <p>Description:
@@ -806,7 +841,7 @@ BYTE OFFSET     Register Name           Data Value
 </pre></div>
 </div>
 <p><strong>3. PDI Download</strong></p>
-<p>command: <code class="docutils literal notranslate"><span class="pre">./xvsecctl</span> <span class="pre">-b</span> <span class="pre">&lt;bus_no&gt;</span> <span class="pre">-F</span> <span class="pre">&lt;dev_no&gt;</span> <span class="pre">-c</span> <span class="pre">0x1</span> <span class="pre">-p</span> <span class="pre">mode</span> <span class="pre">&lt;32b/128b&gt;</span> <span class="pre">type</span> <span class="pre">&lt;fixed/incr&gt;</span> <span class="pre">&lt;Address&gt;</span> <span class="pre">&lt;PDI</span> <span class="pre">File&gt;</span> <span class="pre">[tr_mode</span> <span class="pre">&lt;slow/fast&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">./xvsecctl</span> <span class="pre">-b</span> <span class="pre">&lt;bus_no&gt;</span> <span class="pre">-F</span> <span class="pre">&lt;dev_no&gt;</span> <span class="pre">-c</span> <span class="pre">0x1</span> <span class="pre">-p</span> <span class="pre">mode</span> <span class="pre">&lt;32b/128b&gt;</span> <span class="pre">type</span> <span class="pre">&lt;fixed/incr&gt;</span> <span class="pre">&lt;Address&gt;</span> <span class="pre">&lt;PDI</span> <span class="pre">File&gt;</span> <span class="pre">[tr_mode</span> <span class="pre">&lt;slow/fast&gt;]</span> <span class="pre">[sbi</span> <span class="pre">&lt;SBI</span> <span class="pre">reg</span> <span class="pre">block</span> <span class="pre">addr&gt;]</span></code></p>
 <p>Description:
 This command is used to Download the specified File (.pdi) at given address.</p>
 <p><strong>Parameters</strong></p>
@@ -832,6 +867,10 @@ This command is used to Download the specified File (.pdi) at given address.</p>
 <dt>[tr_mode ]</dt><dd><ul class="simple">
 <li><p>optional slow/fast download mode option for data transfer</p></li>
 <li><p>If tr_mode is not specified, It will use Default(fast) mode</p></li>
+</ul>
+</dd>
+<dt>[sbi ]</dt><dd><ul class="simple">
+<li><p>Slave Boot Interface register address, If the target is an SBI device</p></li>
 </ul>
 </dd>
 </dl>
@@ -861,6 +900,14 @@ MCAP version: 2
 tr_mode: 1
 [XVSEC] : xvsec_mcap_file_download : File Download successful
 File Download successful
+
+4) SBI register example: 128b, fixed mode with SBI fixed address 0xF2100000 and SBI register address 0x1220000
+-----------------------------------------------------------------------------------------------------------
+[xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type fixed 0xF2100000 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow sbi 0x1220000
+
+MCAP version: 2
+tr_mode: 1
+[XVSEC] : xvsec_mcap_file_download : File Download successful
 </pre></div>
 </div>
 <p><strong>4. PDI Upload</strong></p>
@@ -1013,10 +1060,10 @@ axi_cache: 0x1
 axi_prot: 0x2
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
+</section>
 
 
            </div>
@@ -1048,7 +1095,7 @@ axi_prot: 0x2
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 21, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -1126,7 +1173,7 @@ axi_prot: 0x2
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

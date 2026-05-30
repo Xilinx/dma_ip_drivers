@@ -27,13 +27,13 @@ This section describes the details of each option provided for xvsecctl commands
 +--------------------------+---------------------------+---------------------------------+-----------------+
 | -c <capability ID>       | Capability Identifier     | This ID can be identified from  |      All        |
 +--------------------------+---------------------------+---------------------------------+-----------------+
-|   **XVSEC-MCAP Common Options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 0, 1, 2)**                    |
+|   **XVSEC-MCAP Common Options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 0, 1, 2, 3)**                 |
 +--------------------------+---------------------------+---------------------------------+-----------------+
-| -m                       | --                        | Reset                           | US,US+,Versal   |
-|                          |                           | the MCAP module                 |                 |
+| -m                       | --                        | Reset                           | US,US+,Versal,  |
+|                          |                           | the MCAP module                 | Spartan US+     |
 +--------------------------+---------------------------+---------------------------------+-----------------+
-| -d                       | --                        | Print the MCAP                  | US,US+,Versal   |
-|                          |                           | Registers                       |                 |
+| -d                       | --                        | Print the MCAP                  | US,US+,Versal,  |
+|                          |                           | Registers                       | Spartan US+     |
 +--------------------------+---------------------------+---------------------------------+-----------------+
 | -a <offset> <access>     | **offset:** MCAP VSEC     |                                 |                 |
 | [data]                   | offset                    | Read the data at given          |                 |
@@ -42,8 +42,8 @@ This section describes the details of each option provided for xvsecctl commands
 |                          |                           |                                 |                 |
 |                          | - b -- for byte access    | (or)                            |                 |
 |                          |                           |                                 |                 |
-|                          | - h -- for short access   | Writes the given data at        | US,US+,Versal   |
-|                          |                           | given VSEC offset               |                 |
+|                          | - h -- for short access   | Writes the given data at        | US,US+,Versal,  |
+|                          |                           | given VSEC offset               | Spartan US+     |
 |                          | - w -- for word access    |                                 |                 |
 |                          |                           |                                 |                 |
 |                          | **data:**                 |                                 |                 |
@@ -171,6 +171,24 @@ This section describes the details of each option provided for xvsecctl commands
 |                          | **axi_prot:** value       |                                 |                 |
 |                          | to program at axi_prot    |                                 |                 |
 |                          | register                  |                                 |                 |
+|                          |                           |                                 |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+|      **XVSEC-MCAP Spartan US+ Specific Options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 3)**         |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -r                       | --                        | Reset the                       |     Spartan US+ |
+|                          |                           | configuration logic area        |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -f                       | --                        | Reset both                      |                 |
+|                          |                           | configuration logic and         |     Spartan US+ |
+|                          |                           | MCAP module                     |                 |
++--------------------------+---------------------------+---------------------------------+-----------------+
+| -p <bit stream>          | **Bitstream:**            | Program the bitstream           |                 |
+|                          |                           |                                 |                 |
+| <tr_mode slow/fast>      | bitstream file to         |                                 |                 |
+|                          | program                   |                                 |                 |
+|                          |                           |                                 |     Spartan US+ |
+|                          | **tr_mode:** Download mode|                                 |                 |
+|                          |          (Slow/Fast)      |                                 |                 |
 |                          |                           |                                 |                 |
 +--------------------------+---------------------------+---------------------------------+-----------------+
 

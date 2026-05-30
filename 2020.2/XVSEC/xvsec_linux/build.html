@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,6 +57,8 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="User Guide" href="userguide.html" />
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Building and Installing the XVSEC Driver Software</a><ul>
@@ -413,21 +417,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="building-and-installing-the-xvsec-driver-software">
-<h1>Building and Installing the XVSEC Driver Software<a class="headerlink" href="#building-and-installing-the-xvsec-driver-software" title="Permalink to this headline">¶</a></h1>
+  <section id="building-and-installing-the-xvsec-driver-software">
+<h1>Building and Installing the XVSEC Driver Software<a class="headerlink" href="#building-and-installing-the-xvsec-driver-software" title="Permalink to this heading">¶</a></h1>
 <p>For building the Linux XVSEC Driver, make sure the <a class="reference internal" href="system-requirements.html#sys-req"><span class="std std-ref">System Requirements</span></a> are satisfied.</p>
-<div class="section" id="building-the-xvsec-driver-software">
-<h2>Building the XVSEC Driver Software<a class="headerlink" href="#building-the-xvsec-driver-software" title="Permalink to this headline">¶</a></h2>
+<section id="building-the-xvsec-driver-software">
+<h2>Building the XVSEC Driver Software<a class="headerlink" href="#building-the-xvsec-driver-software" title="Permalink to this heading">¶</a></h2>
 <p>In order to compile the Xilinx XVSEC software, configured and compiled Linux kernel source tree is required.
 The source tree may contain only header files, or a complete tree. The source tree needs to be configured and the header files need to be compiled.
 The Linux kernel must be configured to use modules.</p>
 <p>Linux XVSEC Driver software can be found on the Xilinx github <a class="reference external" href="https://github.com/Xilinx/dma_ip_drivers/tree/master/XVSEC/linux-kernel">https://github.com/Xilinx/dma_ip_drivers/tree/master/XVSEC/linux-kernel</a>
 Below is the directory structure of the Linux XVSEC Driver software.</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><strong>Directory</strong></p></th>
 <th class="head"><p><strong>Description</strong></p></th>
@@ -461,11 +461,6 @@ to perform VSEC operations</p></td>
 Individual executables can also be built with commands listed against each component in below tables.</p>
 <p><strong>Kernel modules:</strong></p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 35%" />
-<col style="width: 37%" />
-<col style="width: 28%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Executable</p></th>
 <th class="head"><p>Description</p></th>
@@ -481,11 +476,6 @@ Individual executables can also be built with commands listed against each compo
 </table>
 <p><strong>Libraries:</strong></p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 29%" />
-<col style="width: 48%" />
-<col style="width: 23%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Executable</p></th>
 <th class="head"><p>Description</p></th>
@@ -501,11 +491,6 @@ Individual executables can also be built with commands listed against each compo
 </table>
 <p><strong>Applications:</strong></p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 58%" />
-<col style="width: 18%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Executable</p></th>
 <th class="head"><p>Description</p></th>
@@ -520,13 +505,15 @@ Individual executables can also be built with commands listed against each compo
 </tbody>
 </table>
 <p>Install built artifacts by running “make install”</p>
-<ul class="simple">
+<blockquote>
+<div><ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">xvsecctl</span></code> tool is installed in <code class="docutils literal notranslate"><span class="pre">/user/local/sbin</span></code>.</p></li>
 <li><p>The XVSEC module is installed in <code class="docutils literal notranslate"><span class="pre">/lib/modules/&lt;linux_kernel_version&gt;/updates/kernel/drivers/xvsec</span></code>.</p></li>
 </ul>
-</div>
-<div class="section" id="loading-the-xvsec-driver-module">
-<h2>Loading the XVSEC Driver Module<a class="headerlink" href="#loading-the-xvsec-driver-module" title="Permalink to this headline">¶</a></h2>
+</div></blockquote>
+</section>
+<section id="loading-the-xvsec-driver-module">
+<h2>Loading the XVSEC Driver Module<a class="headerlink" href="#loading-the-xvsec-driver-module" title="Permalink to this heading">¶</a></h2>
 <p>Before loading the XVSEC driver, make sure that the target board is connected to the Host System and required bit stream is loaded on to the board.</p>
 <p>The XVSEC driver does not have any module parameters and hence can be loaded directly as shown below</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# modprobe xvsec
@@ -534,19 +521,21 @@ Individual executables can also be built with commands listed against each compo
 </div>
 <p>Now the XVSEC software is ready for use.</p>
 <p>The eaxmple for the system having VCU1525(US+) card connected on bus 0x03 and device number 0x00 will have char dev nodes as below :</p>
-<ul class="simple">
+<blockquote>
+<div><ul class="simple">
 <li><p>Default generic char device node - /dev/xvsec0300.</p></li>
 <li><p>For US+ MCAP specific functionalities - /dev/xvsec0300_mcap.</p></li>
 </ul>
-</div>
-<div class="section" id="unloading-the-xvsec-driver-module">
-<h2>Unloading the XVSEC Driver Module<a class="headerlink" href="#unloading-the-xvsec-driver-module" title="Permalink to this headline">¶</a></h2>
+</div></blockquote>
+</section>
+<section id="unloading-the-xvsec-driver-module">
+<h2>Unloading the XVSEC Driver Module<a class="headerlink" href="#unloading-the-xvsec-driver-module" title="Permalink to this heading">¶</a></h2>
 <p>The driver can be unloaded directly as shown below</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# rmmod xvsec
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -578,7 +567,7 @@ Individual executables can also be built with commands listed against each compo
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 22, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -656,7 +645,7 @@ Individual executables can also be built with commands listed against each compo
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

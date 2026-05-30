@@ -6,7 +6,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		
+		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -40,10 +41,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -55,6 +57,8 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Data Structures" href="xvsec_linux_export_structs.html" />
@@ -331,7 +335,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -430,160 +434,162 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="enumerations">
-<span id="cid-xvsec-mcap-enums"></span><span id="doxid-group-xvsec-mcap-enums"></span><h1>Enumerations<a class="headerlink" href="#enumerations" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="enum-axi-access-mode">
-<span id="cid-axi-access-mode"></span><span id="doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7"></span><span id="index-0"></span><h2>enum axi_access_mode<a class="headerlink" href="#enum-axi-access-mode" title="Permalink to this headline">¶</a></h2>
+  <section id="enumerations">
+<span id="cid-xvsec-mcap-enums"></span><span id="doxid-group-xvsec-mcap-enums"></span><h1>Enumerations<a class="headerlink" href="#enumerations" title="Permalink to this heading">¶</a></h1>
+<section id="enum-axi-access-mode">
+<span id="cid-axi-access-mode"></span><span id="doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7"></span><span id="index-0"></span><h2>enum axi_access_mode<a class="headerlink" href="#enum-axi-access-mode" title="Permalink to this heading">¶</a></h2>
 <p class="rubric">Overview</p>
 <p>AXI Address Access mode used to access AXI sub-devices via XVSEC-MCAP interface.</p>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="c1">// enum values</span>
 
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga32514782ad53dfa7b7bdd82a9a7acaf7a2396c48ba75769cd19e22b23f37e38db"><span class="std std-ref">MCAP_AXI_MODE_32B</span></a><span></span> <span class="o">=</span> <span class="mi">0</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga32514782ad53dfa7b7bdd82a9a7acaf7a648afc2e6e4f0c73d446415cd810436d"><span class="std std-ref">MCAP_AXI_MODE_128B</span></a></pre>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7a2396c48ba75769cd19e22b23f37e38db"><span class="std std-ref">MCAP_AXI_MODE_32B</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7a648afc2e6e4f0c73d446415cd810436d"><span class="std std-ref">MCAP_AXI_MODE_128B</span></a></pre>
 <p class="rubric" id="details-doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7">Enum values</p>
 <p><span class="raw-html"><table><tr><th>Value</th><th>Description</th></tr></span></p>
-<p id="cid-axi-access-mode-mcap-axi-mode-32b"><span id="doxid-xvsec-mcap-8h-1ga32514782ad53dfa7b7bdd82a9a7acaf7a2396c48ba75769cd19e22b23f37e38db"></span><span class="raw-html"><tr><td></span>
+<p id="cid-axi-access-mode-mcap-axi-mode-32b"><span id="doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7a2396c48ba75769cd19e22b23f37e38db"></span><span class="raw-html"><tr><td></span>
 MCAP_AXI_MODE_32B</p>
 <p><span class="raw-html"></td><td></span>
 32-bit AXI address mode</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-axi-access-mode-mcap-axi-mode-128b"><span id="doxid-xvsec-mcap-8h-1ga32514782ad53dfa7b7bdd82a9a7acaf7a648afc2e6e4f0c73d446415cd810436d"></span><span class="raw-html"><tr><td></span>
+<p id="cid-axi-access-mode-mcap-axi-mode-128b"><span id="doxid-group-xvsec-mcap-enums-1ga32514782ad53dfa7b7bdd82a9a7acaf7a648afc2e6e4f0c73d446415cd810436d"></span><span class="raw-html"><tr><td></span>
 MCAP_AXI_MODE_128B</p>
 <p><span class="raw-html"></td><td></span>
 128-bit AXI address mode</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
-</div>
-<div class="section" id="enum-axi-address-type">
-<span id="cid-axi-address-type"></span><span id="doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdb"></span><span id="index-1"></span><h2>enum axi_address_type<a class="headerlink" href="#enum-axi-address-type" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="enum-axi-address-type">
+<span id="cid-axi-address-type"></span><span id="doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdb"></span><span id="index-1"></span><h2>enum axi_address_type<a class="headerlink" href="#enum-axi-address-type" title="Permalink to this heading">¶</a></h2>
 <p class="rubric">Overview</p>
 <p>Indicates the AXI device access type.</p>
-<p>FIFO type devices support fixed mode where the address is fixed.</p>
-<p>Other types of device support increment address type where the address to be incremented for every transaction.</p>
+<pre class="highlight literal-block">FIFO type devices support fixed mode where the address is fixed.
+
+Other types of device support increment address type
+where the address to be incremented for every transaction.</pre>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="c1">// enum values</span>
 
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga9fcd79c2fd0d751580df6536e252efdbaa446eef703aa384b796e6b9fdf2467c2"><span class="std std-ref">FIXED_ADDRESS</span></a><span></span> <span class="o">=</span> <span class="mi">0</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga9fcd79c2fd0d751580df6536e252efdba17636ee51c2008dffd56e74798ad3f5e"><span class="std std-ref">INCREMENT_ADDRESS</span></a></pre>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdbaa446eef703aa384b796e6b9fdf2467c2"><span class="std std-ref">FIXED_ADDRESS</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdba17636ee51c2008dffd56e74798ad3f5e"><span class="std std-ref">INCREMENT_ADDRESS</span></a></pre>
 <p class="rubric" id="details-doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdb">Enum values</p>
 <p><span class="raw-html"><table><tr><th>Value</th><th>Description</th></tr></span></p>
-<p id="cid-axi-address-type-fixed-address"><span id="doxid-xvsec-mcap-8h-1ga9fcd79c2fd0d751580df6536e252efdbaa446eef703aa384b796e6b9fdf2467c2"></span><span class="raw-html"><tr><td></span>
+<p id="cid-axi-address-type-fixed-address"><span id="doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdbaa446eef703aa384b796e6b9fdf2467c2"></span><span class="raw-html"><tr><td></span>
 FIXED_ADDRESS</p>
 <p><span class="raw-html"></td><td></span>
 Fixed address type for FIFO type devices</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-axi-address-type-increment-address"><span id="doxid-xvsec-mcap-8h-1ga9fcd79c2fd0d751580df6536e252efdba17636ee51c2008dffd56e74798ad3f5e"></span><span class="raw-html"><tr><td></span>
+<p id="cid-axi-address-type-increment-address"><span id="doxid-group-xvsec-mcap-enums-1ga9fcd79c2fd0d751580df6536e252efdba17636ee51c2008dffd56e74798ad3f5e"></span><span class="raw-html"><tr><td></span>
 INCREMENT_ADDRESS</p>
 <p><span class="raw-html"></td><td></span>
 Increment address type for other devices</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
-</div>
-<div class="section" id="enum-bitstream-program-status">
-<span id="cid-bitstream-program-status"></span><span id="doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ff"></span><span id="index-2"></span><h2>enum bitstream_program_status<a class="headerlink" href="#enum-bitstream-program-status" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="enum-bitstream-program-status">
+<span id="cid-bitstream-program-status"></span><span id="doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ff"></span><span id="index-2"></span><h2>enum bitstream_program_status<a class="headerlink" href="#enum-bitstream-program-status" title="Permalink to this heading">¶</a></h2>
 <p class="rubric">Overview</p>
 <p>Enumeration for XVSEC-MCAP bitstream program Result.</p>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="c1">// enum values</span>
 
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga3c32470a63cc98f0cddf44f5abc836ffaa4418732d526e69ca909d37df7c70d33"><span class="std std-ref">MCAP_BITSTREAM_PROGRAM_SUCCESS</span></a><span></span> <span class="o">=</span> <span class="mi">0</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga3c32470a63cc98f0cddf44f5abc836ffadae6450fbeef1ebe13a1f183284a2d2f"><span class="std std-ref">MCAP_BITSTREAM_PROGRAM_FAILURE</span></a><span></span> <span class="o">=</span> <span class="mi">1</span></pre>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ffaa4418732d526e69ca909d37df7c70d33"><span class="std std-ref">MCAP_BITSTREAM_PROGRAM_SUCCESS</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ffadae6450fbeef1ebe13a1f183284a2d2f"><span class="std std-ref">MCAP_BITSTREAM_PROGRAM_FAILURE</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span></pre>
 <p class="rubric" id="details-doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ff">Enum values</p>
 <p><span class="raw-html"><table><tr><th>Value</th><th>Description</th></tr></span></p>
-<p id="cid-bitstream-program-status-mcap-bitstream-program-success"><span id="doxid-xvsec-mcap-8h-1ga3c32470a63cc98f0cddf44f5abc836ffaa4418732d526e69ca909d37df7c70d33"></span><span class="raw-html"><tr><td></span>
+<p id="cid-bitstream-program-status-mcap-bitstream-program-success"><span id="doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ffaa4418732d526e69ca909d37df7c70d33"></span><span class="raw-html"><tr><td></span>
 MCAP_BITSTREAM_PROGRAM_SUCCESS</p>
 <p><span class="raw-html"></td><td></span>
 Programming Success Indication</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-bitstream-program-status-mcap-bitstream-program-failure"><span id="doxid-xvsec-mcap-8h-1ga3c32470a63cc98f0cddf44f5abc836ffadae6450fbeef1ebe13a1f183284a2d2f"></span><span class="raw-html"><tr><td></span>
+<p id="cid-bitstream-program-status-mcap-bitstream-program-failure"><span id="doxid-group-xvsec-mcap-enums-1ga3c32470a63cc98f0cddf44f5abc836ffadae6450fbeef1ebe13a1f183284a2d2f"></span><span class="raw-html"><tr><td></span>
 MCAP_BITSTREAM_PROGRAM_FAILURE</p>
 <p><span class="raw-html"></td><td></span>
 Programming Failure Indication</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
-</div>
-<div class="section" id="enum-data-transfer-mode">
-<span id="cid-data-transfer-mode"></span><span id="doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2"></span><span id="index-3"></span><h2>enum data_transfer_mode<a class="headerlink" href="#enum-data-transfer-mode" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="enum-data-transfer-mode">
+<span id="cid-data-transfer-mode"></span><span id="doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2"></span><span id="index-3"></span><h2>enum data_transfer_mode<a class="headerlink" href="#enum-data-transfer-mode" title="Permalink to this heading">¶</a></h2>
 <p class="rubric">Overview</p>
 <p>Indicates mode of data transfer for download functionality.</p>
 <pre class="highlight overview-code-block literal-block"><span></span><span class="c1">// enum values</span>
 
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga1214350a9a651ab7d65b02ac317623b2a8ec3c4658c72b30504dca719ee5edda8"><span class="std std-ref">DATA_TRANSFER_MODE_FAST</span></a><span></span> <span class="o">=</span> <span class="mi">0</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1ga1214350a9a651ab7d65b02ac317623b2af73ddf3bbd32f34665313240b65652b8"><span class="std std-ref">DATA_TRANSFER_MODE_SLOW</span></a></pre>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2a8ec3c4658c72b30504dca719ee5edda8"><span class="std std-ref">DATA_TRANSFER_MODE_FAST</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2af73ddf3bbd32f34665313240b65652b8"><span class="std std-ref">DATA_TRANSFER_MODE_SLOW</span></a></pre>
 <p class="rubric" id="details-doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2">Enum values</p>
 <p><span class="raw-html"><table><tr><th>Value</th><th>Description</th></tr></span></p>
-<p id="cid-data-transfer-mode-data-transfer-mode-fast"><span id="doxid-xvsec-mcap-8h-1ga1214350a9a651ab7d65b02ac317623b2a8ec3c4658c72b30504dca719ee5edda8"></span><span class="raw-html"><tr><td></span>
+<p id="cid-data-transfer-mode-data-transfer-mode-fast"><span id="doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2a8ec3c4658c72b30504dca719ee5edda8"></span><span class="raw-html"><tr><td></span>
 DATA_TRANSFER_MODE_FAST</p>
 <p><span class="raw-html"></td><td></span>
 Fast Transfer mode and the default one when not specified</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-data-transfer-mode-data-transfer-mode-slow"><span id="doxid-xvsec-mcap-8h-1ga1214350a9a651ab7d65b02ac317623b2af73ddf3bbd32f34665313240b65652b8"></span><span class="raw-html"><tr><td></span>
+<p id="cid-data-transfer-mode-data-transfer-mode-slow"><span id="doxid-group-xvsec-mcap-enums-1ga1214350a9a651ab7d65b02ac317623b2af73ddf3bbd32f34665313240b65652b8"></span><span class="raw-html"><tr><td></span>
 DATA_TRANSFER_MODE_SLOW</p>
 <p><span class="raw-html"></td><td></span>
 Slow Transfer mode</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
-</div>
-<div class="section" id="enum-file-operation-status">
-<span id="cid-file-operation-status"></span><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecc"></span><span id="index-4"></span><h2>enum file_operation_status<a class="headerlink" href="#enum-file-operation-status" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="enum-file-operation-status">
+<span id="cid-file-operation-status"></span><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecc"></span><span id="index-4"></span><h2>enum file_operation_status<a class="headerlink" href="#enum-file-operation-status" title="Permalink to this heading">¶</a></h2>
 <p class="rubric">Overview</p>
 <p>Indicates File operation(Download/Upload) result.</p>
-<pre class="highlight overview-code-block literal-block" id="cid-file-operation-status-file-op-reserved"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca67a3f6bf092428612a0cf66afd6b4d1f"></span><span></span><span class="c1">// enum values</span>
+<pre class="highlight overview-code-block literal-block" id="cid-file-operation-status-file-op-reserved"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca67a3f6bf092428612a0cf66afd6b4d1f"></span><span></span><span class="c1">// enum values</span>
 
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca806be4bd680ee83dcece62734707b448"><span class="std std-ref">FILE_OP_SUCCESS</span></a><span></span> <span class="o">=</span> <span class="mi">0</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca1d55998849b3dcfc4e903dd0fdb41bda"><span class="std std-ref">FILE_OP_FAIL_SLVERR</span></a><span></span> <span class="o">=</span> <span class="mi">1</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca3c5291e7610f8f7aed08e56d0d6b473f"><span class="std std-ref">FILE_OP_FAIL_DECERR</span></a><span></span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">FILE_OP_RESERVED</span> <span class="o">=</span> <span class="mi">3</span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca20d96ab6a7e73bd2c7d386a52bac9a91"><span class="std std-ref">FILE_OP_FAILED</span></a><span></span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456eccaad7a73b0f050daee8f67301c938688cc"><span class="std std-ref">FILE_OP_ZERO_FSIZE</span></a><span></span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca4117652fe3b4d2c3ea54e5afc5ef2f35"><span class="std std-ref">FILE_OP_INVALID_FSIZE</span></a><span></span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca870eec2e3ed85c708852a377e2f6ad6e"><span class="std std-ref">FILE_OP_HW_BUSY</span></a><span></span>
-<a class="reference internal" href="#doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca759c9286ca651a43c0553528365a6764"><span class="std std-ref">FILE_PATH_TOO_LONG</span></a></pre>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca806be4bd680ee83dcece62734707b448"><span class="std std-ref">FILE_OP_SUCCESS</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca1d55998849b3dcfc4e903dd0fdb41bda"><span class="std std-ref">FILE_OP_FAIL_SLVERR</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca3c5291e7610f8f7aed08e56d0d6b473f"><span class="std std-ref">FILE_OP_FAIL_DECERR</span></a><span></span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"></span>
+<span class="n">FILE_OP_RESERVED</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="w"></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca20d96ab6a7e73bd2c7d386a52bac9a91"><span class="std std-ref">FILE_OP_FAILED</span></a><span></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456eccaad7a73b0f050daee8f67301c938688cc"><span class="std std-ref">FILE_OP_ZERO_FSIZE</span></a><span></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca4117652fe3b4d2c3ea54e5afc5ef2f35"><span class="std std-ref">FILE_OP_INVALID_FSIZE</span></a><span></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca870eec2e3ed85c708852a377e2f6ad6e"><span class="std std-ref">FILE_OP_HW_BUSY</span></a><span></span>
+<a class="reference internal" href="#doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca759c9286ca651a43c0553528365a6764"><span class="std std-ref">FILE_PATH_TOO_LONG</span></a></pre>
 <p class="rubric" id="details-doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecc">Enum values</p>
 <p><span class="raw-html"><table><tr><th>Value</th><th>Description</th></tr></span></p>
-<p id="cid-file-operation-status-file-op-success"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca806be4bd680ee83dcece62734707b448"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-success"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca806be4bd680ee83dcece62734707b448"></span><span class="raw-html"><tr><td></span>
 FILE_OP_SUCCESS</p>
 <p><span class="raw-html"></td><td></span>
 File Operation Successful</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-op-fail-slverr"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca1d55998849b3dcfc4e903dd0fdb41bda"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-fail-slverr"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca1d55998849b3dcfc4e903dd0fdb41bda"></span><span class="raw-html"><tr><td></span>
 FILE_OP_FAIL_SLVERR</p>
 <p><span class="raw-html"></td><td></span>
 File Operation failed with XVSEC-MCAP error SLVERR</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-op-fail-decerr"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca3c5291e7610f8f7aed08e56d0d6b473f"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-fail-decerr"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca3c5291e7610f8f7aed08e56d0d6b473f"></span><span class="raw-html"><tr><td></span>
 FILE_OP_FAIL_DECERR</p>
 <p><span class="raw-html"></td><td></span>
 File Operation failed with XVSEC-MCAP error DECERR</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-op-failed"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca20d96ab6a7e73bd2c7d386a52bac9a91"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-failed"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca20d96ab6a7e73bd2c7d386a52bac9a91"></span><span class="raw-html"><tr><td></span>
 FILE_OP_FAILED</p>
 <p><span class="raw-html"></td><td></span>
 File operation failed</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-op-zero-fsize"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456eccaad7a73b0f050daee8f67301c938688cc"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-zero-fsize"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456eccaad7a73b0f050daee8f67301c938688cc"></span><span class="raw-html"><tr><td></span>
 FILE_OP_ZERO_FSIZE</p>
 <p><span class="raw-html"></td><td></span>
 Zero size file is provided as input</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-op-invalid-fsize"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca4117652fe3b4d2c3ea54e5afc5ef2f35"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-invalid-fsize"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca4117652fe3b4d2c3ea54e5afc5ef2f35"></span><span class="raw-html"><tr><td></span>
 FILE_OP_INVALID_FSIZE</p>
 <p><span class="raw-html"></td><td></span>
 Valid File size is not provided</p>
 <p>for 32-bit mode, file size must be multiple of 32-bits / 4 bytes</p>
 <p>for 128-bit mode, file size must be multiple of 128-bits / 16 bytes</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-op-hw-busy"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca870eec2e3ed85c708852a377e2f6ad6e"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-op-hw-busy"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca870eec2e3ed85c708852a377e2f6ad6e"></span><span class="raw-html"><tr><td></span>
 FILE_OP_HW_BUSY</p>
 <p><span class="raw-html"></td><td></span>
 File operation failed with XVSEC-MCAP HW timeout on completion</p>
 <p><span class="raw-html"></td></tr></span></p>
-<p id="cid-file-operation-status-file-path-too-long"><span id="doxid-xvsec-mcap-8h-1gafb1f22b4d1f42b3bacc8177126456ecca759c9286ca651a43c0553528365a6764"></span><span class="raw-html"><tr><td></span>
+<p id="cid-file-operation-status-file-path-too-long"><span id="doxid-group-xvsec-mcap-enums-1gafb1f22b4d1f42b3bacc8177126456ecca759c9286ca651a43c0553528365a6764"></span><span class="raw-html"><tr><td></span>
 FILE_PATH_TOO_LONG</p>
 <p><span class="raw-html"></td><td></span>
 Provided file path is too long to fit in internal buffers</p>
 <p><span class="raw-html"></td></tr></span></p>
 <p><span class="raw-html"></table></span></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -615,7 +621,7 @@ Provided file path is too long to fit in internal buffers</p>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on October 21, 2020.
+        Last updated on August 11, 2022.
       </span>
 
     </p>
@@ -693,7 +699,7 @@ Provided file path is too long to fit in internal buffers</p>
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2020, Xilinx, Inc
+                                  &copy; 2018-2022, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

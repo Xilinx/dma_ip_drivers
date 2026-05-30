@@ -6,8 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
+		
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -41,11 +40,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -57,8 +55,7 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Data Structures" href="xvsec_linux_export_union.html" />
@@ -310,7 +307,7 @@
             
             
               <div class="version">
-                2020.2
+                2026.1
               </div>
             
           
@@ -335,7 +332,7 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -431,37 +428,55 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="data-structures">
-<span id="cid-xvsec-struct"></span><span id="doxid-group-xvsec-struct"></span><h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this heading">¶</a></h1>
-<section id="struct-xvsec-capabilities">
-<span id="cid-xvsec-capabilities"></span><span id="doxid-structxvsec-capabilities"></span><span id="index-0"></span><h2>struct xvsec_capabilities<a class="headerlink" href="#struct-xvsec-capabilities" title="Permalink to this heading">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_drv.h&quot;</span></pre>
+  <div class="section" id="data-structures">
+<span id="cid-xvsec-struct"></span><span id="doxid-group-xvsec-struct"></span><h1>Data Structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="struct-xvsec-capabilities">
+<span id="cid-xvsec-capabilities"></span><span id="doxid-structxvsec-capabilities"></span><span id="index-0"></span><h2>struct xvsec_capabilities<a class="headerlink" href="#struct-xvsec-capabilities" title="Permalink to this headline">¶</a></h2>
+<pre class="highlight overview-code-block literal-block">
+<span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_drv.h&quot;</span>
+</pre>
 <p class="rubric">Overview</p>
 <p>Xilinx Vendor Specific Capabilities present in the device.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-capabilities-no-of-caps"><span id="doxid-structxvsec-capabilities-1a7c6328e2f4acbad6f7d0e437a12a6938"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">no_of_caps</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-capabilities-no-of-caps">
+<span id="doxid-structxvsec-capabilities-1a7c6328e2f4acbad6f7d0e437a12a6938"></span><span></span><span class="kt">uint16_t</span> <span class="n">no_of_caps</span>
+</pre>
 <p>Number of VSEC capabilities supported by the device</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-capabilities-vsec-info"><span id="doxid-structxvsec-capabilities-1ab41085fb4b8a6e67ffe70f883171898d"></span><span></span><span class="k">struct</span><span class="w"> </span><a class="reference internal" href="#doxid-structxvsec-vsec-info"><span class="std std-ref">xvsec_vsec_info</span></a><span></span><span class="w"> </span><span class="n">vsec_info</span><span class="w"> </span><span class="p">[</span><span class="n">MAX_CAPABILITIES_SUPPORTED</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-capabilities-vsec-info">
+<span id="doxid-structxvsec-capabilities-1ab41085fb4b8a6e67ffe70f883171898d"></span><span></span><span class="k">struct</span> <a class="reference internal" href="#doxid-structxvsec-vsec-info"><span class="std std-ref">xvsec_vsec_info</span></a><span></span> <span class="n">vsec_info</span> <span class="p">[</span><span class="n">MAX_CAPABILITIES_SUPPORTED</span><span class="p">]</span>
+</pre>
 <p>Vsec inforamtion</p>
-</section>
-<section id="struct-xvsec-vsec-info">
-<span id="cid-xvsec-vsec-info"></span><span id="doxid-structxvsec-vsec-info"></span><span id="index-1"></span><h2>struct xvsec_vsec_info<a class="headerlink" href="#struct-xvsec-vsec-info" title="Permalink to this heading">¶</a></h2>
-<pre class="highlight overview-code-block literal-block"><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;xvsec_drv.h&quot;</span></pre>
+</div>
+<div class="section" id="struct-xvsec-vsec-info">
+<span id="cid-xvsec-vsec-info"></span><span id="doxid-structxvsec-vsec-info"></span><span id="index-1"></span><h2>struct xvsec_vsec_info<a class="headerlink" href="#struct-xvsec-vsec-info" title="Permalink to this headline">¶</a></h2>
+<pre class="highlight overview-code-block literal-block">
+<span></span><span class="cp">#include</span> <span class="cpf">&quot;xvsec_drv.h&quot;</span>
+</pre>
 <p class="rubric">Overview</p>
 <p>Xilinx Vendor Specific Capabilities device information.</p>
 <p class="rubric">Fields</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-cap-id"><span id="doxid-structxvsec-vsec-info-1a61d5f298a6afa4c18691abba36ad28b5"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">cap_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-cap-id">
+<span id="doxid-structxvsec-vsec-info-1a61d5f298a6afa4c18691abba36ad28b5"></span><span></span><span class="kt">uint16_t</span> <span class="n">cap_id</span>
+</pre>
 <p>Capability ID Info</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-rev-id"><span id="doxid-structxvsec-vsec-info-1a182648e20917f97740aecc2cd7d366cf"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">rev_id</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-rev-id">
+<span id="doxid-structxvsec-vsec-info-1a182648e20917f97740aecc2cd7d366cf"></span><span></span><span class="kt">uint16_t</span> <span class="n">rev_id</span>
+</pre>
 <p>VSEC revision Info</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-offset"><span id="doxid-structxvsec-vsec-info-1a50f5c651bd5fe556a4dfa67ff4f639f1"></span><span></span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">offset</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-offset">
+<span id="doxid-structxvsec-vsec-info-1a50f5c651bd5fe556a4dfa67ff4f639f1"></span><span></span><span class="kt">uint16_t</span> <span class="n">offset</span>
+</pre>
 <p>Capability Offset Info in PCIe configuration space</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-name"><span id="doxid-structxvsec-vsec-info-1a67c9ecc8dd1058d1449140b8162076de"></span><span></span><span class="kt">char</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="p">[</span><span class="n">MAX_VSEC_STR_LEN</span><span class="p">]</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-name">
+<span id="doxid-structxvsec-vsec-info-1a67c9ecc8dd1058d1449140b8162076de"></span><span></span><span class="kt">char</span> <span class="n">name</span> <span class="p">[</span><span class="n">MAX_VSEC_STR_LEN</span><span class="p">]</span>
+</pre>
 <p>VSEC Capability name</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-is-supported"><span id="doxid-structxvsec-vsec-info-1a3e5870ae32ee984542d115e8449fc28a"></span><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">is_supported</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-vsec-info-is-supported">
+<span id="doxid-structxvsec-vsec-info-1a3e5870ae32ee984542d115e8449fc28a"></span><span></span><span class="kt">bool</span> <span class="n">is_supported</span>
+</pre>
 <p>info to check capability supported by this drv or not</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
@@ -493,7 +508,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 11, 2022.
+        Last updated on April 23, 2026.
       </span>
 
     </p>
@@ -571,7 +586,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2018-2026, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

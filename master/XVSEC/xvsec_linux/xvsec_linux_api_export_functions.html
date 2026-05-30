@@ -6,8 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
+		
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -41,11 +40,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -57,8 +55,7 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="User Application" href="user_app.html" />
@@ -310,7 +307,7 @@
             
             
               <div class="version">
-                2020.2
+                2026.1
               </div>
             
           
@@ -335,7 +332,7 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -365,6 +362,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#xvsec-mcap-access-config-reg">xvsec_mcap_access_config_reg</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xvsec-mcap-access-fpga-config-reg">xvsec_mcap_access_fpga_config_reg</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xvsec-mcap-configure-fpga">xvsec_mcap_configure_fpga</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#xvsec-mcapv3-configure-fpga">xvsec_mcapv3_configure_fpga</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xvsec-mcap-access-axi-reg">xvsec_mcap_access_axi_reg</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xvsec-mcap-file-download">xvsec_mcap_file_download</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#xvsec-mcap-file-upload">xvsec_mcap_file_upload</a></li>
@@ -451,23 +449,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="functions">
-<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h1>
-<section id="xvsec-lib-init">
-<span id="cid-xvsec-lib-init"></span><span id="doxid-group-xvsec-api-func-1ga6a36872e6f53e936198de2069aa7837b"></span><h2>xvsec_lib_init<a class="headerlink" href="#xvsec-lib-init" title="Permalink to this heading">¶</a></h2>
+  <div class="section" id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="xvsec-lib-init">
+<span id="cid-xvsec-lib-init"></span><span id="doxid-group-xvsec-api-func-1ga6a36872e6f53e936198de2069aa7837b"></span><h2>xvsec_lib_init<a class="headerlink" href="#xvsec-lib-init" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_lib_init</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">max_devices</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_lib_init</span> <span class="p">(</span><span class="kt">int</span> <span class="n">max_devices</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga6a36872e6f53e936198de2069aa7837b"><span class="std std-ref">xvsec_lib_init()</span></a> - Initializes the XVSEC Library by allocating memory to support requested number of devices</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>max_devices</p></td>
-<td><p>Maximum devices to support</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>max_devices</td>
+<td>Maximum devices to support</td>
 </tr>
 </tbody>
 </table>
@@ -475,58 +475,62 @@
 <p>XVSEC_SUCCESS : Success</p>
 <p>XVSEC_ERR_MEM_ALLOC_FAILED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Filure</p>
-</section>
-<section id="xvsec-lib-deinit">
-<span id="cid-xvsec-lib-deinit"></span><span id="doxid-group-xvsec-api-func-1ga552e8c658cf13a368a3f36903bac50f9"></span><h2>xvsec_lib_deinit<a class="headerlink" href="#xvsec-lib-deinit" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-lib-deinit">
+<span id="cid-xvsec-lib-deinit"></span><span id="doxid-group-xvsec-api-func-1ga552e8c658cf13a368a3f36903bac50f9"></span><h2>xvsec_lib_deinit<a class="headerlink" href="#xvsec-lib-deinit" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_lib_deinit</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_lib_deinit</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga552e8c658cf13a368a3f36903bac50f9"><span class="std std-ref">xvsec_lib_deinit()</span></a> - De-initializes the XVSEC Library by freeing allocated memory and clearing the context</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>none</p></td>
-<td></td>
+<tbody valign="top">
+<tr class="row-odd"><td>none</td>
+<td>&#160;</td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Returns:</p>
 <p>XVSEC_SUCCESS : Success</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-open">
-<span id="cid-xvsec-open"></span><span id="doxid-group-xvsec-api-func-1gadc001429779edaffce5d1a8388bbbe4c"></span><h2>xvsec_open<a class="headerlink" href="#xvsec-open" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-open">
+<span id="cid-xvsec-open"></span><span id="doxid-group-xvsec-api-func-1gadc001429779edaffce5d1a8388bbbe4c"></span><h2>xvsec_open<a class="headerlink" href="#xvsec-open" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_open</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">bus_no</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">dev_no</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">dev_str</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_open</span> <span class="p">(</span>
+    <span class="kt">uint16_t</span> <span class="n">bus_no</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">dev_no</span><span class="p">,</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">dev_str</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gadc001429779edaffce5d1a8388bbbe4c"><span class="std std-ref">xvsec_open()</span></a> - Opens XVSEC character device which is dedicated to the given bus number and device number and returns a unique handle to access the device</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>bus_no</p></td>
-<td><p>PCIe bus number on which device sits</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>bus_no</td>
+<td>PCIe bus number on which device sits</td>
 </tr>
-<tr class="row-even"><td><p>dev_no</p></td>
-<td><p>Device number in the PCIe bus</p></td>
+<tr class="row-even"><td>dev_no</td>
+<td>Device number in the PCIe bus</td>
 </tr>
-<tr class="row-odd"><td><p>dev_str</p></td>
-<td><p>string to append to create character device.</p></td>
+<tr class="row-odd"><td>dev_str</td>
+<td>string to append to create character device.</td>
 </tr>
-<tr class="row-even"><td><p>handle</p></td>
-<td><p>Unique handle returned to access the device</p></td>
+<tr class="row-even"><td>handle</td>
+<td>Unique handle returned to access the device</td>
 </tr>
 </tbody>
 </table>
@@ -536,22 +540,24 @@
 <p>XVSEC_MAX_DEVICES_LIMIT_REACHED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
-</section>
-<section id="xvsec-close">
-<span id="cid-xvsec-close"></span><span id="doxid-group-xvsec-api-func-1ga109c35f276869d560241a9cbcc0e8044"></span><h2>xvsec_close<a class="headerlink" href="#xvsec-close" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-close">
+<span id="cid-xvsec-close"></span><span id="doxid-group-xvsec-api-func-1ga109c35f276869d560241a9cbcc0e8044"></span><h2>xvsec_close<a class="headerlink" href="#xvsec-close" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_close</span><span class="w"> </span><span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_close</span> <span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga109c35f276869d560241a9cbcc0e8044"><span class="std std-ref">xvsec_close()</span></a> - Closes XVSEC character device of provided handle</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
 </tbody>
 </table>
@@ -560,28 +566,30 @@
 <p>XVSEC_ERR_NULL_POINTER : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-get-cap-list">
-<span id="cid-xvsec-get-cap-list"></span><span id="doxid-group-xvsec-api-func-1ga3b7da703416703643bb9629b32479fb3"></span><h2>xvsec_get_cap_list<a class="headerlink" href="#xvsec-get-cap-list" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-get-cap-list">
+<span id="cid-xvsec-get-cap-list"></span><span id="doxid-group-xvsec-api-func-1ga3b7da703416703643bb9629b32479fb3"></span><h2>xvsec_get_cap_list<a class="headerlink" href="#xvsec-get-cap-list" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_get_cap_list</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_structs.html#doxid-structxvsec-cap-list-t"><span class="std std-ref">xvsec_cap_list_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">cap_list</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_get_cap_list</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <a class="reference internal" href="xvsec_linux_api_export_structs.html#doxid-structxvsec-cap-list-t"><span class="std std-ref">xvsec_cap_list_t</span></a><span></span><span class="o">*</span> <span class="n">cap_list</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga3b7da703416703643bb9629b32479fb3"><span class="std std-ref">xvsec_get_cap_list()</span></a> - Returns the supported VSEC capabilities of the given handle</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>cap_list</p></td>
-<td><p>Supported capability list</p></td>
+<tr class="row-even"><td>cap_list</td>
+<td>Supported capability list</td>
 </tr>
 </tbody>
 </table>
@@ -590,22 +598,24 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-show-device">
-<span id="cid-xvsec-show-device"></span><span id="doxid-group-xvsec-api-func-1ga65dc70d17d1afab0c89c55e440021153"></span><h2>xvsec_show_device<a class="headerlink" href="#xvsec-show-device" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-show-device">
+<span id="cid-xvsec-show-device"></span><span id="doxid-group-xvsec-api-func-1ga65dc70d17d1afab0c89c55e440021153"></span><h2>xvsec_show_device<a class="headerlink" href="#xvsec-show-device" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_show_device</span><span class="w"> </span><span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_show_device</span> <span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga65dc70d17d1afab0c89c55e440021153"><span class="std std-ref">xvsec_show_device()</span></a> - Shows the device information of the given handle</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
 </tbody>
 </table>
@@ -614,22 +624,24 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-reset">
-<span id="cid-xvsec-mcap-reset"></span><span id="doxid-group-xvsec-api-func-1ga8ddae7c38b537465044be66ac5ef15f1"></span><h2>xvsec_mcap_reset<a class="headerlink" href="#xvsec-mcap-reset" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-reset">
+<span id="cid-xvsec-mcap-reset"></span><span id="doxid-group-xvsec-api-func-1ga8ddae7c38b537465044be66ac5ef15f1"></span><h2>xvsec_mcap_reset<a class="headerlink" href="#xvsec-mcap-reset" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_reset</span><span class="w"> </span><span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_reset</span> <span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga8ddae7c38b537465044be66ac5ef15f1"><span class="std std-ref">xvsec_mcap_reset()</span></a> - Resets the configuration logic of the given handle</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
 </tbody>
 </table>
@@ -638,22 +650,24 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-module-reset">
-<span id="cid-xvsec-mcap-module-reset"></span><span id="doxid-group-xvsec-api-func-1ga92f0f277a99319dc8142b86c41214850"></span><h2>xvsec_mcap_module_reset<a class="headerlink" href="#xvsec-mcap-module-reset" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-module-reset">
+<span id="cid-xvsec-mcap-module-reset"></span><span id="doxid-group-xvsec-api-func-1ga92f0f277a99319dc8142b86c41214850"></span><h2>xvsec_mcap_module_reset<a class="headerlink" href="#xvsec-mcap-module-reset" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_module_reset</span><span class="w"> </span><span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_module_reset</span> <span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga92f0f277a99319dc8142b86c41214850"><span class="std std-ref">xvsec_mcap_module_reset()</span></a> - Resets the MCAP module of the given handle</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
 </tbody>
 </table>
@@ -662,22 +676,24 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-full-reset">
-<span id="cid-xvsec-mcap-full-reset"></span><span id="doxid-group-xvsec-api-func-1ga15c38aeeb4ff55b7942114884f174819"></span><h2>xvsec_mcap_full_reset<a class="headerlink" href="#xvsec-mcap-full-reset" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-full-reset">
+<span id="cid-xvsec-mcap-full-reset"></span><span id="doxid-group-xvsec-api-func-1ga15c38aeeb4ff55b7942114884f174819"></span><h2>xvsec_mcap_full_reset<a class="headerlink" href="#xvsec-mcap-full-reset" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_full_reset</span><span class="w"> </span><span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_full_reset</span> <span class="p">(</span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga15c38aeeb4ff55b7942114884f174819"><span class="std std-ref">xvsec_mcap_full_reset()</span></a> - Resets bothconfiguration logic &amp; MCAP module of the given handle</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
 </tbody>
 </table>
@@ -686,28 +702,30 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-get-data-registers">
-<span id="cid-xvsec-mcap-get-data-registers"></span><span id="doxid-group-xvsec-api-func-1gab9de230871c2cbbded4f3cbb749775e2"></span><h2>xvsec_mcap_get_data_registers<a class="headerlink" href="#xvsec-mcap-get-data-registers" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-get-data-registers">
+<span id="cid-xvsec-mcap-get-data-registers"></span><span id="doxid-group-xvsec-api-func-1gab9de230871c2cbbded4f3cbb749775e2"></span><h2>xvsec_mcap_get_data_registers<a class="headerlink" href="#xvsec-mcap-get-data-registers" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_get_data_registers</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_get_data_registers</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">data</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gab9de230871c2cbbded4f3cbb749775e2"><span class="std std-ref">xvsec_mcap_get_data_registers()</span></a> - Returns the MCAP read data registers</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>data[]</p></td>
-<td><p>MCAP read data register values</p></td>
+<tr class="row-even"><td>data[]</td>
+<td>MCAP read data register values</td>
 </tr>
 </tbody>
 </table>
@@ -716,28 +734,30 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-get-revision">
-<span id="cid-xvsec-mcap-get-revision"></span><span id="doxid-group-xvsec-api-func-1ga858003e22b50951cf6e46a15f05051f9"></span><h2>xvsec_mcap_get_revision<a class="headerlink" href="#xvsec-mcap-get-revision" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-get-revision">
+<span id="cid-xvsec-mcap-get-revision"></span><span id="doxid-group-xvsec-api-func-1ga858003e22b50951cf6e46a15f05051f9"></span><h2>xvsec_mcap_get_revision<a class="headerlink" href="#xvsec-mcap-get-revision" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_get_revision</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="o">*</span><span class="w"> </span><span class="n">rev</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_get_revision</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">uint32_t</span><span class="o">*</span> <span class="n">rev</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga858003e22b50951cf6e46a15f05051f9"><span class="std std-ref">xvsec_mcap_get_revision()</span></a> - Returns the MCAP read data registers</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>rev[]</p></td>
-<td><p>MCAP read data register values</p></td>
+<tr class="row-even"><td>rev[]</td>
+<td>MCAP read data register values</td>
 </tr>
 </tbody>
 </table>
@@ -746,28 +766,30 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-get-registers">
-<span id="cid-xvsec-mcap-get-registers"></span><span id="doxid-group-xvsec-api-func-1gac46a1e003b77607dd609e191c40872d8"></span><h2>xvsec_mcap_get_registers<a class="headerlink" href="#xvsec-mcap-get-registers" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-get-registers">
+<span id="cid-xvsec-mcap-get-registers"></span><span id="doxid-group-xvsec-api-func-1gac46a1e003b77607dd609e191c40872d8"></span><h2>xvsec_mcap_get_registers<a class="headerlink" href="#xvsec-mcap-get-registers" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_get_registers</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_structs.html#doxid-unionxvsec-mcap-regs-t"><span class="std std-ref">xvsec_mcap_regs_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">mcap_regs</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_get_registers</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <a class="reference internal" href="xvsec_linux_api_export_structs.html#doxid-unionxvsec-mcap-regs-t"><span class="std std-ref">xvsec_mcap_regs_t</span></a><span></span><span class="o">*</span> <span class="n">mcap_regs</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gac46a1e003b77607dd609e191c40872d8"><span class="std std-ref">xvsec_mcap_get_registers()</span></a> - Returns the MCAP register set</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="xvsec_linux_export_union.html#doxid-unionmcap-regs"><span class="std std-ref">mcap_regs</span></a></p></td>
-<td><p>MCAP register values</p></td>
+<tr class="row-even"><td><a class="reference internal" href="xvsec_linux_export_union.html#doxid-unionmcap-regs"><span class="std std-ref">mcap_regs</span></a></td>
+<td>MCAP register values</td>
 </tr>
 </tbody>
 </table>
@@ -776,28 +798,30 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-get-fpga-registers">
-<span id="cid-xvsec-mcap-get-fpga-registers"></span><span id="doxid-group-xvsec-api-func-1gaa9d2726c9b7f88956fe9654022f07ccc"></span><h2>xvsec_mcap_get_fpga_registers<a class="headerlink" href="#xvsec-mcap-get-fpga-registers" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-get-fpga-registers">
+<span id="cid-xvsec-mcap-get-fpga-registers"></span><span id="doxid-group-xvsec-api-func-1gaa9d2726c9b7f88956fe9654022f07ccc"></span><h2>xvsec_mcap_get_fpga_registers<a class="headerlink" href="#xvsec-mcap-get-fpga-registers" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_get_fpga_registers</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_structs.html#doxid-unionxvsec-fpga-cfg-regs-t"><span class="std std-ref">xvsec_fpga_cfg_regs_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">fpga_cfg_regs</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_get_fpga_registers</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <a class="reference internal" href="xvsec_linux_api_export_structs.html#doxid-unionxvsec-fpga-cfg-regs-t"><span class="std std-ref">xvsec_fpga_cfg_regs_t</span></a><span></span><span class="o">*</span> <span class="n">fpga_cfg_regs</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gaa9d2726c9b7f88956fe9654022f07ccc"><span class="std std-ref">xvsec_mcap_get_fpga_registers()</span></a> - Returns the FPGA configuration register set</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="xvsec_linux_export_union.html#doxid-unionfpga-cfg-regs"><span class="std std-ref">fpga_cfg_regs</span></a></p></td>
-<td><p>FPGA configuration register values</p></td>
+<tr class="row-even"><td><a class="reference internal" href="xvsec_linux_export_union.html#doxid-unionfpga-cfg-regs"><span class="std std-ref">fpga_cfg_regs</span></a></td>
+<td>FPGA configuration register values</td>
 </tr>
 </tbody>
 </table>
@@ -806,40 +830,42 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-access-config-reg">
-<span id="cid-xvsec-mcap-access-config-reg"></span><span id="doxid-group-xvsec-api-func-1gae4652553e78671c51071632be6cdb734"></span><h2>xvsec_mcap_access_config_reg<a class="headerlink" href="#xvsec-mcap-access-config-reg" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-access-config-reg">
+<span id="cid-xvsec-mcap-access-config-reg"></span><span id="doxid-group-xvsec-api-func-1gae4652553e78671c51071632be6cdb734"></span><h2>xvsec_mcap_access_config_reg<a class="headerlink" href="#xvsec-mcap-access-config-reg" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_access_config_reg</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">offset</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_enums.html#doxid-group-xvsec-api-enums-1gab389704d45fb9eef07e2e87a7d0a63f8"><span class="std std-ref">access_type_t</span></a><span></span><span class="w"> </span><span class="n">access</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">write</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_access_config_reg</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">offset</span><span class="p">,</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">,</span>
+    <a class="reference internal" href="xvsec_linux_api_export_enums.html#doxid-group-xvsec-api-enums-1gab389704d45fb9eef07e2e87a7d0a63f8"><span class="std std-ref">access_type_t</span></a><span></span> <span class="n">access</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">write</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gae4652553e78671c51071632be6cdb734"><span class="std std-ref">xvsec_mcap_access_config_reg()</span></a> - Performs read/write operations on the MCAP register set</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>offset</p></td>
-<td><p>Register address offset from MCAP Base address</p></td>
+<tr class="row-even"><td>offset</td>
+<td>Register address offset from MCAP Base address</td>
 </tr>
-<tr class="row-odd"><td><p>data</p></td>
-<td><p>Data pointer which holds the data to write / the data after read</p></td>
+<tr class="row-odd"><td>data</td>
+<td>Data pointer which holds the data to write / the data after read</td>
 </tr>
-<tr class="row-even"><td><p>access</p></td>
-<td><p>Control specifier which specifies type of access (8 bits/16 bits/32 bits)</p></td>
+<tr class="row-even"><td>access</td>
+<td>Control specifier which specifies type of access (8 bits/16 bits/32 bits)</td>
 </tr>
-<tr class="row-odd"><td><p>write</p></td>
-<td><p>Control specifier which specifies write/read operation</p></td>
+<tr class="row-odd"><td>write</td>
+<td>Control specifier which specifies write/read operation</td>
 </tr>
 </tbody>
 </table>
@@ -850,36 +876,38 @@
 <p>XVSEC_ERR_INVALID_OFFSET_ACCESS_COMBO : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-access-fpga-config-reg">
-<span id="cid-xvsec-mcap-access-fpga-config-reg"></span><span id="doxid-group-xvsec-api-func-1gac62356b3aa08032ead9fe736812203bc"></span><h2>xvsec_mcap_access_fpga_config_reg<a class="headerlink" href="#xvsec-mcap-access-fpga-config-reg" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-access-fpga-config-reg">
+<span id="cid-xvsec-mcap-access-fpga-config-reg"></span><span id="doxid-group-xvsec-api-func-1gac62356b3aa08032ead9fe736812203bc"></span><h2>xvsec_mcap_access_fpga_config_reg<a class="headerlink" href="#xvsec-mcap-access-fpga-config-reg" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_access_fpga_config_reg</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">offset</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">write</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_access_fpga_config_reg</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">uint16_t</span> <span class="n">offset</span><span class="p">,</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">data</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">write</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gac62356b3aa08032ead9fe736812203bc"><span class="std std-ref">xvsec_mcap_access_fpga_config_reg()</span></a> - Performs read/write operations on the FPGA configuration register set</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>offset</p></td>
-<td><p>Register address offset from MCAP Base address</p></td>
+<tr class="row-even"><td>offset</td>
+<td>Register address offset from MCAP Base address</td>
 </tr>
-<tr class="row-odd"><td><p>data</p></td>
-<td><p>Data pointer which holds the data to write / the data after read</p></td>
+<tr class="row-odd"><td>data</td>
+<td>Data pointer which holds the data to write / the data after read</td>
 </tr>
-<tr class="row-even"><td><p>write</p></td>
-<td><p>Control specifier which specifies write/read operation</p></td>
+<tr class="row-even"><td>write</td>
+<td>Control specifier which specifies write/read operation</td>
 </tr>
 </tbody>
 </table>
@@ -889,32 +917,34 @@
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
 <p>XVSEC_ERR_INVALID_FPGA_REG_NUM : Failure</p>
-</section>
-<section id="xvsec-mcap-configure-fpga">
-<span id="cid-xvsec-mcap-configure-fpga"></span><span id="doxid-group-xvsec-api-func-1gaa560f82cf89bb584636402a44491edea"></span><h2>xvsec_mcap_configure_fpga<a class="headerlink" href="#xvsec-mcap-configure-fpga" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-configure-fpga">
+<span id="cid-xvsec-mcap-configure-fpga"></span><span id="doxid-group-xvsec-api-func-1gaa560f82cf89bb584636402a44491edea"></span><h2>xvsec_mcap_configure_fpga<a class="headerlink" href="#xvsec-mcap-configure-fpga" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_configure_fpga</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">partial_cfg_file</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">bitfile</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_configure_fpga</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">partial_cfg_file</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">bitfile</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gaa560f82cf89bb584636402a44491edea"><span class="std std-ref">xvsec_mcap_configure_fpga()</span></a> - Performs bitstream programming on FPGA</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>partial_cfg_file</p></td>
-<td><p>Partial Clear bitstream file</p></td>
+<tr class="row-even"><td>partial_cfg_file</td>
+<td>Partial Clear bitstream file</td>
 </tr>
-<tr class="row-odd"><td><p>bitfile</p></td>
-<td><p>Bitstream file</p></td>
+<tr class="row-odd"><td>bitfile</td>
+<td>Bitstream file</td>
 </tr>
 </tbody>
 </table>
@@ -924,40 +954,87 @@
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
 <p>XVSEC_ERR_INVALID_FPGA_REG_NUM : Failure</p>
-</section>
-<section id="xvsec-mcap-access-axi-reg">
-<span id="cid-xvsec-mcap-access-axi-reg"></span><span id="doxid-group-xvsec-api-func-1ga3499ed5e40408326372f87c9d5ae1bd6"></span><h2>xvsec_mcap_access_axi_reg<a class="headerlink" href="#xvsec-mcap-access-axi-reg" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcapv3-configure-fpga">
+<span id="cid-xvsec-mcapv3-configure-fpga"></span><span id="doxid-group-xvsec-api-func-1gad60c8737699c24f50dae1ceef166c2e7"></span><h2>xvsec_mcapv3_configure_fpga<a class="headerlink" href="#xvsec-mcapv3-configure-fpga" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_access_axi_reg</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">address</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">write</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">axi_access_mode_t</span><span class="w"> </span><span class="n">mode</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcapv3_configure_fpga</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">partial_cfg_file</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">bitfile</span><span class="p">,</span>
+    <span class="n">data_transfer_mode_t</span> <span class="n">tr_mode</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">is_full_raw</span>
+    <span class="p">)</span>
+</pre>
+<p class="rubric">Details:</p>
+<p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gad60c8737699c24f50dae1ceef166c2e7"><span class="std std-ref">xvsec_mcapv3_configure_fpga()</span></a> - Performs bitstream programming on FPGA</p>
+<p class="rubric">Parameters:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
+</tr>
+<tr class="row-even"><td>partial_cfg_file</td>
+<td>Partial Clear bitstream file</td>
+</tr>
+<tr class="row-odd"><td>bitfile</td>
+<td>Bitstream file</td>
+</tr>
+<tr class="row-even"><td>tr_mode</td>
+<td>Data transfer mode(slow/fast)</td>
+</tr>
+<tr class="row-odd"><td>is_full_raw</td>
+<td>Flag to indicate full raw bitstream programming mode</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Returns:</p>
+<p>XVSEC_SUCCESS : Success</p>
+<p>XVSEC_ERR_INVALID_PARAM : Failure</p>
+<p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
+<p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
+<p>XVSEC_ERR_INVALID_FPGA_REG_NUM : Failure</p>
+</div>
+<div class="section" id="xvsec-mcap-access-axi-reg">
+<span id="cid-xvsec-mcap-access-axi-reg"></span><span id="doxid-group-xvsec-api-func-1ga3499ed5e40408326372f87c9d5ae1bd6"></span><h2>xvsec_mcap_access_axi_reg<a class="headerlink" href="#xvsec-mcap-access-axi-reg" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Syntax:</p>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_access_axi_reg</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">address</span><span class="p">,</span>
+    <span class="kt">void</span><span class="o">*</span> <span class="n">value</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">write</span><span class="p">,</span>
+    <span class="n">axi_access_mode_t</span> <span class="n">mode</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p>xvsec_mcap_access_axi_reg - Performs AXI read/write operations</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>address</p></td>
-<td><p>axi address to be read/write</p></td>
+<tr class="row-even"><td>address</td>
+<td>axi address to be read/write</td>
 </tr>
-<tr class="row-odd"><td><p>value</p></td>
-<td><p>Data pointer which holds the data to write/read For Read Only 32b mode is supported. For Write 32b/128b modes are supported. Data buffer size is assumed 4 bytes in case of 32b mode Data buffer size is assumed 16 bytes in case of 128b mode</p></td>
+<tr class="row-odd"><td>value</td>
+<td>Data pointer which holds the data to write/read For Read Only 32b mode is supported. For Write 32b/128b modes are supported. Data buffer size is assumed 4 bytes in case of 32b mode Data buffer size is assumed 16 bytes in case of 128b mode</td>
 </tr>
-<tr class="row-even"><td><p>write</p></td>
-<td><p>Control specifier which specifies write/read operation</p></td>
+<tr class="row-even"><td>write</td>
+<td>Control specifier which specifies write/read operation</td>
 </tr>
-<tr class="row-odd"><td><p>mode</p></td>
-<td><p>32bit or 128bit axi mode</p></td>
+<tr class="row-odd"><td>mode</td>
+<td>32bit or 128bit axi mode</td>
 </tr>
 </tbody>
 </table>
@@ -966,56 +1043,58 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-file-download">
-<span id="cid-xvsec-mcap-file-download"></span><span id="doxid-group-xvsec-api-func-1ga694979d97ea8416539d3108d78c9798a"></span><h2>xvsec_mcap_file_download<a class="headerlink" href="#xvsec-mcap-file-download" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-file-download">
+<span id="cid-xvsec-mcap-file-download"></span><span id="doxid-group-xvsec-api-func-1ga694979d97ea8416539d3108d78c9798a"></span><h2>xvsec_mcap_file_download<a class="headerlink" href="#xvsec-mcap-file-download" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_file_download</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">fixed_address</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">mode_128_bit</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">file_name</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">dev_address</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">data_transfer_mode_t</span><span class="w"> </span><span class="n">tr_mode</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">sbi_address</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">file_operation_status_t</span><span class="o">*</span><span class="w"> </span><span class="n">op_status</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">size_t</span><span class="o">*</span><span class="w"> </span><span class="n">err_index</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_file_download</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">fixed_address</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">mode_128_bit</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">file_name</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">dev_address</span><span class="p">,</span>
+    <span class="n">data_transfer_mode_t</span> <span class="n">tr_mode</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">sbi_address</span><span class="p">,</span>
+    <span class="n">file_operation_status_t</span><span class="o">*</span> <span class="n">op_status</span><span class="p">,</span>
+    <span class="kt">size_t</span><span class="o">*</span> <span class="n">err_index</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1ga694979d97ea8416539d3108d78c9798a"><span class="std std-ref">xvsec_mcap_file_download()</span></a> - Performs File download at specified address</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>fixed_address</p></td>
-<td><p>Address Type (is it fixed/incr)</p></td>
+<tr class="row-even"><td>fixed_address</td>
+<td>Address Type (is it fixed/incr)</td>
 </tr>
-<tr class="row-odd"><td><p>mode_128_bit</p></td>
-<td><p>Access Mode (128 bit or 32 bit)</p></td>
+<tr class="row-odd"><td>mode_128_bit</td>
+<td>Access Mode (128 bit or 32 bit)</td>
 </tr>
-<tr class="row-even"><td><p>file_name</p></td>
-<td><p>File to download</p></td>
+<tr class="row-even"><td>file_name</td>
+<td>File to download</td>
 </tr>
-<tr class="row-odd"><td><p>dev_address</p></td>
-<td><p>The address to download the file</p></td>
+<tr class="row-odd"><td>dev_address</td>
+<td>The address to download the file</td>
 </tr>
-<tr class="row-even"><td><p>tr_mode</p></td>
-<td><p>Data transfer mode(slow/fast)</p></td>
+<tr class="row-even"><td>tr_mode</td>
+<td>Data transfer mode(slow/fast)</td>
 </tr>
-<tr class="row-odd"><td><p>sbi_address</p></td>
-<td><p>SBI reg block address</p></td>
+<tr class="row-odd"><td>sbi_address</td>
+<td>SBI reg block address</td>
 </tr>
-<tr class="row-even"><td><p>op_status</p></td>
-<td><p>file download status</p></td>
+<tr class="row-even"><td>op_status</td>
+<td>file download status</td>
 </tr>
-<tr class="row-odd"><td><p>err_index</p></td>
-<td><p>file download error index</p></td>
+<tr class="row-odd"><td>err_index</td>
+<td>file download error index</td>
 </tr>
 </tbody>
 </table>
@@ -1024,48 +1103,50 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-mcap-file-upload">
-<span id="cid-xvsec-mcap-file-upload"></span><span id="doxid-group-xvsec-api-func-1gaa2ec198b143ba68e0f9ca4a2a3bcd285"></span><h2>xvsec_mcap_file_upload<a class="headerlink" href="#xvsec-mcap-file-upload" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-file-upload">
+<span id="cid-xvsec-mcap-file-upload"></span><span id="doxid-group-xvsec-api-func-1gaa2ec198b143ba68e0f9ca4a2a3bcd285"></span><h2>xvsec_mcap_file_upload<a class="headerlink" href="#xvsec-mcap-file-upload" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_file_upload</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">fixed_address</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">file_name</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">dev_address</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">file_operation_status_t</span><span class="o">*</span><span class="w"> </span><span class="n">op_status</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">size_t</span><span class="o">*</span><span class="w"> </span><span class="n">err_index</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_file_upload</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">bool</span> <span class="n">fixed_address</span><span class="p">,</span>
+    <span class="kt">char</span><span class="o">*</span> <span class="n">file_name</span><span class="p">,</span>
+    <span class="kt">uint32_t</span> <span class="n">dev_address</span><span class="p">,</span>
+    <span class="kt">size_t</span> <span class="n">length</span><span class="p">,</span>
+    <span class="n">file_operation_status_t</span><span class="o">*</span> <span class="n">op_status</span><span class="p">,</span>
+    <span class="kt">size_t</span><span class="o">*</span> <span class="n">err_index</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p><a class="reference internal" href="#doxid-group-xvsec-api-func-1gaa2ec198b143ba68e0f9ca4a2a3bcd285"><span class="std std-ref">xvsec_mcap_file_upload()</span></a> - Performs File Upload from specified address</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>fixed_address</p></td>
-<td><p>Address Type (is it fixed/incr)</p></td>
+<tr class="row-even"><td>fixed_address</td>
+<td>Address Type (is it fixed/incr)</td>
 </tr>
-<tr class="row-odd"><td><p>file_name</p></td>
-<td><p>File to download</p></td>
+<tr class="row-odd"><td>file_name</td>
+<td>File to download</td>
 </tr>
-<tr class="row-even"><td><p>dev_address</p></td>
-<td><p>The address to download the file</p></td>
+<tr class="row-even"><td>dev_address</td>
+<td>The address to download the file</td>
 </tr>
-<tr class="row-odd"><td><p>length</p></td>
-<td><p>Length of the file to upload</p></td>
+<tr class="row-odd"><td>length</td>
+<td>Length of the file to upload</td>
 </tr>
-<tr class="row-even"><td><p>op_status</p></td>
-<td><p>file upload status</p></td>
+<tr class="row-even"><td>op_status</td>
+<td>file upload status</td>
 </tr>
-<tr class="row-odd"><td><p>err_index</p></td>
-<td><p>file upload error index</p></td>
+<tr class="row-odd"><td>err_index</td>
+<td>file upload error index</td>
 </tr>
 </tbody>
 </table>
@@ -1075,28 +1156,30 @@
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
 <p>XVSEC_FAILURE : Failure</p>
-</section>
-<section id="xvsec-mcap-set-axi-cache-attr">
-<span id="cid-xvsec-mcap-set-axi-cache-attr"></span><span id="doxid-group-xvsec-api-func-1gab507d3da6d855c29f933e04632be7691"></span><h2>xvsec_mcap_set_axi_cache_attr<a class="headerlink" href="#xvsec-mcap-set-axi-cache-attr" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-mcap-set-axi-cache-attr">
+<span id="cid-xvsec-mcap-set-axi-cache-attr"></span><span id="doxid-group-xvsec-api-func-1gab507d3da6d855c29f933e04632be7691"></span><h2>xvsec_mcap_set_axi_cache_attr<a class="headerlink" href="#xvsec-mcap-set-axi-cache-attr" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_mcap_set_axi_cache_attr</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_union.html#doxid-union-axi-cache-attr"><span class="std std-ref">axi_cache_attr_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">user_attr</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_mcap_set_axi_cache_attr</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <a class="reference internal" href="xvsec_linux_api_export_union.html#doxid-union-axi-cache-attr"><span class="std std-ref">axi_cache_attr_t</span></a><span></span><span class="o">*</span> <span class="n">user_attr</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p>xvsec_mcap_set_axi_cache_attr - To set AXI cache and protection bits</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>user_attr</p></td>
-<td><p>structure having axi cache and protection value to be set</p></td>
+<tr class="row-even"><td>user_attr</td>
+<td>structure having axi cache and protection value to be set</td>
 </tr>
 </tbody>
 </table>
@@ -1105,28 +1188,30 @@
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
 <p>XVSEC_ERR_LINUX_SYSTEM_CALL : Failure</p>
-</section>
-<section id="xvsec-lib-get-mcap-revision">
-<span id="cid-xvsec-lib-get-mcap-revision"></span><span id="doxid-group-xvsec-api-func-1ga220a3e58cc04993fd7e7573f40ce54a3"></span><h2>xvsec_lib_get_mcap_revision<a class="headerlink" href="#xvsec-lib-get-mcap-revision" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="xvsec-lib-get-mcap-revision">
+<span id="cid-xvsec-lib-get-mcap-revision"></span><span id="doxid-group-xvsec-api-func-1ga220a3e58cc04993fd7e7573f40ce54a3"></span><h2>xvsec_lib_get_mcap_revision<a class="headerlink" href="#xvsec-lib-get-mcap-revision" title="Permalink to this headline">¶</a></h2>
 <p class="rubric">Syntax:</p>
-<pre class="highlight title-code-block literal-block"><span></span><span class="kt">int</span><span class="w"> </span><span class="n">xvsec_lib_get_mcap_revision</span><span class="w"> </span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint8_t</span><span class="o">*</span><span class="w"> </span><span class="n">mrev</span><span class="w"></span>
-<span class="w">    </span><span class="p">)</span></pre>
+<pre class="highlight title-code-block literal-block">
+<span></span><span class="kt">int</span> <span class="n">xvsec_lib_get_mcap_revision</span> <span class="p">(</span>
+    <a class="reference internal" href="xvsec_linux_api_export_var.html#doxid-group-xvsec-api-var-1gaff02ddc1aa1e9e37b0e96b36f46f5ff5"><span class="std std-ref">xvsec_handle_t</span></a><span></span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+    <span class="kt">uint8_t</span><span class="o">*</span> <span class="n">mrev</span>
+    <span class="p">)</span>
+</pre>
 <p class="rubric">Details:</p>
 <p>xvsec_lib_get_mcap_revision - To get the MCAP version info from Library</p>
 <p class="rubric">Parameters:</p>
-<table class="docutils align-default">
+<table border="1" class="colwidths-given docutils">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 80.0%" />
+<col width="20%" />
+<col width="80%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>handle</p></td>
-<td><p>Unique handle to access the device</p></td>
+<tbody valign="top">
+<tr class="row-odd"><td>handle</td>
+<td>Unique handle to access the device</td>
 </tr>
-<tr class="row-even"><td><p>mrev</p></td>
-<td><p>Pointer variable to get the MCAP revision</p></td>
+<tr class="row-even"><td>mrev</td>
+<td>Pointer variable to get the MCAP revision</td>
 </tr>
 </tbody>
 </table>
@@ -1134,8 +1219,8 @@
 <p>XVSEC_SUCCESS : Success</p>
 <p>XVSEC_ERR_INVALID_PARAM : Failure</p>
 <p>XVSEC_ERR_OPERATION_NOT_SUPPORTED : Failure</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
@@ -1167,7 +1252,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 11, 2022.
+        Last updated on April 23, 2026.
       </span>
 
     </p>
@@ -1245,7 +1330,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2018-2026, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

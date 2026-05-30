@@ -6,8 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 	<head>
 		<meta charset="utf-8">
-		<meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
+		
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="https://static.cloud.coveo.com/searchui/v2.4382/css/CoveoFullSearch.css"/>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -41,11 +40,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -57,8 +55,7 @@
   <link rel="stylesheet" href="_static/css/common-ui-all.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/header-footer.min.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/pro.min.css" media="all" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Enumerations" href="xvsec_linux_api_export_enums.html" />
@@ -310,7 +307,7 @@
             
             
               <div class="version">
-                2020.2
+                2026.1
               </div>
             
           
@@ -335,7 +332,7 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="system-requirements.html">System Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build.html">Building and Installing the XVSEC Driver Software</a></li>
@@ -431,53 +428,93 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="definitions">
-<span id="cid-xvsec-api-defines"></span><span id="doxid-group-xvsec-api-defines"></span><span id="index-0"></span><h1>Definitions<a class="headerlink" href="#definitions" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="definitions">
+<span id="cid-xvsec-api-defines"></span><span id="doxid-group-xvsec-api-defines"></span><span id="index-0"></span><h1>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Overview</p>
-<section id="macros">
-<h2>Macros<a class="headerlink" href="#macros" title="Permalink to this heading">¶</a></h2>
-<pre class="highlight title-code-block literal-block" id="cid-max-caps-supported"><span id="doxid-group-xvsec-api-defines-1ga6a196aa9d67b2e6e895517151ab9b90a"></span><span></span><span class="cp">#define MAX_CAPS_SUPPORTED</span></pre>
+<div class="section" id="macros">
+<h2>Macros<a class="headerlink" href="#macros" title="Permalink to this headline">¶</a></h2>
+<pre class="highlight title-code-block literal-block" id="cid-max-caps-supported">
+<span id="doxid-group-xvsec-api-defines-1ga6a196aa9d67b2e6e895517151ab9b90a"></span><span></span><span class="cp">#define MAX_CAPS_SUPPORTED</span>
+</pre>
 <p>Maximum supported Capability ID by the Library</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-eperm"><span id="doxid-group-xvsec-api-defines-1gaaeb67c6777b3cb2001f9faeb9a4fd314"></span><span></span><span class="cp">#define XVSEC_EPERM</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-eperm">
+<span id="doxid-group-xvsec-api-defines-1gaaeb67c6777b3cb2001f9faeb9a4fd314"></span><span></span><span class="cp">#define XVSEC_EPERM</span>
+</pre>
 <p>Indicates Operation not permitted</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-bitstream-program"><span id="doxid-group-xvsec-api-defines-1ga311cacd6b2c9e039d9b4d52cf9309415"></span><span></span><span class="cp">#define XVSEC_ERR_BITSTREAM_PROGRAM</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-bitstream-program">
+<span id="doxid-group-xvsec-api-defines-1ga311cacd6b2c9e039d9b4d52cf9309415"></span><span></span><span class="cp">#define XVSEC_ERR_BITSTREAM_PROGRAM</span>
+</pre>
 <p>Indicates BitStream programming Failed</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-capability-id-missing"><span id="doxid-group-xvsec-api-defines-1ga786bf5dfd15de4f8e062748551f033f9"></span><span></span><span class="cp">#define XVSEC_ERR_CAPABILITY_ID_MISSING</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-capability-id-missing">
+<span id="doxid-group-xvsec-api-defines-1ga786bf5dfd15de4f8e062748551f033f9"></span><span></span><span class="cp">#define XVSEC_ERR_CAPABILITY_ID_MISSING</span>
+</pre>
 <p>Indicates Capability ID is not provided</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-capability-not-supported"><span id="doxid-group-xvsec-api-defines-1ga9403bd7eda89ac3c31f50baf0b86bfea"></span><span></span><span class="cp">#define XVSEC_ERR_CAPABILITY_NOT_SUPPORTED</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-capability-not-supported">
+<span id="doxid-group-xvsec-api-defines-1ga9403bd7eda89ac3c31f50baf0b86bfea"></span><span></span><span class="cp">#define XVSEC_ERR_CAPABILITY_NOT_SUPPORTED</span>
+</pre>
 <p>Indicates Capability ID is not supported</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-file-format"><span id="doxid-group-xvsec-api-defines-1gaf5cde24237a6e57e5d2894af29b5f85f"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_FILE_FORMAT</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-file-format">
+<span id="doxid-group-xvsec-api-defines-1gaf5cde24237a6e57e5d2894af29b5f85f"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_FILE_FORMAT</span>
+</pre>
 <p>Indicates unsupported file format provided</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-fpga-reg-num"><span id="doxid-group-xvsec-api-defines-1ga2cd395bc8fa531024dbcdb99c6a7a609"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_FPGA_REG_NUM</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-fpga-reg-num">
+<span id="doxid-group-xvsec-api-defines-1ga2cd395bc8fa531024dbcdb99c6a7a609"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_FPGA_REG_NUM</span>
+</pre>
 <p>Indicates FPGA CFG Register number provided is invalid (or) access to the requested register is prohibited</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-offset"><span id="doxid-group-xvsec-api-defines-1ga7a1fd6d7d1db2c7f90157fa780bd8024"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_OFFSET</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-offset">
+<span id="doxid-group-xvsec-api-defines-1ga7a1fd6d7d1db2c7f90157fa780bd8024"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_OFFSET</span>
+</pre>
 <p>Indicates Provided VSEC Offset is invalid</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-offset-access-combo"><span id="doxid-group-xvsec-api-defines-1gaf09ce65a861b7731550bf487df909303"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_OFFSET_ACCESS_COMBO</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-offset-access-combo">
+<span id="doxid-group-xvsec-api-defines-1gaf09ce65a861b7731550bf487df909303"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_OFFSET_ACCESS_COMBO</span>
+</pre>
 <p>Indicates Offset and Access combination is incorrect (Ex : u16 needs an even offset, u32 needs an offset divisible by 4</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-param"><span id="doxid-group-xvsec-api-defines-1gab998c9476eefbdee917ee4682579428f"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_PARAM</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-invalid-param">
+<span id="doxid-group-xvsec-api-defines-1gab998c9476eefbdee917ee4682579428f"></span><span></span><span class="cp">#define XVSEC_ERR_INVALID_PARAM</span>
+</pre>
 <p>Indicates one or more invalid parameters passed</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-linux-system-call"><span id="doxid-group-xvsec-api-defines-1gabaf3a4a22d573c87ab1ddcf19b606c01"></span><span></span><span class="cp">#define XVSEC_ERR_LINUX_SYSTEM_CALL</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-linux-system-call">
+<span id="doxid-group-xvsec-api-defines-1gabaf3a4a22d573c87ab1ddcf19b606c01"></span><span></span><span class="cp">#define XVSEC_ERR_LINUX_SYSTEM_CALL</span>
+</pre>
 <p>Indicates one of the linux system call Failed</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-mem-alloc-failed"><span id="doxid-group-xvsec-api-defines-1gaeeea691f825dc80e5b2d26c556b9314a"></span><span></span><span class="cp">#define XVSEC_ERR_MEM_ALLOC_FAILED</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-mem-alloc-failed">
+<span id="doxid-group-xvsec-api-defines-1gaeeea691f825dc80e5b2d26c556b9314a"></span><span></span><span class="cp">#define XVSEC_ERR_MEM_ALLOC_FAILED</span>
+</pre>
 <p>Indicates memory allocation failed</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-mutex-lock-fail"><span id="doxid-group-xvsec-api-defines-1gaecfb7d56aca8969cd5b44b4a3261deab"></span><span></span><span class="cp">#define XVSEC_ERR_MUTEX_LOCK_FAIL</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-mutex-lock-fail">
+<span id="doxid-group-xvsec-api-defines-1gaecfb7d56aca8969cd5b44b4a3261deab"></span><span></span><span class="cp">#define XVSEC_ERR_MUTEX_LOCK_FAIL</span>
+</pre>
 <p>Indicates mutex lock failed</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-mutex-unlock-fail"><span id="doxid-group-xvsec-api-defines-1gab2c9374ad0d0ceb81e8d0fe0dcb981d5"></span><span></span><span class="cp">#define XVSEC_ERR_MUTEX_UNLOCK_FAIL</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-mutex-unlock-fail">
+<span id="doxid-group-xvsec-api-defines-1gab2c9374ad0d0ceb81e8d0fe0dcb981d5"></span><span></span><span class="cp">#define XVSEC_ERR_MUTEX_UNLOCK_FAIL</span>
+</pre>
 <p>Indicates mutex unlock failed while trying to release</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-null-pointer"><span id="doxid-group-xvsec-api-defines-1ga32badeacd53f0448469be155bc405284"></span><span></span><span class="cp">#define XVSEC_ERR_NULL_POINTER</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-null-pointer">
+<span id="doxid-group-xvsec-api-defines-1ga32badeacd53f0448469be155bc405284"></span><span></span><span class="cp">#define XVSEC_ERR_NULL_POINTER</span>
+</pre>
 <p>Indicates one or more NULL pointer passed as parameter</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-operation-not-supported"><span id="doxid-group-xvsec-api-defines-1ga3383540cec51ef5cc455bd07107e63ab"></span><span></span><span class="cp">#define XVSEC_ERR_OPERATION_NOT_SUPPORTED</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-err-operation-not-supported">
+<span id="doxid-group-xvsec-api-defines-1ga3383540cec51ef5cc455bd07107e63ab"></span><span></span><span class="cp">#define XVSEC_ERR_OPERATION_NOT_SUPPORTED</span>
+</pre>
 <p>Indicates the requested operation is not supported</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-failure"><span id="doxid-group-xvsec-api-defines-1ga775acc0a83050946d1565e8aaf1cf2d5"></span><span></span><span class="cp">#define XVSEC_FAILURE</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-failure">
+<span id="doxid-group-xvsec-api-defines-1ga775acc0a83050946d1565e8aaf1cf2d5"></span><span></span><span class="cp">#define XVSEC_FAILURE</span>
+</pre>
 <p>Indicates Failure of API call</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-max-devices-limit-reached"><span id="doxid-group-xvsec-api-defines-1gaed0e22a3132e4d1d2d7f988024929cc1"></span><span></span><span class="cp">#define XVSEC_MAX_DEVICES_LIMIT_REACHED</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-max-devices-limit-reached">
+<span id="doxid-group-xvsec-api-defines-1gaed0e22a3132e4d1d2d7f988024929cc1"></span><span></span><span class="cp">#define XVSEC_MAX_DEVICES_LIMIT_REACHED</span>
+</pre>
 <p>Indicates No more devices present to open</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-max-vsec-str-len"><span id="doxid-group-xvsec-api-defines-1ga035ca2c2b8d6834589f04f02fea33da9"></span><span></span><span class="cp">#define XVSEC_MAX_VSEC_STR_LEN</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-max-vsec-str-len">
+<span id="doxid-group-xvsec-api-defines-1ga035ca2c2b8d6834589f04f02fea33da9"></span><span></span><span class="cp">#define XVSEC_MAX_VSEC_STR_LEN</span>
+</pre>
 <p>Maximum VSEC name String length</p>
-<pre class="highlight title-code-block literal-block" id="cid-xvsec-success"><span id="doxid-group-xvsec-api-defines-1gaf5307d6c4a4b476973193968d19910f6"></span><span></span><span class="cp">#define XVSEC_SUCCESS</span></pre>
+<pre class="highlight title-code-block literal-block" id="cid-xvsec-success">
+<span id="doxid-group-xvsec-api-defines-1gaf5307d6c4a4b476973193968d19910f6"></span><span></span><span class="cp">#define XVSEC_SUCCESS</span>
+</pre>
 <p>Indicates Success of API call</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
@@ -509,7 +546,7 @@
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on August 11, 2022.
+        Last updated on April 23, 2026.
       </span>
 
     </p>
@@ -587,7 +624,7 @@
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2018-2022, Xilinx, Inc
+                                  &copy; 2018-2026, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

@@ -85,10 +85,10 @@ The XVSEC driver does not have any module parameters and hence can be loaded dir
 
 Now the XVSEC software is ready for use.
 
-The eaxmple for the system having VCU1525(US+) card connected on bus 0x03 and device number 0x00 will have char dev nodes as below :
+The eaxmple for the system having Spartan UltraScale+(SU200P) card connected on bus 0x41 and device number 0x00 will have char dev nodes as below :
 
-	- Default generic char device node - /dev/xvsec0300.
-	- For US+ MCAP specific functionalities - /dev/xvsec0300_mcap.
+	- Default generic char device node - /dev/xvsec4100.
+	- For Spartan UltraScale+ MCAP specific functionalities - /dev/xvsec4100_mcap.
 
 
 

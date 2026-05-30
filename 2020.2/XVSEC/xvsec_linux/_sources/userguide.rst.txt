@@ -363,6 +363,26 @@ Programs Stage 2 Bitstream into FPGA. Supported file extentions are *.bin, *.bit
 **Versal MCAP Specific Options**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**Design Requirements**
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The capability to load reconfigurable, partial bitstreams for DFX regions in the PL or Stage 2 bitstreams to employ the Tandem PCIe boot methodology via the combined hardware and software solution of the Xilinx MCAP for Versal devices is carried over from Ultrascale/Ultrascale+ devices, but differs significantly from previous generations.  While Ultrascale/Ultrascale+ devices had a dedicated connection to the configuration engine, Versal devices access the configuration engine via a generic connection to the NOC.  This means that there are design requirements that must be followed to enable the MCAP feature for Versal devices and successfully use the MCAP VSEC software.  For detailed information, refer to PG346 or PG347, but the design requirements are listed here for brevity.
+
+1. Enable the MCAP capability and the “CPM to NOC” port via the CIPS GUI’s CPM module in the block design
+2. Enable the “NOC to PMC” port via the CIPS GUI’s PS PMC module in the block design
+3. Instantiate the AXI NOC IP and connect the CPM master to the PMC slave in the BD
+4. Assume the CPM master connects to the AXI NOC’s S00_AXI port and the PMC slave connects to the AXI NOC’s M00_AXI port.  Issue the following configuration TCL command.
+
+	a. set_property CONFIG.REMAPS {M00_AXI {{0xF122_0000 0x1_0122_0000 64K} {0xF210_0000 0x1_0210_0000 64K}}} [get_bd_intf_pins /axi_noc_0/S00_AXI]
+5. Using the IPI Address Editor tab, assign the pspmc_0_psv_pmc_slave_boot_stream and the pspmc_0_psv_pmc_slave_boot PMC slaves to the CPM master
+
+	a. assign_bd_address -offset 0xF1220000 -range 0x00010000 -target_address_space [get_bd_addr_spaces versal_cips_0/CPM_PCIE_NOC_0] [get_bd_addr_segs versal_cips_0/NOC_PMC_AXI_0/pspmc_0_psv_pmc_slave_boot] -force
+	b. assign_bd_address -offset 0xF2100000 -range 0x00010000 -target_address_space [get_bd_addr_spaces versal_cips_0/CPM_PCIE_NOC_0] [get_bd_addr_segs versal_cips_0/NOC_PMC_AXI_0/pspmc_0_psv_pmc_slave_boot_stream] -force
+
+
+**Example usage**
+~~~~~~~~~~~~~~~~~
+
 **1. MCAP Module Reset**
 
 command: ``./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -m``
@@ -415,7 +435,7 @@ It will print the contents of the MCAP Registers.
 
 **3. PDI Download**
 
-command: ``./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p mode <32b/128b> type <fixed/incr> <Address> <PDI File> [tr_mode <slow/fast>]``
+command: ``./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p mode <32b/128b> type <fixed/incr> <Address> <PDI File> [tr_mode <slow/fast>] [sbi <SBI reg block addr>]``
 
 Description: 
 This command is used to Download the specified File (.pdi) at given address.
@@ -435,6 +455,8 @@ type
 [tr_mode ]
  - optional slow/fast download mode option for data transfer
  - If tr_mode is not specified, It will use Default(fast) mode
+[sbi ]
+ - Slave Boot Interface register address, If the target is an SBI device
 
 ::
 
@@ -464,6 +486,15 @@ type
    tr_mode: 1
    [XVSEC] : xvsec_mcap_file_download : File Download successful
    File Download successful
+
+   4) SBI register example: 128b, fixed mode with SBI fixed address 0xF2100000 and SBI register address 0x1220000
+   -----------------------------------------------------------------------------------------------------------
+   [xilinx@]# ./xvsecctl -b 0x01 -F 0x0 -c 0x1 -p mode 128b type fixed 0xF2100000 ./design_routed_tandem_off_rp_1_partial.pdi tr_mode slow sbi 0x1220000
+
+   MCAP version: 2
+   tr_mode: 1
+   [XVSEC] : xvsec_mcap_file_download : File Download successful
+
 
 **4. PDI Upload**
 
