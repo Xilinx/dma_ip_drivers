@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -20,9 +21,9 @@
 #ifndef __XDMA_VERSION_H__
 #define __XDMA_VERSION_H__
 
-#define DRV_MOD_MAJOR		2020
+#define DRV_MOD_MAJOR		2025
 #define DRV_MOD_MINOR		2
-#define DRV_MOD_PATCHLEVEL	2
+#define DRV_MOD_PATCHLEVEL	0
 
 #define DRV_MODULE_VERSION      \
 	__stringify(DRV_MOD_MAJOR) "." \

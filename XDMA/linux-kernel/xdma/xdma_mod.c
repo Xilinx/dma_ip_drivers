@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -173,13 +174,13 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 	}
 
 	if (xpdev->h2c_channel_max > XDMA_CHANNEL_NUM_MAX) {
-		pr_err("Maximun H2C channel limit reached\n");
+		pr_err("Maximum H2C channel limit reached\n");
 		rv = -EINVAL;
 		goto err_out;
 	}
 
 	if (xpdev->c2h_channel_max > XDMA_CHANNEL_NUM_MAX) {
-		pr_err("Maximun C2H channel limit reached\n");
+		pr_err("Maximum C2H channel limit reached\n");
 		rv = -EINVAL;
 		goto err_out;
 	}

@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver tools for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -253,7 +254,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 			rc = ioctl(fpga_fd, IOCTL_XDMA_APERTURE_W, &io);
 			if (rc < 0 || io.error) {
 				fprintf(stdout,
-					"#%d: aperture W ioctl failed %d,%d.\n",
+					"#%ld: aperture W ioctl failed %ld,%d.\n",
 					i, rc, io.error);
 				goto out;
 			}
@@ -271,7 +272,7 @@ static int test_dma(char *devname, uint64_t addr, uint64_t aperture,
 		rc = clock_gettime(CLOCK_MONOTONIC, &ts_end);
 
 		if (bytes_done < size) {
-			printf("#%d: underflow %ld/%ld.\n",
+			printf("#%ld: underflow %ld/%ld.\n",
 				i, bytes_done, size);
 			underflow = 1;
 		}

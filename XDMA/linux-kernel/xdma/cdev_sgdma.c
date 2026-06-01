@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -105,7 +106,7 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 		res = caio->res;
 		res2 = caio->res2;
 #if defined(RHEL_RELEASE_CODE)
-    #if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 4))
+    #if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 0))
                 caio->iocb->ki_complete(caio->iocb, caio->err_cnt ? res2 : res);
     #elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
                 caio->iocb->ki_complete(caio->iocb, caio->err_cnt ? res2 : res);
@@ -132,7 +133,7 @@ skip_tran:
 
 skip_dev_lock:
 #if defined(RHEL_RELEASE_CODE)
-    #if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 4))
+    #if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 0))
         caio->iocb->ki_complete(caio->iocb, caio->err_cnt ? res2 : res);
     #elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
         caio->iocb->ki_complete(caio->iocb, -EBUSY);

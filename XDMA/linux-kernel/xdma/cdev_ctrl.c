@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -115,8 +116,8 @@ static long version_ioctl(struct xdma_cdev *xcdev, void __user *arg)
 	obj.subsystem_device = xdev->pdev->subsystem_device;
 	obj.feature_id = xdev->feature_id;
 	obj.driver_version = DRV_MOD_VERSION_NUMBER;
-	obj.domain = 0;
-	obj.bus = PCI_BUS_NUM(xdev->pdev->devfn);
+	obj.domain = pci_domain_nr(xdev->pdev->bus);
+	obj.bus = xdev->pdev->bus->number;
 	obj.dev = PCI_SLOT(xdev->pdev->devfn);
 	obj.func = PCI_FUNC(xdev->pdev->devfn);
 	if (copy_to_user(arg, &obj, sizeof(struct xdma_ioc_info)))

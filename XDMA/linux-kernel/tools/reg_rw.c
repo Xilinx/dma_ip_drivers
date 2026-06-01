@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver tools for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
  * LICENSE file in the root directory of this source tree)
@@ -52,7 +53,8 @@ int main(int argc, char **argv)
 		fprintf(stderr,
 			"\nUsage:\t%s <device> <address> [[type] data]\n"
 			"\tdevice  : character device to access\n"
-			"\taddress : memory address to access\n"
+			"\taddress : memory address to access. For word (32-bit) access, "
+			"use a multiple of 4; for halfword (16-bit), a multiple of 2.\n"
 			"\ttype    : access operation type : [b]yte, [h]alfword, [w]ord\n"
 			"\tdata    : data to be written for a write\n\n",
 			argv[0]);

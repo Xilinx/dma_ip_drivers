@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2017-present,  Xilinx, Inc.
+ * Copyright (c) 2017-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -119,7 +120,9 @@ static int xthread_main(void *data)
 					thp->name, thp->work_cnt);
 			/* do work */
 			list_for_each_safe(work_item, next, &thp->work_list) {
+				unlock_thread(thp);
 				thp->fproc(work_item);
+				lock_thread(thp);
 			}
 		}
 		unlock_thread(thp);

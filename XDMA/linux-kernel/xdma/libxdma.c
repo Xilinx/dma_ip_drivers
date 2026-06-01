@@ -1,8 +1,9 @@
 /*
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
- * Copyright (c) 2016-present,  Xilinx, Inc.
+ * Copyright (c) 2016-2022,  Xilinx, Inc.
  * All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -413,7 +414,7 @@ static int engine_reg_dump(struct xdma_engine *engine)
 static void engine_status_dump(struct xdma_engine *engine)
 {
 	u32 v = engine->status;
-	char buffer[256];
+	char buffer[320];
 	char *buf = buffer;
 	int len = 0;
 
@@ -433,7 +434,7 @@ static void engine_status_dump(struct xdma_engine *engine)
 		if ((v & XDMA_STAT_MAGIC_STOPPED))
 			len += sprintf(buf + len, "MAGIC_STOPPED ");
 		if ((v & XDMA_STAT_INVALID_LEN))
-			len += sprintf(buf + len, "INVLIAD_LEN ");
+			len += sprintf(buf + len, "INVALID_LEN ");
 		if ((v & XDMA_STAT_IDLE_STOPPED))
 			len += sprintf(buf + len, "IDLE_STOPPED ");
 		buf[len - 1] = ',';
@@ -966,7 +967,7 @@ engine_service_final_transfer(struct xdma_engine *engine,
 				}
 			}
 
-			transfer->desc_cmpl += *pdesc_completed;
+			transfer->desc_cmpl = *pdesc_completed;
 			if (!(transfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED)) {
 				return NULL;
 			}
@@ -1109,7 +1110,7 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 
 	/* Service the engine */
 	if (!engine->running) {
-		dbg_tfr("Engine was not running!!! Clearing status\n");
+		pr_err("Engine was not running!!! Clearing status\n");
 		rv = engine_status_read(engine, 1, 0);
 		if (rv < 0) {
 			pr_err("%s failed to read status\n", engine->name);
@@ -1192,11 +1193,9 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 	transfer = engine_service_final_transfer(engine, transfer, &desc_count);
 
 	/* Restart the engine following the servicing */
-	if (!engine->eop_flush) {
-		rv = engine_service_resume(engine);
-		if (rv < 0)
-			pr_err("Failed to resume engine\n");
-	}
+	rv = engine_service_resume(engine);
+	if (rv < 0)
+		pr_err("Failed to resume engine\n");
 
 done:
 	/* If polling detected an error, signal to the caller */
@@ -1810,7 +1809,11 @@ static int msi_msix_capable(struct pci_dev *dev, int type)
 static void disable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 {
 	if (xdev->msix_enabled) {
+#if KERNEL_VERSION(4, 12, 0) <= LINUX_VERSION_CODE
+		pci_free_irq_vectors(pdev);
+#else
 		pci_disable_msix(pdev);
+#endif
 		xdev->msix_enabled = 0;
 	} else if (xdev->msi_enabled) {
 		pci_disable_msi(pdev);
@@ -2310,7 +2313,6 @@ static void xdma_desc_link(struct xdma_desc *first, struct xdma_desc *second,
 		 */
 		first->next_lo = cpu_to_le32(PCI_DMA_L(second_bus));
 		first->next_hi = cpu_to_le32(PCI_DMA_H(second_bus));
-		WARN_ON(first->next_hi);
 		/* no second descriptor given */
 	} else {
 		/* first descriptor is the last */
@@ -3428,7 +3430,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 			transfer_dump(xfer);
 			sgt_dump(sgt);
 #endif
-			rv = -ERESTARTSYS;
+			rv = -ETIMEDOUT;
 			break;
 		}
 
@@ -3463,7 +3465,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			 struct sg_table *sgt, bool dma_mapped, int timeout_ms)
 {
 	struct xdma_dev *xdev = (struct xdma_dev *)dev_hndl;
-	struct xdma_engine *engine;
+	struct xdma_engine *engine = NULL;
 	int rv = 0, tfer_idx = 0, i;
 	ssize_t done = 0;
 	struct scatterlist *sg = sgt->sgl;
@@ -3617,7 +3619,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 					done += result[i].length;
 
 				/* finish the whole request */
-				if (engine->eop_flush)
+				if (engine->eop_flush && (xfer->flags & XFER_FLAG_ST_C2H_EOP_RCVED))
 					nents = 0;
 			} else
 				done += xfer->len;
@@ -3658,7 +3660,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			transfer_dump(xfer);
 			sgt_dump(sgt);
 #endif
-			rv = -ERESTARTSYS;
+			rv = -ETIMEDOUT;
 			break;
 		}
 
@@ -3789,7 +3791,7 @@ ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
 			transfer_dump(xfer);
 			sgt_dump(sgt);
 #endif
-			rv = -ERESTARTSYS;
+			rv = -ETIMEDOUT;
 			break;
 		}
 
