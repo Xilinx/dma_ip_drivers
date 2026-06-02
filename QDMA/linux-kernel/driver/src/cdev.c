@@ -68,6 +68,7 @@ struct cdev_async_io {
 	struct qdma_io_cb *qiocb;
 	struct qdma_request **reqv;
 	struct kiocb *iocb;
+	struct completion *done;
 	struct work_struct wrk_itm;
 };
 
@@ -136,25 +137,30 @@ static int qdma_req_completed(struct qdma_request *req,
 	if (caio->cmpl_count == caio->req_count) {
 		res = caio->cmpl_count - caio->err_cnt;
 		res2 = caio->res2;
+		if (caio->done) {
+			caio->res2 = res2;
+			complete(caio->done);
+		} else {
 #ifdef RHEL_RELEASE_VERSION
 #if RHEL_RELEASE_VERSION(9, 0) < RHEL_RELEASE_CODE
-		caio->iocb->ki_complete(caio->iocb, res);
+			caio->iocb->ki_complete(caio->iocb, res);
 #elif RHEL_RELEASE_VERSION(8, 0) < RHEL_RELEASE_CODE
-		caio->iocb->ki_complete(caio->iocb, res, res2);
+			caio->iocb->ki_complete(caio->iocb, res, res2);
 #else
-		aio_complete(caio->iocb, res, res2);
+			aio_complete(caio->iocb, res, res2);
 #endif
 #else
 #if KERNEL_VERSION(5, 16, 0) <= LINUX_VERSION_CODE
-		caio->iocb->ki_complete(caio->iocb, res);
+			caio->iocb->ki_complete(caio->iocb, res);
 #elif KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
-		caio->iocb->ki_complete(caio->iocb, res, res2);
+			caio->iocb->ki_complete(caio->iocb, res, res2);
 #else
-		aio_complete(caio->iocb, res, res2);
+			aio_complete(caio->iocb, res, res2);
 #endif
 #endif
-		kfree(caio->qiocb);
-		free_caio = true;
+			kfree(caio->qiocb);
+			free_caio = true;
+		}
 	}
 	if (free_caio)
 		kmem_cache_free(cdev_cache, caio);
@@ -424,9 +430,14 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 	struct qdma_cdev *xcdev =
 		(struct qdma_cdev *)iocb->ki_filp->private_data;
 	struct cdev_async_io *caio;
+	struct completion done;
+	bool sync = is_sync_kiocb(iocb);
 	int rv = 0;
 	unsigned long i;
 	unsigned long qhndl;
+
+	if (count == 0)
+		return 0;
 
 	if (!xcdev) {
 		pr_err("file 0x%p, xcdev NULL, %llu, pos %llu, W %d.\n",
@@ -452,6 +463,11 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		return -ENOMEM;
 	}
 
+	if (sync) {
+		init_completion(&done);
+		caio->done = &done;
+	}
+
 	caio->reqv = (struct qdma_request **)(caio->qiocb + count);
 	for (i = 0; i < count; i++) {
 		caio->qiocb[i].private = caio;
@@ -475,21 +491,28 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		caio->reqv[i]->fp_done = qdma_req_completed;
 
 	}
-	if (i > 0) {
-		iocb->private = caio;
-		caio->iocb = iocb;
-		caio->req_count = i;
-		qhndl = xcdev->h2c_qhndl;
-		rv = xcdev->fp_aiorw(xcdev->xcb->xpdev->dev_hndl, qhndl,
-				     caio->req_count, caio->reqv);
-		if (rv >= 0)
-			rv = -EIOCBQUEUED;
-	} else {
+
+	if (i == 0) {
 		pr_err("failed with %d for %lu reqs", rv, caio->req_count);
-		kfree(caio->qiocb);
-		kmem_cache_free(cdev_cache, caio);
+		goto err_out;
 	}
 
+	iocb->private = caio;
+	caio->iocb = iocb;
+	caio->req_count = i;
+	qhndl = xcdev->h2c_qhndl;
+	rv = xcdev->fp_aiorw(xcdev->xcb->xpdev->dev_hndl, qhndl,
+				caio->req_count, caio->reqv);
+
+	if (!sync)
+		return rv < 0 ? rv : -EIOCBQUEUED;
+
+	wait_for_completion(&done);
+	rv = caio->cmpl_count - caio->err_cnt;
+
+err_out:
+	kfree(caio->qiocb);
+	kmem_cache_free(cdev_cache, caio);
 	return rv;
 }
 
@@ -499,9 +522,14 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 	struct qdma_cdev *xcdev =
 		(struct qdma_cdev *)iocb->ki_filp->private_data;
 	struct cdev_async_io *caio;
+	struct completion done;
+	bool sync = is_sync_kiocb(iocb);
 	int rv = 0;
 	unsigned long i;
 	unsigned long qhndl;
+
+	if (count == 0)
+		return 0;
 
 	if (!xcdev) {
 		pr_err("file 0x%p, xcdev NULL, %llu, pos %llu, W %d.\n",
@@ -527,6 +555,11 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		return -ENOMEM;
 	}
 
+	if (sync) {
+		init_completion(&done);
+		caio->done = &done;
+	}
+
 	caio->reqv = (struct qdma_request **)(caio->qiocb + count);
 	for (i = 0; i < count; i++) {
 		caio->qiocb[i].private = caio;
@@ -549,23 +582,31 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		caio->reqv[i]->timeout_ms = 10 * 1000;	/* 10 seconds */
 		caio->reqv[i]->fp_done = qdma_req_completed;
 	}
-	if (i > 0) {
-		iocb->private = caio;
-		caio->iocb = iocb;
-		caio->req_count = i;
-		qhndl = xcdev->c2h_qhndl;
-		rv = xcdev->fp_aiorw(xcdev->xcb->xpdev->dev_hndl, qhndl,
-				     caio->req_count, caio->reqv);
-		if (rv >= 0)
-			rv = -EIOCBQUEUED;
-	} else {
+
+	if (i == 0) {
 		pr_err("failed with %d for %lu reqs", rv, caio->req_count);
-		kfree(caio->qiocb);
-		kmem_cache_free(cdev_cache, caio);
+		goto err_out;
 	}
 
+	iocb->private = caio;
+	caio->iocb = iocb;
+	caio->req_count = i;
+	qhndl = xcdev->c2h_qhndl;
+	rv = xcdev->fp_aiorw(xcdev->xcb->xpdev->dev_hndl, qhndl,
+				caio->req_count, caio->reqv);
+
+	if (!sync)
+		return rv < 0 ? rv : -EIOCBQUEUED;
+
+	wait_for_completion(&done);
+	rv = caio->cmpl_count - caio->err_cnt;
+
+err_out:
+	kfree(caio->qiocb);
+	kmem_cache_free(cdev_cache, caio);
 	return rv;
 }
+
 
 #if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
