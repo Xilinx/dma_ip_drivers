@@ -44,15 +44,19 @@ $(info ARCH = $(ARCH).)
 
 MOD_NAME := qdma$(PFVF_TYPE)
 
-EXTRA_CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror
-EXTRA_CFLAGS += $(FLAGS) $(CPPFLAGS) $(EXTRA_FLAGS)
-EXTRA_CFLAGS += -I$(srcdir)/../include
-EXTRA_CFLAGS += -I$(KSRC)/../include
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_soft_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_soft_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_cpm5_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_cpm4_access
-EXTRA_CFLAGS += -I.
+E_CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror
+E_CFLAGS += $(FLAGS) $(CPPFLAGS) $(EXTRA_FLAGS)
+E_CFLAGS += -I$(srcdir)/../include
+E_CFLAGS += -I$(KSRC)/../include
+E_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_soft_access
+E_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_soft_access
+E_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_cpm5_access
+E_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_cpm4_access
+E_CFLAGS += -I.
+
+# for backwards compatibilty
+EXTRA_CFLAGS += $(E_CFLAGS)
+ccflags-y += $(E_CFLAGS)
 
 # linux >= 3.13 genl_ops become part of the genl_family. And although
 # genl_register_family_with_ops() is still retained until kernel 4.10,
