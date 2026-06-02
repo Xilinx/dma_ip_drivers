@@ -114,4 +114,7 @@ extern struct class		*g_xvsec_class;
 int xvsec_mcap_module_init(struct vsec_context *dev_ctx);
 void xvsec_mcap_module_exit(struct vsec_context *dev_ctx);
 
+extern int xvsec_initialize(struct pci_dev *, struct context *);
+extern int xvsec_deinitialize(struct context *);
+
 #endif /* __XVSEC_DRV_INT_H__ */

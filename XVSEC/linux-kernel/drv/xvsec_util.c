@@ -32,8 +32,8 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/delay.h>
-#include <linux/fs.h>
-#include <linux/uaccess.h>
+#include <linux/statfs.h>
+#include <linux/namei.h>
 
 #include "xvsec_util.h"
 
@@ -63,13 +63,21 @@ int xvsec_util_find_file_type(char *fname, const char *suffix)
 struct file *xvsec_util_fopen(const char *path, int flags, int rights)
 {
 	struct file *filep;
-	mm_segment_t oldfs;
 	int err = 0;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
+	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+#endif
+
 	filep = filp_open(path, (flags | O_LARGEFILE), rights);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
 	set_fs(oldfs);
+#endif
+
 	if (IS_ERR(filep) != 0) {
 		err = PTR_ERR(filep);
 		pr_err("%s : filp_open failed, err : 0x%X\n", __func__, err);
@@ -87,17 +95,24 @@ int xvsec_util_fread(struct file *filep, uint64_t offset,
 	uint8_t *data, uint32_t size)
 {
 	int ret = 0;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
 	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+#endif
+
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 	ret = vfs_read(filep, (char __user *)data, size, (loff_t *)&offset);
 #else
 	ret = kernel_read(filep, (void *)data, size, (loff_t *)&offset);
 #endif
 	filep->f_pos = offset;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
 	set_fs(oldfs);
+#endif
 
 	if (ret < 0) {
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
@@ -117,10 +132,14 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 	uint8_t *data, uint32_t size)
 {
 	int ret = 0;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
 	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
+#endif
+
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
 	ret = vfs_write(filep, (char __user *)data, size, (loff_t *)&offset);
 #else
@@ -128,7 +147,10 @@ int xvsec_util_fwrite(struct file *filep, uint64_t offset,
 				(loff_t *)&offset);
 #endif
 	filep->f_pos = offset;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
 	set_fs(oldfs);
+#endif
 
 	if (ret < 0) {
 #if KERNEL_VERSION(4, 14, 0) > LINUX_VERSION_CODE
@@ -151,21 +173,48 @@ int xvsec_util_fsync(struct file *filep)
 int xvsec_util_get_file_size(const char *fname, loff_t *size)
 {
 	int ret = 0;
-	mm_segment_t oldfs;
 	struct kstat stat;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
+	mm_segment_t oldfs;
 
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
 
 	memset(&stat, 0, sizeof(struct kstat));
+
 	ret = vfs_stat((char __user *)fname, &stat);
 	set_fs(oldfs);
+
 	if (ret < 0) {
 		pr_err("%s : vfs_stat failed with error : %d\n", __func__, ret);
 		return -(EIO);
 	}
 
 	*size = stat.size;
+
+#else
+
+	struct path path;
+
+	memset(&stat, 0, sizeof(struct kstat));
+
+	ret = kern_path(fname, LOOKUP_FOLLOW, &path);
+	if (ret){
+		pr_err("%s : kern_path failed with error : %d\n", __func__, ret);
+		return -(EIO);
+	}
+
+	ret = vfs_getattr(&path, &stat, STATX_TYPE, AT_STATX_SYNC_AS_STAT);
+	path_put(&path);
+	if (ret){
+		pr_err("%s : vfs_getattr failed with error : %d\n", __func__, ret);
+		return -(EIO);
+	}
+
+	*size = stat.size;
+
+#endif
 
 	return ret;
 }
