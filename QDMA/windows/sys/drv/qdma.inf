@@ -25,6 +25,7 @@ Provider			= %ManufacturerName%
 CatalogFile			= QDMA.cat
 DriverVer			= 10/15/2020, 2020.2.0.0 ;Format : year.quarter_no.drv_ver.libqdma_ver
 DriverPackageType	= PlugAndPlay
+PnpLockdown			= 1
 
 [DestinationDirs]
 DefaultDestDir = 12
