@@ -35,13 +35,13 @@ include $(srcdir)/../make_rules/common_flags.mk
 $(info srcdir = $(srcdir).)
 $(info KSRC = $(KSRC).)
 
-EXTRA_CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror
-EXTRA_CFLAGS += $(FLAGS) $(CPPFLAGS)
-EXTRA_CFLAGS += -I$(srcdir)/../include
-EXTRA_CFLAGS += -I$(KSRC)/../include
-EXTRA_CFLAGS += -I.
+ccflags-y += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror -Wno-error=empty-body
+ccflags-y += $(FLAGS) $(CPPFLAGS)
+ccflags-y += -I$(srcdir)/../include
+ccflags-y += -I$(KSRC)/../include
+ccflags-y += -I.
 
-#EXTRA_CFLAGS += -DDEBUG
+#ccflags-y += -DDEBUG
 
 ifneq ($(modulesymfile),)
   override symverfile = symverfile="$(topdir)/$(modulesymfile) \
