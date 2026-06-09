@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -103,5 +103,18 @@
 
 #endif /* timer */
 
+/* from_timer() was renamed to timer_container_of() in upstream v6.16
+ * (commit 41cb08555c41), and backported by Red Hat into RHEL 9.8
+ * (RHEL-115039) and RHEL 10.1 (RHEL-114125).
+ */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 16, 0)
+#define QDMA_HAVE_TIMER_CONTAINER_OF
+#elif defined(RHEL_RELEASE_CODE)
+#if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 8) && \
+	RHEL_RELEASE_CODE <  RHEL_RELEASE_VERSION(10, 0)) || \
+	(RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(10, 1))
+#define QDMA_HAVE_TIMER_CONTAINER_OF
+#endif
+#endif /* from_timer() */
 
 #endif /* #ifndef __QDMA_COMPAT_H */
