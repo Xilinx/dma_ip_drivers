@@ -32,8 +32,6 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/delay.h>
-#include <linux/fs.h>
-#include <linux/uaccess.h>
 
 #include "xvsec_util.h"
 
