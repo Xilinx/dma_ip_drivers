@@ -23,13 +23,13 @@ all:
 	make -C /lib/modules/$(XVSEC_KVER)/build M=$(XVSEC_HOME) modules
 	@mv *.ko $(module_path)/
 	@cp xvsec_drv.h $(module_path)/
+	@cp xvsec_drv_int.h $(module_path)/
 	@cp ./xvsec_mcap/xvsec_mcap.h $(module_path)/
 	@mv *.o  $(module_path)/obj/
 	@mv .*cmd $(module_path)/obj/
 	@mv *.symvers $(module_path)/obj/
 	@mv *.mod* $(module_path)/obj/
 	@mv *.order* $(module_path)/obj/
-	@mv .tmp* $(module_path)/obj/
 	@mv ./xvsec_mcap/*.o $(module_path)/obj/xvsec_mcap/
 	@mv ./xvsec_mcap/us/*.o $(module_path)/obj/xvsec_mcap/us/
 	@mv ./xvsec_mcap/versal/*.o $(module_path)/obj/xvsec_mcap/versal/
