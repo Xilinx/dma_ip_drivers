@@ -55,6 +55,7 @@ struct xlnx_phy_dev {
 	unsigned int device_bus_domain; /**< PCIe bus domain per board */
 #endif
 	unsigned int dma_device_index;
+	int refcnt;	/**< number of PFs sharing this board's major */
 };
 
 static LIST_HEAD(xlnx_phy_dev_list);
@@ -745,8 +746,29 @@ err_out:
  */
 void qdma_cdev_device_cleanup(struct qdma_cdev_cb *xcb)
 {
+	struct xlnx_phy_dev *phy_dev, *tmp;
+
 	if (!xcb->cdev_major)
 		return;
+
+	/* Release this board's char-device region once the last PF sharing
+	 * the major is gone. Without this the region leaks on every device
+	 * remove (e.g. PCIe remove/rescan) and the dynamic major pool fills
+	 * up, eventually failing probe with -EBUSY in qdma_cdev_device_init.
+	 */
+	mutex_lock(&xlnx_phy_dev_mutex);
+	list_for_each_entry_safe(phy_dev, tmp, &xlnx_phy_dev_list, list_head) {
+		if (phy_dev->major != xcb->cdev_major)
+			continue;
+		if (--phy_dev->refcnt == 0) {
+			unregister_chrdev_region(MKDEV(phy_dev->major, 0),
+					QDMA_MINOR_MAX);
+			list_del(&phy_dev->list_head);
+			kfree(phy_dev);
+		}
+		break;
+	}
+	mutex_unlock(&xlnx_phy_dev_mutex);
 
 	xcb->cdev_major = 0;
 }
@@ -780,6 +802,7 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 #endif
 			phy_dev->dma_device_index == xdev->dma_device_index) {
 			xcb->cdev_major = phy_dev->major;
+			phy_dev->refcnt++;
 			mutex_unlock(&xlnx_phy_dev_mutex);
 			return 0;
 		}
@@ -807,6 +830,7 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 	new_phy_dev->device_bus_domain = xcb->xpdev->pdev->bus->domain_nr;
 #endif
 	new_phy_dev->dma_device_index = xdev->dma_device_index;
+	new_phy_dev->refcnt = 1;
 	xlnx_phy_dev_list_add(new_phy_dev);
 
 	return 0;
