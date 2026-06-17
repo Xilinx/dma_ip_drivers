@@ -3,6 +3,7 @@
  * to enable the user to execute the XVSEC functionality
  *
  * Copyright (c) 2018-2022  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -75,8 +76,10 @@ struct fpga_cfg_access_reg {
 
 struct mcap_program_bitstream {
 	bool flag;
+	bool is_full_raw;
 	char *abs_clr_file;
 	char *abs_bit_file;
+	data_transfer_mode_t tr_mode;
 };
 
 struct mcap_axi_access_reg {
@@ -110,6 +113,7 @@ enum mcap_revision {
 	XVSEC_MCAP_US = 0,
 	XVSEC_MCAP_USPLUS,
 	XVSEC_MCAP_VERSAL,
+	XVSEC_MCAP_SPARTAN,
 	XVSEC_INVALID_MCAP_REVISION,
 };
 

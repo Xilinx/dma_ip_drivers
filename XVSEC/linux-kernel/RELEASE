@@ -1,3 +1,29 @@
+Release: 2026.1
+=================
+- The XVSEC kernel driver 2026.1 Supports
+	- US/US+ devices (MCAP Rev 0 and 1)
+	- Versal device (MCAP Rev 2)
+	- Spartan UltraScale+ devices (MCAP Rev 3)
+
+- Supports Multiple VSECs on the same device
+- Supports Multiple devices connected on the same host
+
+- Generic VSEC functionality
+	- Lists the supported VSECs by the device
+	- Verbose information about the device
+
+- The following MCAP operations supported for Spartan UltraScale+
+	- Configuration Logic Reset
+	- MCAP Module Reset
+	- Full Reset (Both Configuration Logic and MCAP Module Reset)
+	- List MCAP Register set
+	- Access(Read/Write) any MCAP register by providing offset
+	- Program partial clear bitstream
+	- Program Stage-2/partial reconfigurable bitstream
+             - Slow and Fast download mode supported
+
+- Fixed the compilation issues for Ubuntu 24.04 LTS
+
 Release: 2020.2.1
 =================
 

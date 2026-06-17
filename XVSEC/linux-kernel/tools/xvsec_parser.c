@@ -3,6 +3,7 @@
  * to enable the user to execute the XVSEC functionality
  *
  * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -20,7 +21,7 @@
 #include "xvsec_parser.h"
 #include <libgen.h>
 
-static const char options[] =	":b:F:c:lp:C:rmfdvHhDoa:s:t:x:q:";
+static const char options[] =	":b:F:c:lp:P:C:rmfdvHhDoa:s:t:x:q:";
 
 /*
  * this is common for US/US+ and Versal devices.
@@ -135,14 +136,27 @@ CLEANUP:
 int parse_opt_p_arguments(int argc, char *argv[], struct args *args)
 {
 	int ret = 0;
+
 	if(args->rev_id.mrev == XVSEC_MCAP_VERSAL)
 	{
 		ret = parse_arguments_for_versal(argc, argv, args);
 	}
-	else
+	else if( (args->rev_id.mrev == XVSEC_MCAP_US) || (args->rev_id.mrev == XVSEC_MCAP_USPLUS))
 	{
 		ret = parse_arguments_for_us(argc, argv, args);
+	}else {
+		ret = parse_arguments_for_spartan(argc, argv, args);
+		args->program.is_full_raw  = 0;
 	}
+	return ret;
+}
+
+int parse_opt_P_arguments(int argc, char *argv[], struct args *args)
+{
+	int ret = 0;
+
+	ret = parse_arguments_for_spartan(argc, argv, args);
+	args->program.is_full_raw = 1;
 
 	return ret;
 }
@@ -327,6 +341,7 @@ int parse_arguments_for_us(int argc, char *argv[], struct args *args)
 		ret = XVSEC_FAILURE;
 		goto CLEANUP;
 	}
+
 	snprintf(bit_file, len, "%s", optarg);
 
 	args->program.abs_bit_file = realpath(bit_file, NULL);
@@ -343,6 +358,63 @@ int parse_arguments_for_us(int argc, char *argv[], struct args *args)
 	args->program.flag = true;
 
 CLEANUP:
+	return ret;
+}
+
+int parse_arguments_for_spartan(int argc, char *argv[], struct args *args)
+{
+	int ret = 0;
+        uint16_t len;
+        char *bit_file = NULL;
+
+	if (argc > MAX_NO_OF_P_ARGS_FOR_SPARTAN || argc < MAX_NO_OF_P_ARGS_FOR_SPARTAN) {
+		fprintf(stderr, "Invalid number of arguments passed "
+				"for -p option: %d\n"
+				"Please enter valid arguments!\n", argc);
+		return XVSEC_FAILURE;
+	}
+
+	len = strlen(optarg) + 1;
+	bit_file = malloc(len*sizeof(char));
+	if(bit_file == NULL)
+	{
+		fprintf(stderr, "malloc failed while allocating"
+			" for size : %d\n", len);
+		return XVSEC_FAILURE;
+	}
+
+	snprintf(bit_file, len, "%s", optarg);
+
+	args->program.abs_bit_file = realpath(bit_file, NULL);
+	if(args->program.abs_bit_file == NULL)
+	{
+		fprintf(stderr, "Absolute Path conversion "
+			"Failed for bit file with error : "
+			"%d(%s)\n", errno, strerror(errno));
+		ret = XVSEC_FAILURE;
+		goto CLEANUP;
+	}
+
+	if (strncmp(argv[optind], "tr_mode", sizeof("tr_mode")) == 0) {
+                if (strncmp(argv[optind + 1], "slow", sizeof("slow")) == 0) {
+                        /*slow download mode*/
+                        args->program.tr_mode = XVSEC_MCAP_DATA_TR_MODE_SLOW;
+                } else if (strncmp(argv[optind + 1], "fast", sizeof("fast")) == 0) {
+                        /*fast download mode*/
+                        args->program.tr_mode = XVSEC_MCAP_DATA_TR_MODE_FAST;
+                } else {
+                        fprintf(stderr, "Invalid transfer mode provided, "
+                                        "Only slow and fast are valid\n");
+                        ret = XVSEC_FAILURE;
+                        goto CLEANUP;
+                }
+                fprintf(stdout, "tr_mode: %d\n", args->program.tr_mode);
+        }
+
+	args->program.flag = true;
+
+CLEANUP:
+	free(bit_file);
 	return ret;
 }
 
@@ -795,6 +867,9 @@ int parse_mcap_arguments(int argc, char *argv[], struct args *args)
 			case 'p':
 				ret = parse_opt_p_arguments(argc, argv, args);
 				break;
+			case 'P':
+				ret = parse_opt_P_arguments(argc, argv, args);
+				break;
 			case 't':
 				ret = parse_opt_t_arguments(argc, argv, args);
 				break;
@@ -948,6 +1023,7 @@ int parse_arguments(int argc, char *argv[], struct args *args)
 			case 'a':
 			case 's':
 			case 'p':
+			case 'P':
 			case 't':
 			case 'x':
 			case 'C':

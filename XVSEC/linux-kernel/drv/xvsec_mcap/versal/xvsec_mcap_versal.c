@@ -2,6 +2,7 @@
  *This file is part of the XVSEC driver for Linux
  *
  *Copyright (c) 2020-2022  Xilinx, Inc.
+ *Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *All rights reserved.
  *
  *This source code is free software; you can redistribute it and/or modify it
@@ -390,9 +391,13 @@ int xvsec_mcapv2_file_download(
 	if (filep == NULL)
 		return -(ENOENT);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	ret = xvsec_util_get_file_size(fname, &file_size);
 	if (ret < 0)
 		goto CLEANUP_EXIT;
+#else
+	file_size = xvsec_util_get_file_size(filep);
+#endif
 
 	if (file_size <= 0) {
 		file_info->v2.op_status = FILE_OP_ZERO_FSIZE;
@@ -739,9 +744,13 @@ int xvsec_mcapv2_file_upload(
 	xvsec_util_fsync(filep);
 
 	/** Compare the requested size with file size */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	ret = xvsec_util_get_file_size(fname, &file_size);
 	if (ret < 0)
 		goto CLEANUP;
+#else
+	file_size = xvsec_util_get_file_size(filep);
+#endif
 
 	if (file_size != file_info->v2.length) {
 		pr_err("%s: Could not read complete requested length\n",

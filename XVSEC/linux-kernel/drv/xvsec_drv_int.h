@@ -1,7 +1,8 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -21,6 +22,7 @@
 #define __XVSEC_DRV_INT_H__
 
 #include "xvsec_cdev.h"
+#include <linux/mutex.h>
 
 /**
  * @file xvsec_drv_int.h
@@ -80,7 +82,7 @@ struct xvsec_ioctl_ops {
 
 struct vsec_context {
 	struct pci_dev		*pdev;
-	spinlock_t		lock;
+	struct mutex		mutex; /** Mutex for serializing all MCAP operations */
 	struct cdev_info	char_dev;
 	int			fopen_cnt;
 	uint16_t		vsec_offset;

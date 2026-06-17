@@ -2,7 +2,8 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -14,6 +15,7 @@
 #define __MCAP_OPS_H__
 
 #define MCAP_CAP_ID		(0x0001)
+#define MCAP_CFG_STS_REG_OFFSET (0x1c)
 #define MCAP_STS_REG_OFFSET	(0x10)
 #define MCAP_CTL_REG_OFFSET	(0x14)
 #define MCAP_VSEC_HEADER_OFFSET	(0x04)

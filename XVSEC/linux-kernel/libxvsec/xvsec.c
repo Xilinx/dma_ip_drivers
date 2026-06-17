@@ -2,7 +2,8 @@
  * This file is part of the XVSEC userspace library which provides the
  * userspace APIs to enable the XSEC driver functionality
  *
- * Copyright (c) 2018-2020  Xilinx, Inc.
+ * Copyright (c) 2018-2022  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the

@@ -3,6 +3,7 @@
  * to enable the user to execute the XVSEC functionality
  *
  * Copyright (c) 2020-2022 Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -108,6 +109,45 @@ static const char *MCAPV2_ctl_fields[] = {
 	"MCAP AXI Protect"
 };
 
+/* Spartan UltraScale+ MCAP register display strings */
+static const char *MCAPV3_reg_names[] = {
+	"Ext Capability",
+	"VSEC Header",
+	"Spartan_reserved",
+	"FPGA BitStream Ver",
+	"Status",
+	"Control",
+	"FPGA Write Data",
+	"Config Status"
+};
+
+static const char *MCAPV3_sts_fields[] = {
+	"MCAP Error",
+	"MCAP EOS",
+	"MCAP FIFO Overflow",
+	"MCAP FIFO Occupancy",
+	"Req for MCAP Release"
+};
+
+static const char *MCAPV3_ctl_fields[] = {
+	"MCAP Enable",
+	"MCAP Reset",
+	"MCAP Module Reset",
+	"Req for MCAP by PCIe",
+	"MCAP Design Switch",
+	"Write Data Reg Enable"
+};
+
+static const char *MCAPV3_cfg_fields[] = {
+	"IDCODE",
+	"MCAP SBI Empty",
+	"MCAP Load mode",
+	"MCAP Reset irq",
+	"Pmcl error",
+	"MCAP disable",
+	"MCAP Fuse disable"
+};
+
 static int execute_mcap_reset_cmd(xvsec_handle_t *xvsec_handle,
 	struct args *args);
 static int execute_mcap_module_reset_cmd(xvsec_handle_t *xvsec_handle,
@@ -137,12 +177,15 @@ static int execute_mcap_file_upload_cmd(xvsec_handle_t *xvsec_handle,
 static int execute_mcap_set_axi_cache_attr_cmd(xvsec_handle_t *xvsec_handle,
         struct args *args);
 
-
 static void print_mcap_sts_fields(uint32_t val);
 static void print_mcap_ctl_fields(uint32_t val);
 
 static void print_mcapv2_sts_fields(uint32_t val);
 static void print_mcapv2_ctl_fields(uint32_t val);
+
+static void print_mcapv3_cfg_fields(uint32_t val);
+static void print_mcapv3_sts_fields(uint32_t val);
+static void print_mcapv3_ctl_fields(uint32_t val);
 
 struct mcap_ops mcap_ops[] = {
 	{MCAP_RESET,                execute_mcap_reset_cmd                },
@@ -312,7 +355,7 @@ static int execute_mcap_regs_cmd(xvsec_handle_t *xvsec_handle,
 	int ret = 0;
 	uint16_t index;
 	uint16_t reg_count;
-	uint32_t *reg_value;
+	uint32_t *reg_value = 0x0;
 
 	if(args->reg_dump.flag == false)
 		return XVSEC_FAILURE;
@@ -330,10 +373,12 @@ static int execute_mcap_regs_cmd(xvsec_handle_t *xvsec_handle,
 		if(args->rev_id.mrev == XVSEC_MCAP_VERSAL) {
 			reg_count = sizeof(args->reg_dump.mcap_regs.v2)/sizeof(uint32_t);
 			reg_value = (uint32_t *)&args->reg_dump.mcap_regs.v2 ;
-		}
-		else {
+		} else if( (args->rev_id.mrev == XVSEC_MCAP_US) || (args->rev_id.mrev == XVSEC_MCAP_USPLUS) ) {
 			reg_count = sizeof(args->reg_dump.mcap_regs.v1)/sizeof(uint32_t);
 			reg_value = (uint32_t *)&args->reg_dump.mcap_regs.v1;
+		} else if(args->rev_id.mrev == XVSEC_MCAP_SPARTAN) {
+			reg_count = sizeof(args->reg_dump.mcap_regs.v3)/sizeof(uint32_t);
+			reg_value = (uint32_t *)&args->reg_dump.mcap_regs.v3;
 		}
 
 		fprintf(stdout, "BYTE OFFSET\tRegister Name\t\tData Value\n");
@@ -350,9 +395,9 @@ static int execute_mcap_regs_cmd(xvsec_handle_t *xvsec_handle,
 				if((index*4) == MCAPV2_CTL_REG_OFFSET)
 					print_mcapv2_ctl_fields(reg_value[index]);
 			}
-		}
-		else
-		{
+
+		} else if( (args->rev_id.mrev == XVSEC_MCAP_US) || (args->rev_id.mrev == XVSEC_MCAP_USPLUS) ) {
+
 			for(index = 0; index < reg_count; index++)
 			{
 		 			
@@ -362,7 +407,21 @@ static int execute_mcap_regs_cmd(xvsec_handle_t *xvsec_handle,
 					print_mcap_sts_fields(reg_value[index]);
 				if((index*4) == MCAP_CTL_REG_OFFSET)
 					print_mcap_ctl_fields(reg_value[index]);
-			}	
+			}
+
+		} else if(args->rev_id.mrev == XVSEC_MCAP_SPARTAN) {
+
+			for(index = 0; index < reg_count; index++) {
+
+				fprintf(stdout, "0x%04X\t\t%-20s\t0x%08X\n",
+					index*4, MCAPV3_reg_names[index], reg_value[index]);
+				if((index*4) == MCAP_STS_REG_OFFSET)
+					print_mcapv3_sts_fields(reg_value[index]);
+				if((index*4) == MCAP_CTL_REG_OFFSET)
+					print_mcapv3_ctl_fields(reg_value[index]);
+				if((index*4) == MCAP_CFG_STS_REG_OFFSET)
+					print_mcapv3_cfg_fields(reg_value[index]);
+			}
 		}
 	}
 	return 0;
@@ -462,8 +521,10 @@ static int execute_mcap_access_reg_cmd(xvsec_handle_t *xvsec_handle,
 		char* dstr = NULL;
 		if(args->rev_id.mrev == XVSEC_MCAP_VERSAL)
 			dstr = (char*)MCAPV2_reg_names[args->access_reg.offset/4];
-		else
+		else if( (args->rev_id.mrev == XVSEC_MCAP_US) || (args->rev_id.mrev == XVSEC_MCAP_USPLUS) )
 			dstr = (char*)MCAP_reg_names[args->access_reg.offset/4];
+		else if(args->rev_id.mrev == XVSEC_MCAP_SPARTAN)
+			dstr = (char*)MCAPV3_reg_names[args->access_reg.offset/4];
 
 		if(access == ACCESS_WORD)
 		{
@@ -607,9 +668,16 @@ static int execute_mcap_program_cmd(xvsec_handle_t *xvsec_handle,
 	if(args->program.flag == false)
 		return XVSEC_FAILURE;
 
-	ret = xvsec_mcap_configure_fpga(xvsec_handle,
+	if((args->rev_id.mrev == XVSEC_MCAP_US) || (args->rev_id.mrev == XVSEC_MCAP_USPLUS)) {
+		ret = xvsec_mcap_configure_fpga(xvsec_handle,
 		args->program.abs_clr_file,
 		args->program.abs_bit_file);
+	} else {
+		ret = xvsec_mcapv3_configure_fpga(xvsec_handle,
+		args->program.abs_clr_file,
+		args->program.abs_bit_file, args->program.tr_mode, args->program.is_full_raw);
+	}
+
 	if(ret < 0)
 	{
 		fprintf(stderr, "xvsec_mcap_configure_fpga "
@@ -683,6 +751,42 @@ static void print_mcapv2_ctl_fields(uint32_t val)
 	fprintf(stdout, "   bit  8\t%-20s\t%10d\n",     MCAPV2_ctl_fields[3], reg->v2.reset);
 	fprintf(stdout, "   bit  19:16\t%-20s\t%10d\n", MCAPV2_ctl_fields[4], reg->v2.axi_cache);
 	fprintf(stdout, "   bit  22:20\t%-20s\t%10d\n", MCAPV2_ctl_fields[5], reg->v2.axi_protect);
+}
+
+static void print_mcapv3_sts_fields(uint32_t val)
+{
+	xvsec_mcap_sts_reg_t *reg = (xvsec_mcap_sts_reg_t*)&val;
+
+	fprintf(stdout, "   bit  0\t%-20s\t%10d\n", MCAPV3_sts_fields[0], reg->v3.err);
+	fprintf(stdout, "   bit  1\t%-20s\t%10d\n", MCAPV3_sts_fields[1], reg->v3.eos);
+	fprintf(stdout, "   bit  8\t%-20s\t%10d\n", MCAPV3_sts_fields[2], reg->v3.fifo_ovfl);
+	fprintf(stdout, "   bit 15:12\t%-20s\t%10d\n", MCAPV3_sts_fields[3], reg->v3.fifo_occu);
+	fprintf(stdout, "   bit 24\t%-20s\t%10d\n", MCAPV3_sts_fields[4], reg->v3.req4mcap_rel);
+}
+
+static void print_mcapv3_ctl_fields(uint32_t val)
+{
+	xvsec_mcap_ctl_reg_t *reg = (xvsec_mcap_ctl_reg_t *)&val;
+
+	fprintf(stdout, "   bit  0\t%-20s\t%10d\n", MCAPV3_ctl_fields[0], reg->v3.enable);
+	fprintf(stdout, "   bit  4\t%-20s\t%10d\n", MCAPV3_ctl_fields[1], reg->v3.reset);
+	fprintf(stdout, "   bit  5\t%-20s\t%10d\n", MCAPV3_ctl_fields[2], reg->v3.module_reset);
+	fprintf(stdout, "   bit  8\t%-20s\t%10d\n", MCAPV3_ctl_fields[3], reg->v3.req4mcap_pcie);
+	fprintf(stdout, "   bit 12\t%-20s\t%10d\n", MCAPV3_ctl_fields[4], reg->v3.cfg_desgn_sw);
+	fprintf(stdout, "   bit 16\t%-20s\t%10d\n", MCAPV3_ctl_fields[5], reg->v3.wr_reg_enable);
+}
+
+static void print_mcapv3_cfg_fields(uint32_t val)
+{
+	xvsec_mcap_cfg_reg_t *reg = (xvsec_mcap_cfg_reg_t *)&val;
+
+	fprintf(stdout, "   bit  19:0\t%-20s\t%10d\n", MCAPV3_cfg_fields[0], reg->v3.idcode);
+	fprintf(stdout, "   bit  20\t%-20s\t%10d\n", MCAPV3_cfg_fields[1], reg->v3.sbi_empty);
+	fprintf(stdout, "   bit  21\t%-20s\t%10d\n", MCAPV3_cfg_fields[2], reg->v3.load_mode);
+	fprintf(stdout, "   bit  22\t%-20s\t%10d\n", MCAPV3_cfg_fields[3], reg->v3.mcap_reset_irq);
+	fprintf(stdout, "   bit  23\t%-20s\t%10d\n", MCAPV3_cfg_fields[4], reg->v3.pmcl_error);
+	fprintf(stdout, "   bit  24\t%-20s\t%10d\n", MCAPV3_cfg_fields[5], reg->v3.mcap_disable);
+	fprintf(stdout, "   bit  25\t%-20s\t%10d\n", MCAPV3_cfg_fields[6], reg->v3.fuse_mcap_disable);
 }
 
 static int execute_mcap_file_download_cmd(xvsec_handle_t *xvsec_handle,

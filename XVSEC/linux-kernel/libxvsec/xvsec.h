@@ -3,6 +3,7 @@
  * userspace APIs to enable the XSEC driver functionality
  *
  * Copyright (c) 2018-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -209,6 +210,23 @@ typedef union xvsec_mcap_sts_reg_t {
 		/** Reserved */
 		uint32_t reserved04		: 6;
 	}v2;
+	/** MCAP sts bits for Spartan UltraScale+ Devices */
+	struct  {
+		/** Error */
+		uint32_t err		: 1;
+		/** End of Startup Signal */
+		uint32_t eos		: 1;
+		uint32_t reserved01	: 6;
+		/** MCAP Write Buffer FIFO overflow */
+		uint32_t fifo_ovfl	: 1;
+		uint32_t reserved02	: 3;
+		/** MCAP Write Buffer FIFO Occupency */
+		uint32_t fifo_occu	: 4;
+		uint32_t reserved03	: 8;
+		/** MCAP Request for Release Flag */
+		uint32_t req4mcap_rel	: 1;
+		uint32_t reserved04	: 7;
+	}v3;
 
 }xvsec_mcap_sts_reg_t;
 
@@ -259,7 +277,59 @@ typedef union xvsec_mcap_ctl_reg_t {
 		uint32_t axi_protect	: 3;
 		uint32_t reserved04	: 9;
 	}v2;
+	/** MCAP ctrl bits for Spartan UltraScale+ */
+	struct  {
+		/** MCAP Module Enable */
+		uint32_t enable		: 1;
+		uint32_t reserved01	: 3;
+		/** MCAP Configurable Region Reset */
+		uint32_t reset		: 1;
+		/** MCAP Module Reset */
+		uint32_t module_reset	: 1;
+		uint32_t reserved02	: 2;
+		/** Request for gaining access to configurable region */
+		uint32_t req4mcap_pcie	: 1;
+		uint32_t reserved03	: 3;
+		/** MCAP Design Switch : Must be SET after loading bitstream */
+		uint32_t cfg_desgn_sw	: 1;
+		uint32_t reserved04	: 3;
+		/** MCAP Write Register Enable */
+		uint32_t wr_reg_enable	: 1;
+		uint32_t reserved05	: 15;
+	}v3;
 }xvsec_mcap_ctl_reg_t;
+
+/**
+ * @struct - xvsec_mcap_cfg_reg_t
+ * @brief       MCAP Control Register Fields
+ * @ingroup xvsec_api_struct
+ */
+typedef union xvsec_mcap_cfg_reg_t {
+	/** MCAP cfg bits for Spartan UltraScale+ */
+	struct {
+		/** MCAP IDCODE Val */
+		uint32_t idcode			:20;
+		/** MCAP SBI Empty  */
+		uint32_t sbi_empty		:1;
+		/** MCAP Load mode  */
+		uint32_t load_mode		:1;
+		/** MCAP Reset irq  */
+		uint32_t mcap_reset_irq		:1;
+		/** MCAP Pmcl error */
+		uint32_t pmcl_error		:1;
+		/** MCAP Disable    */
+		uint32_t mcap_disable		:1;
+		/** MCAP Fuse Disable */
+		uint32_t fuse_mcap_disable	:1;
+		uint32_t reserved01		:1;
+		uint32_t reserved02		:1;
+		uint32_t reserved03		:1;
+		uint32_t reserved04		:1;
+		uint32_t reserved05		:2;
+
+	}v3;
+
+}xvsec_mcap_cfg_reg_t;
 
 /**
  * @struct - xvsec_mcap_regs_t
@@ -303,6 +373,25 @@ typedef union xvsec_mcap_regs_t {
 		/** Read Data Register */
 		uint32_t	rd_data_reg;
 	}v2;
+	/** MCAP register sets for Spartan UltraScale+ device*/
+        struct {
+                /** Extended capability header register */
+                uint32_t        ext_cap_header;
+                /** Vendor Specific header register */
+                uint32_t        vendor_header;
+		/** Reserved */
+		uint32_t        spartan_reserved;
+                /** FPGA bit-stream version register */
+                uint32_t        fpga_bit_ver;
+                /** Status Register */
+                uint32_t        status_reg;
+                /** Control Register */
+                uint32_t        control_reg;
+                /** Write Data Register */
+                uint32_t        wr_data_reg;
+                /** Config status register */
+                uint32_t        config_status_reg;
+        } v3;
 }xvsec_mcap_regs_t;
 
 /**
@@ -375,6 +464,8 @@ typedef enum mcap_revision_t {
 	MCAP_USPLUS,
 	/** MCAP Revision for Versal device */
 	MCAP_VERSAL,
+	/** MCAP Revision for Spartan UltraScale+ device */
+	MCAP_SPARTAN,
 	/** Unsupported MCAP Revision by this Driver */
 	INVALID_MCAP_REVISION,
 }mcap_revision_t;
@@ -764,6 +855,28 @@ int xvsec_mcap_access_fpga_config_reg(xvsec_handle_t *handle, uint16_t offset,
 int xvsec_mcap_configure_fpga(xvsec_handle_t *handle,
 				char *partial_cfg_file, char *bitfile);
 
+/*****************************************************************************/
+/**
+ * xvsec_mcapv3_configure_fpga() - Performs bitstream programming on FPGA
+ *
+ *
+ * @param[in]   handle                  Unique handle to access the device
+ * @param[in]   partial_cfg_file        Partial Clear bitstream file
+ * @param[in]   bitfile                 Bitstream file
+ * @param[in]   tr_mode                 Data transfer mode(slow/fast)
+ * @param[in]	is_full_raw		Flag to indicate full raw bitstream
+ *					programming mode
+ *
+ * @return      XVSEC_SUCCESS                           : Success
+ * @return      XVSEC_ERR_INVALID_PARAM                 : Failure
+ * @return      XVSEC_ERR_OPERATION_NOT_SUPPORTED       : Failure
+ * @return      XVSEC_ERR_LINUX_SYSTEM_CALL             : Failure
+ * @return      XVSEC_ERR_INVALID_FPGA_REG_NUM          : Failure
+ * @ingroup xvsec_api_func
+ *
+ *****************************************************************************/
+int xvsec_mcapv3_configure_fpga(xvsec_handle_t *handle,
+        char *partial_cfg_file, char *bitfile, data_transfer_mode_t tr_mode, bool is_full_raw);
 
 /*****************************************************************************/
 /**

@@ -2,7 +2,8 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -22,6 +23,7 @@
 
 #define MAX_NO_OF_P_ARGS_FOR_US		9
 #define MAX_NO_OF_P_ARGS_FOR_VERSAL	14
+#define MAX_NO_OF_P_ARGS_FOR_SPARTAN	11
 
 /* main parser function */
 int parse_arguments(int argc, char *argv[], struct args *args);
@@ -52,5 +54,8 @@ int parse_arguments_for_versal(int argc, char *argv[], struct args *args);
 
 /* sub function for program options for ultrscale */
 int parse_arguments_for_us(int argc, char *argv[], struct args *args);
+
+/* sub function for program options for ultrscale */
+int parse_arguments_for_spartan(int argc, char *argv[], struct args *args);
 
 #endif /* __XVSEC_PARSER_H__ */

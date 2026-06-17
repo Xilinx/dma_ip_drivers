@@ -1,7 +1,8 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it

@@ -2,6 +2,7 @@
  * This file is part of the XVSEC driver for Linux
  *
  * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -157,6 +158,7 @@ enum file_operation_status {
  * @brief	MCAP register set
  *		V1 corresponds to US/US+ devices
  *		V2 corresponds to Versal devices
+ *		V3 corresponds to Spartan UltraScale+ devices
  *
  * @ingroup xvsec_mcap_union
  */
@@ -201,6 +203,27 @@ union mcap_regs {
 		/** Read Data Register */
 		uint32_t	rd_data_reg;
 	} v2;
+	/** MCAP register sets for Spartan UltraScale+ device*/
+        struct {
+                /** Valid flag to indicate registers validity */
+                uint32_t        valid;
+                /** Extended capability header register */
+                uint32_t        ext_cap_header;
+                /** Vendor Specific header register */
+                uint32_t        vendor_header;
+		/** Reserved */
+		uint32_t spartan_reserved;
+                /** FPGA bit-stream version register */
+                uint32_t        fpga_bit_ver;
+                /** Status Register */
+                uint32_t        status_reg;
+                /** Control Register */
+                uint32_t        control_reg;
+                /** Write Data Register */
+                uint32_t        wr_data_reg;
+                /** Config status register */
+                uint32_t        config_status_reg;
+        } v3;
 };
 
 /**
@@ -223,17 +246,39 @@ union bitstream_file {
 		enum bitstream_program_status status;
 	} v1;
 };
-
+/**
+ * @struct - bitstream_file
+ * @brief	XVSEC-MCAP bitstream parameters for programming
+ *		V3 corresponds to Spartan UltraScale+ devices
+ *
+ * @ingroup xvsec_mcap_union
+ */
+union bitstream_file_v3 {
+	/** MCAP bitstream parameters for Spartan UltraScale+ */
+	struct {
+		/** Partial clear bitstream file to
+		 * program ultrascale devices
+		 */
+		char *partial_clr_file;
+		/** bitstream file to program */
+		char *bitstream_file;
+		/** data transfer mode */
+		enum data_transfer_mode tr_mode;
+		/** Status of the bitstream programming */
+		enum bitstream_program_status status;
+	} v3;
+};
 /**
  * @struct - cfg_data
  * @brief	Parameters needed to perform MCAP read and writes
  *		V1 corresponds to US/US+ devices
  *		V2 corresponds to Versal devices
+ *		V3 corresponds to Spartan UltraScale+ devices
  *
  * @ingroup xvsec_mcap_union
  */
 union cfg_data {
-	/** MCAP register read/write parameters for US/US+ and Versal */
+	/** MCAP register read/write parameters for US/US+, Versal and Spartan UltraScale+*/
 	struct {
 		/** access field. 'b' for byte access, 'h'for half word access,
 		 *  'w' for word access
@@ -246,7 +291,7 @@ union cfg_data {
 		 *  Holds the info at the provided offset for read operation
 		 */
 		uint32_t	data;
-	} v1, v2;
+	} v1, v2, v3;
 };
 
 /**
@@ -423,6 +468,8 @@ union axi_cache_attr {
 #define CODE_MCAP_FILE_UPLOAD		14
 #define CODE_MCAP_GET_REVISION		15
 #define CODE_MCAP_SET_AXI_ATTR		16
+#define CODE_MCAP_PROG_BITFILE_FULL	17
+#define CODE_MCAP_PROG_BITFILE_RAW	18
 
 /** Complete set of ioctls for MCAP VSEC */
 
@@ -470,6 +517,12 @@ union axi_cache_attr {
 #define IOC_MCAP_PROGRAM_BITSTREAM		\
 	_IOWR(XVSEC_MCAP_IOC_MAGIC, CODE_MCAP_PROG_BITFILE, \
 		union bitstream_file *)
+#define IOC_MCAP_PROGRAM_BITSTREAM_FULL		\
+	_IOWR(XVSEC_MCAP_IOC_MAGIC, CODE_MCAP_PROG_BITFILE_FULL, \
+		union bitstream_file_v3 *)
+#define IOC_MCAP_PROGRAM_BITSTREAM_RAW		\
+	_IOWR(XVSEC_MCAP_IOC_MAGIC, CODE_MCAP_PROG_BITFILE_RAW, \
+		union bitstream_file_v3 *)
 /**
  * ioctl code for reading an MCAP VSEC register
  */

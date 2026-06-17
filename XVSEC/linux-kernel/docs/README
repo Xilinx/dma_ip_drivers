@@ -14,6 +14,7 @@ Contents
      2.1 Using xvsecctl for Generic VSEC functionality
      2.2 US/US+ MCAP Specific Commands
      2.3 Versal MCAP Specific Commands
+     2.4 Spartan UltraScale+ MCAP Specific Commands
 
 _____________________________________________________________________________
 1. Installation:
@@ -122,6 +123,16 @@ _____________________________________________________________________________
     - Access(Read/Write) any MCAP register by providing offset
     - Access(Read/Write) any Device register connected to AXI bus by providing address
     - Set the AXI cache and protections bits
+
+  - Spartan UltraScale+ device specific functionality
+    - Configuration Logic Reset
+    - MCAP Module Reset
+    - Full Reset (Both Configuration Logic and MCAP Module Reset)
+    - List MCAP Register set
+    - Access(Read/Write) any MCAP register by providing offset
+    - Program partial clear bitstream
+    - Program Stage-2/partial reconfigurable bitstream
+	- Slow and Fast download mode supported
 
   2.1 Using xvsecctl for Generic VSEC functionality
   -------------------------------------------------
@@ -660,3 +671,154 @@ _____________________________________________________________________________
         axi_cache: 0x1
         axi_prot: 0x2
 
+  2.4 Spartan UltraScale+ MCAP Specific Options
+  --------------------------------
+
+    2.4.1. MCAP Reset
+    -----------------
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -r
+
+    Description:
+    It Performs Simple Reset.
+
+	Example:
+	   [xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -r
+
+	   MCAP version: 3
+	   Configuration Logic Reset Successful
+
+    2.4.2. MCAP Module Reset
+    ------------------------
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -m
+
+    Description:
+    Performs Module Reset.
+
+	Example:
+	[xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -m
+
+	MCAP version: 3
+	MCAP Module Reset Successful
+
+    2.4.3. MCAP Full Reset
+    ----------------------
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -f
+
+    Description:
+    This command Performs Full Reset. It is equivalent to MCAP Simpale Reset + MCAP Module Reset.
+
+	Example:
+	[xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -f
+
+	MCAP version: 3
+	Both Configuration Logic & MCAP Module Reset Successful
+
+    2.4.4. Lists Data register Contents
+    -----------------------------------
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -d
+
+    Description:
+    Reads and prints MCAP Data Registers.
+
+	Example:
+	[xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -d
+
+	MCAP version: 3
+	BYTE OFFSET	Register Name		Data Value
+	-----------	----------------	----------
+	0x0000		Ext Capability      	0x3A01000B
+	0x0004		VSEC Header         	0x02C30001
+	0x0008		Spartan_reserved     	0x20104EA0
+	0x000C		FPGA BitStream Ver  	0x00000000
+	0x0010		Status              	0x00000004
+	    bit  0	MCAP Error          	         0
+	    bit  1	MCAP EOS            	         0
+	    bit  8	MCAP FIFO Overflow  	         0
+	    bit 15:12	MCAP FIFO Occupancy 	         0
+	    bit 24	Req for MCAP Release	         0
+	0x0014		Control             	0x00000000
+	    bit  0	MCAP Enable         	         0
+	    bit  4	MCAP Reset          	         0
+	    bit  5	MCAP Module Reset   	         0
+	    bit  8	Req for MCAP by PCIe	         0
+	    bit 12	MCAP Design Switch  	         0
+	    bit 16	Write Data Reg Enable	         0
+	0x0018		FPGA Write Data     	0x00000000
+	0x001C		Config Status       	0x20304EA0
+	    bit  19:0	IDCODE              	     20128
+	    bit  20	MCAP SBI Empty      	         1
+	    bit  21	MCAP Load mode      	         1
+	    bit  22	MCAP Reset irq      	         0
+	    bit  23	Pmcl error          	         0
+	    bit  24	MCAP disable        	         0
+	    bit  25	MCAP Fuse disable   	         0
+
+    2.4.5. Access the MCAP Registers
+    --------------------------------
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -a <byte offset> [type [data]]
+
+    Description:
+    This command is used to read/write the MCAP config Register.
+
+    Parameters:
+      <byte offset>:
+        - MCAP register offset
+      [type[data]]:
+        - Write operation with data
+        - b for byte data [8 bits] read
+        - h for half word data [16 bits] read
+        - w for word data [32 bits] read
+
+      Examples:
+        1) Read MCAP register
+        ---------------------
+	[xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -a 0x4 w
+
+	MCAP version: 3
+	[XVSEC] : xvsec_mcap_access_config_reg : read operation completed
+	BYTE OFFSET	Register Name		Data Value
+	-----------	----------------	----------
+	0x0004		VSEC Header         	0x02C30001
+
+        2) Write FPGA config register
+        ----------------------------
+        [xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -a 0x14 w 0x10000
+
+	MCAP version: 3
+	[XVSEC] : xvsec_mcap_access_config_reg : write operation completed
+	BYTE OFFSET	Register Name		Data Value
+	-----------	----------------	----------
+	0x0014		Control             	0x00010000
+
+    2.4.6. Program Stage 2 Bit-stream(.pdi)
+    -------------------------------------------------
+
+    command: ./xvsecctl -b <bus_no> -F <dev_no> -c 0x1 -p <file> [tr_mode <slow/fast>]
+
+    Description:
+    Programs Stage 2 Bitstream into FPGA. Supported file extentions are *.pdi.
+
+      Parameters:
+	[tr_mode ]
+	  - optional slow/fast download mode option for data transfer
+          - If tr_mode is not specified, it will use Default(fast) mode
+
+      Example:
+        1) [xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -p design_routed_tandem2_pcie1_llfix.pdi tr_mode fast
+
+	MCAP version: 3
+	tr_mode: 0
+	[XVSEC] : xvsec_mcapv3_configure_fpga : Bitstream Program successful
+	FPGA configuration successful
+
+	2) [xilinx@]# xvsecctl -b 0x41 -F 0x0 -c 0x1 -p design_routed_tandem2_pcie1_llfix.pdi tr_mode slow
+
+	MCAP version: 3
+	tr_mode: 1
+	[XVSEC] : xvsec_mcapv3_configure_fpga : Bitstream Program successful
+	FPGA configuration successful

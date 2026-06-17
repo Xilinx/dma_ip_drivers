@@ -3,6 +3,7 @@
  * to enable the user to execute the XVSEC functionality
  *
  * Copyright (c) 2018-2022  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -151,11 +152,30 @@ static void versal_help(FILE *fp)
 			"\n");
 }
 
+static void spartan_help(FILE *fp)
+{
+	fprintf(fp,
+			"Spartan UltraScale+ MCAP options(Ext Cap ID : 0xB, VSEC ID:0x0001, VSEC Rev : 3):\n"
+			"\t-p    [tr_mode <slow/fast>] <file>\t Program Bitstream(.pdi)\n"
+			"\t-P    [tr_mode <slow/fast>] <file>\t Program Bitstream with Manual register write(.pdi)\n"
+			"\t-C    <file>\t Partial Reconfig Clear File(.pdi)\n"
+			"\t-r\t\t Performs Simple Reset\n"
+			"\t-m\t\t Performs Module Reset\n"
+			"\t-f\t\t Performs Full Reset\n"
+			"\t-d\t\t Dump all the MCAP Registers\n"
+			"\t-a <byte offset> [type [data]]  Access the MCAP Registers\n"
+			"\t\t      here type[data] - b for byte data [8 bits]\n"
+			"\t\t      here type[data] - h for half word data [16 bits]\n"
+			"\t\t      here type[data] - w for word data [32 bits]\n"
+			"\n");
+}
+
 static void usage(FILE *fp)
 {
 	xvsec_common_help(fp);
 	ultrascale_help(fp);
 	versal_help(fp);
+	spartan_help(fp);
 }
 
 static int execute_xvsec_help_cmd(xvsec_handle_t *xvsec_handle,

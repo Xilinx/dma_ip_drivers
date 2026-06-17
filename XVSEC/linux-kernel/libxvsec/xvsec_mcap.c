@@ -3,6 +3,7 @@
  * userspace APIs to enable the XSEC driver functionality
  *
  * Copyright (c) 2018-2022  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -301,9 +302,9 @@ int xvsec_mcap_get_registers(xvsec_handle_t *handle,
 	memset(&regs, 0, sizeof(union mcap_regs));
 	status = ioctl(xvsec_user_ctx[device_index].fd,
 		IOC_MCAP_GET_REGISTERS, &regs);
-	if((status != XVSEC_SUCCESS) || ( (mrev != MCAP_VERSAL) & (regs.v1.valid == 0)) || ( (mrev == MCAP_VERSAL) & (regs.v2.valid == 0)))
+	if((status != XVSEC_SUCCESS) || ( (mrev != MCAP_VERSAL) & (regs.v1.valid == 0)) || ( (mrev == MCAP_VERSAL) & (regs.v2.valid == 0)) || ( (mrev == MCAP_SPARTAN) & (regs.v3.valid == 0)))
 	{
-		fprintf(stderr, "[XVSEC] : %s, mrev: %d, v1.valid:%d, v2.valid:%d\n", __func__, mrev, regs.v1.valid, regs.v2.valid);
+		fprintf(stderr, "[XVSEC] : %s, mrev: %d, v1.valid:%d, v2.valid:%d, regs.v3.valid:%d\n", __func__, mrev, regs.v1.valid, regs.v2.valid, regs.v3.valid);
 		ret = check_error_code(status, __func__);
 		goto CLEANUP;
 	}
@@ -317,9 +318,8 @@ int xvsec_mcap_get_registers(xvsec_handle_t *handle,
 		mcap_regs->v2.address_reg         = regs.v2.address_reg;
 		mcap_regs->v2.wr_data_reg         = regs.v2.wr_data_reg;
 		mcap_regs->v2.rd_data_reg         = regs.v2.rd_data_reg;
-	}
-	else
-	{
+
+	} else if( (mrev == MCAP_US) || (mrev == MCAP_USPLUS) ) {
 		mcap_regs->v1.cap_header			= regs.v1.ext_cap_header;
 		mcap_regs->v1.vendor_header			= regs.v1.vendor_header ;
 		mcap_regs->v1.fpga_jtag_id			= regs.v1.fpga_jtag_id  ;
@@ -331,6 +331,17 @@ int xvsec_mcap_get_registers(xvsec_handle_t *handle,
 		mcap_regs->v1.read_data_reg[1]			= regs.v1.rd_data_reg[1];
 		mcap_regs->v1.read_data_reg[2]			= regs.v1.rd_data_reg[2];
 		mcap_regs->v1.read_data_reg[3]			= regs.v1.rd_data_reg[3];
+
+	} else if( mrev == MCAP_SPARTAN) {
+
+		mcap_regs->v3.ext_cap_header			= regs.v3.ext_cap_header;
+		mcap_regs->v3.vendor_header			= regs.v3.vendor_header ;
+		mcap_regs->v3.spartan_reserved                   = regs.v3.spartan_reserved ;
+		mcap_regs->v3.fpga_bit_ver		        = regs.v3.fpga_bit_ver  ;
+		mcap_regs->v3.status_reg			= regs.v3.status_reg    ;
+		mcap_regs->v3.control_reg			= regs.v3.control_reg   ;
+		mcap_regs->v3.wr_data_reg			= regs.v3.wr_data_reg   ;
+		mcap_regs->v3.config_status_reg		        = regs.v3.config_status_reg  ;
 	}
 
 CLEANUP:
@@ -484,11 +495,17 @@ int xvsec_mcap_access_config_reg(xvsec_handle_t *handle, uint16_t offset,
 			cfg_data.v2.access = usr_cfg_data.access;
 			cfg_data.v2.data   = usr_cfg_data.data;
 		}
-		else			  /* cfg data for US/US+ devices */ 
+		else if( (mrev == MCAP_US) || (mrev == MCAP_USPLUS) )	  /* cfg data for US/US+ devices */
 		{
 			cfg_data.v1.offset = usr_cfg_data.offset;
 			cfg_data.v1.access = usr_cfg_data.access;
 			cfg_data.v1.data   = usr_cfg_data.data;
+		}
+		else if (mrev == MCAP_SPARTAN)
+		{
+			cfg_data.v3.offset = usr_cfg_data.offset;
+                        cfg_data.v3.access = usr_cfg_data.access;
+                        cfg_data.v3.data   = usr_cfg_data.data;
 		}
 
 		status = ioctl(xvsec_user_ctx[device_index].fd,
@@ -521,10 +538,15 @@ int xvsec_mcap_access_config_reg(xvsec_handle_t *handle, uint16_t offset,
 			cfg_data.v2.offset = usr_cfg_data.offset;
 			cfg_data.v2.access = usr_cfg_data.access;
 		}
-		else
+		else if( (mrev == MCAP_US) || (mrev == MCAP_USPLUS) )
 		{
 			cfg_data.v1.offset = usr_cfg_data.offset;
 			cfg_data.v1.access = usr_cfg_data.access;
+		}
+		else if( mrev == MCAP_SPARTAN )
+		{
+			cfg_data.v3.offset = usr_cfg_data.offset;
+                        cfg_data.v3.access = usr_cfg_data.access;
 		}
 
 
@@ -539,8 +561,10 @@ int xvsec_mcap_access_config_reg(xvsec_handle_t *handle, uint16_t offset,
 
 		if(mrev == MCAP_VERSAL)
 			usr_cfg_data.data   = cfg_data.v2.data;
-		else
+		else if( (mrev == MCAP_US) || (mrev == MCAP_USPLUS) )
 			usr_cfg_data.data   = cfg_data.v1.data;
+		else if( mrev == MCAP_SPARTAN )
+			usr_cfg_data.data   = cfg_data.v3.data;
 
 		if(access == ACCESS_BYTE)
 		{
@@ -745,6 +769,55 @@ int xvsec_mcap_configure_fpga(xvsec_handle_t *handle,
 		(bit_files.v1.status != MCAP_BITSTREAM_PROGRAM_SUCCESS))
 	{
 		fprintf(stderr, "[XVSEC] : %s : err status : %d\n", __func__, bit_files.v1.status);
+		ret = check_error_code(status, __func__);
+		goto CLEANUP;
+	}
+
+	fprintf(stdout, "[XVSEC] : %s : Bitstream Program successful\n", __func__);
+
+
+CLEANUP:
+	pthread_mutex_unlock(&xvsec_user_ctx[device_index].mutex);
+	return ret;
+
+}
+
+int xvsec_mcapv3_configure_fpga(xvsec_handle_t *handle,
+	char *partial_cfg_file, char *bitfile, data_transfer_mode_t tr_mode, bool is_full_raw)
+{
+	int			ret = XVSEC_SUCCESS;
+	int			status;
+	int			device_index;
+	union bitstream_file_v3	bit_files;
+
+	if((handle == NULL) ||
+		((partial_cfg_file == NULL) && (bitfile == NULL)))
+		return XVSEC_ERR_INVALID_PARAM;
+
+	status = xvsec_validate_handle(handle);
+	if(status < 0)
+		return status;
+
+	device_index = ((handle_t *)handle)->index;
+
+	pthread_mutex_lock(&xvsec_user_ctx[device_index].mutex);
+
+	/* V3 arguementes for Spartan UltraScale+ devices to program bitstreasm */
+	bit_files.v3.partial_clr_file = partial_cfg_file;
+	bit_files.v3.bitstream_file = bitfile;
+	bit_files.v3.tr_mode = tr_mode;
+	bit_files.v3.status = MCAP_BITSTREAM_PROGRAM_FAILURE;
+	if (!is_full_raw)
+		status = ioctl(xvsec_user_ctx[device_index].fd,
+			IOC_MCAP_PROGRAM_BITSTREAM_FULL, &bit_files);
+	else
+		status = ioctl(xvsec_user_ctx[device_index].fd,
+				IOC_MCAP_PROGRAM_BITSTREAM_RAW, &bit_files);
+
+	if((status != XVSEC_SUCCESS) ||
+		(bit_files.v3.status != MCAP_BITSTREAM_PROGRAM_SUCCESS))
+	{
+		fprintf(stderr, "[XVSEC] : %s : err status : %d\n", __func__, bit_files.v3.status);
 		ret = check_error_code(status, __func__);
 		goto CLEANUP;
 	}

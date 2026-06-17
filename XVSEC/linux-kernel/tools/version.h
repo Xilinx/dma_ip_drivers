@@ -2,7 +2,8 @@
  * This file is part of the XVSEC userspace application
  * to enable the user to execute the XVSEC functionality
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is licensed under BSD-style license (found in the
@@ -19,9 +20,9 @@
 #define XVSEC_TOOL_MODULE_NAME	"xvsec"
 #define XVSEC_TOOL_MODULE_DESC	"Xilinx VSEC Tool"
 
-#define XVSEC_TOOL_VERSION_MAJOR	2020
-#define XVSEC_TOOL_VERSION_MINOR	2
-#define XVSEC_TOOL_VERSION_PATCH	1
+#define XVSEC_TOOL_VERSION_MAJOR	2026
+#define XVSEC_TOOL_VERSION_MINOR	1
+#define XVSEC_TOOL_VERSION_PATCH	0
 
 #define XVSEC_TOOL_VERSION	\
 	__stringify(XVSEC_TOOL_VERSION_MAJOR) "." \

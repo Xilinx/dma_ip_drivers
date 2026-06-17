@@ -1,7 +1,8 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -517,7 +518,6 @@ int xvsec_mcap_program_bitstream(struct vsec_context *mcap_ctx,
 	ctrl_data = ctrl_data | XVSEC_MCAP_CTRL_WR_ENABLE |
 			XVSEC_MCAP_CTRL_ENABLE | XVSEC_MCAP_CTRL_REQ_ACCESS;
 
-
 	ctrl_data = ctrl_data &
 		~(XVSEC_MCAP_CTRL_RESET | XVSEC_MCAP_CTRL_MOD_RESET |
 		XVSEC_MCAP_CTRL_RD_ENABLE | XVSEC_MCAP_CTRL_CFG_SWICTH);
@@ -775,7 +775,7 @@ static int xvsec_write_bit(struct vsec_context *mcap_ctx,
 	 * the bitstream sync word on a 32-bit boundary. So,
 	 * we need to check every byte here.
 	 */
-	while (xvsec_util_fread(filep, offset, &val, 1) == 1) {
+	while (xvsec_util_fread(filep, offset, (uint8_t *)&val, 1) == 1) {
 		if (offset >= size) {
 			pr_err("[xvsec_cdev] : Reached End of BIT file");
 			pr_err(" Failed to find the sync word\n");
@@ -784,15 +784,15 @@ static int xvsec_write_bit(struct vsec_context *mcap_ctx,
 		len++; offset++;
 		if ((val == MCAP_SYNC_BYTE0) &&
 			(xvsec_util_fread(filep,
-				offset, &val, 1)) == 1) {
+				offset, (uint8_t *)&val, 1)) == 1) {
 			len++; offset++;
 			if ((val == MCAP_SYNC_BYTE1) &&
 				(xvsec_util_fread(filep,
-					offset, &val, 1)) == 1) {
+					offset, (uint8_t *)&val, 1)) == 1) {
 				len++; offset++;
 				if ((val == MCAP_SYNC_BYTE2) &&
 					(xvsec_util_fread(filep,
-						offset, &val, 1)) == 1) {
+						offset, (uint8_t *)&val, 1)) == 1) {
 					len++; offset++;
 					if (val == MCAP_SYNC_BYTE3) {
 						sync_found = true;
@@ -909,17 +909,20 @@ static int xvsec_mcap_program(struct vsec_context *mcap_ctx, char *fname)
 	uint32_t sts_data;
 
 	pr_info("Before fopen\n");
-	pr_info("file name : %p\n", fname);
+	pr_info("file name : %s\n", fname);
 	filep = xvsec_util_fopen(fname, O_RDONLY, 0);
 	if (filep == NULL)
 		return -(ENOENT);
 
 	pr_info("After fopen\n");
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 	ret = xvsec_util_get_file_size(fname, &file_size);
 	if (ret < 0)
 		goto CLEANUP;
-
+#else
+	file_size = xvsec_util_get_file_size(filep);
+#endif
 	pr_info("After getsize\n");
 
 	if (file_size <= 0) {

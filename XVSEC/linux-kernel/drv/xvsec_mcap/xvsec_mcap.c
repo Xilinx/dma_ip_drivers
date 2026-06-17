@@ -1,7 +1,8 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2020,  Xilinx, Inc.
+ * Copyright (c) 2020-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -41,6 +42,7 @@
 #include "xvsec_mcap.h"
 #include "xvsec_mcap_us.h"
 #include "xvsec_mcap_versal.h"
+#include "xvsec_mcap_spartan.h"
 
 /**
  * XVSEC-MCAP character device name
@@ -51,6 +53,7 @@ enum mcap_revison {
 	XVSEC_MCAP_US_REV = 0,
 	XVSEC_MCAP_USPLUS_REV = 1,
 	XVSEC_MCAP_VERSAL = 2,
+	XVSEC_MCAP_LASSAN = 3,
 	XVSEC_MCAP_MAX_REV
 };
 
@@ -96,6 +99,10 @@ struct mcap_fops {
 		union file_download_upload *file);
 	int (*set_axi_cache_attr)(struct vsec_context *mcap_ctx,
 		union axi_cache_attr *attr);
+	int (*program_bitstream_v3_full)(struct vsec_context *mcap_ctx,
+		union bitstream_file_v3 *bit_files);
+	int (*program_bitstream_v3_raw)(struct vsec_context *mcap_ctx,
+		union bitstream_file_v3 *bit_files);
 };
 
 struct mcap_priv_ctx {
@@ -145,10 +152,25 @@ static long xvsec_ioc_file_upload(struct file *filep,
 	uint32_t cmd, unsigned long arg);
 static long xvsec_ioc_set_axi_attr(struct file *filep,
 	uint32_t cmd, unsigned long arg);
+static long xvsec_ioc_prog_bitstream_v3_full(struct file *filep,
+	uint32_t cmd, unsigned long arg);
+static long xvsec_ioc_prog_bitstream_v3_raw(struct file *filep,
+	uint32_t cmd, unsigned long arg);
 
 static int xvsec_mcap_get_revision(struct vsec_context *mcap_ctx,
 	uint16_t *vsec_id, uint16_t *rev_id);
 
+/**
+ * @brief Open handler for the MCAP character device.
+ *
+ * Enforces single-open semantics: only one process may have the device
+ * open at a time. Allocates per-file private data and stores a pointer
+ * to the VSEC context.
+ *
+ * @param[in] inode  Inode associated with the character device.
+ * @param[in] filep  File pointer for the new open instance.
+ * @return 0 on success, -EBUSY if already open, -ENOMEM on allocation failure.
+ */
 static int xvsec_mcap_open(struct inode *inode, struct file *filep)
 {
 	int ret = 0;
@@ -160,7 +182,7 @@ static int xvsec_mcap_open(struct inode *inode, struct file *filep)
 
 	pr_info("%s: mcap_ctx address : %p\n", __func__, mcap_ctx);
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 
 	if (mcap_ctx->fopen_cnt != 0) {
 		ret = -(EBUSY);
@@ -180,16 +202,26 @@ static int xvsec_mcap_open(struct inode *inode, struct file *filep)
 	pr_debug("%s success\n", __func__);
 
 CLEANUP:
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 	return	ret;
 }
 
+/**
+ * @brief Release handler for the MCAP character device.
+ *
+ * Decrements the open count and frees the per-file private data
+ * allocated during open.
+ *
+ * @param[in] inode  Inode associated with the character device.
+ * @param[in] filep  File pointer being released.
+ * @return 0 always.
+ */
 static int xvsec_mcap_close(struct inode *inode, struct file *filep)
 {
 	struct file_priv_mcap	*priv = filep->private_data;
 	struct vsec_context *mcap_ctx = (struct vsec_context *)priv->ctx;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 
 	if (mcap_ctx->fopen_cnt == 0) {
 		pr_warn("File Open/close mismatch\n");
@@ -199,31 +231,53 @@ static int xvsec_mcap_close(struct inode *inode, struct file *filep)
 	}
 	kfree(priv);
 
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	return 0;
 }
 
+/**
+ * @brief MCAP IOCTL command dispatch table.
+ *
+ * Maps each IOCTL command code to its corresponding handler function.
+ * The table is iterated by xvsec_mcap_ioctl() to find and invoke the
+ * matching handler for an incoming IOCTL request.
+ *
+ * Each entry is a { command, handler } pair of type struct mcap_ioctl_ops.
+ */
 static const struct mcap_ioctl_ops mcap_ioctl_ops[] = {
-	{IOC_MCAP_RESET,		xvsec_ioc_mcap_reset},
-	{IOC_MCAP_MODULE_RESET,		xvsec_ioc_mcap_module_reset},
-	{IOC_MCAP_FULL_RESET,		xvsec_ioc_mcap_full_reset},
-	{IOC_MCAP_GET_REVISION,		xvsec_ioc_get_mcap_revision},
-	{IOC_MCAP_GET_DATA_REGISTERS,	xvsec_ioc_get_data_regs},
-	{IOC_MCAP_GET_REGISTERS,	xvsec_ioc_get_regs},
-	{IOC_MCAP_GET_FPGA_REGISTERS,	xvsec_ioc_get_fpga_regs},
-	{IOC_MCAP_PROGRAM_BITSTREAM,	xvsec_ioc_prog_bitstream},
-	{IOC_MCAP_READ_DEV_CFG_REG,	xvsec_ioc_rd_dev_cfg_reg},
-	{IOC_MCAP_WRITE_DEV_CFG_REG,	xvsec_ioc_wr_dev_cfg_reg},
-	{IOC_MCAP_READ_FPGA_CFG_REG,	xvsec_ioc_rd_fpga_cfg_reg},
-	{IOC_MCAP_WRITE_FPGA_CFG_REG,	xvsec_ioc_wr_fpga_cfg_reg},
-	{IOC_MCAP_READ_AXI_REG,		xvsec_ioc_read_axi_reg},
-	{IOC_MCAP_WRITE_AXI_REG,	xvsec_ioc_write_axi_reg},
-	{IOC_MCAP_FILE_DOWNLOAD,	xvsec_ioc_file_download},
-	{IOC_MCAP_FILE_UPLOAD,		xvsec_ioc_file_upload},
-	{IOC_MCAP_SET_AXI_ATTR,		xvsec_ioc_set_axi_attr},
+	{IOC_MCAP_RESET,		xvsec_ioc_mcap_reset},            /**< Reset MCAP configuration logic */
+	{IOC_MCAP_MODULE_RESET,		xvsec_ioc_mcap_module_reset},     /**< Reset the MCAP module */
+	{IOC_MCAP_FULL_RESET,		xvsec_ioc_mcap_full_reset},       /**< Full reset (MCAP + module) */
+	{IOC_MCAP_GET_REVISION,		xvsec_ioc_get_mcap_revision},     /**< Get MCAP hardware revision */
+	{IOC_MCAP_GET_DATA_REGISTERS,	xvsec_ioc_get_data_regs},         /**< Read MCAP data registers */
+	{IOC_MCAP_GET_REGISTERS,	xvsec_ioc_get_regs},              /**< Dump all MCAP registers */
+	{IOC_MCAP_GET_FPGA_REGISTERS,	xvsec_ioc_get_fpga_regs},         /**< Dump FPGA configuration registers */
+	{IOC_MCAP_PROGRAM_BITSTREAM,	xvsec_ioc_prog_bitstream},        /**< Program bitstream (V1/V2) */
+	{IOC_MCAP_READ_DEV_CFG_REG,	xvsec_ioc_rd_dev_cfg_reg},        /**< Read device config register */
+	{IOC_MCAP_WRITE_DEV_CFG_REG,	xvsec_ioc_wr_dev_cfg_reg},        /**< Write device config register */
+	{IOC_MCAP_READ_FPGA_CFG_REG,	xvsec_ioc_rd_fpga_cfg_reg},       /**< Read FPGA config register */
+	{IOC_MCAP_WRITE_FPGA_CFG_REG,	xvsec_ioc_wr_fpga_cfg_reg},       /**< Write FPGA config register */
+	{IOC_MCAP_READ_AXI_REG,		xvsec_ioc_read_axi_reg},  /**< Read AXI register */
+	{IOC_MCAP_WRITE_AXI_REG,	xvsec_ioc_write_axi_reg},         /**< Write AXI register */
+	{IOC_MCAP_FILE_DOWNLOAD,	xvsec_ioc_file_download},         /**< Download file via AXI */
+	{IOC_MCAP_FILE_UPLOAD,		xvsec_ioc_file_upload},           /**< Upload file via AXI */
+	{IOC_MCAP_SET_AXI_ATTR,		xvsec_ioc_set_axi_attr},  /**< Set AXI cache/protect attributes */
+	{IOC_MCAP_PROGRAM_BITSTREAM_FULL,    xvsec_ioc_prog_bitstream_v3_full}, /**< Program full PDI bitstream (V3) */
+	{IOC_MCAP_PROGRAM_BITSTREAM_RAW, xvsec_ioc_prog_bitstream_v3_raw},     /**< Program raw PDI bitstream (V3) */
 };
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_RESET.
+ *
+ * Resets the MCAP configuration logic via the revision-specific reset
+ * function pointer.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_RESET).
+ * @param[in] arg    User-space argument (unused).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_mcap_reset(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -236,14 +290,24 @@ static long xvsec_ioc_mcap_reset(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_RESET\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->reset(mcap_ctx);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	return ret;
 
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_MODULE_RESET.
+ *
+ * Performs a module-level reset of the MCAP block.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_MODULE_RESET).
+ * @param[in] arg    User-space argument (unused).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_mcap_module_reset(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -256,13 +320,24 @@ static long xvsec_ioc_mcap_module_reset(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_MODULE_RESET\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->module_reset(mcap_ctx);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_FULL_RESET.
+ *
+ * Performs a full reset of both the MCAP configuration logic and the
+ * MCAP module.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_FULL_RESET).
+ * @param[in] arg    User-space argument (unused).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_mcap_full_reset(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -275,13 +350,23 @@ static long xvsec_ioc_mcap_full_reset(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_FULL_RESET\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->full_reset(mcap_ctx);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_GET_REVISION.
+ *
+ * Retrieves the MCAP hardware revision ID and copies it to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_GET_REVISION).
+ * @param[in] arg    User-space pointer to receive the uint16_t revision ID.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_get_mcap_revision(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -296,9 +381,9 @@ static long xvsec_ioc_get_mcap_revision(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_GET_REVISION\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->get_revision(mcap_ctx, &vsec_id, &rev_id);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret == 0) {
 		pr_debug("vsec_id: %d, rev_id: %d\n", vsec_id, rev_id);
@@ -309,6 +394,16 @@ static long xvsec_ioc_get_mcap_revision(struct file *filep,
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_GET_DATA_REGISTERS.
+ *
+ * Reads the MCAP data registers and copies them to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_GET_DATA_REGISTERS).
+ * @param[in] arg    User-space pointer to receive the data register array.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_get_data_regs(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -322,9 +417,9 @@ static long xvsec_ioc_get_data_regs(struct file *filep,
 
 	pr_debug("ioctl : IOC_MCAP_GET_DATA_REGISTERS\n");
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->get_data_regs(mcap_ctx, read_data_reg);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	memset(read_data_reg, 0, sizeof(read_data_reg));
 	if (ret == 0) {
@@ -336,6 +431,16 @@ static long xvsec_ioc_get_data_regs(struct file *filep,
 
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_GET_REGISTERS.
+ *
+ * Reads all MCAP registers and copies them to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_GET_REGISTERS).
+ * @param[in] arg    User-space pointer to receive the mcap_regs union.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_get_regs(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -351,9 +456,9 @@ static long xvsec_ioc_get_regs(struct file *filep,
 
 	memset(&mcap_regs, 0, sizeof(union mcap_regs));
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->get_regs(mcap_ctx, &mcap_regs);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret == 0) {
 		ret = copy_to_user((void __user *)arg,
@@ -363,6 +468,16 @@ static long xvsec_ioc_get_regs(struct file *filep,
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_GET_FPGA_REGISTERS.
+ *
+ * Reads the FPGA configuration registers and copies them to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_GET_FPGA_REGISTERS).
+ * @param[in] arg    User-space pointer to receive the fpga_cfg_regs union.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_get_fpga_regs(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -378,9 +493,9 @@ static long xvsec_ioc_get_fpga_regs(struct file *filep,
 
 	memset(&fpga_cfg_regs, 0, sizeof(union fpga_cfg_regs));
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->get_fpga_regs(mcap_ctx, &fpga_cfg_regs);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret == 0) {
 		ret = copy_to_user((void __user *)arg,
@@ -391,6 +506,19 @@ static long xvsec_ioc_get_fpga_regs(struct file *filep,
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_PROGRAM_BITSTREAM.
+ *
+ * Programs a bitstream file onto the FPGA via the V1/V2 programming
+ * path. Copies the bitstream_file union from user space, invokes the
+ * revision-specific program_bitstream function, and returns the
+ * updated status to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_PROGRAM_BITSTREAM).
+ * @param[in] arg    User-space pointer to a bitstream_file union.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_prog_bitstream(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -409,9 +537,9 @@ static long xvsec_ioc_prog_bitstream(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->program_bitstream(mcap_ctx, &bit_files);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret < 0)
 		goto CLEANUP;
@@ -423,6 +551,104 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_PROGRAM_BITSTREAM_FULL.
+ *
+ * Programs a full PDI bitstream onto the FPGA via the V3 (Spartan UltraScale+)
+ * programming path with full MCAP setup (access request, enable,
+ * write mode, completion check).
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_PROGRAM_BITSTREAM_FULL).
+ * @param[in] arg    User-space pointer to a bitstream_file_v3 union.
+ * @return 0 on success, negative error code on failure.
+ */
+static long xvsec_ioc_prog_bitstream_v3_full(struct file *filep,
+	uint32_t cmd, unsigned long arg)
+{
+	int ret = 0;
+	struct file_priv_mcap *priv = filep->private_data;
+	struct vsec_context *mcap_ctx = (struct vsec_context *)priv->ctx;
+	struct mcap_priv_ctx *mcap_priv_ctx =
+			(struct mcap_priv_ctx *)mcap_ctx->vsec_priv;
+	struct mcap_fops *mcap_fops = (struct mcap_fops *)&mcap_priv_ctx->fops;
+	union bitstream_file_v3	bit_files;
+
+	pr_debug("ioctl : IOC_MCAP_PROGRAM_BITSTREAM_FULL\n");
+	ret = copy_from_user(&bit_files, (void __user *)arg,
+		sizeof(union bitstream_file_v3));
+
+	if (ret != 0)
+		goto CLEANUP;
+
+	mutex_lock(&mcap_ctx->mutex);
+	ret = mcap_fops->program_bitstream_v3_full(mcap_ctx, &bit_files);
+	mutex_unlock(&mcap_ctx->mutex);
+
+	if (ret < 0)
+		goto CLEANUP;
+
+	ret = copy_to_user((void __user *)arg, (void *)&bit_files,
+		sizeof(union bitstream_file_v3));
+
+CLEANUP:
+	return ret;
+}
+
+/**
+ * @brief IOCTL handler for IOC_MCAP_PROGRAM_BITSTREAM_RAW.
+ *
+ * Programs a raw PDI bitstream onto the FPGA via the V3 (Spartan UltraScale+)
+ * path without performing MCAP access request or enable setup.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_PROGRAM_BITSTREAM_RAW).
+ * @param[in] arg    User-space pointer to a bitstream_file_v3 union.
+ * @return 0 on success, negative error code on failure.
+ */
+static long xvsec_ioc_prog_bitstream_v3_raw(struct file *filep,
+	uint32_t cmd, unsigned long arg)
+{
+	int ret = 0;
+	struct file_priv_mcap *priv = filep->private_data;
+	struct vsec_context *mcap_ctx = (struct vsec_context *)priv->ctx;
+	struct mcap_priv_ctx *mcap_priv_ctx =
+			(struct mcap_priv_ctx *)mcap_ctx->vsec_priv;
+	struct mcap_fops *mcap_fops = (struct mcap_fops *)&mcap_priv_ctx->fops;
+	union bitstream_file_v3	bit_files;
+
+	pr_debug("ioctl : IOC_MCAP_PROGRAM_BITSTREAM_RAW\n");
+	ret = copy_from_user(&bit_files, (void __user *)arg,
+		sizeof(union bitstream_file_v3));
+
+	if (ret != 0)
+		goto CLEANUP;
+
+	mutex_lock(&mcap_ctx->mutex);
+	ret = mcap_fops->program_bitstream_v3_raw(mcap_ctx, &bit_files);
+	mutex_unlock(&mcap_ctx->mutex);
+
+	if (ret < 0)
+		goto CLEANUP;
+
+	ret = copy_to_user((void __user *)arg, (void *)&bit_files,
+		sizeof(union bitstream_file_v3));
+
+CLEANUP:
+	return ret;
+}
+
+/**
+ * @brief IOCTL handler for IOC_MCAP_READ_DEV_CFG_REG.
+ *
+ * Reads a device configuration register at the user-specified offset
+ * and returns the value to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_READ_DEV_CFG_REG).
+ * @param[in] arg    User-space pointer to a cfg_data union (offset in, data out).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_rd_dev_cfg_reg(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -442,9 +668,9 @@ static long xvsec_ioc_rd_dev_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->rd_cfg_addr(mcap_ctx, &rw_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret < 0)
 		goto CLEANUP;
@@ -456,6 +682,17 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_WRITE_DEV_CFG_REG.
+ *
+ * Writes a value to a device configuration register at the
+ * user-specified offset.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_WRITE_DEV_CFG_REG).
+ * @param[in] arg    User-space pointer to a cfg_data union (offset + data).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_wr_dev_cfg_reg(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -475,15 +712,26 @@ static long xvsec_ioc_wr_dev_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->wr_cfg_addr(mcap_ctx, &rw_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 CLEANUP:
 	return ret;
 
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_READ_FPGA_CFG_REG.
+ *
+ * Reads an FPGA configuration register at the user-specified offset
+ * and returns the value to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_READ_FPGA_CFG_REG).
+ * @param[in] arg    User-space pointer to a fpga_cfg_reg union (offset in, data out).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_rd_fpga_cfg_reg(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -502,9 +750,9 @@ static long xvsec_ioc_rd_fpga_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->fpga_rd_cfg_addr(mcap_ctx, &fpga_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret != 0)
 		goto CLEANUP;
@@ -515,6 +763,17 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_WRITE_FPGA_CFG_REG.
+ *
+ * Writes a value to an FPGA configuration register at the
+ * user-specified offset.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_WRITE_FPGA_CFG_REG).
+ * @param[in] arg    User-space pointer to a fpga_cfg_reg union (offset + data).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_wr_fpga_cfg_reg(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -534,13 +793,24 @@ static long xvsec_ioc_wr_fpga_cfg_reg(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->fpga_wr_cfg_addr(mcap_ctx, &fpga_cfg_data);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_READ_AXI_REG.
+ *
+ * Reads an AXI register at the user-specified address and returns
+ * the value to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_READ_AXI_REG).
+ * @param[in] arg    User-space pointer to an axi_reg_data union (address in, data out).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_read_axi_reg(struct file *filep,
 		uint32_t cmd, unsigned long arg)
 {
@@ -560,9 +830,9 @@ static long xvsec_ioc_read_axi_reg(struct file *filep,
 		goto CLEANUP;
 
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->axi_rd_addr(mcap_ctx, &axi_rd_info);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret == 0) {
 		ret = copy_to_user((void __user *)arg,
@@ -573,6 +843,16 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_WRITE_AXI_REG.
+ *
+ * Writes a value to an AXI register at the user-specified address.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_WRITE_AXI_REG).
+ * @param[in] arg    User-space pointer to an axi_reg_data union (address + data).
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_write_axi_reg(struct file *filep,
 		uint32_t cmd, unsigned long arg)
 {
@@ -592,14 +872,27 @@ static long xvsec_ioc_write_axi_reg(struct file *filep,
 		goto CLEANUP;
 
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->axi_wr_addr(mcap_ctx, &axi_wr_info);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_FILE_DOWNLOAD.
+ *
+ * Downloads (writes) a file to the device via AXI. Copies the
+ * file_download_upload parameters from user space, invokes the
+ * revision-specific file_download function, and returns the
+ * status to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_FILE_DOWNLOAD).
+ * @param[in] arg    User-space pointer to a file_download_upload union.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_file_download(struct file *filep,
 		uint32_t cmd, unsigned long arg)
 {
@@ -619,9 +912,9 @@ static long xvsec_ioc_file_download(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->file_download(mcap_ctx, &file_args);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	rv = copy_to_user((void __user *)arg, (void *)&file_args,
 			sizeof(union file_download_upload));
@@ -633,6 +926,19 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_FILE_UPLOAD.
+ *
+ * Uploads (reads) data from the device via AXI and writes it to a
+ * file. Copies the file_download_upload parameters from user space,
+ * invokes the revision-specific file_upload function, and returns
+ * the status to user space.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_FILE_UPLOAD).
+ * @param[in] arg    User-space pointer to a file_download_upload union.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_file_upload(struct file *filep,
 		uint32_t cmd, unsigned long arg)
 {
@@ -652,9 +958,9 @@ static long xvsec_ioc_file_upload(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->file_upload(mcap_ctx, &file_args);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	rv = copy_to_user((void __user *)arg, (void *)&file_args,
 			sizeof(union file_download_upload));
@@ -666,6 +972,17 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief IOCTL handler for IOC_MCAP_SET_AXI_ATTR.
+ *
+ * Sets the AXI cache and protection attributes used for AXI
+ * register and file transfer operations.
+ *
+ * @param[in] filep  File pointer with MCAP context in private_data.
+ * @param[in] cmd    IOCTL command code (IOC_MCAP_SET_AXI_ATTR).
+ * @param[in] arg    User-space pointer to an axi_cache_attr union.
+ * @return 0 on success, negative error code on failure.
+ */
 static long xvsec_ioc_set_axi_attr(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -684,9 +1001,9 @@ static long xvsec_ioc_set_axi_attr(struct file *filep,
 	if (ret != 0)
 		goto CLEANUP;
 
-	spin_lock(&mcap_ctx->lock);
+	mutex_lock(&mcap_ctx->mutex);
 	ret = mcap_fops->set_axi_cache_attr(mcap_ctx, &axi_attr_info);
-	spin_unlock(&mcap_ctx->lock);
+	mutex_unlock(&mcap_ctx->mutex);
 
 	if (ret != 0)
 		goto CLEANUP;
@@ -695,6 +1012,18 @@ CLEANUP:
 	return ret;
 }
 
+/**
+ * @brief Unlocked IOCTL dispatch handler for the MCAP character device.
+ *
+ * Iterates the mcap_ioctl_ops dispatch table to find the handler
+ * matching the given IOCTL command code and invokes it.
+ *
+ * @param[in] filep  File pointer for the open MCAP device.
+ * @param[in] cmd    IOCTL command code from user space.
+ * @param[in] arg    User-space argument associated with the command.
+ * @return 0 on success, -EINVAL if command is unknown, or the
+ *         handler's return value on other errors.
+ */
 static long xvsec_mcap_ioctl(struct file *filep,
 	uint32_t cmd, unsigned long arg)
 {
@@ -716,6 +1045,18 @@ static long xvsec_mcap_ioctl(struct file *filep,
 	return ret;
 }
 
+/**
+ * @brief Read the MCAP VSEC and revision IDs from PCI configuration space.
+ *
+ * On the first call, reads the vendor-specific header from PCI config
+ * space and caches the VSEC ID and revision ID in the private context.
+ * Subsequent calls return the cached values.
+ *
+ * @param[in]  mcap_ctx  Pointer to the VSEC context structure.
+ * @param[out] vsec_id   Pointer to store the VSEC ID.
+ * @param[out] rev_id    Pointer to store the revision ID.
+ * @return 0 on success, negative error code on PCI read failure.
+ */
 static int xvsec_mcap_get_revision(struct vsec_context *mcap_ctx,
 	uint16_t *vsec_id, uint16_t *rev_id)
 {
@@ -761,6 +1102,17 @@ static const struct file_operations xvsec_mcap_fops = {
 	.unlocked_ioctl	= xvsec_mcap_ioctl,
 };
 
+/**
+ * @brief Initialize the MCAP VSEC module.
+ *
+ * Initializes the mutex, allocates the private MCAP context, reads
+ * the hardware revision, validates the VSEC ID, binds the appropriate
+ * revision-specific function pointers (V1/V2/V3), and creates the
+ * MCAP character device.
+ *
+ * @param[in] mcap_ctx  Pointer to the VSEC context structure.
+ * @return 0 on success, negative error code on failure.
+ */
 int xvsec_mcap_module_init(struct vsec_context *mcap_ctx)
 {
 	int rv;
@@ -769,7 +1121,7 @@ int xvsec_mcap_module_init(struct vsec_context *mcap_ctx)
 
 	pr_info("%s: mcap_ctx address : %p\n", __func__, mcap_ctx);
 
-	spin_lock_init(&mcap_ctx->lock);
+	mutex_init(&mcap_ctx->mutex);
 	mcap_priv_ctx = kzalloc(sizeof(struct mcap_priv_ctx), GFP_KERNEL);
 	if (mcap_priv_ctx == NULL)
 		return -(ENOMEM);
@@ -799,46 +1151,83 @@ int xvsec_mcap_module_init(struct vsec_context *mcap_ctx)
 		goto CLEANUP;
 	}
 
+	/* Bind revision-specific MCAP operations to the function pointer table */
 	mcap_fops = &mcap_priv_ctx->fops;
 	if ((mcap_priv_ctx->rev_id == XVSEC_MCAP_US_REV) ||
 		(mcap_priv_ctx->rev_id == XVSEC_MCAP_USPLUS_REV)) {
-		mcap_fops->reset = xvsec_mcap_reset;
-		mcap_fops->module_reset = xvsec_mcap_module_reset;
-		mcap_fops->full_reset = xvsec_mcap_full_reset;
-		mcap_fops->get_revision = xvsec_mcap_get_revision;
-		mcap_fops->get_data_regs = xvsec_mcap_get_data_regs;
-		mcap_fops->get_regs = xvsec_mcap_get_regs;
-		mcap_fops->get_fpga_regs = xvsec_mcap_get_fpga_regs;
-		mcap_fops->program_bitstream = xvsec_mcap_program_bitstream;
-		mcap_fops->rd_cfg_addr = xvsec_mcap_rd_cfg_addr;
-		mcap_fops->wr_cfg_addr = xvsec_mcap_wr_cfg_addr;
-		mcap_fops->fpga_rd_cfg_addr = xvsec_fpga_rd_cfg_addr;
-		mcap_fops->fpga_wr_cfg_addr = xvsec_fpga_wr_cfg_addr;
-		mcap_fops->axi_rd_addr = xvsec_mcapv1_axi_rd_addr;
-		mcap_fops->axi_wr_addr = xvsec_mcapv1_axi_wr_addr;
-		mcap_fops->file_download = xvsec_mcapv1_file_download;
-		mcap_fops->file_upload	= xvsec_mcapv1_file_upload;
-		mcap_fops->set_axi_cache_attr = xvsec_mcapv1_set_axi_cache_attr;
+		/*
+		 * UltraScale / UltraScale+ (MCAP V1) function bindings.
+		 * Uses the original MCAP interface with single bitstream
+		 * programming and FPGA configuration register access.
+		 */
+		mcap_fops->reset = xvsec_mcap_reset;                        /** MCAP reset */
+		mcap_fops->module_reset = xvsec_mcap_module_reset;          /** Module reset */
+		mcap_fops->full_reset = xvsec_mcap_full_reset;              /** Full reset (MCAP + module) */
+		mcap_fops->get_revision = xvsec_mcap_get_revision;          /** Get VSEC/revision ID */
+		mcap_fops->get_data_regs = xvsec_mcap_get_data_regs;        /** Read MCAP data registers */
+		mcap_fops->get_regs = xvsec_mcap_get_regs;                  /** Read all MCAP registers */
+		mcap_fops->get_fpga_regs = xvsec_mcap_get_fpga_regs;        /** Read FPGA config registers */
+		mcap_fops->program_bitstream = xvsec_mcap_program_bitstream; /** Program bitstream */
+		mcap_fops->rd_cfg_addr = xvsec_mcap_rd_cfg_addr;            /** Read device config register */
+		mcap_fops->wr_cfg_addr = xvsec_mcap_wr_cfg_addr;            /** Write device config register */
+		mcap_fops->fpga_rd_cfg_addr = xvsec_fpga_rd_cfg_addr;       /** Read FPGA config register */
+		mcap_fops->fpga_wr_cfg_addr = xvsec_fpga_wr_cfg_addr;       /** Write FPGA config register */
+		mcap_fops->axi_rd_addr = xvsec_mcapv1_axi_rd_addr;          /** AXI register read */
+		mcap_fops->axi_wr_addr = xvsec_mcapv1_axi_wr_addr;          /** AXI register write */
+		mcap_fops->file_download = xvsec_mcapv1_file_download;      /** AXI file download */
+		mcap_fops->file_upload	= xvsec_mcapv1_file_upload;          /** AXI file upload */
+		mcap_fops->set_axi_cache_attr = xvsec_mcapv1_set_axi_cache_attr; /** Set AXI cache attributes */
 
 
 	} else if (mcap_priv_ctx->rev_id == XVSEC_MCAP_VERSAL) {
-		mcap_fops->reset = xvsec_mcapv2_reset;
-		mcap_fops->module_reset = xvsec_mcapv2_module_reset;
-		mcap_fops->full_reset = xvsec_mcapv2_full_reset;
-		mcap_fops->get_revision = xvsec_mcap_get_revision;
-		mcap_fops->get_data_regs = xvsec_mcapv2_get_data_regs;
-		mcap_fops->get_regs = xvsec_mcapv2_get_regs;
-		mcap_fops->get_fpga_regs = xvsec_mcapv2_get_fpga_regs;
-		mcap_fops->program_bitstream = xvsec_mcapv2_program_bitstream;
-		mcap_fops->rd_cfg_addr = xvsec_mcapv2_rd_cfg_addr;
-		mcap_fops->wr_cfg_addr = xvsec_mcapv2_wr_cfg_addr;
-		mcap_fops->fpga_rd_cfg_addr = xvsec_fpgav2_rd_cfg_addr;
-		mcap_fops->fpga_wr_cfg_addr = xvsec_fpgav2_wr_cfg_addr;
-		mcap_fops->axi_rd_addr = xvsec_mcapv2_axi_rd_addr;
-		mcap_fops->axi_wr_addr = xvsec_mcapv2_axi_wr_addr;
-		mcap_fops->file_download = xvsec_mcapv2_file_download;
-		mcap_fops->file_upload	= xvsec_mcapv2_file_upload;
-		mcap_fops->set_axi_cache_attr = xvsec_mcapv2_set_axi_cache_attr;
+		/*
+		 * Versal (MCAP V2) function bindings.
+		 * Uses the V2 interface with PDI-based bitstream programming,
+		 * AXI register access, and file download/upload support.
+		 */
+		mcap_fops->reset = xvsec_mcapv2_reset;                        /** MCAP V2 reset */
+		mcap_fops->module_reset = xvsec_mcapv2_module_reset;          /** Module reset */
+		mcap_fops->full_reset = xvsec_mcapv2_full_reset;              /** Full reset (MCAP + module) */
+		mcap_fops->get_revision = xvsec_mcap_get_revision;            /** Get VSEC/revision ID (common) */
+		mcap_fops->get_data_regs = xvsec_mcapv2_get_data_regs;        /** Read MCAP V2 data registers */
+		mcap_fops->get_regs = xvsec_mcapv2_get_regs;                  /** Read all MCAP V2 registers */
+		mcap_fops->get_fpga_regs = xvsec_mcapv2_get_fpga_regs;        /** Read FPGA config registers */
+		mcap_fops->program_bitstream = xvsec_mcapv2_program_bitstream; /** Program PDI bitstream */
+		mcap_fops->rd_cfg_addr = xvsec_mcapv2_rd_cfg_addr;            /** Read device config register */
+		mcap_fops->wr_cfg_addr = xvsec_mcapv2_wr_cfg_addr;            /** Write device config register */
+		mcap_fops->fpga_rd_cfg_addr = xvsec_fpgav2_rd_cfg_addr;       /** Read FPGA config register */
+		mcap_fops->fpga_wr_cfg_addr = xvsec_fpgav2_wr_cfg_addr;       /** Write FPGA config register */
+		mcap_fops->axi_rd_addr = xvsec_mcapv2_axi_rd_addr;            /** AXI register read */
+		mcap_fops->axi_wr_addr = xvsec_mcapv2_axi_wr_addr;            /** AXI register write */
+		mcap_fops->file_download = xvsec_mcapv2_file_download;        /** AXI file download */
+		mcap_fops->file_upload	= xvsec_mcapv2_file_upload;            /** AXI file upload */
+		mcap_fops->set_axi_cache_attr = xvsec_mcapv2_set_axi_cache_attr; /** Set AXI cache attributes */
+
+	} else if (mcap_priv_ctx->rev_id == XVSEC_MCAP_LASSAN) {
+		/*
+		 * Spartan UltraScale+ (MCAP V3) function bindings.
+		 * Uses the V3 interface with separate full and raw PDI
+		 * programming paths. FPGA config register, AXI, and
+		 * file transfer operations are unsupported on this revision.
+		 */
+		mcap_fops->reset = xvsec_mcapv3_reset;                        /** MCAP V3 reset */
+		mcap_fops->module_reset = xvsec_mcapv3_module_reset;          /** Module reset */
+		mcap_fops->full_reset = xvsec_mcapv3_full_reset;              /** Full reset (MCAP + module) */
+		mcap_fops->get_revision = xvsec_mcap_get_revision;            /** Get VSEC/revision ID (common) */
+		mcap_fops->get_data_regs = xvsec_mcapv3_get_data_regs;        /** Read MCAP data regs (unsupported) */
+		mcap_fops->get_regs = xvsec_mcapv3_get_regs;                  /** Read all MCAP V3 registers */
+		mcap_fops->get_fpga_regs = xvsec_mcapv3_get_fpga_regs;        /** Read FPGA config regs (unsupported) */
+		mcap_fops->program_bitstream_v3_full = xvsec_mcapv3_program_bitstream_full; /** Full PDI programming with MCAP setup */
+		mcap_fops->program_bitstream_v3_raw = xvsec_mcapv3_program_bitstream_raw;   /** Raw PDI programming without MCAP setup */
+		mcap_fops->rd_cfg_addr = xvsec_mcapv3_rd_cfg_addr;            /** Read device config register */
+		mcap_fops->wr_cfg_addr = xvsec_mcapv3_wr_cfg_addr;            /** Write device config register */
+		mcap_fops->fpga_rd_cfg_addr = xvsec_fpgav3_rd_cfg_addr;       /** Read FPGA config reg (unsupported) */
+		mcap_fops->fpga_wr_cfg_addr = xvsec_fpgav3_wr_cfg_addr;       /** Write FPGA config reg (unsupported) */
+		mcap_fops->axi_rd_addr = xvsec_mcapv3_axi_rd_addr;            /** AXI register read (unsupported) */
+		mcap_fops->axi_wr_addr = xvsec_mcapv3_axi_wr_addr;            /** AXI register write (unsupported) */
+		mcap_fops->file_download = xvsec_mcapv3_file_download;        /** AXI file download (unsupported) */
+		mcap_fops->file_upload	= xvsec_mcapv3_file_upload;            /** AXI file upload (unsupported) */
+		mcap_fops->set_axi_cache_attr = xvsec_mcapv3_set_axi_cache_attr; /** Set AXI cache attr (unsupported) */
 	}
 
 	rv = xvsec_cdev_create(mcap_ctx->pdev, &mcap_ctx->char_dev,
@@ -856,6 +1245,14 @@ CLEANUP:
 	return rv;
 }
 
+/**
+ * @brief Clean up and exit the MCAP VSEC module.
+ *
+ * Removes the MCAP character device and frees the private MCAP
+ * context allocated during initialization.
+ *
+ * @param[in] mcap_ctx  Pointer to the VSEC context structure.
+ */
 void xvsec_mcap_module_exit(struct vsec_context *mcap_ctx)
 {
 	pr_debug("%s\n", __func__);

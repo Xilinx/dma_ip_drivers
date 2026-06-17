@@ -1,7 +1,8 @@
 /*
  * This file is part of the XVSEC driver for Linux
  *
- * Copyright (c) 2018-2020,  Xilinx, Inc.
+ * Copyright (c) 2018-2022,  Xilinx, Inc.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  * All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
@@ -360,7 +361,6 @@ static const struct file_operations xvsec_gen_fops = {
 	.unlocked_ioctl	= xvsec_gen_ioctl,
 };
 
-
 static int xvsec_initialize(struct pci_dev *pdev, struct context *dev_ctx)
 {
 	int ret = 0;
@@ -403,7 +403,6 @@ static int xvsec_initialize(struct pci_dev *pdev, struct context *dev_ctx)
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(xvsec_initialize);
 
 static int xvsec_deinitialize(struct context *dev_ctx)
 {
@@ -429,7 +428,6 @@ static int xvsec_deinitialize(struct context *dev_ctx)
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(xvsec_deinitialize);
 
 static int __init xvsec_drv_init(void)
 {
@@ -456,7 +454,11 @@ static int __init xvsec_drv_init(void)
 	if (dev_count == 0)
 		return 0;
 
+#if KERNEL_VERSION(6, 4, 0) > LINUX_VERSION_CODE
 	g_xvsec_class = class_create(THIS_MODULE, XVSEC_NODE_NAME);
+#else
+	g_xvsec_class = class_create(XVSEC_NODE_NAME);
+#endif
 	if (IS_ERR(g_xvsec_class)) {
 		pr_err("failed to create class");
 		ret = -(PTR_ERR(g_xvsec_class));
