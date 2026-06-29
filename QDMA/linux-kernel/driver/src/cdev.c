@@ -61,6 +61,7 @@ static LIST_HEAD(xlnx_phy_dev_list);
 static DEFINE_MUTEX(xlnx_phy_dev_mutex);
 
 struct cdev_async_io {
+	ssize_t res;
 	ssize_t res2;
 	unsigned long req_count;
 	unsigned long cmpl_count;
@@ -129,15 +130,20 @@ static int qdma_req_completed(struct qdma_request *req,
 
 	unmap_user_buf(qiocb, req->write);
 	iocb_release(qiocb);
-	caio->res2 |= (err < 0) ? err : 0;
-	if (caio->res2)
+	if (err < 0) {
+		if (!(caio->res2))
+			caio->res2 = err; // return the first error
 		caio->err_cnt++;
+	} else if (!(caio->res2)) {
+		caio->res += bytes_done; // add the iovec byte count; return the successful byte count before the first error
+	}
 	caio->cmpl_count++;
 	if (caio->cmpl_count == caio->req_count) {
-		res = caio->cmpl_count - caio->err_cnt;
+		res = caio->res;
 		res2 = caio->res2;
 #ifdef RHEL_RELEASE_VERSION
 #if RHEL_RELEASE_VERSION(9, 0) < RHEL_RELEASE_CODE
+		res = (res2 < 0) ? res2 : res;
 		caio->iocb->ki_complete(caio->iocb, res);
 #elif RHEL_RELEASE_VERSION(8, 0) < RHEL_RELEASE_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
@@ -146,6 +152,7 @@ static int qdma_req_completed(struct qdma_request *req,
 #endif
 #else
 #if KERNEL_VERSION(5, 16, 0) <= LINUX_VERSION_CODE
+		res = (res2 < 0) ? res2 : res;
 		caio->iocb->ki_complete(caio->iocb, res);
 #elif KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
@@ -470,7 +477,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		caio->reqv[i]->ep_addr = (u64)pos;
 		pos += io[i].iov_len;
 		caio->reqv[i]->no_memcpy = xcdev->no_memcpy ? 1 : 0;
-		caio->reqv[i]->count = io->iov_len;
+		caio->reqv[i]->count = io[i].iov_len;
 		caio->reqv[i]->timeout_ms = 10 * 1000;	/* 10 seconds */
 		caio->reqv[i]->fp_done = qdma_req_completed;
 
@@ -545,7 +552,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		caio->reqv[i]->ep_addr = (u64)pos;
 		pos += io[i].iov_len;
 		caio->reqv[i]->no_memcpy = xcdev->no_memcpy ? 1 : 0;
-		caio->reqv[i]->count = io->iov_len;
+		caio->reqv[i]->count = io[i].iov_len;
 		caio->reqv[i]->timeout_ms = 10 * 1000;	/* 10 seconds */
 		caio->reqv[i]->fp_done = qdma_req_completed;
 	}

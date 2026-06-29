@@ -485,7 +485,7 @@ static void *event_mon(void *handle)
 					printf("Error: Invalid IOCB from events\n");
 					continue;
 				}
-				_info->num_req_completed += events[j].res;
+				_info->num_req_completed += iocb->u.c.nbytes; // iovec count, for preadv/pwritev
 
 				iov = (struct iovec *)(iocb->u.c.buf);
 				if (!iov) {
