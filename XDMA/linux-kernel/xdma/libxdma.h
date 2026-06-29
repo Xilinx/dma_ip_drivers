@@ -609,7 +609,9 @@ struct xdma_dev {
 	int h2c_channel_max;
 
 	/* Interrupt management */
-	int irq_count;		/* interrupt counter */
+	atomic_t irq_count;	/* interrupt counter (incremented from
+				 * concurrent MSI-X handlers on different CPUs)
+				 */
 	int irq_line;		/* flag if irq allocated successfully */
 	int msi_enabled;	/* flag if msi was enabled for the device */
 	int msix_enabled;	/* flag if msi-x was enabled for the device */

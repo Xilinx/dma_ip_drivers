@@ -167,6 +167,14 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 		goto err_out;
 	}
 
+	/* Record the opened device handle now, before the validation/ISR steps
+	 * below. Their error paths goto err_out -> xpdev_free() ->
+	 * xdma_device_close(xpdev->xdev); if xpdev->xdev were still NULL there,
+	 * xdma_device_close() returns at its !dev_hndl guard and the opened
+	 * device (BAR maps, IRQ vectors, engine DMA buffers, pci regions) leaks.
+	 */
+	xpdev->xdev = hndl;
+
 	if (xpdev->user_max > MAX_USER_IRQ) {
 		pr_err("Maximum users limit reached\n");
 		rv = -EINVAL;
@@ -189,7 +197,10 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 		pr_warn("NO engine found!\n");
 
 	if (xpdev->user_max) {
-		u32 mask = (1 << (xpdev->user_max + 1)) - 1;
+		/* user_max is the COUNT of user IRQ lines (0..user_max-1), so the
+		 * enable mask is (1 << user_max) - 1. The old "+ 1" set one extra
+		 * bit, enabling a user-IRQ line with no backing handler. */
+		u32 mask = (1 << xpdev->user_max) - 1;
 
 		rv = xdma_user_isr_enable(hndl, mask);
 		if (rv)
@@ -214,8 +225,6 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 		dev_name(&pdev->dev), xdev->idx, pdev, xpdev, xdev,
 		xpdev->user_max, xpdev->h2c_channel_max,
 		xpdev->c2h_channel_max);
-
-	xpdev->xdev = hndl;
 
 	rv = xpdev_create_interfaces(xpdev);
 	if (rv)
