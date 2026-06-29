@@ -247,6 +247,8 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 			struct qdma_descq *descq, struct qdma_request *req)
 {
 	struct qdma_sgt_req_cb *cb = qdma_req_cb_get(req);
+	unsigned long now, timeout, expire;
+	int rv;
 
 	/** if timeout is mentioned in the request,
 	 *  wait until the timeout occurs or wait until the
@@ -254,19 +256,33 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 	 */
 
 	if (req->timeout_ms) {
-#ifdef __XRT__
-		qdma_waitq_wait_event_timeout(cb->wq, cb->done &&
-				(descq->pidx == descq->cidx),
-				msecs_to_jiffies(req->timeout_ms));
-#else
-		qdma_waitq_wait_event_timeout(cb->wq, cb->done,
-				msecs_to_jiffies(req->timeout_ms));
-#endif
+		now = jiffies;
+		timeout = msecs_to_jiffies(req->timeout_ms);
+		expire = now + timeout;
+		do {
+			#ifdef __XRT__
+			rv = qdma_waitq_wait_event_timeout(cb->wq, cb->done &&
+					(descq->pidx == descq->cidx),
+					timeout);
+			#else
+			rv = qdma_waitq_wait_event_timeout(cb->wq, cb->done,
+					timeout);
+			#endif
+			if (rv >= 0)
+				break;
+			now = jiffies;
+			if (unlikely(now >= expire))
+				break;
+			timeout = expire - now;
+		} while (1);
 	} else {
-		qdma_waitq_wait_event(cb->wq, cb->done);
+		do {
+			rv = qdma_waitq_wait_event(cb->wq, cb->done);
+		} while (rv < 0);
 	}
 
 	lock_descq(descq);
+
 	/** if the call back is not done, request timed out
 	 *  delete the request list
 	 */
@@ -276,7 +292,7 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 	/** if the call back is not done but the status is updated
 	 *  return i/o error
 	 */
-	if (!cb->done || cb->status) {
+	if (unlikely(!cb->done || cb->status)) {
 		pr_err("%s: req 0x%p, %c,%u,%u/%u,0x%llx, done %d, err %d, tm %u.\n",
 				descq->conf.name,
 				req, req->write ? 'W' : 'R',
@@ -288,13 +304,13 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 				cb->status,
 			req->timeout_ms);
 		qdma_descq_dump(descq, NULL, 0, 1);
-		unlock_descq(descq);
-
-		return -EIO;
+		rv = -EIO;
+	} else {
+		rv = req->count;
 	}
 
 	unlock_descq(descq);
-	return 0;
+	return rv;
 }
 
 /*****************************************************************************/
