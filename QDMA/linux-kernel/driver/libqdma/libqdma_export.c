@@ -2465,6 +2465,8 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	/** Initialize the wait queue */
 	qdma_waitq_init(&cb->wq);
 
+	cb->left = req->count;
+
 	pr_debug("%s: data len %u, ep 0x%llx, sgl 0x%p, sgl cnt %u, tm %u ms.\n",
 		descq->conf.name, req->count, req->ep_addr, req->sgl,
 		req->sgcnt, req->timeout_ms);
@@ -2508,11 +2510,13 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	if (rv < 0)
 		goto unmap_sgl;
 
-	return cb->offset;
+	return rv;
 
 unmap_sgl:
-	if (!req->dma_mapped)
+	if (cb->unmap_needed) {
 		sgl_unmap(xdev->conf.pdev,  req->sgl, req->sgcnt, dir);
+		cb->unmap_needed = 0;
+	}
 
 	return rv;
 }
@@ -2523,6 +2527,12 @@ unmap_sgl:
  *  for dma operation (for both read and write)
  * This is a callback function called from upper layer(character device)
  * to handle the read/write request on the queues
+ * 
+ * If qdma_batch_request_submit fails during DMA mapping, it unwinds mapped
+ * requests and returns an error before enqueueing anything.
+ *
+ * Once requests are added to descq->work_list, normal completion should
+ * eventually call ki_complete through fp_done (qdma_req_completed).
  *
  * @param[in]	dev_hndl:	hndl retured from qdma_device_open()
  * @param[in]	id:			queue index
@@ -2541,6 +2551,7 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	enum dma_data_direction dir;
 	int rv = 0;
 	unsigned long i;
+	unsigned long mapped = 0;
 	struct qdma_request *req;
 	int st_c2h = 0;
 
@@ -2622,10 +2633,11 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 						descq->conf.name,
 						req->sgcnt,
 						req->count);
-					req->fp_done(req, 0, rv);
+					goto unmap_mapped;
 				}
 				cb->unmap_needed = 1;
 			}
+			mapped++;
 		}
 	}
 
@@ -2635,7 +2647,8 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 		unlock_descq(descq);
 		pr_err("%s descq %s NOT online.\n", xdev->conf.name,
 				descq->conf.name);
-		return -EINVAL;
+		rv = -EINVAL;
+		goto unmap_mapped;
 	}
 
 	for (i = 0; i < count; i++) {
@@ -2649,6 +2662,19 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	qdma_descq_proc_sgt_request(descq);
 
 	return 0;
+
+unmap_mapped:
+	for (i = 0; i < mapped; i++) {
+		req = reqv[i];
+		cb = qdma_req_cb_get(req);
+
+		if (cb->unmap_needed) {
+			sgl_unmap(xdev->conf.pdev, req->sgl, req->sgcnt, dir);
+			cb->unmap_needed = 0;
+		}
+	}
+
+	return rv;
 }
 
 #ifdef TANDEM_BOOT_SUPPORTED
