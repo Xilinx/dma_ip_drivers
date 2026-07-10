@@ -1,0 +1,24 @@
+#
+# This file is part of the MDB5 userspace application
+# to enable the user to execute the MDB5 functionality
+#
+# Copyright (c) 2025, Advanced Micro Devices, Inc. All rights reserved.
+#
+# This source code is licensed under BSD-style license (found in the
+# LICENSE file in the root directory of this source tree)
+#
+
+name=mm_perf
+chan_mode=mm			# <mm>
+pci_bus=1
+pci_dev=0
+ch_start_idx=0
+num_rd_channels=0
+num_wr_channels=1
+address=0xaa002000		# Device memory address of PCIe BAR 2
+runtime=30			# seconds
+num_process=1			# num of processes per channel
+num_pkt=64			# count of pkt bursts
+pkt_sz=64
+aperture_sz=0			# ignores if aperture_sz=0
+dump_en=true			# <true / false> dumps lspci and stats at the end

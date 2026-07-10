@@ -803,7 +803,7 @@ static int mdb5_dma_io_req_prepare(struct amd_mdb5_dma_channel *hchan,
 	struct dma_slave_config sconf;
 	struct dma_chan *dchan;
 	int ret = 0;
-	bool async = false;
+	bool async;
 
 	dchan = hchan->dchan;
 	amd_mdb5_dma_tx_direction(hchan, NULL, &dir);
@@ -816,8 +816,7 @@ static int mdb5_dma_io_req_prepare(struct amd_mdb5_dma_channel *hchan,
 	io_req->buflen = io_req_param->user_bufsz;
 	io_req->write  = read_write;
 
-	if (io_req_param->flags & AMD_MDB5_DMA_CHAN_ASYNC_MODE)
-		async = true;
+	async = io_req_param->flags & AMD_MDB5_DMA_CHAN_ASYNC_MODE;
 
 	ret = mdb5_dma_sgdma_map_user_buf_to_sgl(hchan, io_req);
 	if (ret) {
@@ -1308,9 +1307,6 @@ static void amd_mdb5_dma_aio_done(void *args)
 
 	aio_req = (struct amd_mdb5_dma_aio_request *) args;
 	if (!aio_req)
-		return;
-
-	if (!aio_req->iocb)
 		return;
 
 	hchan = aio_req->hchan;
@@ -2521,7 +2517,7 @@ int amd_mdb5_dma_cdev_ctrl_destroy(struct amd_mdb5_dma_cdev_ctrl *ctrl)
 	int ret = -EINVAL;
 
 	if (!ctrl) {
-		mdb5_dma_err(ctrl->dev, "device is null");
+		mdb5_dma_err(NULL, "device is null");
 		goto end_destroy;
 	}
 

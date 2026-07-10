@@ -7,7 +7,6 @@
 # This source code is licensed under BSD-style license (found in the
 # LICENSE file in the root directory of this source tree)
 #
-
 SHELL = /bin/bash
 
 srcdir := $(shell pwd)
@@ -16,6 +15,7 @@ dma-ctl_dir = $(srcdir)/dma-ctl
 dma-from-device_dir = $(srcdir)/dma-from-device
 dma-to-device_dir = $(srcdir)/dma-to-device
 dma-xfer_dir = $(srcdir)/dma-xfer
+dma-perf_dir = $(srcdir)/dma-perf
 
 export bin_dir
 
@@ -57,8 +57,17 @@ dma-xfer:
 	$(MAKE) -C dma-xfer
 	@cp -f $(dma-xfer_dir)/dma-xfer $(bin_dir)
 
+.PHONY: dma-perf
+dma-perf:
+	@echo "#######################";
+	@echo "###  dma-perf  ###";
+	@echo "#######################";
+	@mkdir -p -m 755 $(bin_dir)
+	$(MAKE) -C dma-perf
+	@cp -f $(dma-perf_dir)/dma-perf $(bin_dir)
+
 .PHONY: apps
-apps: dma-ctl dma-from-device dma-to-device dma-xfer
+apps: dma-ctl dma-from-device dma-to-device dma-xfer dma-perf
 
 
 .PHONY: clean
@@ -82,4 +91,9 @@ clean:
 	@echo "####       dma-xfer      ####";
 	@echo "#############################";
 	$(MAKE) -C dma-xfer clean;
-	@rm -rf $(bin_dir)
+	@rm -f $(bin_dir)/dma-xfer
+	@echo "#############################";
+	@echo "####       dma-perf      ####";
+	@echo "#############################";
+	$(MAKE) -C dma-perf clean;
+	@rm -f $(bin_dir)/dma-perf
