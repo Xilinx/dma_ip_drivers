@@ -1,0 +1,401 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Applications &mdash; MDB5 DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=074839c1" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developers Guide" href="developers-guide.html" />
+    <link rel="prev" title="Getting Started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5 DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User Applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dma-ctl">dma-ctl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dma-xfer">dma-xfer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dma-to-device">dma-to-device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dma-from-device">dma-from-device</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dma-perf">dma-perf</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developers-guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-guide.html">Migration Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5 DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">User Applications</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="user-applications">
+<h1>User Applications<a class="headerlink" href="#user-applications" title="Link to this heading"></a></h1>
+<p>This document provides comprehensive usage information for all MDB5 DMA user-space applications. Each application serves a specific purpose in the MDB5 DMA ecosystem for testing various functionalities supported by the controller.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Aperture Size</strong></p>
+<p>Provides support of programming over PCIe. MDB5 DMA Software provides a capability to program a pdi file to a specific aperture within a Versal device. This enables the DMA to write data to a fixed size FPGA aperture.</p>
+<p>When the end of the user specified aperture size is reached, transactions continue to transfer data by looping back to the start of the aperture window. This is repeated until all data has been programmed into the user specified aperture window.</p>
+</div>
+<section id="dma-ctl">
+<h2>dma-ctl<a class="headerlink" href="#dma-ctl" title="Link to this heading"></a></h2>
+<p><strong>Overview</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dma-ctl</span></code> application is a command-line utility for configuring and controlling MDB5 DMA devices. It provides control capabilities for DMA controllers, channels, and registers.</p>
+<p><strong>Usage</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dma-ctl [OPTIONS]
+
+-c, --channel &lt;INDEX&gt;            Specify the channel index (0-7 for read/write channels)
+-d, --dir &lt;read/write&gt;           Specify channel direction
+-s, --bdf &lt;BB:DD.F&gt;              Specify PCI Bus:Device.Function in hexadecimal format
+-S, --stats                      Display channel statistics
+-m, --set_transfer_mode &lt;MODE&gt;   Set transfer mode (e.g., sg/simple)
+-M, --get_transfer_mode          Get current transfer mode
+-a, --set_aperture_sz &lt;VALUE&gt;    Set aperture size (SG mode only)
+-A, --get_aperture_sz            Get current aperture size
+-h, --help                       Display help information
+-v, --version                    Display version information
+-r, --reg_read &lt;OFFSET&gt;          Read register at specified offset (debug only)
+-w, --reg_write &lt;OFFSET&gt; &lt;DATA&gt;  Write data to register at specified offset (debug only)
+</pre></div>
+</div>
+<p><strong>Commands</strong></p>
+<p><strong>Channel statistics</strong></p>
+<p>This command displays statistics for a specific DMA channel.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -S -c 1 -d write
+INFO: Channel /dev/mdb5_write00 stats:
+	Number of packets received = 1
+	Number of packets success = 1
+	Number of packets failed = 0
+	Number of interrupts received = 1
+	Read data processed = 0
+	Write data processed = 104857600
+	Total data processed = 104857600
+</pre></div>
+</div>
+<p><strong>Set transfer mode</strong></p>
+<p>This command configures the transfer mode for a channel. Two available modes are, Scatter-Gather (Linked-list) Mode and Simple (Non Linked-list) Mode.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Channels are set to Scatter-Gather (Linked-list) Mode as default when the driver is initialized.</p>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -m sg -c 0 -d write
+INFO: Scatter-Gather mode configured on channel /dev/mdb5_write00
+
+[root@host]# dma-ctl -m simple -c 2 -d read
+INFO: Simple mode configured on channel /dev/mdb5_read02
+</pre></div>
+</div>
+<p><strong>Get transfer mode</strong></p>
+<p>This command queries the current transfer mode for a channel.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -M -c 0 -d write
+INFO: Scatter-Gather mode configured on channel /dev/mdb5_write00
+</pre></div>
+</div>
+<p><strong>Set aperture size</strong></p>
+<p>This command configures the aperture size for Scatter-Gather (Linked-list) Mode channels.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -a 4096 -c 0 -d write
+INFO: Aperture size = 4096 is configured on channel /dev/mdb5_write00
+</pre></div>
+</div>
+<p><strong>Get aperture size</strong></p>
+<p>This command queries the current aperture size for a channel.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -A -c 0 -d write
+INFO: Aperture size = 4096 is configured on channel /dev/mdb5_write00
+</pre></div>
+</div>
+<p><strong>Debug Register Operations</strong></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The register read and write operations are intended for debugging purposes only. These commands provide direct access to hardware registers and should be used with caution. Improper register writes can cause system instability.</p>
+</div>
+<p><strong>Register read</strong></p>
+<p>This command reads a register value from the DMA controller.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -r 0x100 -s 01:00.0
+INFO: Register read: offset = 0x100, data = 0xDEADBEEF
+</pre></div>
+</div>
+<p><strong>Register write</strong></p>
+<p>This command writes a value to a register in the DMA controller.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-ctl -w 0x100 0xFF -s 01:00.0
+INFO: Register read back: offset = 0x100, data = 0xFF
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="dma-xfer">
+<h2>dma-xfer<a class="headerlink" href="#dma-xfer" title="Link to this heading"></a></h2>
+<p><strong>Overview</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dma-xfer</span></code> application demonstrates DMA transfer operations using configuration files. It provides an interface for performing both synchronous and asynchronous data transfers between files and device memory on both Simple (Non Linked-list) Mode and Scatter-Gather (Linked-list) Mode.</p>
+<p>The utility perform a completes test by:</p>
+<ul class="simple">
+<li><p><strong>Configuration</strong>: Reads parameters from a configuration file specifying channel counts, device memory addresses, transfer modes, and file paths</p></li>
+<li><p><strong>Channel Setup</strong>: Initializes write channels (host-to-device) and read channels (device-to-host)</p></li>
+<li><p><strong>Write Operation</strong>: Transfers data from an input file to a specified address in device memory via write channels</p></li>
+<li><p><strong>Read Operation</strong>: Reads the same data back from device memory and writes it to an output file</p></li>
+<li><p><strong>Validation</strong>: Enables validation that data written to device memory can be successfully read back</p></li>
+<li><p><strong>Async Transfer Completion</strong>: In asynchronous mode, transfer completion is detected by the interrupt generated by the MDB5 DMA Controller.</p></li>
+</ul>
+<p>The application is designed primarily for round-trip validation, automatically performing both write and read operations in sequence. While it’s technically possible to configure write-only or read-only operations by setting channel counts to zero, this breaks the validation workflow and is not the intended use case. For dedicated unidirectional transfers, consider using the specialized <code class="docutils literal notranslate"><span class="pre">dma-to-device</span></code> or <code class="docutils literal notranslate"><span class="pre">dma-from-device</span></code> applications instead.</p>
+<p><strong>Usage</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dma-xfer [OPTIONS]
+
+-c, --config &lt;FILE&gt; Configuration file that defines transfer parameters
+-h, --help          Print usage help and exit
+-v, --version       Print version information and exit
+-V, --verbose       Enable verbose output
+</pre></div>
+</div>
+<p><strong>Configuration file format</strong></p>
+<p>The application requires a configuration file with transfer parameters:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">name</span><span class="o">=</span><span class="s">mm_xfer			</span><span class="c1"># Configuration name</span>
+<span class="na">chan_mode</span><span class="o">=</span><span class="s">mm			</span><span class="c1"># &lt;mm&gt;</span>
+<span class="na">num_rd_channels</span><span class="o">=</span><span class="s">2</span>
+<span class="na">num_wr_channels</span><span class="o">=</span><span class="s">2</span>
+<span class="na">address</span><span class="o">=</span><span class="s">0xaa002000		</span><span class="c1"># Device memory address</span>
+<span class="na">transfer_mode</span><span class="o">=</span><span class="s">sg		</span><span class="c1"># &lt;sg=SCATTER-GATHER DMA / simple=Simple DMA&gt; </span>
+<span class="na">pkt_sz</span><span class="o">=</span><span class="s">1024</span>
+<span class="na">io_type</span><span class="o">=</span><span class="s">io_sync			</span><span class="c1"># &lt;io_async / io_sync&gt;</span>
+<span class="na">inputfile</span><span class="o">=</span><span class="s">in.txt		</span><span class="c1"># &lt;file name of length up to 127&gt;</span>
+<span class="na">outputfile</span><span class="o">=</span><span class="s">out.txt		</span><span class="c1"># &lt;file name of length up to 127&gt;</span>
+</pre></div>
+</div>
+<p><strong>Configuration parameters</strong></p>
+<ul class="simple">
+<li><p><strong>name</strong> - Configuration name for identification</p></li>
+<li><p><strong>chan_mode</strong> - Channel mode (currently only <code class="docutils literal notranslate"><span class="pre">mm</span></code> supported)</p></li>
+<li><p><strong>num_rd_channels</strong> - Number of read channels to use for C2H transfers, starting from channel 0 (e.g., setting this to 2 will use channels 0 and 1)</p></li>
+<li><p><strong>num_wr_channels</strong> - Number of write channels to use for H2C transfers, starting from channel 0 (e.g., setting this to 2 will use channels 0 and 1)</p></li>
+<li><p><strong>address</strong> - Device memory address for transfers</p></li>
+<li><p><strong>transfer_mode</strong> - Transfer mode (<code class="docutils literal notranslate"><span class="pre">sg</span></code> for Scatter-Gather (Linked-list) DMA, <code class="docutils literal notranslate"><span class="pre">simple</span></code> for Simple (Non Linked-list) DMA)</p></li>
+<li><p><strong>pkt_sz</strong> - Size of data packets to transfer (in bytes)</p></li>
+<li><p><strong>io_type</strong> - Transfer synchronization (<code class="docutils literal notranslate"><span class="pre">io_sync</span></code> for blocking, <code class="docutils literal notranslate"><span class="pre">io_async</span></code> for non-blocking)</p></li>
+<li><p><strong>inputfile</strong> - Source file for write operations (up to 128 characters)</p></li>
+<li><p><strong>outputfile</strong> - Destination file for read operations (up to 128 characters)</p></li>
+</ul>
+<p><strong>Example</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-xfer --config config_file.txt
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="dma-to-device">
+<h2>dma-to-device<a class="headerlink" href="#dma-to-device" title="Link to this heading"></a></h2>
+<p><strong>Overview</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dma-to-device</span></code> application enables Host-to-Card (H2C) data transfers using the MDB5 DMA driver. It provides a simple interface for transferring data from system memory to device memory.</p>
+<p><strong>Usage</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dma-to-device [OPTIONS]
+
+-c, --channel &lt;INDEX&gt;         Channel index, default 0
+-a, --address &lt;ADDRESS&gt;       Address on the device memory
+-s, --size &lt;SIZE&gt;             Size of a single transfer in bytes, default 32
+-o, --offset &lt;OFFSET&gt;         Page offset of transfer, default 0
+-f, --data_input_file &lt;FILE&gt;  Input file to read data from
+-w, --data_output_file &lt;FILE&gt; Optional output file to write transfer data
+-h, --help                    Print usage help and exit
+-v, --verbose                 Verbose output
+</pre></div>
+</div>
+<p><strong>Examples</strong></p>
+<p><strong>Basic transfer</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-to-device --channel 0 --address 0xaa002000 --size 1024 --data_input_file input.bin
+</pre></div>
+</div>
+<p><strong>Transfer with offset</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-to-device --channel 0 --address 0xaa002000 --size 1024 --offset 512 --data_input_file input.bin
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="dma-from-device">
+<h2>dma-from-device<a class="headerlink" href="#dma-from-device" title="Link to this heading"></a></h2>
+<p><strong>Overview</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dma-from-device</span></code> application enables Card-to-Host (C2H) data transfers using the MDB5 DMA driver. It provides a simple interface for transferring data from device memory to system memory.</p>
+<p><strong>Usage</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dma-from-device [OPTIONS]
+
+-c, --channel &lt;INDEX&gt;         Channel index, default 0
+-a, --address &lt;ADDRESS&gt;       Address on the device memory
+-s, --size &lt;SIZE&gt;             Size of a single transfer in bytes, default 32
+-o, --offset &lt;OFFSET&gt;         Page offset of transfer, default 0
+-w, --data_output_file &lt;FILE&gt; Optional output file to write transfer data
+-h, --help                    Print usage help and exit
+-v, --verbose                 Verbose output
+</pre></div>
+</div>
+<p><strong>Examples</strong></p>
+<p><strong>Basic transfer</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-from-device --channel 0 --address 0xaa002000 --size 1024
+</pre></div>
+</div>
+<p><strong>Transfer with file output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-from-device --channel 0 --address 0xaa002000 --size 4096 --data_output_file output.bin
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="dma-perf">
+<h2>dma-perf<a class="headerlink" href="#dma-perf" title="Link to this heading"></a></h2>
+<p><strong>Overview</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dma-perf</span></code> application is a performance benchmarking utility designed to measure DMA throughput and performance on MDB5 DMA driver. It executes concurrent DMA transfers using asynchronous I/O (AIO), supports multi-process execution using configuration file.</p>
+<p>Key features include:</p>
+<ul class="simple">
+<li><p><strong>Performance Measurement</strong>: Measures data transfer rates and packet throughput (packets per second and bandwidth)</p></li>
+<li><p><strong>Concurrent Operations</strong>: Supports simultaneous read and write operations across multiple channels</p></li>
+<li><p><strong>Scalable Testing</strong>: Multi-processexecution for comprehensive stress testing</p></li>
+<li><p><strong>Asynchronous I/O</strong>: Uses Linux AIO (libaio) for non-blocking operations</p></li>
+<li><p><strong>PCI Device Analysis</strong>: Optional PCIe device information dump via <code class="docutils literal notranslate"><span class="pre">lspci</span></code> for system characterization</p></li>
+</ul>
+<p><strong>Usage</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dma-perf [OPTIONS]
+
+-c, --config &lt;FILE&gt;  Configuration file specifying test parameters (REQUIRED)
+-h, --help          Display usage help and exit
+-v, --version       Display version information and exit
+</pre></div>
+</div>
+<p><strong>Configuration file format</strong></p>
+<p>The application requires a configuration file with performance test parameters:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">name</span><span class="o">=</span><span class="s">mm_perf</span>
+<span class="na">chan_mode</span><span class="o">=</span><span class="s">mm</span><span class="w">             </span><span class="c1"># &lt;mm&gt;</span>
+<span class="na">pci_bus</span><span class="o">=</span><span class="s">1</span>
+<span class="na">pci_dev</span><span class="o">=</span><span class="s">0</span>
+<span class="na">pf_range</span><span class="o">=</span><span class="s">0:0</span>
+<span class="na">ch_start_idx</span><span class="o">=</span><span class="s">0</span>
+<span class="na">num_rd_channels</span><span class="o">=</span><span class="s">0</span>
+<span class="na">num_wr_channels</span><span class="o">=</span><span class="s">1</span>
+<span class="na">address</span><span class="o">=</span><span class="s">0xaa002000</span><span class="w">       </span><span class="c1"># Device memory address of PCIe BAR 2</span>
+<span class="na">runtime</span><span class="o">=</span><span class="s">30</span><span class="w">               </span><span class="c1"># seconds (0 = unlimited)</span>
+<span class="na">num_process</span><span class="o">=</span><span class="s">1</span><span class="w">            </span><span class="c1"># num of processes per channel</span>
+<span class="na">num_pkt</span><span class="o">=</span><span class="s">4</span><span class="w">              </span><span class="c1"># count of pkt bursts</span>
+<span class="na">pkt_sz</span><span class="o">=</span><span class="s">4096</span>
+<span class="na">aperture_sz</span><span class="o">=</span><span class="s">0</span><span class="w">            </span><span class="c1"># ignores if aperture_sz=0</span>
+<span class="na">dump_en</span><span class="o">=</span><span class="s">true</span><span class="w">             </span><span class="c1"># &lt;true / false&gt; dumps lspci and stats at the end</span>
+</pre></div>
+</div>
+<p><strong>Configuration parameters</strong></p>
+<ul class="simple">
+<li><p><strong>name</strong> - Human-readable name for the test configuration</p></li>
+<li><p><strong>chan_mode</strong> - Channel mode (currently only <code class="docutils literal notranslate"><span class="pre">mm</span></code> supported)</p></li>
+<li><p><strong>pci_bus</strong> - PCIe bus number of the target device</p></li>
+<li><p><strong>pci_dev</strong> - PCIe device number on the bus</p></li>
+<li><p><strong>pf_range</strong> - PCI function range in format <code class="docutils literal notranslate"><span class="pre">start:end</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">0:0</span></code> for PF0 only, <code class="docutils literal notranslate"><span class="pre">0:3</span></code> for PF0-PF3)</p></li>
+<li><p><strong>ch_start_idx</strong> - Starting DMA channel index for this test</p></li>
+<li><p><strong>num_rd_channels</strong> - Number of read (C2H) channels to use for device-to-host transfers</p></li>
+<li><p><strong>num_wr_channels</strong> - Number of write (H2C) channels to use for host-to-device transfers</p></li>
+<li><p><strong>address</strong> - Device memory base address (PCIe BAR 2 register address)</p></li>
+<li><p><strong>runtime</strong> - Test duration in seconds (0 for unlimited runtime)</p></li>
+<li><p><strong>num_process</strong> - Number of worker processes per channel</p></li>
+<li><p><strong>num_pkt</strong> - Number of packet bursts submitted per I/O operation</p></li>
+<li><p><strong>pkt_sz</strong> - Size of each packet in bytes</p></li>
+<li><p><strong>aperture_sz</strong> - Aperture size for Scatter-Gather DMA mode (0 = disabled)</p></li>
+<li><p><strong>dump_en</strong> - Enable <code class="docutils literal notranslate"><span class="pre">lspci</span></code> dump and detailed performance statistics at test completion</p></li>
+</ul>
+<p><strong>For Write Operations (Host-to-Device)</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>WRITE: total pps = &lt;packets_per_second&gt; &lt;bandwidth&gt;
+</pre></div>
+</div>
+<p><strong>For Read Operations (Device-to-Host)</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>READ: total pps = &lt;packets_per_second&gt; &lt;bandwidth&gt;
+</pre></div>
+</div>
+<p>Bandwidth is automatically displayed in the most appropriate unit (GB/sec, MB/sec, KB/sec, or Bytes/sec).</p>
+<p><strong>Example</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[root@host]# dma-perf --config sample_mdb5_dma_perf_config.txt
+...
+dma transfer initiated
+INFO: WRITE: total pps = 6678 INFO: BW = 14.005620 GB/sec
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting-started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developers-guide.html" class="btn btn-neutral float-right" title="Developers Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on Jul 09, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

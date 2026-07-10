@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Overview &mdash; MDB5 DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=074839c1" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Driver Operations" href="driver-operations.html" />
+    <link rel="prev" title="Developers Guide" href="developers-guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5 DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="developers-guide.html">Developers Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Driver Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#controller-driver-dw-edma">Controller Driver (<code class="docutils literal notranslate"><span class="pre">dw-edma</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#client-driver">Client Driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#client-driver-and-controller-driver-interaction-workflow">Client Driver and Controller Driver Interaction workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="driver-operations.html">Driver Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="use-cases.html">Use Cases</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-guide.html">Migration Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5 DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="developers-guide.html">Developers Guide</a></li>
+      <li class="breadcrumb-item active">Driver Overview</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="driver-overview">
+<h1>Driver Overview<a class="headerlink" href="#driver-overview" title="Link to this heading"></a></h1>
+<p>The MDB5 DMA architecture is built from two distinct kernel-space drivers that work together:</p>
+<ol class="arabic simple">
+<li><p><strong>Controller Driver (<code class="docutils literal notranslate"><span class="pre">dw-edma</span></code>)</strong> - A kernel-space driver that directly manages the DMA controller hardware.</p></li>
+<li><p><strong>Client Driver (MDB5 DMA client driver)</strong> - Client driver provides a glue-logic between the controller driver (dw-edma) and the user-space applications.</p></li>
+</ol>
+<p>The MDB5 DMA client driver interfaces with <code class="docutils literal notranslate"><span class="pre">dw-edma</span></code> controller driver using the <code class="docutils literal notranslate"><span class="pre">dmaengine</span></code> API. This API abstracts hardware-specific details, enabling the MDB5 DMA client driver to focus on managing DMA transactions and configurations for user-space applications through character device interfaces.</p>
+<section id="controller-driver-dw-edma">
+<h2>Controller Driver (<code class="docutils literal notranslate"><span class="pre">dw-edma</span></code>)<a class="headerlink" href="#controller-driver-dw-edma" title="Link to this heading"></a></h2>
+<p>The controller driver is a kernel module responsible for probing the PCIe device, configuring it, and registering callbacks and channels with the DMA engine framework. Since the DMA engine framework exposes its mechanisms within the kernel, a separate kernel module is necessary to utilize the DMA functionality provided by the DMA controller.</p>
+<p><strong>Key characteristics of the controller driver:</strong></p>
+<ul class="simple">
+<li><p>Kernel-space hardware abstraction</p></li>
+<li><p>Direct interaction with DMA hardware registers and interrupts</p></li>
+<li><p>Manages up to 16 independent DMA channels (8 read and 8 write)</p></li>
+<li><p>Implements Link List and non-Link List transfer modes at hardware level</p></li>
+<li><p>Designed for PCIe endpoint devices</p></li>
+<li><p>Exposes functionality only through Linux DMAEngine framework APIs</p></li>
+</ul>
+<p>Details about the controller driver are beyond the scope of this document. However, the source code can be accessed at the provided <a class="reference external" href="https://elixir.bootlin.com/linux/v6.8/source/drivers/dma/dw-edma">link</a>.</p>
+</section>
+<section id="client-driver">
+<h2>Client Driver<a class="headerlink" href="#client-driver" title="Link to this heading"></a></h2>
+<p>The MDB5 DMA client driver is a kernel-space driver that acts as a glue-logic between user-space applications and the kernel-space controller driver (<code class="docutils literal notranslate"><span class="pre">dw-edma</span></code>). It exposes a character device interface, allowing applications to manage DMA channels and initiate data transfers without needing to interact directly with kernel APIs.</p>
+<p><strong>Key characteristics of the client driver:</strong></p>
+<ul class="simple">
+<li><p>Kernel-space driver that provides user-space interface</p></li>
+<li><p>Exposes character device nodes in <code class="docutils literal notranslate"><span class="pre">/dev</span></code> filesystem</p></li>
+<li><p>Discovers and registers available DMA channels from the controller driver</p></li>
+<li><p>Handles up to 8 read channels and 8 write channels</p></li>
+<li><p>Creates <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_ctrl</span></code>, <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_read&lt;NN&gt;</span></code>, and <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_write&lt;NN&gt;</span></code> device nodes</p></li>
+<li><p>Supports multiple transfer modes. It also supports synchronous and asynchronous operations mode of DMA operations.</p></li>
+<li><p>Handles configuration requests, transfer submissions, and completion notifications while abstracting hardware and kernel complexities from user-space applications</p></li>
+</ul>
+<p><strong>Client Driver Interface</strong></p>
+<p>The client driver provides user-space access through a well-defined character device interface that abstracts the complexity of kernel DMA operations. Applications interact with the driver through standard file operations (open, read, write, ioctl, close) on specialized device nodes created in the <code class="docutils literal notranslate"><span class="pre">/dev</span></code> filesystem.</p>
+<p>The interface consists of three types of device nodes, each serving a specific purpose:</p>
+<ul class="simple">
+<li><p><strong>Control node: <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_ctrl</span></code></strong></p>
+<ul>
+<li><p>Centralized configuration and management interface</p></li>
+<li><p>Provides system-wide DMA controller status and capabilities</p></li>
+<li><p>Enables runtime configuration of transfer modes and parameters</p></li>
+<li><p>Supports channel statistics retrieval and system diagnostics</p></li>
+</ul>
+</li>
+<li><p><strong>Read channel nodes: <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_read&lt;NN&gt;</span></code></strong></p>
+<ul>
+<li><p>Used for Card-to-Host (C2H) data transfer</p></li>
+<li><p>Each node represents an independent DMA read channel</p></li>
+<li><p>Supports both blocking (synchronous) and non-blocking (asynchronous) transfer modes</p></li>
+</ul>
+</li>
+<li><p><strong>Write channel nodes: <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_write&lt;NN&gt;</span></code></strong></p>
+<ul>
+<li><p>Used for Host-to-Card (H2C) data transfer</p></li>
+<li><p>Each node represents an independent DMA write channel</p></li>
+<li><p>Supports both blocking (synchronous) and non-blocking (asynchronous) transfer modes</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Client Driver Transfer Modes</strong></p>
+<p>The client driver supports two transfer modes that correspond to different hardware operation modes:</p>
+<p><strong>Scatter-Gather (Linked-list) Mode</strong></p>
+<ul class="simple">
+<li><p>Handles multiple buffers in a single transfer operation.</p></li>
+<li><p>Creates a chain of descriptors linked together via pointers.</p></li>
+<li><p>Best suited for large transfers, non-contiguous memory buffers, and multiple small transfers.</p></li>
+<li><p>Also referred to as “Linked List Mode” in hardware documentation, where the descriptor chain is implemented as a linked list.</p></li>
+</ul>
+<p><strong>Simple (Non Linked-list) Mode</strong></p>
+<ul class="simple">
+<li><p>Handles single, contiguous buffer transfers.</p></li>
+<li><p>Uses a single descriptor per transfer.</p></li>
+<li><p>Best suited for large contiguous buffers where reduced setup overhead is beneficial.</p></li>
+</ul>
+<p><strong>Client Driver Supported Operations</strong></p>
+<p><strong>Control Node Operations:</strong></p>
+<ul class="simple">
+<li><p>Configure aperture size for Scatter-Gather (Linked-list) Mode</p></li>
+<li><p>Retrieve channel statistics (transfer counts, success/failure rates, data processed)</p></li>
+<li><p>Set and query DMA transfer modes</p></li>
+<li><p>Query current aperture size settings</p></li>
+</ul>
+<p><strong>Channel Node Operations:</strong></p>
+<ul class="simple">
+<li><p>Perform synchronous and asynchronous read/write operations</p></li>
+<li><p>Transfer data between host memory and device memory</p></li>
+<li><p>Transfer data using Simple (Non Linked-list) Mode and Scatter-Gather (Linked-list) Mode</p></li>
+</ul>
+<p><strong>Client Driver Installation Requirements</strong></p>
+<p>The client driver requires the following user inputs on the command line during insmod:</p>
+<ol class="arabic simple">
+<li><p><strong>device_dbdf</strong>: This is the domain, bus, device and function ID of the PCIe endpoint in the format as following:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device_dbdf</span><span class="o">=</span><span class="s2">&quot;DOMA:BB:DD.F&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p><strong>dma_dev_id</strong>: This is the unique ID with which DMAEngine has registered the DMA Channels and can be found at the following path:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">sys</span><span class="o">/</span><span class="n">devices</span><span class="o">/&lt;</span><span class="n">pci</span><span class="o">-</span><span class="n">bridge</span><span class="o">&gt;/&lt;</span><span class="n">DOMA</span><span class="p">:</span><span class="n">BB</span><span class="p">:</span><span class="n">DD</span><span class="o">.</span><span class="n">F</span><span class="o">&gt;/</span><span class="n">dma</span><span class="o">/</span><span class="n">dma</span><span class="o">&lt;</span><span class="n">ID</span><span class="o">&gt;</span><span class="n">chan</span><span class="o">&lt;</span><span class="n">NUM</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="client-driver-and-controller-driver-interaction-workflow">
+<h2>Client Driver and Controller Driver Interaction workflow<a class="headerlink" href="#client-driver-and-controller-driver-interaction-workflow" title="Link to this heading"></a></h2>
+<p>Below is a sequence diagram illustrating the communication between the MDB5 DMA client driver and the controller driver (<code class="docutils literal notranslate"><span class="pre">dw-edma</span></code>) during a typical DMA transfer.</p>
+<img alt="DMA flow" class="flowchart-svg align-center" src="_images/driver_interaction_workflow.drawio.svg" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="developers-guide.html" class="btn btn-neutral float-left" title="Developers Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="driver-operations.html" class="btn btn-neutral float-right" title="Driver Operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on Jul 09, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

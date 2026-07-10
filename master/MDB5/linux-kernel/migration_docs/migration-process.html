@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migration Process - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html" class="active">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html">CLI Usage Examples</a></li>
+            <li><a href="application-code.html">Application Code Migration</a></li>
+            <li><a href="driver-init.html">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <section id="prerequisites">
+            <h2>3. Tools/Pre-requisites for Migration</h2>
+            <p>Before starting the migration, please ensure the following requirements are met:</p>
+
+            <h3>Software Environment</h3>
+            <ul>
+                <li><strong>OS/Kernel</strong>: Ubuntu 24.04 recommended. <strong>Kernel 6.8.0+ is required</strong>.</li>
+                <li><strong>Dependencies</strong>: Install development libraries: <code>apt-get install libaio-dev</code></li>
+            </ul>
+
+            <h3>Kernel Configuration</h3>
+            <p>The MDB5 driver relies on the in-kernel <code>dw-edma</code> driver. Ensure these options are set in your kernel config:</p>
+            <ul>
+                <li><code>CONFIG_DMADEVICES=y</code></li>
+                <li><code>CONFIG_DMA_ENGINE=y</code></li>
+                <li><code>CONFIG_PCI=y</code></li>
+                <li><code>CONFIG_PCI_MSI=y</code></li>
+                <li><code>CONFIG_DW_EDMA=y</code></li>
+                <li><code>CONFIG_DW_EDMA_PCIE=y</code></li>
+            </ul>
+        </section>
+
+        <section id="migration-process">
+            <h2>4. The Migration Process</h2>
+            <p>Follow these steps to transition your system and applications.</p>
+
+            <h3>Step 1: Driver Setup</h3>
+            <ol>
+                <li><strong>Build Client Driver</strong>:
+                    <pre><code>cd /path/to/mdb5-dmaclient-drv/
+make</code></pre>
+                </li>
+                <li><strong>Load Driver</strong>:
+                    <pre><code>modprobe ./bin/$(uname -p)/mdb5-dmaclient-drv.ko device_dbdf="&lt;BDF&gt;" dma_dev_id="&lt;device id&gt;"</code></pre>
+                </li>
+            </ol>
+
+            <div class="admonition note">
+                <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
+                <p>Use <code>lspci</code> to find the BDF of the Xilinx device.</p>
+            </div>
+
+            <h3>Step 2: Application &amp; Script Migration</h3>
+
+            <h4>A. Device Node Mapping</h4>
+            <p>Once driver is installed, new device nodes will be available:</p>
+            <ul>
+                <li><strong>Read (C2H)</strong>:
+                    <pre><code>QDMA: /dev/qdma&lt;BDF&gt;-MM-&lt;Q&gt;</code></pre>
+                    <pre><code>MDB5-DMA: /dev/mdb5_read&lt;00-07&gt;</code></pre>
+                </li>
+                <li><strong>Write (H2C)</strong>:
+                    <pre><code>QDMA: /dev/qdma&lt;BDF&gt;-MM-&lt;Q&gt;</code></pre>
+                    <pre><code>MDB5-DMA: /dev/mdb5_write&lt;00-07&gt;</code></pre>
+                </li>
+                <li><strong>Control:</strong>
+                    <pre><code>MDB5-DMA: /dev/mdb5_ctrl</code></pre>
+                </li>
+            </ul>
+            <div class="admonition note">
+                <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
+                <p>QDMA does not have dedicated device node to perform control operations instead QDMA uses netlink sockets for control path communications.</p>
+            </div>
+            <h4>B. Command Line Userspace Applications</h4>
+            <p>The command line userspace applications have similar names but different options and workflows.</p>
+
+            <h5>H2C Transfer (dma-to-device)</h5>
+            <p>QDMA - uses device path with BDF and queue number:</p>
+            <pre><code>dma-to-device -d /dev/qdma06000-MM-0 -s 1024 -f input.bin</code></pre>
+            <p>MDB5-DMA - uses channel index:</p>
+            <pre><code>dma-to-device -c 0 -a 0xaa002000 -s 1024 -f input.bin</code></pre>
+
+            <h5>C2H Transfer (dma-from-device)</h5>
+            <p>QDMA:</p>
+            <pre><code>dma-from-device -d /dev/qdma01000-MM-1 -s 64</code></pre>
+            <p>MDB5-DMA:</p>
+            <pre><code>dma-from-device -c 0 -a 0xaa002000 -s 1024 -w output.bin</code></pre>
+
+            <h5>Statistics</h5>
+            <p>QDMA - view queue status:</p>
+            <pre><code>dma-ctl dev list</code></pre>
+            <p>MDB5-DMA - view channel statistics:</p>
+            <pre><code>dma-ctl -S -c 0 -d write</code></pre>
+
+            <h5>Transfer test config based (dma-xfer)</h5>
+            <p>The <code>dma-xfer</code> userspace application uses configuration files to define test parameters, enabling repeatable testing without specifying all options on the command line.</p>
+            
+            <p>QDMA config file format:</p>
+            <pre><code>name=mm_sample
+pci_bus=08
+pci_device=00
+function=0
+is_vf=0
+mode=mm
+dir=bi
+q_range=0:0
+tmr_idx=6
+cntr_idx=6
+cmptsz=0
+trig_mode=cntr_tmr
+pfetch_en=0
+rngidx=0
+pkt_sz=1024
+io_type=io_async
+inputfile=INPUT
+outputfile=OUTPUT</code></pre>
+            <p>Execute QDMA test:</p>
+            <pre><code>dma-xfer -c qdma_xfer_config.txt</code></pre>
+            
+            <p>MDB5-DMA config file format:</p>
+            <pre><code>name=mm_xfer
+chan_mode=mm
+num_rd_channels=2
+num_wr_channels=2
+address=0xaa002000
+transfer_mode=sg
+pkt_sz=1024
+io_type=io_sync
+inputfile=in.txt
+outputfile=out.txt</code></pre>
+            <p>Execute MDB5-DMA test:</p>
+            <pre><code>dma-xfer -c mdb5_dma_xfer_config.txt</code></pre>
+
+            <h5>Performance Testing (dma-perf)</h5>
+            <p>The <code>dma-perf</code> userspace application measures DMA throughput using configuration files. Both userspace applications are config-file driven and measure sustained DMA throughput over a specified runtime.</p>
+
+            <p>QDMA config file format:</p>
+            <pre><code>name=mm_perf
+mode=mm
+dir=bi
+pf_range=0:0
+q_range=0:0
+wb_acc=5
+tmr_idx=9
+cntr_idx=0
+trig_mode=usr_cnt
+rngidx=9
+runtime=30
+num_threads=8
+bidir_en=1
+num_pkt=64
+pkt_sz=64
+pci_bus=06
+pci_device=00</code></pre>
+            <p>Execute QDMA performance test:</p>
+            <pre><code>dma-perf -c qdma_perf_config.txt</code></pre>
+
+            <p>MDB5-DMA config file format:</p>
+            <pre><code>name=mm_perf
+chan_mode=mm
+pci_bus=1
+pci_dev=0
+pf_range=0:0
+ch_start_idx=0
+num_rd_channels=0
+num_wr_channels=1
+address=0xaa002000
+runtime=30
+num_process=1
+num_pkt=64
+pkt_sz=64
+aperture_sz=0
+dump_en=true</code></pre>
+            <p>Execute MDB5-DMA performance test:</p>
+            <pre><code>dma-perf -c mdb5_dma_perf_config.txt</code></pre>
+        </section>
+
+        <section id="feature-comparison">
+            <h2>5. Feature Comparison</h2>
+            <p>The following table provides a comprehensive comparison of features supported by each driver.</p>
+
+            <table>
+                <tr>
+                    <th>Feature</th>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr><td><strong>Memory Mapped (MM) Mode</strong></td><td>Supported</td><td>Supported</td></tr>
+                <tr><td><strong>Streaming (ST) Mode</strong></td><td>Supported</td><td>Not supported</td></tr>
+                <tr><td><strong>Scatter-Gather DMA</strong></td><td>Supported</td><td>Supported (Linked-list)</td></tr>
+                <tr><td><strong>Simple/Single Transfer</strong></td><td>Supported</td><td>Supported (Non Linked-list)</td></tr>
+                <tr><td><strong>Asynchronous IO</strong></td><td>Supported</td><td>Supported</td></tr>
+                <tr><td><strong>Synchronous IO</strong></td><td>Supported</td><td>Supported</td></tr>
+                <tr><td><strong>SR-IOV (PF/VF)</strong></td><td>Supported</td><td>Not supported</td></tr>
+                <tr><td><strong>Queue Management</strong></td><td>Supported (up to 4096)</td><td>Not applicable (fixed 16 channels)</td></tr>
+                <tr><td><strong>Interrupt Aggregation</strong></td><td>Supported</td><td>Not supported</td></tr>
+                <tr><td><strong>Poll Mode</strong></td><td>Supported</td><td>Not supported</td></tr>
+                <tr><td><strong>Aperture Size Configuration</strong></td><td>Not applicable</td><td>Supported</td></tr>
+                <tr><td><strong>Performance Applications</strong></td><td>Supported (dma-perf, dma-latency)</td><td>Supported (dma-perf)</td></tr>
+                <tr><td><strong>Register Debug Access</strong></td><td>Supported (debugfs)</td><td>Supported (dma-ctl)</td></tr>
+            </table>
+        </section>
+
+        <section id="testing">
+            <h2>6. Testing and Validation</h2>
+            <p>After migration, use the following diagnostic commands to verify system integrity:</p>
+
+            <pre><code># Check kernel config
+cat /boot/config-$(uname -r) | grep -E "CONFIG_DW_EDMA"
+
+# Check device enumeration
+lspci | grep -i xilinx
+
+# Check device nodes
+ls -la /dev/mdb5*
+
+# Check kernel messages
+dmesg | tail -50
+
+# Get channel statistics
+dma-ctl -S -c 0 -d write</code></pre>
+        </section>
+
+        <div class="page-navigation">
+            <a href="introduction.html" class="nav-btn prev">
+                <span class="nav-icon">arrow_back</span>
+                <span>
+                    <span class="nav-direction">Previous</span>
+                    <span class="nav-title">Introduction &amp; Architecture</span>
+                </span>
+            </a>
+            <a href="usage-examples.html" class="nav-btn next">
+                <span>
+                    <span class="nav-direction">Next</span>
+                    <span class="nav-title">CLI Usage Examples</span>
+                </span>
+                <span class="nav-icon">arrow_forward</span>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        © 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

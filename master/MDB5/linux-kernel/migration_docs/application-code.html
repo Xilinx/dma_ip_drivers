@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Code Migration - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html">CLI Usage Examples</a></li>
+            <li><a href="application-code.html" class="active">Application Code Migration</a></li>
+            <li><a href="driver-init.html">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <section id="code-reference">
+            <h2>7. Code Migration Reference</h2>
+            <p>This section provides side-by-side code comparisons between QDMA and MDB5-DMA implementations for key operations.</p>
+
+            <div class="admonition note">
+                <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
+                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5-DMA implementations.</p>
+            </div>
+
+            <h3 id="application-code">7.1 Application Code</h3>
+
+            <h4>7.1.1 Register Access (dma-ctl)</h4>
+            <p>Both use mmap on <code>/sys/bus/pci/devices/.../resource&lt;BAR&gt;</code>. QDMA falls back to netlink if mmap fails.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (apps/dma-utils/dmactl_reg.c)</th>
+                    <th>MDB5-DMA (client-apps/dma-utils/dma_common_utils.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static int32_t reg_read_mmap(
+    struct xnl_dev_info *dev_info,
+    unsigned char barno,
+    struct xcmd_info *xcmd)
+{
+    uint32_t *bar;
+    char fname[256];
+    int rv = 0;
+    uint32_t attrs[XNL_ATTR_MAX] = {0};
+
+    get_syspath_bar_mmap(fname,
+        dev_info->pci_bus,
+        dev_info->pci_dev,
+        dev_info->dev_func, barno);
+
+    bar = mmap_bar(fname,
+        xcmd->req.reg.reg + 4, PROT_READ);
+    if (!bar) {
+        rv = xnl_common_msg_send(xcmd, attrs);
+        return rv;
+    }
+
+    xcmd->req.reg.val =
+        le32toh(bar[xcmd->req.reg.reg / 4]);
+    munmap(bar, xcmd->req.reg.reg + 4);
+    return rv;
+}</code></pre></td>
+                    <td><pre><code>int reg_read_mmap(struct mdb5_dma_reg *reg)
+{
+    uint32_t offset = reg->offset;
+    uint32_t *bar;
+    uint8_t bar_num = PCI_BAR0;
+    char fname[256];
+    char *bdf = reg->pci_bdf;
+    int ret = 0;
+
+    get_syspath_bar_mmap(fname,
+        PCI_DOMAIN, bdf, bar_num);
+
+    if (!is_file_available(fname)) {
+        ret = -ENOENT;
+        goto error;
+    }
+
+    bar = mmap_bar(fname,
+        offset + REGISTER_SIZE, PROT_READ);
+    if (!bar) {
+        ret = -1;
+        goto error;
+    }
+
+    reg->data = bar[offset / REGISTER_SIZE];
+    munmap(bar, offset + REGISTER_SIZE);
+error:
+    return ret;
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.1.2 Queue/Channel Operations (dma-ctl)</h4>
+            <p>QDMA uses netlink for queue management (add, start, stop, delete queues). In contrast, MDB5-DMA channels are always available and do not require explicit creation or destruction. The <code>dma-ctl</code> utility in MDB5-DMA provides various channel management capabilities including: configuring transfer modes (Simple or Scatter-Gather), setting aperture size for SG mode, displaying channel statistics, and reading/writing registers for debugging purposes.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (apps/dma-utils/dmactl.c)</th>
+                    <th>MDB5-DMA (client-apps/dma-ctl/dma_ctl.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>int qdma_q_add(struct xcmd_info *cmd)
+{
+    uint32_t attrs[XNL_ATTR_MAX] = {0};
+    return xnl_common_msg_send(cmd, attrs);
+}
+
+int qdma_q_start(struct xcmd_info *cmd)
+{
+    uint32_t attrs[XNL_ATTR_MAX] = {0};
+    return xnl_common_msg_send(cmd, attrs);
+}
+
+int qdma_q_stop(struct xcmd_info *cmd)
+{
+    uint32_t attrs[XNL_ATTR_MAX] = {0};
+    return xnl_common_msg_send(cmd, attrs);
+}
+
+int qdma_q_del(struct xcmd_info *cmd)
+{
+    uint32_t attrs[XNL_ATTR_MAX] = {0};
+    return xnl_common_msg_send(cmd, attrs);
+}</code></pre></td>
+                    <td><pre><code>static int32_t (*process_fn[CMD_MAX + 1])(void *arg) = {
+    mdb5_dma_reg_read,           /* CMD_REG_READ */
+    mdb5_dma_reg_write,          /* CMD_REG_WRITE */
+    mdb5_dma_stats_read,         /* CMD_STATS_READ */
+    mdb5_dma_transfer_mode,      /* CMD_SET_TRANSFER_MODE */
+    mdb5_dma_transfer_mode,      /* CMD_GET_TRANSFER_MODE */
+    mdb5_dma_aperture_sz,        /* CMD_SET_APERTURE_MODE */
+    mdb5_dma_aperture_sz,        /* CMD_GET_APERTURE_MODE */
+    NULL
+};
+
+static int process_cmd(struct mdb5_dma_common *h)
+{
+    struct mdb5_dma_ioctl *hioc = &h->hioc;
+    struct mdb5_dma_reg *reg = &h->reg;
+    struct mdb5_dma_channel *chan = h->chan;
+    void *arg;
+
+    switch (h->op) {
+    case CMD_REG_READ:
+    case CMD_REG_WRITE:
+        arg = (void *)reg;
+        break;
+    case CMD_STATS:
+        hioc->h = h;
+        memcpy(&hioc->cstats.name, &chan->name,
+               MDB5_NODE_CHAN_SZ);
+        arg = (void *)hioc;
+        break;
+    case CMD_SET_TRANSFER_MODE:
+    case CMD_GET_TRANSFER_MODE:
+        hioc->h = h;
+        memcpy(&hioc->cmode.name, &chan->name,
+               MDB5_NODE_CHAN_SZ);
+        arg = (void *)hioc;
+        break;
+    case CMD_SET_APERTURE_MODE:
+    case CMD_GET_APERTURE_MODE:
+        hioc->h = h;
+        memcpy(&hioc->caperture.name, &chan->name,
+               MDB5_NODE_CHAN_SZ);
+        arg = (void *)hioc;
+        break;
+    default:
+        usage(stderr);
+    }
+
+    if (process_fn[h->op])
+        return process_fn[h->op](arg);
+
+    return -EOPNOTSUPP;
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.1.3 Channel/Queue Information Flow</h4>
+            <p>Understanding how channel and queue information is passed through the application is crucial for migration:</p>
+            
+            <p><strong>QDMA Approach:</strong></p>
+            <ul>
+                <li>Queue lifecycle: <code>add → start → (use) → stop → delete</code></li>
+                <li>Queue information passed via netlink commands and queue IDs</li>
+                <li>Applications must explicitly manage queue lifecycle before transfers</li>
+                <li>Device nodes created dynamically: <code>/dev/qdma&lt;BDF&gt;-MM-&lt;QID&gt;</code></li>
+            </ul>
+
+            <p><strong>MDB5-DMA Approach:</strong></p>
+            <ul>
+                <li>Channels device nodes are created by client driver (8 read + 8 write)</li>
+                <li>Channel information passed via standard file descriptors</li>
+                <li>Applications simply open device nodes: <code>/dev/mdb5_read&lt;00-07&gt;</code>, <code>/dev/mdb5_write&lt;00-07&gt;</code></li>
+                <li>No explicit channel lifecycle management required</li>
+                <li>Optional configuration via <code>/dev/mdb5_ctrl</code> using ioctl</li>
+            </ul>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (apps/dma-xfer/dmaxfer.c)</th>
+                    <th>MDB5-DMA (client-apps/dma-xfer/dma_xfer.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>/* QDMA: Explicit queue management */
+
+// 1. Add queue via netlink
+qdma_prepare_q_add(&xcmd, dir, qid, pf);
+qdma_q_add(&xcmd);
+
+// 2. Start queue
+qdma_q_start(&xcmd);
+
+// 3. Open device node
+sprintf(dev_path, "/dev/qdma%02x%03x-MM-%d",
+        bus, dev_func, qid);
+fd = open(dev_path, O_RDWR);
+
+// 4. Perform transfers using fd
+// ... (transfer operations)
+
+// 5. Cleanup: stop and delete queue
+qdma_q_stop(&xcmd);
+qdma_q_del(&xcmd);
+close(fd);</code></pre></td>
+                    <td><pre><code>/* MDB5: Direct channel access */
+
+// 1. Open pre-created channel device node
+sprintf(dev_path, "/dev/mdb5_%s%02d",
+        dir == TO_DEV ? "write" : "read",
+        channel_id);
+fd = open(dev_path, O_RDWR);
+
+// 2. Optionally configure transfer mode
+ctrl_fd = open("/dev/mdb5_ctrl", O_RDWR);
+cmode.channel = channel_id;
+cmode.mode = MDB5_MODE_SG; // or MDB5_MODE_SIMPLE
+ioctl(ctrl_fd, IOCTL_MDB5_SET_TRANSFER_MODE, &cmode);
+close(ctrl_fd);
+
+// 3. Perform transfers using fd
+// ... (transfer operations)
+
+// 4. Cleanup
+close(fd);</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.1.4 Data Transfer (dma-to-device / dma-from-device)</h4>
+            <p>The core data transfer functions in both drivers use standard POSIX I/O syscalls. The channel/queue information is implicitly passed through the <strong>file descriptor</strong> obtained by opening the appropriate device node (e.g., <code>/dev/qdma...</code> or <code>/dev/mdb5_write00</code>). The offset parameter specifies the target address on the device.</p>
+            <p>QDMA uses <code>lseek()</code> followed by <code>write()</code>, while MDB5 uses the combined <code>pwrite()</code> call.</p>
+            
+            <h5>H2C Transfer (write_from_buffer)</h5>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (apps/dma-utils/dma_xfer_utils.c)</th>
+                    <th>MDB5-DMA (client-apps/dma-utils/dma_common_utils.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>ssize_t write_from_buffer(char *fname,
+    int fd, char *buffer,
+    uint64_t size, uint64_t base)
+{
+    ssize_t rc;
+    uint64_t count = 0;
+    char *buf = buffer;
+    off_t offset = base;
+
+    do {
+        uint64_t bytes = size - count;
+        if (bytes > RW_MAX_SIZE)
+            bytes = RW_MAX_SIZE;
+
+        if (offset) {
+            rc = lseek(fd, offset, SEEK_SET);
+            if (rc != offset)
+                return -EIO;
+        }
+
+        rc = write(fd, buf, bytes);
+        if (rc < 0)
+            return -EIO;
+
+        count += bytes;
+        buf += bytes;
+        offset += bytes;
+    } while (count < size);
+
+    return count;
+}</code></pre></td>
+                    <td><pre><code>ssize_t write_from_buffer(char *fname,
+    int fd, char *buffer,
+    size_t size, size_t base)
+{
+    ssize_t rc;
+    size_t count = 0;
+    char *buf = buffer;
+    off_t offset = (off_t) base;
+    int ret;
+
+    do {
+        size_t bytes = size - count;
+        if (bytes > RW_MAX_SIZE)
+            bytes = RW_MAX_SIZE;
+
+        rc = pwrite(fd, buf, bytes, offset);
+        if (rc < 0) {
+            ret = -errno;
+            goto error;
+        }
+
+        count += bytes;
+        buf += bytes;
+        offset += bytes;
+    } while (count < size);
+
+    return count;
+error:
+    return ret;
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <h5>C2H Transfer (read_to_buffer)</h5>
+            <p>Similarly, for reading data from device to host, both use POSIX read syscalls:</p>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (apps/dma-utils/dma_xfer_utils.c)</th>
+                    <th>MDB5-DMA (client-apps/dma-utils/dma_common_utils.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>ssize_t read_to_buffer(char *fname,
+    int fd, char *buffer,
+    uint64_t size, uint64_t base)
+{
+    ssize_t rc;
+    uint64_t count = 0;
+    char *buf = buffer;
+    off_t offset = base;
+
+    do {
+        uint64_t bytes = size - count;
+        if (bytes > RW_MAX_SIZE)
+            bytes = RW_MAX_SIZE;
+
+        if (offset) {
+            rc = lseek(fd, offset, SEEK_SET);
+            if (rc != offset)
+                return -EIO;
+        }
+
+        rc = read(fd, buf, bytes);
+        if (rc < 0)
+            return -EIO;
+
+        count += bytes;
+        buf += bytes;
+        offset += bytes;
+    } while (count < size);
+
+    return count;
+}</code></pre></td>
+                    <td><pre><code>ssize_t read_to_buffer(char *fname,
+    int fd, char *buffer,
+    size_t size, size_t base)
+{
+    ssize_t rc;
+    size_t count = 0;
+    char *buf = buffer;
+    off_t offset = (off_t) base;
+    int ret;
+
+    do {
+        size_t bytes = size - count;
+        if (bytes > RW_MAX_SIZE)
+            bytes = RW_MAX_SIZE;
+
+        rc = pread(fd, buf, bytes, offset);
+        if (rc < 0) {
+            ret = -errno;
+            goto error;
+        }
+
+        count += bytes;
+        buf += bytes;
+        offset += bytes;
+    } while (count < size);
+
+    return count;
+error:
+    return ret;
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.1.5 dma-xfer Tool</h4>
+            <p>Both <code>dma-xfer</code> implementations share the same configuration file format and overall structure: parsing key=value pairs, validating parameters, setting up channels/queues, and executing transfers. The main difference lies in resource lifecycle management.</p>
+
+            <p><strong>QDMA Approach:</strong></p>
+            <ul>
+                <li>Parses config file for queue parameters (mode, direction, queue range, PCI bus/dev/function)</li>
+                <li>Validates queue range against driver-assigned <code>qmax</code></li>
+                <li>Explicitly creates queues via netlink (add → start sequence)</li>
+                <li>Opens device nodes for created queues</li>
+                <li>Performs transfers using file descriptors</li>
+                <li>Explicitly destroys queues (stop → delete sequence)</li>
+            </ul>
+
+            <p><strong>MDB5-DMA Approach:</strong></p>
+            <ul>
+                <li>Parses config file for channel parameters (mode, direction, number of channels, transfer mode)</li>
+                <li>Validates channel count against maximum supported channels</li>
+                <li>Opens pre-existing channel device nodes directly</li>
+                <li>Configures transfer mode (Simple/SG) via ioctl on control device</li>
+                <li>Performs transfers using file descriptors</li>
+                <li>Channels persist after application exits (no cleanup required)</li>
+            </ul>
+
+            <h5>Queue/Channel Setup and Transfer Execution</h5>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (apps/dma-xfer/dmaxfer.c)</th>
+                    <th>MDB5-DMA (client-apps/dma-xfer/dma_xfer.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>int main(int argc, char *argv[])
+{
+    struct queue_info *q_info;
+    int q_count;
+
+    /* 1. Parse and validate config */
+    parse_config_file(cfg_fname);
+    qdma_validate_qrange();
+
+    /* 2. Create queues via netlink */
+    q_count = qdma_setup_queues(&q_info);
+    // Internally calls:
+    //   qdma_prepare_q_add() -> qdma_q_add()
+    //   qdma_prepare_q_start() -> qdma_q_start()
+
+    /* 3. Register cleanup handler */
+    atexit(qdma_env_cleanup);
+    // Will call qdma_q_stop() and qdma_q_del()
+    // for each queue on exit
+
+    /* 4. Perform transfers */
+    qdmautils_xfer(q_info, q_count, io_type);
+    // Opens /dev/qdma&lt;BDF&gt;-MM-&lt;qid&gt;
+    // Calls write_from_buffer() or read_to_buffer()
+
+    return 0;
+}
+
+static int qdma_setup_queues(
+    struct queue_info **pq_info)
+{
+    struct queue_info *q_info;
+    struct xcmd_info xcmd;
+
+    q_info = calloc(q_count,
+                    sizeof(struct queue_info));
+
+    for (qid = 0; qid &lt; num_q; qid++) {
+        /* Prepare queue via netlink */
+        qdma_prepare_q_add(&xcmd, dir, qid, pf);
+        qdma_q_add(&xcmd);
+
+        qdma_prepare_q_start(&xcmd, dir, qid, pf);
+        qdma_q_start(&xcmd);
+
+        /* Store queue info */
+        qdma_q_prep_name(q_info, qid, pf);
+        q_info->qid = qid;
+        q_info->dir = dir;
+    }
+    return q_count;
+}</code></pre></td>
+                    <td><pre><code>int main(int argc, char *argv[])
+{
+    struct mdb5_dma_common h;
+    struct mdb5_dma_channel chan[max_chan];
+    int ch_count = 0;
+
+    /* 1. Parse and validate config */
+    parse_config_file(cfg_fname, &h);
+    validate_input_params(&h, cfg_fname);
+
+    /* 2. Configure channels (no creation needed) */
+    ch_count = mdb5_dma_config_channels(&h, chan);
+    // Opens existing /dev/mdb5_write&lt;NN&gt; or
+    // /dev/mdb5_read&lt;NN&gt; nodes
+    // Sets transfer mode via ioctl
+
+    /* 3. Perform transfers */
+    mdb5_dmautils_xfer(&h, ch_count);
+    // Calls mdb5_dmautils_write() or
+    // mdb5_dmautils_read()
+    // Using write_from_buffer() or read_to_buffer()
+
+    /* 4. No cleanup needed - channels persist */
+    return 0;
+}
+
+static int mdb5_dma_config_channels(
+    struct mdb5_dma_common *h,
+    struct mdb5_dma_channel *chan)
+{
+    struct mdb5_dma_ioctl *hioc = &h->hioc;
+
+    /* Open control device */
+    prepare_node_name(h->ctrl_name, "ctrl", 0);
+
+    /* Configure write channels */
+    for (i = 0; i &lt; num_wr_chan; i++) {
+        chan[i].ch_id = i;
+        chan[i].dir = MDB5_CHAN_DIR_TO_DEV;
+
+        /* Open existing device node */
+        prepare_node_name(chan[i].name, "write", i);
+
+        /* Set transfer mode via ioctl */
+        memcpy(&hioc->cmode.name, &chan[i].name,
+               MDB5_NODE_CHAN_SZ);
+        mdb5_dma_transfer_mode((void *)hioc);
+    }
+
+    /* Configure read channels similarly */
+    for (i = 0; i &lt; num_rd_chan; i++) {
+        /* Same pattern for read channels */
+    }
+    return ch_count;
+}</code></pre></td>
+                </tr>
+            </table>
+
+        </section>
+
+        <div class="page-navigation">
+            <a href="usage-examples.html" class="nav-btn prev">
+                <span class="nav-icon">arrow_back</span>
+                <span>
+                    <span class="nav-direction">Previous</span>
+                    <span class="nav-title">CLI Usage Examples</span>
+                </span>
+            </a>
+            <a href="driver-init.html" class="nav-btn next">
+                <span>
+                    <span class="nav-direction">Next</span>
+                    <span class="nav-title">Driver Code: Init &amp; DMA</span>
+                </span>
+                <span class="nav-icon">arrow_forward</span>
+            </a>
+        </div>
+    </main>
+
+    <script>
+    // VS Code-style syntax highlighting for C code
+    function highlightCode() {
+        const codeBlocks = document.querySelectorAll('.code-comparison code');
+        
+        const keywords = ['int', 'uint32_t', 'uint64_t', 'uint8_t', 'int32_t', 'char', 'void', 
+                          'struct', 'static', 'unsigned', 'return', 'if', 'do', 'while', 
+                          'for', 'ssize_t', 'size_t', 'off_t', 'const', 'long', 'short',
+                          'goto', 'break', 'continue', 'else', 'switch', 'case', 'default',
+                          'enum', 'sizeof', 'typedef', 'union', 'volatile', 'bool', 'true', 'false',
+                          'u16', 'u32', 'u64', 'u8', 's16', 's32', 's64', 's8'];
+        
+        const types = ['xnl_dev_info', 'xcmd_info', 'mdb5_dma_reg', 'mdb5_dma_ioctl',
+                       'mdb5_dma_common', 'ctrl_mode', 'qdma_request', 'sk_buff', 
+                       'genl_info', 'file', 'amd_mdb5_dma_channel', 'amd_mdb5_dma_io_request',
+                       'file_operations', 'genl_ops', 'pci_driver', 'pci_device_id',
+                       'dma_chan', 'dma_async_tx_descriptor', 'dma_cookie_t', 'dmaengine_result',
+                       'dma_slave_config', 'amd_mdb5_dma_io_completion', 'qdma_io_cb',
+                       'qdma_descq', 'xlnx_dma_dev', 'xlnx_pci_dev', 'qdma_queue_conf',
+                       'cdev_async_io', 'dma_data_direction', 'io_req_param'];
+        
+        codeBlocks.forEach(block => {
+            let code = block.textContent;
+            const tokens = [];
+            let tokenIndex = 0;
+            
+            code = code.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+                const token = `__COMMENT_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="comment">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = code.replace(/\/\/.*/g, (match) => {
+                const token = `__COMMENT_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="comment">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = code.replace(/"([^"\\]|\\.)*"/g, (match) => {
+                const token = `__STRING_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="string">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = escapeHtml(code);
+            code = code.replace(/#\w+/g, '<span class="preprocessor">$&</span>');
+            code = code.replace(/\b(0x[0-9a-fA-F]+)\b/g, '<span class="number">$1</span>');
+            code = code.replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+            
+            keywords.forEach(keyword => {
+                const regex = new RegExp(`\\b${keyword}\\b`, 'g');
+                code = code.replace(regex, `<span class="keyword">${keyword}</span>`);
+            });
+            
+            types.forEach(type => {
+                const regex = new RegExp(`\\b${type}\\b`, 'g');
+                code = code.replace(regex, `<span class="type">${type}</span>`);
+            });
+            
+            code = code.replace(/\b([a-z_][a-z0-9_]*)\s*\(/gi, '<span class="function">$1</span>(');
+            
+            for (let i = 0; i < tokenIndex; i++) {
+                code = code.replace(`__COMMENT_${i}__`, tokens[i]);
+                code = code.replace(`__STRING_${i}__`, tokens[i]);
+            }
+            
+            block.innerHTML = code;
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    highlightCode();
+    </script>
+
+    <footer>
+        © 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

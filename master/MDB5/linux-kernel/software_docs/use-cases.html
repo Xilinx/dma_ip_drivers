@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Use Cases &mdash; MDB5 DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=074839c1" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api-reference.html" />
+    <link rel="prev" title="Driver Operations" href="driver-operations.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5 DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="developers-guide.html">Developers Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="driver-overview.html">Driver Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="driver-operations.html">Driver Operations</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Use Cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#host-to-card-h2c">Host-to-Card (H2C)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scatter-gather-linked-list-dma">Scatter-Gather (Linked-list) DMA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#async-io">ASYNC IO</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#card-to-host-c2h">Card-to-Host (C2H)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Scatter-Gather (Linked-list) DMA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">ASYNC IO</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-guide.html">Migration Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5 DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="developers-guide.html">Developers Guide</a></li>
+      <li class="breadcrumb-item active">Use Cases</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="use-cases">
+<h1>Use Cases<a class="headerlink" href="#use-cases" title="Link to this heading"></a></h1>
+<p>This document outlines the operational use cases for the MDB5 DMA client driver, describing data transfer flows and architectural patterns. The MDB5 DMA Controller supports up to 8 read channels and 8 write channels per controller, with transfer sizes ranging from 1 byte to 4GB.</p>
+<section id="host-to-card-h2c">
+<h2>Host-to-Card (H2C)<a class="headerlink" href="#host-to-card-h2c" title="Link to this heading"></a></h2>
+<p>Host-to-Card (H2C) transfers move data from the host system’s memory to the PCIe device’s memory. This is the primary method for sending configuration data, commands, or data payloads to the device.</p>
+<section id="scatter-gather-linked-list-dma">
+<h3>Scatter-Gather (Linked-list) DMA<a class="headerlink" href="#scatter-gather-linked-list-dma" title="Link to this heading"></a></h3>
+<p>Scatter-Gather (Linked-list) DMA mode utilizes linked-list operation to handle fragmented buffers efficiently. The driver creates scatter-gather lists from user buffers and programs multiple descriptors as needed.</p>
+<p><strong>Scatter-Gather (Linked-list) DMA Data Flow</strong></p>
+<ul class="simple">
+<li><p>Application opens the H2C channel device node (e.g., <code class="docutils literal notranslate"><span class="pre">/dev/mdb5_write00</span></code>)</p></li>
+<li><p>Application issues a <code class="docutils literal notranslate"><span class="pre">write()</span></code> system call with the user-space buffer</p></li>
+<li><p>MDB5 DMA client driver receives the buffer and validates parameters</p></li>
+<li><p>Driver pins user-space memory pages and creates Scatter-Gather (Linked-list) lists</p></li>
+<li><p>DMA descriptors are prepared and submitted to the underlying <code class="docutils literal notranslate"><span class="pre">dw-edma</span></code> controller via the DMA Engine API</p></li>
+<li><p>H2C MM Engine reads data from host memory locations and writes to device memory through PCIe interface</p></li>
+<li><p>Upon transfer completion, DMA engine updates completion status and generates interrupt if required</p></li>
+<li><p>Driver processes completion status and returns the number of bytes transferred to the application</p></li>
+</ul>
+<p><strong>Buffer Segmentation</strong></p>
+<p>When a user buffer is submitted for a scatter-gather transfer, the MDB5 DMA client driver breaks it down into a scatter-gather list for efficient DMA processing. The driver’s segmentation process follows these steps:</p>
+<ul class="simple">
+<li><p>The driver pins user-space memory pages using <code class="docutils literal notranslate"><span class="pre">get_user_pages_fast()</span></code> to prevent the operating system from moving or swapping them during the transfer</p></li>
+<li><p>This driver implementation uses PAGE_SIZE as the standard size for each scatter-gather entry (typically 4KB on x86 systems, though this varies by architecture)</p></li>
+<li><p>While PAGE_SIZE alignment is not a hardware requirement and entry sizes can be configured differently if needed, this driver follows the PAGE_SIZE pattern</p></li>
+<li><p>Entry sizes vary based on buffer alignment relative to page boundaries</p></li>
+<li><p>The first entry may be partial if the buffer starts mid-page</p></li>
+<li><p>Middle entries typically span complete pages when properly aligned</p></li>
+<li><p>The final entry contains any remaining data that doesn’t fill a complete page</p></li>
+</ul>
+<p><strong>Example</strong>: A 10KB buffer starting at a 100-byte offset within a page would create:</p>
+<ul class="simple">
+<li><p>Entry 0: 3,996 bytes (from offset 100 to end of first page)</p></li>
+<li><p>Entry 1: 4,096 bytes (complete second page)</p></li>
+<li><p>Entry 2: 1,908 bytes (remaining data on third page)</p></li>
+</ul>
+<p><strong>Configuration</strong></p>
+<p>Channels default to Scatter-Gather (Linked-list) Mode. The aperture size can be configured to optimize performance for specific transfer patterns using the control device interface.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_mode</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/dev/mdb5_write00&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MDB5_MODE_SG</span>
+<span class="p">};</span>
+<span class="n">ioctl</span><span class="p">(</span><span class="n">ctrl_fd</span><span class="p">,</span><span class="w"> </span><span class="n">IOCTL_MDB5_SET_TRANSFER_MODE</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mode</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Simple (Non Linked-list) Mode</strong></p>
+<p>In Simple (Non Linked-list) Mode, the MDB5 DMA driver operates in non-linked-list mode for direct single-buffer transfers. This mode is optimal for a single large chunk as it reduces the overhead of setting up Link List pointer (LLP).</p>
+<p>The channel must be configured for Simple (Non Linked-list) Mode using the control device interface before performing transfers.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_mode</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/dev/mdb5_write00&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MDB5_MODE_SIMPLE</span>
+<span class="p">};</span>
+<span class="n">ioctl</span><span class="p">(</span><span class="n">ctrl_fd</span><span class="p">,</span><span class="w"> </span><span class="n">IOCTL_MDB5_SET_TRANSFER_MODE</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mode</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Simple (Non Linked-list) Mode data flow</strong></p>
+<ul class="simple">
+<li><p>Application opens the H2C channel device node</p></li>
+<li><p>Channel is configured for Simple (Non Linked-list) Mode operation</p></li>
+<li><p>Application issues a <code class="docutils literal notranslate"><span class="pre">write()</span></code> system call with a contiguous buffer</p></li>
+<li><p>Driver maps the buffer directly without Scatter-Gather (Linked-list) list creation</p></li>
+<li><p>Single DMA descriptor is prepared and submitted</p></li>
+<li><p>H2C engine performs direct transfer from host to device memory</p></li>
+<li><p>Completion notification is provided upon transfer completion</p></li>
+</ul>
+</section>
+<section id="async-io">
+<h3>ASYNC IO<a class="headerlink" href="#async-io" title="Link to this heading"></a></h3>
+<p>Asynchronous H2C operations enable non-blocking transfers using vectored I/O interfaces.</p>
+<p><strong>Async Data Flow</strong></p>
+<ul class="simple">
+<li><p>AIO context is established using <code class="docutils literal notranslate"><span class="pre">io_setup()</span></code></p></li>
+<li><p>I/O Control Blocks (iocb) are prepared for each transfer operation using <code class="docutils literal notranslate"><span class="pre">io_prep_pwrite</span></code></p></li>
+<li><p>Transfers are submitted using <code class="docutils literal notranslate"><span class="pre">io_submit()</span></code>, returning immediately to allow continued application execution</p></li>
+<li><p>Driver and DMA hardware process transfers asynchronously in the background</p></li>
+<li><p>Application uses <code class="docutils literal notranslate"><span class="pre">io_getevents()</span></code> to check for completed operations and retrieve results</p></li>
+</ul>
+</section>
+</section>
+<section id="card-to-host-c2h">
+<h2>Card-to-Host (C2H)<a class="headerlink" href="#card-to-host-c2h" title="Link to this heading"></a></h2>
+<p>Card-to-Host (C2H) transfers move data from the PCIe device’s memory to the host system’s memory. This is essential for reading results, status information, or streaming data from the device.</p>
+<section id="id1">
+<h3>Scatter-Gather (Linked-list) DMA<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Scatter-Gather (Linked-list) DMA C2H mode efficiently handles large or fragmented read operations using linked-list descriptors. The driver manages Scatter-Gather (Linked-list) list creation and DMA mapping automatically.</p>
+<p><strong>Buffer Segmentation</strong></p>
+<p>When a user provides a destination buffer for a scatter-gather read transfer, the MDB5 DMA client driver segments it into a scatter-gather list for efficient DMA processing. The driver’s segmentation process for receiving data follows these steps:</p>
+<ul class="simple">
+<li><p>The driver pins the destination buffer’s memory pages using <code class="docutils literal notranslate"><span class="pre">get_user_pages_fast()</span></code> to prevent the operating system from moving or swapping them during the transfer</p></li>
+<li><p>This driver implementation uses PAGE_SIZE as the standard size for each scatter-gather entry (typically 4KB on x86 systems, though this varies by architecture)</p></li>
+<li><p>While PAGE_SIZE alignment is not a hardware requirement and entry sizes can be configured differently if needed, this driver follows the PAGE_SIZE pattern for optimal memory management</p></li>
+<li><p>Entry sizes vary based on buffer alignment relative to page boundaries</p></li>
+<li><p>The first entry may be partial if the destination buffer starts mid-page</p></li>
+<li><p>Middle entries typically span complete pages when properly aligned</p></li>
+<li><p>The final entry contains space for any remaining data that doesn’t fill a complete page</p></li>
+</ul>
+<p><strong>Example</strong>: A 10KB destination buffer starting at a 100-byte offset within a page would create:</p>
+<ul class="simple">
+<li><p>Entry 0: 3,996 bytes (from offset 100 to end of first page)</p></li>
+<li><p>Entry 1: 4,096 bytes (complete second page)</p></li>
+<li><p>Entry 2: 1,908 bytes (remaining space on third page)</p></li>
+</ul>
+<p><strong>Scatter-Gather (Linked-list) DMA Data Flow</strong></p>
+<p>The complete flow between the host components and hardware components follows this sequence:</p>
+<ul class="simple">
+<li><p>Application opens the C2H channel device node (e.g., /dev/mdb5_read00)</p></li>
+<li><p>Application issues a <code class="docutils literal notranslate"><span class="pre">read()</span></code> system call with a destination buffer</p></li>
+<li><p>MDB5 DMA client driver validates the read request and buffer parameters</p></li>
+<li><p>Driver pins user buffer pages and creates Scatter-Gather (Linked-list) lists</p></li>
+<li><p>C2H DMA descriptors are prepared and submitted to the DMA engine</p></li>
+<li><p>C2H MM Engine reads data from device memory and writes to host memory locations</p></li>
+<li><p>Upon transfer completion, DMA engine updates completion status and generates interrupt if required</p></li>
+<li><p>Driver processes completion status, unmaps pages, and returns the number of bytes transferred</p></li>
+</ul>
+<p><strong>Simple (Non Linked-list) Mode</strong></p>
+<p>Simple (Non Linked-list) Mode C2H operations use non-linked-list mode for direct buffer transfers. This mode is optimal for a single large chunk as it reduces the overhead of setting up Link List pointer (LLP).</p>
+<p>Similar to H2C operations, C2H channels must be explicitly configured for Simple (Non Linked-list) Mode.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_mode</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/dev/mdb5_read00&quot;</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="p">.</span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MDB5_MODE_SIMPLE</span>
+<span class="p">};</span>
+<span class="n">ioctl</span><span class="p">(</span><span class="n">ctrl_fd</span><span class="p">,</span><span class="w"> </span><span class="n">IOCTL_MDB5_SET_TRANSFER_MODE</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">mode</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Simple (Non Linked-list) Mode data flow</strong></p>
+<ul class="simple">
+<li><p>Application opens the C2H channel device node</p></li>
+<li><p>Channel is configured for Simple (Non Linked-list) Mode operation</p></li>
+<li><p>Application issues a <code class="docutils literal notranslate"><span class="pre">read()</span></code> system call with a contiguous buffer</p></li>
+<li><p>Driver maps the destination buffer directly</p></li>
+<li><p>Single DMA descriptor is prepared for the transfer</p></li>
+<li><p>C2H engine reads from device memory and writes to host buffer</p></li>
+<li><p>Completion status is returned with the number of bytes transferred</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>ASYNC IO<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>Asynchronous C2H operations enable non-blocking reads, particularly useful for streaming data applications where continuous data flow from the device is required without blocking the application.</p>
+<p><strong>Async Data Flow</strong></p>
+<ul class="simple">
+<li><p>Application opens the C2H channel with direct I/O flags</p></li>
+<li><p>AIO context is created for managing asynchronous operations</p></li>
+<li><p>Read operations are prepared using <code class="docutils literal notranslate"><span class="pre">io_prep_pread</span></code> and submitted via <code class="docutils literal notranslate"><span class="pre">io_submit()</span></code></p></li>
+<li><p>C2H engine performs transfers while application continues execution</p></li>
+<li><p>Application receives completion events via <code class="docutils literal notranslate"><span class="pre">io_getevents()</span></code> when data is available</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="driver-operations.html" class="btn btn-neutral float-left" title="Driver Operations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api-reference.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on Jul 09, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

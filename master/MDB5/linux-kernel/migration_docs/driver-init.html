@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Init & DMA - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html">CLI Usage Examples</a></li>
+            <li><a href="application-code.html">Application Code Migration</a></li>
+            <li><a href="driver-init.html" class="active">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <section id="driver-code">
+            <h2>7. Code Migration Reference (continued)</h2>
+
+            <div class="admonition note">
+                <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
+                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5-DMA implementations.</p>
+            </div>
+
+            <h3>7.2 Driver Code</h3>
+
+            <h4>7.2.1 Module Initialization</h4>
+            <p>Both drivers follow standard Linux module initialization patterns. QDMA initializes its custom libqdma framework and netlink interface for queue management, while MDB5-DMA integrates with the DMAEngine framework using <code>dma_request_channel()</code> to discover available DMA channels.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/src/qdma_mod.c)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-mod.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static struct pci_driver pci_driver = {
+    .name = DRV_MODULE_NAME,
+    .id_table = pci_ids,
+    .probe = probe_one,
+    .remove = remove_one,
+    .err_handler = &qdma_err_handler,
+};
+
+static int __init qdma_mod_init(void)
+{
+    int rv;
+    pr_info("%s", version);
+
+    rv = libqdma_init(num_threads, NULL);
+    if (rv &lt; 0)
+        return rv;
+
+    rv = xlnx_nl_init();
+    if (rv &lt; 0)
+        return rv;
+
+    rv = qdma_cdev_init();
+    if (rv &lt; 0)
+        return rv;
+
+    return pci_register_driver(&pci_driver);
+}</code></pre></td>
+                    <td><pre><code>static int __init
+amd_mdb5_dma_client_mod_init(void)
+{
+    amd_mdb5_dma_client_init(&mdb5_dma_client);
+
+    if (amd_mdb5_dma_cdev_init() < 0)
+        goto init_err;
+
+    ret = amd_mdb5_dma_probe_channels(
+        &mdb5_dma_client, dma_dev_id,
+        mdb5_dma_client.rd_max_chan,
+        mdb5_dma_client.wr_max_chan);
+    if (ret)
+        goto init_err;
+
+    ret = amd_mdb5_dma_cdev_ctrl_create(
+        &mdb5_dma_client.cdev_ctrl,
+        mdb5_dma_client.dev);
+    // ...
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.2.2 Channel Discovery</h4>
+            <p>QDMA creates queues dynamically via netlink commands. MDB5 discovers channels from the static or loadable module dw-edma controller using DMAEngine API.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/src/nl.c - xnl_q_add)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-mod.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static int xnl_q_add(struct sk_buff *skb2,
+                     struct genl_info *info)
+{
+    struct xlnx_pci_dev *xpdev = NULL;
+    struct qdma_queue_conf qconf;
+    char *buf;
+    unsigned int num_q, i;
+    unsigned short qidx;
+
+    xpdev = xnl_rcv_check_xpdev(info);
+    if (!xpdev)
+        return -EINVAL;
+
+    rv = qconf_get(&qconf, info, ...);
+    num_q = nla_get_u32(
+        info-&gt;attrs[XNL_ATTR_NUM_Q]);
+
+    for (i = 0; i &lt; num_q; i++) {
+        qconf.qidx = qidx + i;
+        rv = xpdev_queue_add(xpdev,
+            &qconf, cur, end - cur);
+        if (rv &lt; 0)
+            goto send_resp;
+    }
+    // ...
+}</code></pre></td>
+                    <td><pre><code>int amd_mdb5_dma_probe_channels(
+    struct amd_mdb5_dma_client *client,
+    u16 dev_id, u16 max_rchan,
+    u16 max_wchan)
+{
+    dma_cap_zero(mask);
+    dma_cap_set(DMA_SLAVE, mask);
+    dma_cap_set(DMA_CYCLIC, mask);
+
+    for (i = 0; i &lt; (max_rchan + max_wchan); i++) {
+        snprintf(filter, sizeof(filter),
+            "dma%uchan%u", dev_id, i);
+
+        chan = dma_request_channel(mask,
+            amd_mdb5_dma_filter_comp, filter);
+        if (!chan)
+            break;
+
+        hc = kzalloc(sizeof(*hc), GFP_KERNEL);
+        hc->dchan = chan;
+        // ...
+    }
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.2.3 DMA Transfer Preparation</h4>
+            <p>QDMA uses custom scatter-gather and request submission through libqdma. MDB5 uses standard DMAEngine <code>dmaengine_prep_slave_sg()</code>.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/src/cdev.c, driver/libqdma/libqdma_export.c)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static ssize_t cdev_gen_read_write(
+    struct file *file, char __user *buf,
+    size_t count, loff_t *pos, bool write)
+{
+    struct qdma_cdev *xcdev = file-&gt;private_data;
+    struct qdma_io_cb iocb;
+    struct qdma_request *req = &iocb.req;
+    unsigned long qhndl;
+
+    qhndl = write ? xcdev-&gt;h2c_qhndl
+                  : xcdev-&gt;c2h_qhndl;
+
+    memset(&iocb, 0, sizeof(iocb));
+    iocb.buf = buf;
+    iocb.len = count;
+    rv = map_user_buf_to_sgl(&iocb, write);
+
+    req-&gt;sgcnt = iocb.pages_nr;
+    req-&gt;sgl = iocb.sgl;
+    req-&gt;write = write ? 1 : 0;
+    req-&gt;ep_addr = (u64)*pos;
+    req-&gt;count = count;
+    req-&gt;timeout_ms = 10 * 1000;
+    req-&gt;fp_done = NULL; /* blocking */
+
+    res = xcdev-&gt;fp_rw(xcdev-&gt;xcb-&gt;xpdev
+        -&gt;dev_hndl, qhndl, req);
+    // ...
+}</code></pre></td>
+                    <td><pre><code>static int mdb5_dma_io_req_prepare(
+    struct amd_mdb5_dma_channel *hchan,
+    struct amd_mdb5_dma_io_request *io_req,
+    struct io_req_param *param)
+{
+    struct dma_slave_config sconf;
+
+    // Map user buffer to SG list
+    mdb5_dma_sgdma_map_user_buf_to_sgl(
+        hchan, io_req);
+    mdb5_dma_map_page(hchan, io_req);
+
+    // Configure DMA slave
+    memset(&sconf, 0, sizeof(sconf));
+    sconf.src_addr = io_req->ep_addr;
+    sconf.dst_addr = sg_dma_address(
+        io_req->sgt.sgl);
+    dmaengine_slave_config(dchan, &sconf);
+
+    // Use standard DMAEngine API
+    io_req->txdesc = dmaengine_prep_slave_sg(
+        dchan, io_req->sgt.sgl,
+        io_req->sgt.nents, dir,
+        DMA_PREP_INTERRUPT);
+    // ...
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.2.4 Request Submission</h4>
+            <p>QDMA submits requests through <code>qdma_request_submit()</code> in libqdma. MDB5 uses standard DMAEngine <code>dmaengine_submit()</code> and <code>dma_async_issue_pending()</code>.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/libqdma/libqdma_export.c, driver/src/cdev.c)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>ssize_t qdma_request_submit(
+    unsigned long dev_hndl, unsigned long id,
+    struct qdma_request *req)
+{
+    struct xlnx_dma_dev *xdev = 
+        (struct xlnx_dma_dev *)dev_hndl;
+    struct qdma_descq *descq;
+    enum dma_data_direction dir;
+    int wait = req-&gt;fp_done ? 0 : 1;
+    int rv = 0;
+
+    descq = qdma_device_get_descq_by_id(
+        xdev, id, NULL, 0, 1);
+    if (!descq)
+        return -EINVAL;
+
+    dir = (descq-&gt;conf.q_type == Q_C2H) ? 
+          DMA_FROM_DEVICE : DMA_TO_DEVICE;
+
+    if (!req-&gt;dma_mapped) {
+        rv = sgl_map(xdev-&gt;conf.pdev, 
+            req-&gt;sgl, req-&gt;sgcnt, dir);
+        if (rv &lt; 0)
+            return rv;
+    }
+
+    // Submit to hardware queue
+    rv = qdma_descq_proc_sgt_request(
+        descq, req);
+    
+    return rv;
+}</code></pre></td>
+                    <td><pre><code>static int mdb5_dma_submit_request(
+    struct amd_mdb5_dma_channel *hchan,
+    struct amd_mdb5_dma_io_request *io_req)
+{
+    struct dma_async_tx_descriptor *txdesc;
+    dma_cookie_t cookie;
+    struct dma_chan *dchan = hchan-&gt;dchan;
+
+    // Get the prepared descriptor
+    txdesc = io_req-&gt;txdesc;
+    if (!txdesc)
+        return -EINVAL;
+
+    // Set completion callback
+    txdesc-&gt;callback_result = 
+        amd_mdb5_dma_comp_result_cb;
+    txdesc-&gt;callback_param = io_req-&gt;comp;
+
+    // Submit the transaction
+    cookie = dmaengine_submit(txdesc);
+    if (dma_submit_error(cookie)) {
+        dev_err(hchan-&gt;dev, 
+            "Failed to submit DMA transaction\n");
+        return -EIO;
+    }
+
+    // Issue pending transactions
+    dma_async_issue_pending(dchan);
+
+    // Store cookie for tracking
+    io_req-&gt;cookie = cookie;
+    
+    return 0;
+}</code></pre></td>
+                </tr>
+            </table>
+        </section>
+
+        <div class="page-navigation">
+            <a href="application-code.html" class="nav-btn prev">
+                <span class="nav-icon">arrow_back</span>
+                <span>
+                    <span class="nav-direction">Previous</span>
+                    <span class="nav-title">Application Code Migration</span>
+                </span>
+            </a>
+            <a href="driver-control.html" class="nav-btn next">
+                <span>
+                    <span class="nav-direction">Next</span>
+                    <span class="nav-title">Driver Code: Completion</span>
+                </span>
+                <span class="nav-icon">arrow_forward</span>
+            </a>
+        </div>
+    </main>
+
+    <script>
+    // VS Code-style syntax highlighting for C code
+    function highlightCode() {
+        const codeBlocks = document.querySelectorAll('.code-comparison code');
+        
+        const keywords = ['int', 'uint32_t', 'uint64_t', 'uint8_t', 'int32_t', 'char', 'void', 
+                          'struct', 'static', 'unsigned', 'return', 'if', 'do', 'while', 
+                          'for', 'ssize_t', 'size_t', 'off_t', 'const', 'long', 'short',
+                          'goto', 'break', 'continue', 'else', 'switch', 'case', 'default',
+                          'enum', 'sizeof', 'typedef', 'union', 'volatile', 'bool', 'true', 'false',
+                          'u16', 'u32', 'u64', 'u8', 's16', 's32', 's64', 's8'];
+        
+        const types = ['xnl_dev_info', 'xcmd_info', 'mdb5_dma_reg', 'mdb5_dma_ioctl',
+                       'mdb5_dma_common', 'ctrl_mode', 'qdma_request', 'sk_buff', 
+                       'genl_info', 'file', 'amd_mdb5_dma_channel', 'amd_mdb5_dma_io_request',
+                       'file_operations', 'genl_ops', 'pci_driver', 'pci_device_id',
+                       'dma_chan', 'dma_async_tx_descriptor', 'dma_cookie_t', 'dmaengine_result',
+                       'dma_slave_config', 'amd_mdb5_dma_io_completion', 'qdma_io_cb',
+                       'qdma_descq', 'xlnx_dma_dev', 'xlnx_pci_dev', 'qdma_queue_conf',
+                       'cdev_async_io', 'dma_data_direction', 'io_req_param'];
+        
+        codeBlocks.forEach(block => {
+            let code = block.textContent;
+            const tokens = [];
+            let tokenIndex = 0;
+            
+            code = code.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+                const token = `__COMMENT_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="comment">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = code.replace(/\/\/.*/g, (match) => {
+                const token = `__COMMENT_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="comment">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = code.replace(/"([^"\\]|\\.)*"/g, (match) => {
+                const token = `__STRING_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="string">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = escapeHtml(code);
+            code = code.replace(/#\w+/g, '<span class="preprocessor">$&</span>');
+            code = code.replace(/\b(0x[0-9a-fA-F]+)\b/g, '<span class="number">$1</span>');
+            code = code.replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+            
+            keywords.forEach(keyword => {
+                const regex = new RegExp(`\\b${keyword}\\b`, 'g');
+                code = code.replace(regex, `<span class="keyword">${keyword}</span>`);
+            });
+            
+            types.forEach(type => {
+                const regex = new RegExp(`\\b${type}\\b`, 'g');
+                code = code.replace(regex, `<span class="type">${type}</span>`);
+            });
+            
+            code = code.replace(/\b([a-z_][a-z0-9_]*)\s*\(/gi, '<span class="function">$1</span>(');
+            
+            for (let i = 0; i < tokenIndex; i++) {
+                code = code.replace(`__COMMENT_${i}__`, tokens[i]);
+                code = code.replace(`__STRING_${i}__`, tokens[i]);
+            }
+            
+            block.innerHTML = code;
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    highlightCode();
+    </script>
+
+    <footer>
+        © 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

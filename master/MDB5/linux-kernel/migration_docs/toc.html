@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table of Contents - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html">CLI Usage Examples</a></li>
+            <li><a href="application-code.html">Application Code Migration</a></li>
+            <li><a href="driver-init.html">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content toc-page">
+
+        <!-- Hero Banner -->
+        <div class="toc-hero">
+            <div class="toc-hero-accent"></div>
+            <div class="toc-hero-content">
+                <h2 class="toc-hero-title">QDMA &rarr; MDB5-DMA</h2>
+                <p class="toc-hero-subtitle">A step-by-step reference for migrating DMA applications and kernel drivers from the AMD QDMA framework to MDB5-DMA.</p>
+            </div>
+        </div>
+
+        <!-- Card Grid -->
+        <div class="toc-grid">
+
+            <!-- Card 1 -->
+            <a href="introduction.html" class="toc-card">
+                <div class="toc-card-step">Chapter 1</div>
+                <h3>Introduction &amp; Architecture</h3>
+                <ul>
+                    <li>Introduction</li>
+                    <li>Key Architecture Differences</li>
+                    <li>Architectural Overview Table</li>
+                </ul>
+                <span class="toc-card-arrow">arrow_forward</span>
+            </a>
+
+            <!-- Card 2 -->
+            <a href="migration-process.html" class="toc-card">
+                <div class="toc-card-step">Chapter 2</div>
+                <h3>Migration Process &amp; Testing</h3>
+                <ul>
+                    <li>Tools &amp; Pre-requisites</li>
+                    <li>Step-by-Step Migration</li>
+                    <li>Feature Comparison</li>
+                    <li>Testing &amp; Validation</li>
+                </ul>
+                <span class="toc-card-arrow">arrow_forward</span>
+            </a>
+
+            <!-- Card 3 -->
+            <a href="usage-examples.html" class="toc-card">
+                <div class="toc-card-step">Chapter 3</div>
+                <h3>CLI Usage Examples</h3>
+                <ul>
+                    <li>C2H &amp; H2C Transfers</li>
+                    <li>Register Read/Write</li>
+                    <li>Channel/Queue Management</li>
+                    <li>dma-xfer &amp; dma-perf</li>
+                </ul>
+                <span class="toc-card-arrow">arrow_forward</span>
+            </a>
+
+            <!-- Card 4 -->
+            <a href="application-code.html" class="toc-card">
+                <div class="toc-card-step">Chapter 4</div>
+                <h3>Application Code Migration</h3>
+                <ul>
+                    <li>Register Access</li>
+                    <li>Queue/Channel Operations</li>
+                    <li>Data Transfer Code</li>
+                    <li>dma-xfer Tool</li>
+                </ul>
+                <span class="toc-card-arrow">arrow_forward</span>
+            </a>
+
+            <!-- Card 5 -->
+            <a href="driver-init.html" class="toc-card">
+                <div class="toc-card-step">Chapter 5</div>
+                <h3>Driver Code: Init &amp; DMA</h3>
+                <ul>
+                    <li>Module Initialization</li>
+                    <li>Channel Discovery</li>
+                    <li>DMA Transfer Prep</li>
+                    <li>Request Submission</li>
+                </ul>
+                <span class="toc-card-arrow">arrow_forward</span>
+            </a>
+
+            <!-- Card 6 -->
+            <a href="driver-control.html" class="toc-card">
+                <div class="toc-card-step">Chapter 6</div>
+                <h3>Driver Code: Completion</h3>
+                <ul>
+                    <li>Completion Handling</li>
+                    <li>File Operations</li>
+                    <li>Control Ioctl Handler</li>
+                    <li>References</li>
+                </ul>
+                <span class="toc-card-arrow">arrow_forward</span>
+            </a>
+
+        </div>
+
+        <div class="page-navigation" style="margin: 20px 60px 0; padding-bottom: 20px;">
+            <a href="introduction.html" class="nav-btn next">
+                <span>
+                    <span class="nav-direction">Start reading</span>
+                    <span class="nav-title">Introduction &amp; Architecture</span>
+                </span>
+                <span class="nav-icon">arrow_forward</span>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

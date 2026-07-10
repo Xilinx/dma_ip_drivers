@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI Usage Examples - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html" class="active">CLI Usage Examples</a></li>
+            <li><a href="application-code.html">Application Code Migration</a></li>
+            <li><a href="driver-init.html">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <section id="usage-examples">
+            <h2>8. CLI Usage Examples</h2>
+            <p>This section provides side-by-side command-line examples for the most common DMA operations, showing how each userspace application is invoked in QDMA vs. MDB5-DMA.</p>
+            
+            <div class="admonition note">
+                <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
+                <p><strong>C2H</strong> (Card-to-Host) maps to the <strong>read</strong> direction, and <strong>H2C</strong> (Host-to-Card) maps to the <strong>write</strong> direction. In MDB5-DMA, the direction flag <code>-d</code> uses <code>read</code>/<code>write</code> accordingly.</p>
+            </div>
+            
+            <div class="admonition warning">
+                <div class="admonition-title"><span class="icon">⚠</span> Warning</div>
+                <p>QDMA and MDB5-DMA userspace applications share the same binary names and many of the same flag letters, but several flags have different meanings. Refer to the <a href="#flag-differences">Flag Differences</a> section for details.</p>
+            </div>
+
+            <!-- Flag Differences -->
+            <h3 id="flag-differences">Flag Differences Between QDMA and MDB5-DMA userspace applications</h3>
+            <p>The following table provides a comprehensive flag-by-flag comparison across both the userspace applications.
+                The same option can carry different meanings depending on the userspace application.</p>
+
+            <table class="flag-diff">
+                <thead>
+                    <tr>
+                        <th style="width:6%;">Flag</th>
+                        <th style="width:22%;">Application(s)</th>
+                        <th style="width:36%;">QDMA</th>
+                        <th style="width:36%;">MDB5-DMA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- -d -->
+                    <tr>
+                        <td rowspan="2"><code>-d</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--device</code>: device node path
+                            (e.g., <code>/dev/qdma06000-MM-0</code>)</td>
+                        <td><em>Not available.</em></td>
+                    </tr>
+                    <tr class="ctl-row">
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--dir</code>: channel direction
+                            (<code>read</code>&nbsp;/&nbsp;<code>write</code>)</td>
+                    </tr>
+                    <!-- -c -->
+                    <tr>
+                        <td rowspan="2"><code>-c</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--count</code>: number of transfer iterations
+                            <code>(default:&nbsp;1)</code></td>
+                        <td><code>--channel</code>: channel index (0-7).</td>
+                    </tr>
+                    <tr class="ctl-row">
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--channel</code>: channel index (0-7).</td>
+                    </tr>
+                    <!-- -f -->
+                    <tr>
+                        <td><code>-f</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--file</code>: data file,
+                            input (dma-to-device) or output (dma-from-device)</td>
+                        <td><code>--data_input_file</code>: input file
+                            (dma-to-device only, required).</td>
+                    </tr>
+                    <!-- -w -->
+                    <tr>
+                        <td><code>-w</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--data&nbsp;outfile</code>: output / verification
+                            file. <strong>dma-to-device only</strong></td>
+                        <td><code>--data_output_file</code>: output file.
+                            Available in <strong>both</strong> dma-to-device (optional
+                            verification) and dma-from-device (primary output)</td>
+                    </tr>
+                    <!-- -a -->
+                    <tr>
+                        <td rowspan="2"><code>-a</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--address</code>: AXI bus starting address.</td>
+                        <td><code>--address</code>: device memory address</td>
+                    </tr>
+                    <tr class="ctl-row">
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--set_aperture_sz</code>: set aperture window
+                            size. Requires <code>-c</code> and <code>-d</code></td>
+                    </tr>
+                    <!-- -s -->
+                    <tr>
+                        <td rowspan="2"><code>-s</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--size</code>: transfer size in bytes</td>
+                        <td><code>--size</code>: transfer size in bytes</td>
+                    </tr>
+                    <tr class="ctl-row">
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--bdf</code>: PCI Bus:Device.Function in hex
+                            (<code>BB:DD.F</code>).</td>
+                    </tr>
+                    <!-- -o -->
+                    <tr>
+                        <td><code>-o</code></td>
+                        <td>dma-to-device<br>dma-from-device</td>
+                        <td><code>--offset</code>: page offset of transfer</td>
+                        <td><code>--offset</code>: page offset of transfer</td>
+                    </tr>
+                    <!-- -m -->
+                    <tr class="ctl-row">
+                        <td><code>-m</code></td>
+                        <td>dma-ctl</td>
+                        <td><em>Not available</em></td>
+                        <td><code>--set_transfer_mode</code>: <code>simple</code> or <code>sg</code>
+                            (Scatter-Gather).</td>
+                    </tr>
+                    <!-- -M -->
+                    <tr class="ctl-row">
+                        <td><code>-M</code></td>
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--get_transfer_mode</code>: get current transfer
+                            mode.</td>
+                    </tr>
+                    <!-- -S -->
+                    <tr class="ctl-row">
+                        <td><code>-S</code></td>
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--stats</code>: channel statistics (transfer
+                            counts, success/failure rates, data processed).</td>
+                    </tr>
+                    <!-- -A -->
+                    <tr class="ctl-row">
+                        <td><code>-A</code></td>
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--get_aperture_sz</code>: get current aperture
+                            window size.</td>
+                    </tr>
+                    <!-- -r -->
+                    <tr class="ctl-row">
+                        <td><code>-r</code></td>
+                        <td>dma-ctl</td>
+                        <td><em>Not available.</em></td>
+                        <td><code>--reg_read</code>: register offset to read.
+                            Used with <code>-s</code>&nbsp;(BDF)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>For the complete list of options, see the
+               <a href="https://pages.gitenterprise.xilinx.com/naj/mdb-dma-docs/user-applications.html">MDB5-DMA User Applications</a>
+               reference and the
+               <a href="https://xilinx.github.io/dma_ip_drivers/2023.1/QDMA/linux-kernel/html/userguide.html">QDMA User Guide</a>.</p>
+
+            <hr>
+
+            <!-- C2H Transfer (dma-from-device) -->
+            <h3 id="c2h-transfer">8.1 C2H Transfer (dma-from-device)</h3>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><pre><code># Step 1: Setup queue
+$ dma-ctl qdma06000 q add idx 1 mode mm dir c2h
+$ dma-ctl qdma06000 q start idx 1 dir c2h
+
+# Step 2: Perform transfer
+$ dma-from-device -d /dev/qdma06000-MM-1 \
+    -a 0x0 -s 1024 -f output.bin</code></pre>
+<p class="option-list"><strong>Options:</strong></p>
+<ul class="option-list">
+    <li><code>-d</code> (<code>--device</code>): device node path</li>
+    <li><code>-a</code> (<code>--address</code>): start address on AXI bus</li>
+    <li><code>-s</code> (<code>--size</code>): transfer size in bytes</li>
+    <li><code>-f</code> (<code>--file</code>): output file to write data to</li>
+    <li><code>-c</code> (<code>--count</code>): number of transfers (default: 1)</li>
+    <li><code>-o</code> (<code>--offset</code>): page offset of transfer</li>
+</ul></td>
+                    <td><pre><code># No queue setup needed
+$ dma-from-device -c 0 -a 0xaa002000 \
+    -s 1024 -w output.bin</code></pre>
+<p class="option-list"><strong>Options:</strong></p>
+<ul class="option-list">
+    <li><code>-c</code> (<code>--channel</code>): channel index (0-7)</li>
+    <li><code>-a</code> (<code>--address</code>): device memory address</li>
+    <li><code>-s</code> (<code>--size</code>): transfer size in bytes</li>
+    <li><code>-w</code> (<code>--data_output_file</code>): output file to write data to</li>
+    <li><code>-o</code> (<code>--offset</code>): page offset</li>
+</ul></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <!-- H2C Transfer (dma-to-device) -->
+            <h3 id="h2c-transfer">8.2 H2C Transfer (dma-to-device)</h3>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><pre><code># Step 1: Setup queue
+$ dma-ctl qdma06000 q add idx 0 mode mm dir h2c
+$ dma-ctl qdma06000 q start idx 0 dir h2c
+
+# Step 2: Perform transfer
+$ dma-to-device -d /dev/qdma06000-MM-0 \
+    -a 0x0 -s 1024 -f input.bin
+
+# Step 3: Cleanup
+$ dma-ctl qdma06000 q stop idx 0 dir h2c
+$ dma-ctl qdma06000 q del idx 0 dir h2c</code></pre>
+<p class="option-list"><strong>Options:</strong></p>
+<ul class="option-list">
+    <li><code>-d</code> (<code>--device</code>): device node path</li>
+    <li><code>-a</code> (<code>--address</code>): start address on AXI bus</li>
+    <li><code>-s</code> (<code>--size</code>): transfer size in bytes</li>
+    <li><code>-f</code> (<code>--data infile</code>): input file to read data from</li>
+    <li><code>-w</code> (<code>--data outfile</code>): output file to write transfer data</li>
+    <li><code>-c</code> (<code>--count</code>): number of transfers (default: 1)</li>
+    <li><code>-o</code> (<code>--offset</code>): page offset of transfer</li>
+</ul></td>
+                    <td><pre><code># No queue setup needed
+$ dma-to-device -c 0 -a 0xaa002000 \
+    -s 1024 -f input.bin</code></pre>
+<p class="option-list"><strong>Options:</strong></p>
+<ul class="option-list">
+    <li><code>-c</code> (<code>--channel</code>): channel index (0-7)</li>
+    <li><code>-a</code> (<code>--address</code>): device memory address</li>
+    <li><code>-s</code> (<code>--size</code>): transfer size in bytes</li>
+    <li><code>-f</code> (<code>--data_input_file</code>): input file to read data from</li>
+    <li><code>-w</code> (<code>--data_output_file</code>): output file to write transfer data</li>
+    <li><code>-o</code> (<code>--offset</code>): page offset</li>
+</ul></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <!-- Register Access (dma-ctl) -->
+            <h3 id="reg-access">8.3 Register Read/Write (dma-ctl)</h3>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><pre><code># Read a register
+$ dma-ctl qdma06000 reg read bar 0 0x100
+
+# Write a register
+$ dma-ctl qdma06000 reg write bar 0 0x100 0x1
+
+# Dump all registers
+$ dma-ctl qdma06000 reg dump</code></pre>
+<p class="option-list"><strong>Syntax:</strong></p>
+<ul class="option-list">
+    <li><code>reg read [bar &lt;N&gt;] &lt;addr&gt;</code></li>
+    <li><code>reg write [bar &lt;N&gt;] &lt;addr&gt; &lt;val&gt;</code></li>
+    <li><code>reg dump [dmap &lt;Q&gt; &lt;N&gt;]</code></li>
+</ul></td>
+                    <td><pre><code># Read a register
+$ dma-ctl -r 0x100 -s 06:00.0
+
+# Write a register
+$ dma-ctl -w 0x100 0x1 -s 06:00.0</code></pre>
+<p class="option-list"><strong>Options:</strong></p>
+<ul class="option-list">
+    <li><code>-r</code> (<code>--reg_read</code>): register offset to read</li>
+    <li><code>-w</code> (<code>--reg_write</code>): register offset and data to write</li>
+    <li><code>-s</code> (<code>--bdf</code>): PCI BDF in hex (BB:DD.F)</li>
+</ul></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <!-- Channel/Queue Management (dma-ctl) -->
+            <h3 id="channel-mgmt">8.4 Channel/Queue Management (dma-ctl)</h3>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><pre><code># List devices
+$ dma-ctl dev list
+
+# Device info &amp; capabilities
+$ dma-ctl qdma06000 cap
+$ dma-ctl qdma06000 stat
+
+# Queue lifecycle (add → start → stop → del)
+$ dma-ctl qdma06000 q add idx 0 mode mm dir bi
+$ dma-ctl qdma06000 q start idx 0 dir bi
+$ dma-ctl qdma06000 q stop idx 0 dir bi
+$ dma-ctl qdma06000 q del idx 0 dir bi
+
+# Queue info
+$ dma-ctl qdma06000 q dump idx 0 dir bi</code></pre>
+<p class="option-list"><strong>Key difference:</strong> QDMA requires explicit queue lifecycle management via netlink commands.</p></td>
+                    <td><pre><code># Get channel statistics
+$ dma-ctl -S -c 0 -d write
+
+# Get current transfer mode
+$ dma-ctl -M -c 0 -d write
+
+# Set transfer mode to Scatter-Gather
+$ dma-ctl -m sg -c 0 -d write
+
+# Set transfer mode to Simple DMA
+$ dma-ctl -m simple -c 0 -d read
+
+# Get aperture size
+$ dma-ctl -A -c 0 -d write
+
+# Set aperture size
+$ dma-ctl -a 4096 -c 0 -d write</code></pre>
+<p class="option-list"><strong>Options:</strong></p>
+<ul class="option-list">
+    <li><code>-c</code> (<code>--channel</code>): channel index</li>
+    <li><code>-d</code> (<code>--dir</code>): channel direction (read/write)</li>
+    <li><code>-m</code> (<code>--set_transfer_mode</code>): set mode (sg/simple)</li>
+    <li><code>-M</code> (<code>--get_transfer_mode</code>): get current mode</li>
+    <li><code>-S</code> (<code>--stats</code>): show channel statistics</li>
+    <li><code>-a</code> (<code>--set_aperture_sz</code>): set aperture size</li>
+    <li><code>-A</code> (<code>--get_aperture_sz</code>): get aperture size</li>
+</ul>
+<p class="option-list"><strong>Key difference:</strong> No queue lifecycle — channels are always available. Configuration is done via ioctl.</p></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <!-- Transfer test config based (dma-xfer)-->
+            <h3 id="batch-xfer">8.5 Transfer test config based (dma-xfer)</h3>
+            <p>Both userspace applications use a configuration file. QDMA's config specifies queue parameters and netlink-based queue setup; MDB5-DMA's config specifies channel parameters and transfer mode.</p>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><pre><code># Run with config file
+$ dma-xfer -c qdma_xfer_config.txt</code></pre>
+<p class="option-list"><strong>Sample config (qdma_xfer_config.txt):</strong></p>
+<pre><code>name=mm_sample
+pci_bus=d8
+pci_device=00
+function=0
+is_vf=0
+mode=mm
+dir=bi
+q_range=0:0
+tmr_idx=6
+cntr_idx=6
+cmptsz=0
+trig_mode=cntr_tmr
+pfetch_en=0
+rngidx=0
+pkt_sz=1024
+io_type=io_async
+inputfile=INPUT
+outputfile=OUTPUT</code></pre></td>
+                    <td><pre><code># Run with config file
+$ dma-xfer -c mdb5_dma_xfer_config.txt</code></pre>
+<p class="option-list"><strong>Sample config (mdb5_dma_xfer_config.txt):</strong></p>
+<pre><code>name=mm_xfer
+chan_mode=mm
+num_rd_channels=2
+num_wr_channels=2
+address=0xaa002000
+transfer_mode=sg
+pkt_sz=1024
+io_type=io_sync
+inputfile=in.txt
+outputfile=out.txt</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <!-- Performance Testing (dma-perf) -->
+            <h3 id="perf-test">8.6 Performance Testing (dma-perf)</h3>
+            <p>Both performance userspace applications are config-file driven and measure sustained DMA throughput over a specified runtime.</p>
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><pre><code># Run performance test
+$ dma-perf -c qdma_perf_config.txt</code></pre>
+<p class="option-list"><strong>Sample config (qdma_perf_config.txt):</strong></p>
+<pre><code>name=mm_perf
+mode=mm
+dir=bi
+pf_range=0:0
+q_range=0:0
+wb_acc=5
+tmr_idx=9
+cntr_idx=0
+trig_mode=usr_cnt
+rngidx=9
+runtime=30
+num_threads=8
+bidir_en=1
+num_pkt=64
+pkt_sz=64
+pci_bus=06
+pci_device=00</code></pre></td>
+                    <td><pre><code># Run performance test
+$ dma-perf -c mdb5_dma_perf_config.txt</code></pre>
+<p class="option-list"><strong>Sample config (mdb5_dma_perf_config.txt):</strong></p>
+<pre><code>name=mm_perf
+chan_mode=mm
+pci_bus=1
+pci_dev=0
+pf_range=0:0
+ch_start_idx=0
+num_rd_channels=0
+num_wr_channels=1
+address=0xaa002000
+runtime=30
+num_process=1
+num_pkt=64
+pkt_sz=64
+aperture_sz=0
+dump_en=true</code></pre></td>
+                </tr>
+            </table>
+
+        </section>
+
+        <div class="page-navigation">
+            <a href="migration-process.html" class="nav-btn prev">
+                <span class="nav-icon">arrow_back</span>
+                <span>
+                    <span class="nav-direction">Previous</span>
+                    <span class="nav-title">Migration Process &amp; Testing</span>
+                </span>
+            </a>
+            <a href="application-code.html" class="nav-btn next">
+                <span>
+                    <span class="nav-direction">Next</span>
+                    <span class="nav-title">Application Code Migration</span>
+                </span>
+                <span class="nav-icon">arrow_forward</span>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        © 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</body>
+</html>

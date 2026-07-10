@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Structures &mdash; MDB5 DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=074839c1" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Global Functions" href="functions.html" />
+    <link rel="prev" title="Enumerations" href="enumerations.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5 DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers-guide.html">Developers Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api-reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="definitions.html">Definitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="enumerations.html">Enumerations</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data Structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html">Global Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshoot.html">Troubleshooting and Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration-guide.html">Migration Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5 DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api-reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Data Structures</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-structures">
+<h1>Data Structures<a class="headerlink" href="#data-structures" title="Link to this heading"></a></h1>
+<p>This section documents the data structures provided by the dma-utils</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_channel_stats</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">req_rcvd</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">req_success</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">req_failed</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">intr_rcvd</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">read_data_processed</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">write_data_processed</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">total_data_processed</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>mdb5_dma_channel_stats</strong> - Channel performance statistics</p>
+<p>This structure contains various statistics related to a MDB5 DMA read/write channels. It includes information about the number of packets received, successfully processed, failed, the number of interrupts received, and the total data length transferred.</p>
+<ul class="simple">
+<li><p><strong>req_rcvd</strong> - Number of requests received</p></li>
+<li><p><strong>req_success</strong> - Number of successful requests</p></li>
+<li><p><strong>req_failed</strong> - Number of failed requests</p></li>
+<li><p><strong>intr_rcvd</strong> - Number of interrupts received</p></li>
+<li><p><strong>read_data_processed</strong> - Total read data processed</p></li>
+<li><p><strong>write_data_processed</strong> - Total write data processed</p></li>
+<li><p><strong>total_data_processed</strong> - Total data processed</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_channel</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_channel_stats</span><span class="w"> </span><span class="n">stats</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">address</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">aperture_sz</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint8_t</span><span class="w"> </span><span class="n">ch_id</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">name</span><span class="p">[</span><span class="n">MDB5_NAME_SZ</span><span class="p">];</span>
+<span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_chan_dir</span><span class="w"> </span><span class="n">dir</span><span class="p">;</span>
+<span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_transfer_mode</span><span class="w"> </span><span class="n">mode</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>mdb5_dma_channel</strong> - Complete channel information</p>
+<p>This structure contains information about MDB5 DMA read/write channels. It includes the device memory address, I/O type, Channel’s name, index, mode, direction and statistics. Additionally, it contains specific parameters like aperture size for Scatter-Gather (Linked-list) DMA mode.</p>
+<ul class="simple">
+<li><p><strong>stats</strong> - Channel statistics</p></li>
+<li><p><strong>address</strong> - Device memory address</p></li>
+<li><p><strong>aperture_sz</strong> - Aperture size for SG mode</p></li>
+<li><p><strong>ch_id</strong> - Channel index</p></li>
+<li><p><strong>name</strong> - Channel node name</p></li>
+<li><p><strong>dir</strong> - Channel direction</p></li>
+<li><p><strong>mode</strong> - Transfer mode</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_reg</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">pci_bdf</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>mdb5_dma_reg</strong> - Register access structure</p>
+<p>This structure contains the offset, data, and PCI Bus, Device, Function in BB:DD.F format.</p>
+<ul class="simple">
+<li><p><strong>offset</strong> - Register offset</p></li>
+<li><p><strong>data</strong> - Register data</p></li>
+<li><p><strong>pci_bdf</strong> - PCI Bus:Device.Function</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_mode</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">name</span><span class="p">[</span><span class="n">MDB5_NAME_SZ</span><span class="p">];</span>
+<span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_transfer_mode</span><span class="w"> </span><span class="n">mode</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>ctrl_mode</strong> - Transfer mode configuration</p>
+<p>This structure contains control mode information such as configuring channel to transfer mode Scatter-Gather (Linked-list) Mode or Simple (Non Linked-list) Mode.</p>
+<ul class="simple">
+<li><p><strong>name</strong> - Control node name</p></li>
+<li><p><strong>mode</strong> - Transfer mode</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_aperture</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">name</span><span class="p">[</span><span class="n">MDB5_NAME_SZ</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">aperture</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>ctrl_aperture</strong> - Aperture size configuration</p>
+<p>This structure contains aperture information. It includes control device node name and aperture size.</p>
+<ul class="simple">
+<li><p><strong>name</strong> - Control node name</p></li>
+<li><p><strong>aperture</strong> - Aperture size</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_stats</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">name</span><span class="p">[</span><span class="n">MDB5_NAME_SZ</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">stat_addr</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>ctrl_stats</strong> - Statistics retrieval structure</p>
+<p>This structure contains channel statistics information. It includes physical address to be provided to kernel for filling statistics <code class="docutils literal notranslate"><span class="pre">mdb5_dma_channel_stats</span></code>.</p>
+<ul class="simple">
+<li><p><strong>name</strong> - Control node name</p></li>
+<li><p><strong>stat_addr</strong> - Statistics address</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_ioctl</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_mode</span><span class="w"> </span><span class="n">cmode</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_aperture</span><span class="w"> </span><span class="n">caperture</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctrl_stats</span><span class="w"> </span><span class="n">cstats</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_common</span><span class="w"> </span><span class="o">*</span><span class="n">h</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>mdb5_dma_ioctl</strong> - IOCTL operation container</p>
+<ul class="simple">
+<li><p><strong>cmode</strong> - Mode configuration</p></li>
+<li><p><strong>caperture</strong> - Aperture configuration</p></li>
+<li><p><strong>cstats</strong> - Statistics configuration</p></li>
+<li><p><strong>h</strong> - Common structure pointer</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_common</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_ioctl</span><span class="w"> </span><span class="n">hioc</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_reg</span><span class="w"> </span><span class="n">reg</span><span class="p">;</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">mdb5_dma_channel</span><span class="w"> </span><span class="o">*</span><span class="n">chan</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">address</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">pkt_sz</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">num_rd_chan</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">num_wr_chan</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">num_pkts</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">op_arg</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">ctrl_name</span><span class="p">[</span><span class="n">MDB5_NAME_SZ</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">cfg_name</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+<span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="n">op</span><span class="p">;</span>
+<span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_chan_mode</span><span class="w"> </span><span class="n">chan_mode</span><span class="p">;</span>
+<span class="w">    </span><span class="k">enum</span><span class="w"> </span><span class="n">mdb5_dma_io_type</span><span class="w"> </span><span class="n">io_type</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">set_mode</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">set_aperture</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">dump_en</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>mdb5_dma_common</strong> - Main configuration structure</p>
+<p>This structure contains various configuration parameters and settings for MDB5 DMA operations. It includes information about the operation type, channel mode, I/O type, channel direction, and other relevant details required for MDB5 DMA operations. It is commonly used by all MDB5 DMA user space utilities.</p>
+<ul class="simple">
+<li><p><strong>hioc</strong> - IOCTL structure</p></li>
+<li><p><strong>reg</strong> - Register structure</p></li>
+<li><p><strong>chan</strong> - Channel pointer</p></li>
+<li><p><strong>address</strong> - Device address</p></li>
+<li><p><strong>pkt_sz</strong> - Packet size</p></li>
+<li><p><strong>num_rd_chan</strong> - Number of read channels</p></li>
+<li><p><strong>num_wr_chan</strong> - Number of write channels</p></li>
+<li><p><strong>num_pkts</strong> - Number of packets</p></li>
+<li><p><strong>op_arg</strong> - Operation argument (enum operation_arg)</p></li>
+<li><p><strong>ctrl_name</strong> - Control node name (Name of the PF/VF control node)</p></li>
+<li><p><strong>cfg_name</strong> - Configuration name (for dma-xfer and dma-perf)</p></li>
+<li><p><strong>op</strong> - Operation type</p></li>
+<li><p><strong>chan_mode</strong> - Channel mode</p></li>
+<li><p><strong>io_type</strong> - I/O type</p></li>
+<li><p><strong>set_mode</strong> - Set mode flag</p></li>
+<li><p><strong>set_aperture</strong> - Set aperture flag</p></li>
+<li><p><strong>dump_en</strong> - Dump enable flag</p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="enumerations.html" class="btn btn-neutral float-left" title="Enumerations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="functions.html" class="btn btn-neutral float-right" title="Global Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on Jul 09, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

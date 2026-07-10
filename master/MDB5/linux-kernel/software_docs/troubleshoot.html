@@ -1,0 +1,206 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting and Debugging &mdash; MDB5 DMA 2025.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=bb2faaec" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/page-style.css?v=074839c1" />
+      <link rel="stylesheet" type="text/css" href="_static/syntax-style.css?v=6983aa22" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9ce65358"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/theme-toggle.js?v=ca4beba9"></script>
+      <script src="_static/header.js?v=c231dca6"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Migration Guide" href="migration-guide.html" />
+    <link rel="prev" title="Global Functions" href="functions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MDB5 DMA
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-applications.html">User Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers-guide.html">Developers Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting and Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#controller-driver-issues">Controller Driver Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#client-driver-issues">Client Driver Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#application-issues">Application Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration-guide.html">Migration Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDB5 DMA</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting and Debugging</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting-and-debugging">
+<h1>Troubleshooting and Debugging<a class="headerlink" href="#troubleshooting-and-debugging" title="Link to this heading"></a></h1>
+<p>This section provides guidance for diagnosing and resolving common issues with the MDB5 DMA driver and client applications.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When troubleshooting driver issues, always check kernel messages first using <code class="docutils literal notranslate"><span class="pre">dmesg</span></code> to identify the root cause.</p>
+</div>
+<section id="controller-driver-issues">
+<h2>Controller Driver Issues<a class="headerlink" href="#controller-driver-issues" title="Link to this heading"></a></h2>
+<p><strong>no read/write channel found</strong></p>
+<p>The controller driver <code class="docutils literal notranslate"><span class="pre">dw_edma</span></code> is built into the kernel (not a loadable module). This error indicates that the required kernel configuration options are not enabled in the current kernel build.</p>
+<p>Check if the required kernel options are enabled:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span>/boot/config-<span class="sb">`</span>uname<span class="w"> </span>-r<span class="sb">`</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;^(CONFIG_DW_EDMA|CONFIG_DW_EDMA_PCIE)=&quot;</span>
+</pre></div>
+</div>
+<p>Both options should show <code class="docutils literal notranslate"><span class="pre">=y</span></code>. If they are missing or disabled, the user must recompile the kernel with these options enabled. For detailed instructions, see the <a class="reference internal" href="getting-started.html"><span class="doc">Controller Driver Setup</span></a> section.</p>
+</section>
+<hr class="docutils" />
+<section id="client-driver-issues">
+<h2>Client Driver Issues<a class="headerlink" href="#client-driver-issues" title="Link to this heading"></a></h2>
+<p><strong>modprobe: ERROR: could not insert ‘amd_client_drv’: Operation not permitted</strong></p>
+<p>This error occurs when the BDF (Bus:Device:Function) or DMA device ID parameters provided to <code class="docutils literal notranslate"><span class="pre">modprobe</span></code> are incorrect or don’t match the actual PCIe device.</p>
+<p>Verify and correct the <code class="docutils literal notranslate"><span class="pre">device_dbdf</span></code> and <code class="docutils literal notranslate"><span class="pre">dma_dev_id</span></code> parameters:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>modprobe<span class="w"> </span>./bin/<span class="sb">`</span>uname<span class="w"> </span>-p<span class="sb">`</span>/mdb5-dmaclient-drv.ko<span class="w"> </span><span class="nv">device_dbdf</span><span class="o">=</span><span class="s2">&quot;0000:01:00.0&quot;</span><span class="w"> </span><span class="nv">dma_dev_id</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>Ensure <code class="docutils literal notranslate"><span class="pre">device_dbdf</span></code> matches the actual PCIe device (use <code class="docutils literal notranslate"><span class="pre">lspci</span></code> to find it) and <code class="docutils literal notranslate"><span class="pre">dma_dev_id</span></code> is the correct unique index.</p>
+<hr class="docutils" />
+<p><strong>modprobe: FATAL: Module ./bin/x86_64/mdb5-dmaclient-drv.ko not found</strong></p>
+<p>The client driver module file doesn’t exist at the specified path, either because it hasn’t been compiled yet or the path is incorrect.</p>
+<p>Compile the client driver:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>&lt;path-to-mdb5-ep-drivers&gt;/client-driver
+make
+</pre></div>
+</div>
+<p>Verify the module exists:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>-la<span class="w"> </span>./bin/x86_64/mdb5-dmaclient-drv.ko
+</pre></div>
+</div>
+<hr class="docutils" />
+<p><strong>modprobe: ERROR: could not insert module: Invalid module format</strong></p>
+<p>The module was compiled for a different kernel version than the one currently running. Kernel modules must match the exact kernel version.</p>
+<p>Recompile the client driver for the current kernel:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>&lt;path-to-mdb5-ep-drivers&gt;/client-driver
+make<span class="w"> </span>clean
+make
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This driver is verified to work with Linux kernel v6.8.0. The kernel version can be checked with <code class="docutils literal notranslate"><span class="pre">uname</span> <span class="pre">-r</span></code>. If the system is running a significantly different version, consider updating to a supported kernel version.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="application-issues">
+<h2>Application Issues<a class="headerlink" href="#application-issues" title="Link to this heading"></a></h2>
+<p><strong>Root privileges required</strong></p>
+<p>Client applications need root privileges to access DMA device files in <code class="docutils literal notranslate"><span class="pre">/dev/</span></code>.</p>
+<p>Run applications with root privileges:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>./&lt;dma-application&gt;
+</pre></div>
+</div>
+<hr class="docutils" />
+<p><strong>libaio dependency missing</strong></p>
+<p>The libaio library is required for asynchronous I/O operations but is not installed on the system.</p>
+<p>Install the libaio development package:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ubuntu/Debian</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libaio-dev
+</pre></div>
+</div>
+<p>Verify installation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ldconfig<span class="w"> </span>-p<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>libaio
+</pre></div>
+</div>
+<hr class="docutils" />
+<p><strong>Failed to stat file ‘/dev/mdb5_ctrl’: No such file or directory</strong></p>
+<p>The client driver module is not loaded, or it failed to create the device nodes properly.</p>
+<p>Load the client driver module:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>modprobe<span class="w"> </span>./bin/<span class="sb">`</span>uname<span class="w"> </span>-p<span class="sb">`</span>/mdb5-dmaclient-drv.ko<span class="w"> </span><span class="nv">device_dbdf</span><span class="o">=</span><span class="s2">&quot;0000:01:00.0&quot;</span><span class="w"> </span><span class="nv">dma_dev_id</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>Verify device nodes are created:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>-la<span class="w"> </span>/dev/mdb*
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="functions.html" class="btn btn-neutral float-left" title="Global Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="migration-guide.html" class="btn btn-neutral float-right" title="Migration Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Advanced Micro Devices, Inc.
+      <span class="lastupdated">Last updated on Jul 09, 2026.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

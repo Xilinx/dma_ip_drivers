@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Completion & Control - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html">CLI Usage Examples</a></li>
+            <li><a href="application-code.html">Application Code Migration</a></li>
+            <li><a href="driver-init.html">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html" class="active">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <section id="driver-code-2">
+            <h2>7. Code Migration Reference (continued)</h2>
+
+            <div class="admonition note">
+                <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
+                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5-DMA implementations.</p>
+            </div>
+
+            <hr>
+
+            <h4>7.2.5 Completion Handling</h4>
+            <p>QDMA uses callback-based completion with async I/O support. MDB5 uses DMAEngine callback mechanism with <code>dmaengine_result</code>.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/src/cdev.c)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static int qdma_req_completed(
+    struct qdma_request *req,
+    unsigned int bytes_done, int err)
+{
+    struct qdma_io_cb *qiocb = container_of(
+        req, struct qdma_io_cb, req);
+    struct cdev_async_io *caio;
+    ssize_t res, res2;
+
+    caio = (struct cdev_async_io *)
+        qiocb-&gt;private;
+
+    unmap_user_buf(qiocb, req-&gt;write);
+    iocb_release(qiocb);
+
+    caio-&gt;res2 |= (err &lt; 0) ? err : 0;
+    if (caio-&gt;res2)
+        caio-&gt;err_cnt++;
+    caio-&gt;cmpl_count++;
+
+    if (caio-&gt;cmpl_count == caio-&gt;req_count) {
+        res = caio-&gt;cmpl_count - caio-&gt;err_cnt;
+        res2 = caio-&gt;res2;
+        caio-&gt;iocb-&gt;ki_complete(
+            caio-&gt;iocb, res);
+        kfree(caio-&gt;qiocb);
+        kmem_cache_free(cdev_cache, caio);
+    }
+    return 0;
+}</code></pre></td>
+                    <td><pre><code>static void amd_mdb5_dma_comp_result_cb(
+    void *args,
+    const struct dmaengine_result *res)
+{
+    struct amd_mdb5_dma_aio_request *aio_req = NULL;
+    struct amd_mdb5_dma_io_request *io_req = NULL;
+    struct amd_mdb5_dma_channel *hchan = NULL;
+    struct amd_mdb5_dma_io_completion *comp;
+
+    comp = (struct amd_mdb5_dma_io_completion *)args;
+    if (!comp || comp-&gt;comp_handled)
+        return;
+
+    if ((io_req = amd_mdb5_dma_comp2ioreq(comp))
+            != NULL) {
+        if ((comp-&gt;flags &amp;
+             (AMD_MDB5_DMA_CHAN_ASYNC_MODE |
+              AMD_MDB5_DMA_CHAN_APERTURE_MODE)) &amp;&amp;
+            (aio_req =
+             amd_mdb5_dma_ioreq2aioreq(io_req))
+                != NULL) {
+            hchan = aio_req-&gt;hchan;
+        } else {
+            hchan = (struct amd_mdb5_dma_channel *)
+                io_req-&gt;private;
+        }
+    }
+
+    /* An abort occurred */
+    if (res-&gt;result == DMA_TRANS_ABORTED) {
+        amd_mdb5_dma_handle_abort(hchan,
+            comp-&gt;flags &amp;
+                AMD_MDB5_DMA_CHAN_ASYNC_MODE,
+            comp);
+        return;
+    }
+
+    if (amd_mdb5_dma_comp_status_get(comp)
+            == AMD_MDB5_DMA_REQ_ERROR)
+        return;
+
+    if (hchan)
+        atomic64_inc(&amp;hchan-&gt;stats.intr_rcvd);
+
+    amd_mdb5_dma_comp_status_set(comp,
+        AMD_MDB5_DMA_REQ_INTR_RECV);
+    if (comp-&gt;kth &amp;&amp;
+        (comp-&gt;flags &amp;
+         AMD_MDB5_DMA_CHAN_ASYNC_MODE))
+        comp-&gt;kth-&gt;schedule = 1;
+
+    if (comp-&gt;wq)
+        wake_up_interruptible(comp-&gt;wq);
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.2.6 File Operations</h4>
+            <p>Both expose character device interface. QDMA uses cdev with read/write/ioctl; MDB5 uses standard read/write with async I/O support.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/src/cdev.c)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static const struct file_operations
+cdev_gen_fops = {
+    .owner = THIS_MODULE,
+    .open = cdev_gen_open,
+    .release = cdev_gen_close,
+    .write = cdev_gen_write,
+    .write_iter = cdev_write_iter,
+    .read = cdev_gen_read,
+    .read_iter = cdev_read_iter,
+    .unlocked_ioctl = cdev_gen_ioctl,
+    .llseek = cdev_gen_llseek,
+};</code></pre></td>
+                    <td><pre><code>static struct file_operations
+mdb5_dma_chan_fops = {
+    .owner      = THIS_MODULE,
+    .open       = mdb5_dma_ops_open,
+    .release    = mdb5_dma_ops_release,
+    .read       = mdb5_dma_ops_read,
+    .write      = mdb5_dma_ops_write,
+    .read_iter  = mdb5_dma_ops_read_aio,
+    .write_iter = mdb5_dma_ops_write_aio,
+    .llseek     = mdb5_dma_ops_llseek,
+};</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h4>7.2.7 Control Ioctl Handler</h4>
+            <p>QDMA uses netlink with <code>genl_ops</code> for control commands. MDB5 uses ioctl on <code>/dev/mdb5_ctrl</code>.</p>
+
+            <table class="code-comparison">
+                <tr>
+                    <th>QDMA (driver/src/nl.c)</th>
+                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                </tr>
+                <tr>
+                    <td><pre><code>static struct genl_ops xnl_ops[] = {
+    {
+        .cmd = XNL_CMD_DEV_LIST,
+        .policy = xnl_policy,
+        .doit = xnl_dev_list,
+    },
+    {
+        .cmd = XNL_CMD_Q_ADD,
+        .policy = xnl_policy,
+        .doit = xnl_q_add,
+    },
+    {
+        .cmd = XNL_CMD_Q_START,
+        .policy = xnl_policy,
+        .doit = xnl_q_start,
+    },
+    {
+        .cmd = XNL_CMD_Q_STOP,
+        .policy = xnl_policy,
+        .doit = xnl_q_stop,
+    },
+    {
+        .cmd = XNL_CMD_Q_DEL,
+        .policy = xnl_policy,
+        .doit = xnl_q_del,
+    },
+    // ...
+};</code></pre></td>
+                    <td><pre><code>static long mdb5_dma_cdev_ctrl_ioctl(
+    struct file *filep,
+    unsigned int cmd, unsigned long args)
+{
+    void __user *buf = (void __user *)args;
+    struct amd_mdb5_dma_cdev_ctrl *ctrl;
+
+    ctrl = filep->private_data;
+
+    switch (cmd) {
+    case AMD_MDB5_DMA_CTRL_CMD_MODE:
+        copy_from_user(&cmode, buf, sz);
+        mdb5_dma_ctrl_cmd_mode(ctrl,
+            &cmode, true);
+        break;
+    case AMD_MDB5_DMA_CTRL_CMD_STATS:
+        mdb5_dma_ctrl_cmd_stats(ctrl, &cstats);
+        break;
+    }
+}</code></pre></td>
+                </tr>
+            </table>
+
+            <hr>
+
+            <h2>8. References</h2>
+            <p>The following resources provide additional information:</p>
+            <ul>
+                <li><a href="https://xilinx.github.io/dma_ip_drivers/2023.1/QDMA/linux-kernel/html/index.html">QDMA Linux Driver Documentation (AMD)</a></li>
+                <li><a href="https://pages.gitenterprise.xilinx.com/naj/mdb-dma-docs/getting-started.html">MDB5-DMA Documentation</a></li>
+                <li><a href="https://docs.kernel.org/driver-api/dmaengine/client.html">Linux DMAEngine Client API Guide</a></li>
+                <li><a href="https://elixir.bootlin.com/linux/v6.8/source/drivers/dma/dw-edma">dw-edma Source Code</a></li>
+            </ul>
+        </section>
+
+        <div class="page-navigation">
+            <a href="driver-init.html" class="nav-btn prev">
+                <span class="nav-icon">arrow_back</span>
+                <span>
+                    <span class="nav-direction">Previous</span>
+                    <span class="nav-title">Driver Code: Init &amp; DMA</span>
+                </span>
+            </a>
+        </div>
+    </main>
+
+    <script>
+    // VS Code-style syntax highlighting for C code
+    function highlightCode() {
+        const codeBlocks = document.querySelectorAll('.code-comparison code');
+        
+        const keywords = ['int', 'uint32_t', 'uint64_t', 'uint8_t', 'int32_t', 'char', 'void', 
+                          'struct', 'static', 'unsigned', 'return', 'if', 'do', 'while', 
+                          'for', 'ssize_t', 'size_t', 'off_t', 'const', 'long', 'short',
+                          'goto', 'break', 'continue', 'else', 'switch', 'case', 'default',
+                          'enum', 'sizeof', 'typedef', 'union', 'volatile', 'bool', 'true', 'false',
+                          'u16', 'u32', 'u64', 'u8', 's16', 's32', 's64', 's8'];
+        
+        const types = ['xnl_dev_info', 'xcmd_info', 'mdb5_dma_reg', 'mdb5_dma_ioctl',
+                       'mdb5_dma_common', 'ctrl_mode', 'qdma_request', 'sk_buff', 
+                       'genl_info', 'file', 'amd_mdb5_dma_channel', 'amd_mdb5_dma_io_request',
+                       'file_operations', 'genl_ops', 'pci_driver', 'pci_device_id',
+                       'dma_chan', 'dma_async_tx_descriptor', 'dma_cookie_t', 'dmaengine_result',
+                       'dma_slave_config', 'amd_mdb5_dma_io_completion', 'qdma_io_cb',
+                       'qdma_descq', 'xlnx_dma_dev', 'xlnx_pci_dev', 'qdma_queue_conf',
+                       'cdev_async_io', 'dma_data_direction', 'io_req_param'];
+        
+        codeBlocks.forEach(block => {
+            let code = block.textContent;
+            const tokens = [];
+            let tokenIndex = 0;
+            
+            code = code.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+                const token = `__COMMENT_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="comment">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = code.replace(/\/\/.*/g, (match) => {
+                const token = `__COMMENT_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="comment">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = code.replace(/"([^"\\]|\\.)*"/g, (match) => {
+                const token = `__STRING_${tokenIndex}__`;
+                tokens[tokenIndex] = `<span class="string">${escapeHtml(match)}</span>`;
+                tokenIndex++;
+                return token;
+            });
+            
+            code = escapeHtml(code);
+            code = code.replace(/#\w+/g, '<span class="preprocessor">$&</span>');
+            code = code.replace(/\b(0x[0-9a-fA-F]+)\b/g, '<span class="number">$1</span>');
+            code = code.replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+            
+            keywords.forEach(keyword => {
+                const regex = new RegExp(`\\b${keyword}\\b`, 'g');
+                code = code.replace(regex, `<span class="keyword">${keyword}</span>`);
+            });
+            
+            types.forEach(type => {
+                const regex = new RegExp(`\\b${type}\\b`, 'g');
+                code = code.replace(regex, `<span class="type">${type}</span>`);
+            });
+            
+            code = code.replace(/\b([a-z_][a-z0-9_]*)\s*\(/gi, '<span class="function">$1</span>(');
+            
+            for (let i = 0; i < tokenIndex; i++) {
+                code = code.replace(`__COMMENT_${i}__`, tokens[i]);
+                code = code.replace(`__STRING_${i}__`, tokens[i]);
+            }
+            
+            block.innerHTML = code;
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    highlightCode();
+    </script>
+
+    <footer>
+        © 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>

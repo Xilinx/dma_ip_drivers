@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction & Architecture - Migration Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-title"><a href="toc.html">Table of Contents</a></div>
+        <ul class="sidebar-nav">
+            <li><a href="introduction.html" class="active">Introduction & Architecture</a></li>
+            <li><a href="migration-process.html">Migration Process & Testing</a></li>
+            <li><a href="usage-examples.html">CLI Usage Examples</a></li>
+            <li><a href="application-code.html">Application Code Migration</a></li>
+            <li><a href="driver-init.html">Driver Code: Init & DMA</a></li>
+            <li><a href="driver-control.html">Driver Code: Completion</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+        <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p>This guide outlines the steps to migrate from the <strong>QDMA Linux driver</strong> to the <strong>MDB5-DMA driver</strong>. MDB5-DMA retains the familiar userspace applications and command structure (<code>dma-to-device</code>, <code>dma-from-device</code>, <code>dma-ctl</code>, <code>dma-xfer</code>) while transitioning the underlying driver architecture from a custom libqdma framework to the standard Linux DMAEngine API with in-kernel dw-edma controller. Most application-level code patterns and workflows remain unchanged, with migration primarily focused on adapting to the new queue/channel management model.</p>
+        </section>
+
+        <section id="architecture">
+            <h2>2. Key Architecture Differences</h2>
+
+            <h3>2.1 Architectural Overview</h3>
+            <p>While MDB5-DMA maintains the same userspace application names and similar command-line interfaces, the underlying drivers use the standard kernel frameworks:</p>
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>QDMA</th>
+                    <th>MDB5-DMA</th>
+                </tr>
+                <tr>
+                    <td><strong>Controller Driver</strong></td>
+                    <td>Custom out-of-tree module (<code>qdma-pf.ko</code>, <code>qdma-vf.ko</code>)</td>
+                    <td>In-kernel <code>dw-edma</code> (built-in)</td>
+                </tr>
+                <tr>
+                    <td><strong>Driver Architecture</strong></td>
+                    <td>Single driver module</td>
+                    <td>Separate client driver module (<code>mdb5-dmaclient-drv.ko</code>) on top of dw-edma</td>
+                </tr>
+                <tr>
+                    <td><strong>User Interface</strong></td>
+                    <td>Character device with Ioctl, Sysfs and Netlink</td>
+                    <td>Character device with Ioctl</td>
+                </tr>
+                <tr>
+                    <td><strong>Queue Model</strong></td>
+                    <td>Queue based (up to 2048/4096 queues)</td>
+                    <td>Channel based (8 read + 8 write channels)</td>
+                </tr>
+                <tr>
+                    <td><strong>Transfer Modes</strong></td>
+                    <td>MM (Memory Mapped), ST (Streaming)</td>
+                    <td>MM (Memory Mapped)</td>
+                </tr>
+                <tr>
+                    <td><strong>Interrupt Modes</strong></td>
+                    <td>Poll, Direct, Indirect (Aggregation), Legacy, Auto</td>
+                    <td>Interrupt-driven with poll thread</td>
+                </tr>
+                <tr>
+                    <td><strong>SR-IOV</strong></td>
+                    <td>Yes (4 PF, 252 VF)</td>
+                    <td>Not supported</td>
+                </tr>
+                <tr>
+                    <td><strong>Framework</strong></td>
+                    <td>Custom Libqdma</td>
+                    <td>Linux DMAEngine API</td>
+                </tr>
+                <tr>
+                    <td><strong>Descriptor Bypass</strong></td>
+                    <td>Supported (<code>desc_bypass_en</code>, <code>pfetch_bypass_en</code> flags via dma-ctl)</td>
+                    <td>Not supported</td>
+                </tr>
+            </table>
+        </section>
+
+        <div class="page-navigation">
+            <a href="toc.html" class="nav-btn prev">
+                <span class="nav-icon">arrow_back</span>
+                <span>
+                    <span class="nav-direction">Previous</span>
+                    <span class="nav-title">Table of Contents</span>
+                </span>
+            </a>
+            <a href="migration-process.html" class="nav-btn next">
+                <span>
+                    <span class="nav-direction">Next</span>
+                    <span class="nav-title">Migration Process &amp; Testing</span>
+                </span>
+                <span class="nav-icon">arrow_forward</span>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        © 2026, Advanced Micro Devices, Inc.
+    </footer>
+    <script src="theme-toggle.js"></script>
+</body>
+</html>
