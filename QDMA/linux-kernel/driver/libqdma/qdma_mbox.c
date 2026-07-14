@@ -2,7 +2,7 @@
  * This file is part of the Xilinx DMA IP Core driver for Linux
  *
  * Copyright (c) 2017-2022, Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2024, Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2026, Advanced Micro Devices, Inc. All rights reserved.
  *
  * This source code is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -436,7 +436,7 @@ static void mbox_timer_handler(struct timer_list *t)
 static void mbox_timer_handler(unsigned long arg)
 #endif
 {
-#if LINUX_VERSION_CODE > KERNEL_VERSION(6, 16, 0)
+#if defined(QDMA_HAVE_TIMER_CONTAINER_OF) /* linux v6.16+ or RHEL 9.8+/10.1+ */
 	struct qdma_mbox *mbox = timer_container_of(mbox, t, timer);
 #elif KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE
 	struct qdma_mbox *mbox = from_timer(mbox, t, timer);
