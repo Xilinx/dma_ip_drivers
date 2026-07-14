@@ -10,7 +10,7 @@
 <body>
     <!-- Fixed Header -->
     <header class="fixed-header">
-        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <h1>Migration Guide: QDMA to MDB5 DMA</h1>
         <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
     </header>
 
@@ -31,19 +31,19 @@
     <main class="content">
         <section id="introduction">
             <h2>1. Introduction</h2>
-            <p>This guide outlines the steps to migrate from the <strong>QDMA Linux driver</strong> to the <strong>MDB5-DMA driver</strong>. MDB5-DMA retains the familiar userspace applications and command structure (<code>dma-to-device</code>, <code>dma-from-device</code>, <code>dma-ctl</code>, <code>dma-xfer</code>) while transitioning the underlying driver architecture from a custom libqdma framework to the standard Linux DMAEngine API with in-kernel dw-edma controller. Most application-level code patterns and workflows remain unchanged, with migration primarily focused on adapting to the new queue/channel management model.</p>
+            <p>This guide outlines the steps to migrate from the <strong>QDMA Linux driver</strong> to the <strong>MDB5 DMA driver</strong>. MDB5 DMA retains the familiar userspace applications and command structure (<code>dma-to-device</code>, <code>dma-from-device</code>, <code>dma-ctl</code>, <code>dma-xfer</code>) while transitioning the underlying driver architecture from a custom libqdma framework to the standard Linux DMAEngine API with in-kernel dw-edma controller. Most application-level code patterns and workflows remain unchanged, with migration primarily focused on adapting to the new queue/channel management model.</p>
         </section>
 
         <section id="architecture">
             <h2>2. Key Architecture Differences</h2>
 
             <h3>2.1 Architectural Overview</h3>
-            <p>While MDB5-DMA maintains the same userspace application names and similar command-line interfaces, the underlying drivers use the standard kernel frameworks:</p>
+            <p>While MDB5 DMA maintains the same userspace application names and similar command-line interfaces, the underlying drivers use the standard kernel frameworks:</p>
             <table>
                 <tr>
                     <th>Aspect</th>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><strong>Controller Driver</strong></td>

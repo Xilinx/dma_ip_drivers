@@ -10,7 +10,7 @@
 <body>
     <!-- Fixed Header -->
     <header class="fixed-header">
-        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <h1>Migration Guide: QDMA to MDB5 DMA</h1>
         <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
     </header>
 
@@ -31,20 +31,20 @@
     <main class="content">
         <section id="usage-examples">
             <h2>8. CLI Usage Examples</h2>
-            <p>This section provides side-by-side command-line examples for the most common DMA operations, showing how each userspace application is invoked in QDMA vs. MDB5-DMA.</p>
+            <p>This section provides side-by-side command-line examples for the most common DMA operations, showing how each userspace application is invoked in QDMA vs. MDB5 DMA.</p>
             
             <div class="admonition note">
                 <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
-                <p><strong>C2H</strong> (Card-to-Host) maps to the <strong>read</strong> direction, and <strong>H2C</strong> (Host-to-Card) maps to the <strong>write</strong> direction. In MDB5-DMA, the direction flag <code>-d</code> uses <code>read</code>/<code>write</code> accordingly.</p>
+                <p><strong>C2H</strong> (Card-to-Host) maps to the <strong>read</strong> direction, and <strong>H2C</strong> (Host-to-Card) maps to the <strong>write</strong> direction. In MDB5 DMA, the direction flag <code>-d</code> uses <code>read</code>/<code>write</code> accordingly.</p>
             </div>
             
             <div class="admonition warning">
                 <div class="admonition-title"><span class="icon">⚠</span> Warning</div>
-                <p>QDMA and MDB5-DMA userspace applications share the same binary names and many of the same flag letters, but several flags have different meanings. Refer to the <a href="#flag-differences">Flag Differences</a> section for details.</p>
+                <p>QDMA and MDB5 DMA userspace applications share the same binary names and many of the same flag letters, but several flags have different meanings. Refer to the <a href="#flag-differences">Flag Differences</a> section for details.</p>
             </div>
 
             <!-- Flag Differences -->
-            <h3 id="flag-differences">Flag Differences Between QDMA and MDB5-DMA userspace applications</h3>
+            <h3 id="flag-differences">Flag Differences Between QDMA and MDB5 DMA userspace applications</h3>
             <p>The following table provides a comprehensive flag-by-flag comparison across both the userspace applications.
                 The same option can carry different meanings depending on the userspace application.</p>
 
@@ -54,7 +54,7 @@
                         <th style="width:6%;">Flag</th>
                         <th style="width:22%;">Application(s)</th>
                         <th style="width:36%;">QDMA</th>
-                        <th style="width:36%;">MDB5-DMA</th>
+                        <th style="width:36%;">MDB5 DMA</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -181,7 +181,7 @@
             </table>
 
             <p>For the complete list of options, see the
-               <a href="https://pages.gitenterprise.xilinx.com/naj/mdb-dma-docs/user-applications.html">MDB5-DMA User Applications</a>
+               <a href="https://pages.gitenterprise.xilinx.com/naj/mdb-dma-docs/user-applications.html">MDB5 DMA User Applications</a>
                reference and the
                <a href="https://xilinx.github.io/dma_ip_drivers/2023.1/QDMA/linux-kernel/html/userguide.html">QDMA User Guide</a>.</p>
 
@@ -192,7 +192,7 @@
             <table class="code-comparison">
                 <tr>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><pre><code># Step 1: Setup queue
@@ -232,7 +232,7 @@ $ dma-from-device -c 0 -a 0xaa002000 \
             <table class="code-comparison">
                 <tr>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><pre><code># Step 1: Setup queue
@@ -278,7 +278,7 @@ $ dma-to-device -c 0 -a 0xaa002000 \
             <table class="code-comparison">
                 <tr>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><pre><code># Read a register
@@ -316,7 +316,7 @@ $ dma-ctl -w 0x100 0x1 -s 06:00.0</code></pre>
             <table class="code-comparison">
                 <tr>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><pre><code># List devices
@@ -370,11 +370,11 @@ $ dma-ctl -a 4096 -c 0 -d write</code></pre>
 
             <!-- Transfer test config based (dma-xfer)-->
             <h3 id="batch-xfer">8.5 Transfer test config based (dma-xfer)</h3>
-            <p>Both userspace applications use a configuration file. QDMA's config specifies queue parameters and netlink-based queue setup; MDB5-DMA's config specifies channel parameters and transfer mode.</p>
+            <p>Both userspace applications use a configuration file. QDMA's config specifies queue parameters and netlink-based queue setup; MDB5 DMA's config specifies channel parameters and transfer mode.</p>
             <table class="code-comparison">
                 <tr>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><pre><code># Run with config file
@@ -422,7 +422,7 @@ outputfile=out.txt</code></pre></td>
             <table class="code-comparison">
                 <tr>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr>
                     <td><pre><code># Run performance test

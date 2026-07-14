@@ -10,7 +10,7 @@
 <body>
     <!-- Fixed Header -->
     <header class="fixed-header">
-        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <h1>Migration Guide: QDMA to MDB5 DMA</h1>
         <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
     </header>
 
@@ -34,7 +34,7 @@
 
             <div class="admonition note">
                 <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
-                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5-DMA implementations.</p>
+                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5 DMA implementations.</p>
             </div>
 
             <hr>
@@ -45,7 +45,7 @@
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/src/cdev.c)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static int qdma_req_completed(
@@ -143,7 +143,7 @@
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/src/cdev.c)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static const struct file_operations
@@ -180,7 +180,7 @@ mdb5_dma_chan_fops = {
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/src/nl.c)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static struct genl_ops xnl_ops[] = {
@@ -240,7 +240,7 @@ mdb5_dma_chan_fops = {
             <p>The following resources provide additional information:</p>
             <ul>
                 <li><a href="https://xilinx.github.io/dma_ip_drivers/2023.1/QDMA/linux-kernel/html/index.html">QDMA Linux Driver Documentation (AMD)</a></li>
-                <li><a href="https://pages.gitenterprise.xilinx.com/naj/mdb-dma-docs/getting-started.html">MDB5-DMA Documentation</a></li>
+                <li><a href="https://pages.gitenterprise.xilinx.com/naj/mdb-dma-docs/getting-started.html">MDB5 DMA Documentation</a></li>
                 <li><a href="https://docs.kernel.org/driver-api/dmaengine/client.html">Linux DMAEngine Client API Guide</a></li>
                 <li><a href="https://elixir.bootlin.com/linux/v6.8/source/drivers/dma/dw-edma">dw-edma Source Code</a></li>
             </ul>

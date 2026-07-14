@@ -10,7 +10,7 @@
 <body>
     <!-- Fixed Header -->
     <header class="fixed-header">
-        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <h1>Migration Guide: QDMA to MDB5 DMA</h1>
         <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
     </header>
 
@@ -31,11 +31,11 @@
     <main class="content">
         <section id="code-reference">
             <h2>7. Code Migration Reference</h2>
-            <p>This section provides side-by-side code comparisons between QDMA and MDB5-DMA implementations for key operations.</p>
+            <p>This section provides side-by-side code comparisons between QDMA and MDB5 DMA implementations for key operations.</p>
 
             <div class="admonition note">
                 <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
-                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5-DMA implementations.</p>
+                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5 DMA implementations.</p>
             </div>
 
             <h3 id="application-code">7.1 Application Code</h3>
@@ -46,7 +46,7 @@
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (apps/dma-utils/dmactl_reg.c)</th>
-                    <th>MDB5-DMA (client-apps/dma-utils/dma_common_utils.c)</th>
+                    <th>MDB5 DMA (client-apps/dma-utils/dma_common_utils.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static int32_t reg_read_mmap(
@@ -111,12 +111,12 @@ error:
             <hr>
 
             <h4>7.1.2 Queue/Channel Operations (dma-ctl)</h4>
-            <p>QDMA uses netlink for queue management (add, start, stop, delete queues). In contrast, MDB5-DMA channels are always available and do not require explicit creation or destruction. The <code>dma-ctl</code> utility in MDB5-DMA provides various channel management capabilities including: configuring transfer modes (Simple or Scatter-Gather), setting aperture size for SG mode, displaying channel statistics, and reading/writing registers for debugging purposes.</p>
+            <p>QDMA uses netlink for queue management (add, start, stop, delete queues). In contrast, MDB5 DMA channels are always available and do not require explicit creation or destruction. The <code>dma-ctl</code> utility in MDB5 DMA provides various channel management capabilities including: configuring transfer modes (Simple or Scatter-Gather), setting aperture size for SG mode, displaying channel statistics, and reading/writing registers for debugging purposes.</p>
 
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (apps/dma-utils/dmactl.c)</th>
-                    <th>MDB5-DMA (client-apps/dma-ctl/dma_ctl.c)</th>
+                    <th>MDB5 DMA (client-apps/dma-ctl/dma_ctl.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>int qdma_q_add(struct xcmd_info *cmd)
@@ -210,7 +210,7 @@ static int process_cmd(struct mdb5_dma_common *h)
                 <li>Device nodes created dynamically: <code>/dev/qdma&lt;BDF&gt;-MM-&lt;QID&gt;</code></li>
             </ul>
 
-            <p><strong>MDB5-DMA Approach:</strong></p>
+            <p><strong>MDB5 DMA Approach:</strong></p>
             <ul>
                 <li>Channels device nodes are created by client driver (8 read + 8 write)</li>
                 <li>Channel information passed via standard file descriptors</li>
@@ -222,7 +222,7 @@ static int process_cmd(struct mdb5_dma_common *h)
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (apps/dma-xfer/dmaxfer.c)</th>
-                    <th>MDB5-DMA (client-apps/dma-xfer/dma_xfer.c)</th>
+                    <th>MDB5 DMA (client-apps/dma-xfer/dma_xfer.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>/* QDMA: Explicit queue management */
@@ -279,7 +279,7 @@ close(fd);</code></pre></td>
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (apps/dma-utils/dma_xfer_utils.c)</th>
-                    <th>MDB5-DMA (client-apps/dma-utils/dma_common_utils.c)</th>
+                    <th>MDB5 DMA (client-apps/dma-utils/dma_common_utils.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>ssize_t write_from_buffer(char *fname,
@@ -351,7 +351,7 @@ error:
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (apps/dma-utils/dma_xfer_utils.c)</th>
-                    <th>MDB5-DMA (client-apps/dma-utils/dma_common_utils.c)</th>
+                    <th>MDB5 DMA (client-apps/dma-utils/dma_common_utils.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>ssize_t read_to_buffer(char *fname,
@@ -433,7 +433,7 @@ error:
                 <li>Explicitly destroys queues (stop → delete sequence)</li>
             </ul>
 
-            <p><strong>MDB5-DMA Approach:</strong></p>
+            <p><strong>MDB5 DMA Approach:</strong></p>
             <ul>
                 <li>Parses config file for channel parameters (mode, direction, number of channels, transfer mode)</li>
                 <li>Validates channel count against maximum supported channels</li>
@@ -447,7 +447,7 @@ error:
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (apps/dma-xfer/dmaxfer.c)</th>
-                    <th>MDB5-DMA (client-apps/dma-xfer/dma_xfer.c)</th>
+                    <th>MDB5 DMA (client-apps/dma-xfer/dma_xfer.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>int main(int argc, char *argv[])

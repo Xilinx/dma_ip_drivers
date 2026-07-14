@@ -10,7 +10,7 @@
 <body>
     <!-- Fixed Header -->
     <header class="fixed-header">
-        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <h1>Migration Guide: QDMA to MDB5 DMA</h1>
         <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
     </header>
 
@@ -34,18 +34,18 @@
 
             <div class="admonition note">
                 <div class="admonition-title"><span class="icon">ℹ</span> Note</div>
-                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5-DMA implementations.</p>
+                <p>The code snippets shown below highlight the core functionality to illustrate the similarities and differences between QDMA and MDB5 DMA implementations.</p>
             </div>
 
             <h3>7.2 Driver Code</h3>
 
             <h4>7.2.1 Module Initialization</h4>
-            <p>Both drivers follow standard Linux module initialization patterns. QDMA initializes its custom libqdma framework and netlink interface for queue management, while MDB5-DMA integrates with the DMAEngine framework using <code>dma_request_channel()</code> to discover available DMA channels.</p>
+            <p>Both drivers follow standard Linux module initialization patterns. QDMA initializes its custom libqdma framework and netlink interface for queue management, while MDB5 DMA integrates with the DMAEngine framework using <code>dma_request_channel()</code> to discover available DMA channels.</p>
 
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/src/qdma_mod.c)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-mod.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-mod.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static struct pci_driver pci_driver = {
@@ -106,7 +106,7 @@ amd_mdb5_dma_client_mod_init(void)
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/src/nl.c - xnl_q_add)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-mod.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-mod.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static int xnl_q_add(struct sk_buff *skb2,
@@ -169,7 +169,7 @@ amd_mdb5_dma_client_mod_init(void)
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/src/cdev.c, driver/libqdma/libqdma_export.c)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>static ssize_t cdev_gen_read_write(
@@ -238,7 +238,7 @@ amd_mdb5_dma_client_mod_init(void)
             <table class="code-comparison">
                 <tr>
                     <th>QDMA (driver/libqdma/libqdma_export.c, driver/src/cdev.c)</th>
-                    <th>MDB5-DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
+                    <th>MDB5 DMA (client-driver/mdb5-dmaclient-cdev.c)</th>
                 </tr>
                 <tr>
                     <td><pre><code>ssize_t qdma_request_submit(

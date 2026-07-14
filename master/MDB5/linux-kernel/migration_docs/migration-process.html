@@ -10,7 +10,7 @@
 <body>
     <!-- Fixed Header -->
     <header class="fixed-header">
-        <h1>Migration Guide: QDMA to MDB5-DMA</h1>
+        <h1>Migration Guide: QDMA to MDB5 DMA</h1>
         <a href="../software_docs/index.html" class="header-back-btn"><span class="ms-icon">arrow_back</span> Software Docs</a>
     </header>
 
@@ -78,14 +78,14 @@ make</code></pre>
             <ul>
                 <li><strong>Read (C2H)</strong>:
                     <pre><code>QDMA: /dev/qdma&lt;BDF&gt;-MM-&lt;Q&gt;</code></pre>
-                    <pre><code>MDB5-DMA: /dev/mdb5_read&lt;00-07&gt;</code></pre>
+                    <pre><code>MDB5 DMA: /dev/mdb5_read&lt;00-07&gt;</code></pre>
                 </li>
                 <li><strong>Write (H2C)</strong>:
                     <pre><code>QDMA: /dev/qdma&lt;BDF&gt;-MM-&lt;Q&gt;</code></pre>
-                    <pre><code>MDB5-DMA: /dev/mdb5_write&lt;00-07&gt;</code></pre>
+                    <pre><code>MDB5 DMA: /dev/mdb5_write&lt;00-07&gt;</code></pre>
                 </li>
                 <li><strong>Control:</strong>
-                    <pre><code>MDB5-DMA: /dev/mdb5_ctrl</code></pre>
+                    <pre><code>MDB5 DMA: /dev/mdb5_ctrl</code></pre>
                 </li>
             </ul>
             <div class="admonition note">
@@ -98,19 +98,19 @@ make</code></pre>
             <h5>H2C Transfer (dma-to-device)</h5>
             <p>QDMA - uses device path with BDF and queue number:</p>
             <pre><code>dma-to-device -d /dev/qdma06000-MM-0 -s 1024 -f input.bin</code></pre>
-            <p>MDB5-DMA - uses channel index:</p>
+            <p>MDB5 DMA - uses channel index:</p>
             <pre><code>dma-to-device -c 0 -a 0xaa002000 -s 1024 -f input.bin</code></pre>
 
             <h5>C2H Transfer (dma-from-device)</h5>
             <p>QDMA:</p>
             <pre><code>dma-from-device -d /dev/qdma01000-MM-1 -s 64</code></pre>
-            <p>MDB5-DMA:</p>
+            <p>MDB5 DMA:</p>
             <pre><code>dma-from-device -c 0 -a 0xaa002000 -s 1024 -w output.bin</code></pre>
 
             <h5>Statistics</h5>
             <p>QDMA - view queue status:</p>
             <pre><code>dma-ctl dev list</code></pre>
-            <p>MDB5-DMA - view channel statistics:</p>
+            <p>MDB5 DMA - view channel statistics:</p>
             <pre><code>dma-ctl -S -c 0 -d write</code></pre>
 
             <h5>Transfer test config based (dma-xfer)</h5>
@@ -138,7 +138,7 @@ outputfile=OUTPUT</code></pre>
             <p>Execute QDMA test:</p>
             <pre><code>dma-xfer -c qdma_xfer_config.txt</code></pre>
             
-            <p>MDB5-DMA config file format:</p>
+            <p>MDB5 DMA config file format:</p>
             <pre><code>name=mm_xfer
 chan_mode=mm
 num_rd_channels=2
@@ -149,7 +149,7 @@ pkt_sz=1024
 io_type=io_sync
 inputfile=in.txt
 outputfile=out.txt</code></pre>
-            <p>Execute MDB5-DMA test:</p>
+            <p>Execute MDB5 DMA test:</p>
             <pre><code>dma-xfer -c mdb5_dma_xfer_config.txt</code></pre>
 
             <h5>Performance Testing (dma-perf)</h5>
@@ -176,7 +176,7 @@ pci_device=00</code></pre>
             <p>Execute QDMA performance test:</p>
             <pre><code>dma-perf -c qdma_perf_config.txt</code></pre>
 
-            <p>MDB5-DMA config file format:</p>
+            <p>MDB5 DMA config file format:</p>
             <pre><code>name=mm_perf
 chan_mode=mm
 pci_bus=1
@@ -192,7 +192,7 @@ num_pkt=64
 pkt_sz=64
 aperture_sz=0
 dump_en=true</code></pre>
-            <p>Execute MDB5-DMA performance test:</p>
+            <p>Execute MDB5 DMA performance test:</p>
             <pre><code>dma-perf -c mdb5_dma_perf_config.txt</code></pre>
         </section>
 
@@ -204,7 +204,7 @@ dump_en=true</code></pre>
                 <tr>
                     <th>Feature</th>
                     <th>QDMA</th>
-                    <th>MDB5-DMA</th>
+                    <th>MDB5 DMA</th>
                 </tr>
                 <tr><td><strong>Memory Mapped (MM) Mode</strong></td><td>Supported</td><td>Supported</td></tr>
                 <tr><td><strong>Streaming (ST) Mode</strong></td><td>Supported</td><td>Not supported</td></tr>
