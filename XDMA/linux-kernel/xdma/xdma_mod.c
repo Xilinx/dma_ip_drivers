@@ -223,6 +223,8 @@ static int probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	dev_set_drvdata(&pdev->dev, xpdev);
 
+	pci_save_state(pdev);
+
 	return 0;
 
 err_out:
