@@ -44,15 +44,15 @@ $(info ARCH = $(ARCH).)
 
 MOD_NAME := qdma$(PFVF_TYPE)
 
-EXTRA_CFLAGS += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror
-EXTRA_CFLAGS += $(FLAGS) $(CPPFLAGS) $(EXTRA_FLAGS)
-EXTRA_CFLAGS += -I$(srcdir)/../include
-EXTRA_CFLAGS += -I$(KSRC)/../include
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_soft_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_soft_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/eqdma_cpm5_access
-EXTRA_CFLAGS += -I$(srcdir)/../libqdma/qdma_access/qdma_cpm4_access
-EXTRA_CFLAGS += -I.
+ccflags-y += -DLINUX -D__KERNEL__ -DMODULE -O2 -pipe -Wall -Werror -Wno-error=empty-body
+ccflags-y += $(FLAGS) $(CPPFLAGS) $(EXTRA_FLAGS)
+ccflags-y += -I$(srcdir)/../include
+ccflags-y += -I$(KSRC)/../include
+ccflags-y += -I$(srcdir)/../libqdma/qdma_access/qdma_soft_access
+ccflags-y += -I$(srcdir)/../libqdma/qdma_access/eqdma_soft_access
+ccflags-y += -I$(srcdir)/../libqdma/qdma_access/eqdma_cpm5_access
+ccflags-y += -I$(srcdir)/../libqdma/qdma_access/qdma_cpm4_access
+ccflags-y += -I.
 
 # linux >= 3.13 genl_ops become part of the genl_family. And although
 # genl_register_family_with_ops() is still retained until kernel 4.10,
@@ -82,7 +82,7 @@ endif
 
 $(info EXTRA_FLAGS = $(EXTRA_FLAGS).)
 $(info ccflags-y = $(ccflags-y).)
-#EXTRA_CFLAGS += -DDEBUG
+#ccflags-y += -DDEBUG
 
 #For Kernel Images > 4.9.199 with CONFIG_STACK_VALIDATION=y and GCC version > 8 compiler throws spurious warnings
 #related to sibling calls and frame pointer save/setup. To supress these warnings
