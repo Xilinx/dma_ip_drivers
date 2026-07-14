@@ -247,6 +247,8 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 			struct qdma_descq *descq, struct qdma_request *req)
 {
 	struct qdma_sgt_req_cb *cb = qdma_req_cb_get(req);
+	unsigned long now, timeout, expire;
+	int rv;
 
 	/** if timeout is mentioned in the request,
 	 *  wait until the timeout occurs or wait until the
@@ -254,19 +256,33 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 	 */
 
 	if (req->timeout_ms) {
-#ifdef __XRT__
-		qdma_waitq_wait_event_timeout(cb->wq, cb->done &&
-				(descq->pidx == descq->cidx),
-				msecs_to_jiffies(req->timeout_ms));
-#else
-		qdma_waitq_wait_event_timeout(cb->wq, cb->done,
-				msecs_to_jiffies(req->timeout_ms));
-#endif
+		now = jiffies;
+		timeout = msecs_to_jiffies(req->timeout_ms);
+		expire = now + timeout;
+		do {
+			#ifdef __XRT__
+			rv = qdma_waitq_wait_event_timeout(cb->wq, cb->done &&
+					(descq->pidx == descq->cidx),
+					timeout);
+			#else
+			rv = qdma_waitq_wait_event_timeout(cb->wq, cb->done,
+					timeout);
+			#endif
+			if (rv >= 0)
+				break;
+			now = jiffies;
+			if (unlikely(now >= expire))
+				break;
+			timeout = expire - now;
+		} while (1);
 	} else {
-		qdma_waitq_wait_event(cb->wq, cb->done);
+		do {
+			rv = qdma_waitq_wait_event(cb->wq, cb->done);
+		} while (rv < 0);
 	}
 
 	lock_descq(descq);
+
 	/** if the call back is not done, request timed out
 	 *  delete the request list
 	 */
@@ -276,7 +292,7 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 	/** if the call back is not done but the status is updated
 	 *  return i/o error
 	 */
-	if (!cb->done || cb->status) {
+	if (unlikely(!cb->done || cb->status)) {
 		pr_err("%s: req 0x%p, %c,%u,%u/%u,0x%llx, done %d, err %d, tm %u.\n",
 				descq->conf.name,
 				req, req->write ? 'W' : 'R',
@@ -288,13 +304,13 @@ static int qdma_request_wait_for_cmpl(struct xlnx_dma_dev *xdev,
 				cb->status,
 			req->timeout_ms);
 		qdma_descq_dump(descq, NULL, 0, 1);
-		unlock_descq(descq);
-
-		return -EIO;
+		rv = -EIO;
+	} else {
+		rv = req->count;
 	}
 
 	unlock_descq(descq);
-	return 0;
+	return rv;
 }
 
 /*****************************************************************************/
@@ -2449,6 +2465,8 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	/** Initialize the wait queue */
 	qdma_waitq_init(&cb->wq);
 
+	cb->left = req->count;
+
 	pr_debug("%s: data len %u, ep 0x%llx, sgl 0x%p, sgl cnt %u, tm %u ms.\n",
 		descq->conf.name, req->count, req->ep_addr, req->sgl,
 		req->sgcnt, req->timeout_ms);
@@ -2492,11 +2510,13 @@ ssize_t qdma_request_submit(unsigned long dev_hndl, unsigned long id,
 	if (rv < 0)
 		goto unmap_sgl;
 
-	return cb->offset;
+	return rv;
 
 unmap_sgl:
-	if (!req->dma_mapped)
+	if (cb->unmap_needed) {
 		sgl_unmap(xdev->conf.pdev,  req->sgl, req->sgcnt, dir);
+		cb->unmap_needed = 0;
+	}
 
 	return rv;
 }
@@ -2507,6 +2527,12 @@ unmap_sgl:
  *  for dma operation (for both read and write)
  * This is a callback function called from upper layer(character device)
  * to handle the read/write request on the queues
+ * 
+ * If qdma_batch_request_submit fails during DMA mapping, it unwinds mapped
+ * requests and returns an error before enqueueing anything.
+ *
+ * Once requests are added to descq->work_list, normal completion should
+ * eventually call ki_complete through fp_done (qdma_req_completed).
  *
  * @param[in]	dev_hndl:	hndl retured from qdma_device_open()
  * @param[in]	id:			queue index
@@ -2525,6 +2551,7 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	enum dma_data_direction dir;
 	int rv = 0;
 	unsigned long i;
+	unsigned long mapped = 0;
 	struct qdma_request *req;
 	int st_c2h = 0;
 
@@ -2606,10 +2633,11 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 						descq->conf.name,
 						req->sgcnt,
 						req->count);
-					req->fp_done(req, 0, rv);
+					goto unmap_mapped;
 				}
 				cb->unmap_needed = 1;
 			}
+			mapped++;
 		}
 	}
 
@@ -2619,7 +2647,8 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 		unlock_descq(descq);
 		pr_err("%s descq %s NOT online.\n", xdev->conf.name,
 				descq->conf.name);
-		return -EINVAL;
+		rv = -EINVAL;
+		goto unmap_mapped;
 	}
 
 	for (i = 0; i < count; i++) {
@@ -2633,6 +2662,19 @@ ssize_t qdma_batch_request_submit(unsigned long dev_hndl, unsigned long id,
 	qdma_descq_proc_sgt_request(descq);
 
 	return 0;
+
+unmap_mapped:
+	for (i = 0; i < mapped; i++) {
+		req = reqv[i];
+		cb = qdma_req_cb_get(req);
+
+		if (cb->unmap_needed) {
+			sgl_unmap(xdev->conf.pdev, req->sgl, req->sgcnt, dir);
+			cb->unmap_needed = 0;
+		}
+	}
+
+	return rv;
 }
 
 #ifdef TANDEM_BOOT_SUPPORTED

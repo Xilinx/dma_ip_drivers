@@ -61,6 +61,7 @@ static LIST_HEAD(xlnx_phy_dev_list);
 static DEFINE_MUTEX(xlnx_phy_dev_mutex);
 
 struct cdev_async_io {
+	ssize_t res;
 	ssize_t res2;
 	unsigned long req_count;
 	unsigned long cmpl_count;
@@ -129,15 +130,20 @@ static int qdma_req_completed(struct qdma_request *req,
 
 	unmap_user_buf(qiocb, req->write);
 	iocb_release(qiocb);
-	caio->res2 |= (err < 0) ? err : 0;
-	if (caio->res2)
+	if (err < 0) {
+		if (!(caio->res2))
+			caio->res2 = err; // return the first error
 		caio->err_cnt++;
+	} else if (!(caio->res2)) {
+		caio->res += bytes_done; // add the iovec byte count; return the successful byte count before the first error
+	}
 	caio->cmpl_count++;
 	if (caio->cmpl_count == caio->req_count) {
-		res = caio->cmpl_count - caio->err_cnt;
+		res = caio->res;
 		res2 = caio->res2;
 #ifdef RHEL_RELEASE_VERSION
 #if RHEL_RELEASE_VERSION(9, 0) < RHEL_RELEASE_CODE
+		res = (res2 < 0) ? res2 : res;
 		caio->iocb->ki_complete(caio->iocb, res);
 #elif RHEL_RELEASE_VERSION(8, 0) < RHEL_RELEASE_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
@@ -146,6 +152,7 @@ static int qdma_req_completed(struct qdma_request *req,
 #endif
 #else
 #if KERNEL_VERSION(5, 16, 0) <= LINUX_VERSION_CODE
+		res = (res2 < 0) ? res2 : res;
 		caio->iocb->ki_complete(caio->iocb, res);
 #elif KERNEL_VERSION(4, 1, 0) <= LINUX_VERSION_CODE
 		caio->iocb->ki_complete(caio->iocb, res, res2);
@@ -266,6 +273,25 @@ static void unmap_user_buf(struct qdma_io_cb *iocb, bool write)
 		pr_err("sgl pages %d/%u.\n", i, iocb->pages_nr);
 
 	iocb->pages_nr = 0;
+}
+
+static void cdev_async_io_cleanup(struct cdev_async_io *caio,
+		unsigned long count, bool write)
+{
+	unsigned long i;
+
+	if (!caio)
+		return;
+
+	if (caio->qiocb) {
+		for (i = 0; i < count; i++) {
+			unmap_user_buf(&caio->qiocb[i], write);
+			iocb_release(&caio->qiocb[i]);
+		}
+		kfree(caio->qiocb);
+	}
+
+	kmem_cache_free(cdev_cache, caio);
 }
 
 static int map_user_buf_to_sgl(struct qdma_io_cb *iocb, bool write)
@@ -449,6 +475,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 			sizeof(struct qdma_request *)), GFP_KERNEL);
 	if (!caio->qiocb) {
 		pr_err("failed to allocate qiocb");
+		cdev_async_io_cleanup(caio, 0, true);
 		return -ENOMEM;
 	}
 
@@ -470,12 +497,12 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		caio->reqv[i]->ep_addr = (u64)pos;
 		pos += io[i].iov_len;
 		caio->reqv[i]->no_memcpy = xcdev->no_memcpy ? 1 : 0;
-		caio->reqv[i]->count = io->iov_len;
+		caio->reqv[i]->count = io[i].iov_len;
 		caio->reqv[i]->timeout_ms = 10 * 1000;	/* 10 seconds */
 		caio->reqv[i]->fp_done = qdma_req_completed;
 
 	}
-	if (i > 0) {
+	if (!rv && i == count) {
 		iocb->private = caio;
 		caio->iocb = iocb;
 		caio->req_count = i;
@@ -484,10 +511,13 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 				     caio->req_count, caio->reqv);
 		if (rv >= 0)
 			rv = -EIOCBQUEUED;
+		else {
+			iocb->private = NULL;
+			cdev_async_io_cleanup(caio, caio->req_count, true);
+		}
 	} else {
 		pr_err("failed with %d for %lu reqs", rv, caio->req_count);
-		kfree(caio->qiocb);
-		kmem_cache_free(cdev_cache, caio);
+		cdev_async_io_cleanup(caio, i, true);
 	}
 
 	return rv;
@@ -517,6 +547,7 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 	caio = kmem_cache_alloc(cdev_cache, GFP_KERNEL);
 	if (!caio) {
 		pr_err("failed to allocate qiocb");
+		cdev_async_io_cleanup(caio, 0, false);
 		return -ENOMEM;
 	}
 	memset(caio, 0, sizeof(struct cdev_async_io));
@@ -545,11 +576,11 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		caio->reqv[i]->ep_addr = (u64)pos;
 		pos += io[i].iov_len;
 		caio->reqv[i]->no_memcpy = xcdev->no_memcpy ? 1 : 0;
-		caio->reqv[i]->count = io->iov_len;
+		caio->reqv[i]->count = io[i].iov_len;
 		caio->reqv[i]->timeout_ms = 10 * 1000;	/* 10 seconds */
 		caio->reqv[i]->fp_done = qdma_req_completed;
 	}
-	if (i > 0) {
+	if (!rv && i == count) {
 		iocb->private = caio;
 		caio->iocb = iocb;
 		caio->req_count = i;
@@ -558,10 +589,13 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 				     caio->req_count, caio->reqv);
 		if (rv >= 0)
 			rv = -EIOCBQUEUED;
+		else {
+			iocb->private = NULL;
+			cdev_async_io_cleanup(caio, caio->req_count, false);
+		}
 	} else {
 		pr_err("failed with %d for %lu reqs", rv, caio->req_count);
-		kfree(caio->qiocb);
-		kmem_cache_free(cdev_cache, caio);
+		cdev_async_io_cleanup(caio, i, false);
 	}
 
 	return rv;
