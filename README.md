@@ -24,6 +24,24 @@ The XVSEC driver currently include the MCAP VSEC, but will be expanded to includ
 
 * [XVSEC Linux Kernel Reference Driver Comprehensive documentation](https://xilinx.github.io/dma_ip_drivers/)
 
+## AMD MDB5
+ 
+The AMD MDB5 DMA is an integrated block for multiple DMA/bridge for PCIe v5.0,
+enabling high-performance data transfer capabilities to a DMA controller.
+ 
+This repo contains:
+ 
+- **`client-driver`** uses the DMAEngine API and creates character
+  devices for userspace access, supporting 8 read and 8 write channels
+- **`client-apps`** provides userspace applications that interface with those character devices
+ 
+The client-driver integrates with the standard Linux DMAEngine framework via the
+in-kernel `dw-edma` controller, supporting 8 read and 8 write channels.
+ 
+### Getting Started
+* [MDB5 DMA Linux Driver Comprehensive Documentation](https://xilinx.github.io/dma_ip_drivers/master/MDB5/linux-kernel/software_docs/index.html)
+* [Migrating from QDMA to MDB5](https://xilinx.github.io/dma_ip_drivers/master/MDB5/linux-kernel/migration_docs/toc.html)
+
 ### Support
 
 Refer to Xilinx PCIe Forum for any queries/issues/support required w.r.t Xilinx's DMA IP Reference Drivers
