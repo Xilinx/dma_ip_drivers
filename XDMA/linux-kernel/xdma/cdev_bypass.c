@@ -18,20 +18,27 @@
  */
 #define pr_fmt(fmt)	KBUILD_MODNAME ":%s: " fmt, __func__
 
+#include <linux/slab.h>
+#include <linux/vmalloc.h>
 #include "libxdma_api.h"
 #include "xdma_cdev.h"
 
 #define write_register(v, mem, off) iowrite32(v, mem)
 
-static int copy_desc_data(struct xdma_transfer *transfer, char __user *buf,
+/*
+ * Copy a transfer's descriptors into the kernel staging buffer kbuf. Runs under
+ * engine->lock, so it must not touch userspace (copy_to_user can fault and
+ * sleep, which is illegal while holding a spinlock). The caller copies kbuf out
+ * to userspace after dropping the lock.
+ */
+static int copy_desc_data(struct xdma_transfer *transfer, char *kbuf,
 		size_t *buf_offset, size_t buf_size)
 {
 	int i;
-	int copy_err;
 	int rc = 0;
 
-	if (!buf) {
-		pr_err("Invalid user buffer\n");
+	if (!kbuf) {
+		pr_err("Invalid kernel buffer\n");
 		return -EINVAL;
 	}
 
@@ -40,20 +47,12 @@ static int copy_desc_data(struct xdma_transfer *transfer, char __user *buf,
 		return -EINVAL;
 	}
 
-	/* Fill user buffer with descriptor data */
+	/* Stage descriptor data into the kernel buffer */
 	for (i = 0; i < transfer->desc_num; i++) {
 		if (*buf_offset + sizeof(struct xdma_desc) <= buf_size) {
-			copy_err = copy_to_user(&buf[*buf_offset],
-				transfer->desc_virt + i,
+			memcpy(kbuf + *buf_offset, transfer->desc_virt + i,
 				sizeof(struct xdma_desc));
-
-			if (copy_err) {
-				dbg_sg("Copy to user buffer failed\n");
-				*buf_offset = buf_size;
-				rc = -EINVAL;
-			} else {
-				*buf_offset += sizeof(struct xdma_desc);
-			}
+			*buf_offset += sizeof(struct xdma_desc);
 		} else {
 			rc = -ENOMEM;
 		}
@@ -71,6 +70,7 @@ static ssize_t char_bypass_read(struct file *file, char __user *buf,
 	struct xdma_transfer *transfer;
 	struct list_head *idx;
 	size_t buf_offset = 0;
+	char *kbuf;
 	int rc = 0;
 
 	rc = xcdev_check(__func__, xcdev, 1);
@@ -96,17 +96,32 @@ static ssize_t char_bypass_read(struct file *file, char __user *buf,
 		return -ENODEV;
 	}
 
+	/* Stage descriptors into a kernel buffer under the lock, then copy out
+	 * to userspace after unlocking: copy_to_user may fault/sleep and must
+	 * not run while holding engine->lock (a spinlock).
+	 */
+	kbuf = kvzalloc(count, GFP_KERNEL);
+	if (!kbuf)
+		return -ENOMEM;
+
 	spin_lock(&engine->lock);
 
 	if (!list_empty(&engine->transfer_list)) {
 		list_for_each(idx, &engine->transfer_list) {
 			transfer = list_entry(idx, struct xdma_transfer, entry);
 
-			rc = copy_desc_data(transfer, buf, &buf_offset, count);
+			rc = copy_desc_data(transfer, kbuf, &buf_offset, count);
 		}
 	}
 
 	spin_unlock(&engine->lock);
+
+	if (rc == 0 && buf_offset) {
+		if (copy_to_user(buf, kbuf, buf_offset))
+			rc = -EFAULT;
+	}
+
+	kvfree(kbuf);
 
 	if (rc < 0)
 		return rc;
@@ -121,11 +136,10 @@ static ssize_t char_bypass_write(struct file *file, const char __user *buf,
 	struct xdma_engine *engine;
 	struct xdma_cdev *xcdev = (struct xdma_cdev *)file->private_data;
 
-	u32 desc_data;
 	void __iomem *bypass_addr;
 	size_t buf_offset = 0;
+	u32 *kbuf;
 	int rc = 0;
-	int copy_err;
 
 	rc = xcdev_check(__func__, xcdev, 1);
 	if (rc < 0)
@@ -150,30 +164,38 @@ static ssize_t char_bypass_write(struct file *file, const char __user *buf,
 
 	dbg_sg("In %s()\n", __func__);
 
+	/* Copy the whole user buffer in before taking the lock: copy_from_user
+	 * may fault/sleep and must not run while holding engine->lock (a
+	 * spinlock). The MMIO writes below then run lock-held against kbuf.
+	 */
+	kbuf = kvmalloc(count, GFP_KERNEL);
+	if (!kbuf)
+		return -ENOMEM;
+	if (copy_from_user(kbuf, buf, count)) {
+		dbg_sg("Error reading data from userspace buffer\n");
+		kvfree(kbuf);
+		return -EFAULT;
+	}
+
 	spin_lock(&engine->lock);
 
-	/* Write descriptor data to the bypass BAR */
-	bypass_addr = xdev->bar[xdev->bypass_bar_idx];
-	bypass_addr = (void __iomem *)(
-			(u32 __iomem *)bypass_addr + engine->bypass_offset
-			);
+	/* Write descriptor data to the bypass BAR. engine->bypass_offset is a
+	 * BYTE offset into the bypass BAR (engines_num * BYPASS_MODE_SPACING),
+	 * so add it to the void __iomem * base directly. The previous code cast
+	 * the base to (u32 __iomem *) before adding, which scaled the offset by
+	 * 4 and sent every engine past channel 0 to bar + bypass_offset*4. The
+	 * per-DWORD streaming to this fixed bypass address is unchanged. */
+	bypass_addr = xdev->bar[xdev->bypass_bar_idx] + engine->bypass_offset;
 	while (buf_offset < count) {
-		copy_err = copy_from_user(&desc_data, &buf[buf_offset],
-			sizeof(u32));
-		if (!copy_err) {
-			write_register(desc_data, bypass_addr,
-					bypass_addr - engine->bypass_offset);
-			buf_offset += sizeof(u32);
-			rc = buf_offset;
-		} else {
-			dbg_sg("Error reading data from userspace buffer\n");
-			rc = -EINVAL;
-			break;
-		}
+		write_register(kbuf[buf_offset / sizeof(u32)], bypass_addr,
+				engine->bypass_offset);
+		buf_offset += sizeof(u32);
+		rc = buf_offset;
 	}
 
 	spin_unlock(&engine->lock);
 
+	kvfree(kbuf);
 
 	return rc;
 }

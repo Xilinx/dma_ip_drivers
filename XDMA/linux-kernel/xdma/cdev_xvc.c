@@ -24,6 +24,15 @@
 
 #define COMPLETION_LOOP_MAX	100
 
+/*
+ * Upper bound on the user-supplied JTAG shift length (in bits). A single XVC
+ * shift transaction is small in practice; this cap keeps the size arithmetic
+ * below from overflowing unsigned int (see xvc_ioctl) while remaining far
+ * larger than any legitimate request. total_bytes maxes at 128 KiB, so the
+ * three sub-buffers fit in a 384 KiB allocation.
+ */
+#define XVC_MAX_BITS		(1 << 20)
+
 #define XVC_BAR_LENGTH_REG	0x0
 #define XVC_BAR_TMS_REG		0x4
 #define XVC_BAR_TDI_REG		0x8
@@ -119,9 +128,13 @@ static long xvc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 	rv = copy_from_user((void *)&xvc_obj, (void __user *)arg,
 				sizeof(struct xvc_ioc));
-	/* anything not copied ? */
+	/* anything not copied ? copy_from_user returns bytes-not-copied, a
+	 * positive value; translate to -EFAULT so the ioctl does not return a
+	 * bogus positive count as its result.
+	 */
 	if (rv) {
 		pr_info("copy_from_user xvc_obj failed: %d.\n", rv);
+		rv = -EFAULT;
 		goto cleanup;
 	}
 
@@ -134,9 +147,22 @@ static long xvc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 
 	total_bits = xvc_obj.length;
+
+	/*
+	 * Validate the user-supplied length before any size arithmetic. Without
+	 * this, total_bytes * 3 (an unsigned int multiply) can wrap, yielding a
+	 * tiny allocation that the copy_from_user calls below then overflow, and
+	 * a length of 0 would lead to a zero-sized allocation with a non-empty
+	 * shift loop. Reject 0 and cap to XVC_MAX_BITS.
+	 */
+	if (total_bits == 0 || total_bits > XVC_MAX_BITS) {
+		pr_info("invalid XVC length %u bits.\n", total_bits);
+		return -EINVAL;
+	}
+
 	total_bytes = (total_bits + 7) >> 3;
 
-	buffer = kmalloc(total_bytes * 3, GFP_KERNEL);
+	buffer = kmalloc_array(total_bytes, 3, GFP_KERNEL);
 	if (!buffer) {
 		pr_info("OOM %u, op 0x%x, len %u bits, %u bytes.\n",
 			3 * total_bytes, opcode, total_bits, total_bytes);
@@ -152,6 +178,7 @@ static long xvc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			total_bytes);
 	if (rv) {
 		pr_info("copy tmfs_buf failed: %d/%u.\n", rv, total_bytes);
+		rv = -EFAULT;
 		goto cleanup;
 	}
 	rv = copy_from_user((void *)tdi_buf,
@@ -159,6 +186,7 @@ static long xvc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			total_bytes);
 	if (rv) {
 		pr_info("copy tdi_buf failed: %d/%u.\n", rv, total_bytes);
+		rv = -EFAULT;
 		goto cleanup;
 	}
 
@@ -209,8 +237,10 @@ static long xvc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 
 	rv = copy_to_user(xvc_obj.tdo_buf, (const void *)tdo_buf, total_bytes);
-	if (rv)
+	if (rv) {
 		pr_info("copy back tdo_buf failed: %d/%u.\n", rv, total_bytes);
+		rv = -EFAULT;
+	}
 
 unlock:
 #if HAS_MMIOWB

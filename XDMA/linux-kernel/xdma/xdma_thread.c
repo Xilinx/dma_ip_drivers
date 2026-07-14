@@ -49,13 +49,33 @@ static int xdma_thread_cmpl_status_pend(struct list_head *work_item)
 static int xdma_thread_cmpl_status_proc(struct list_head *work_item)
 {
 	struct xdma_engine *engine;
-	struct xdma_transfer * transfer;
+	struct xdma_transfer *transfer;
+	unsigned int desc_cmpl_th = 0;
+	unsigned long flags;
+	int have_xfer = 0;
 
 	engine = list_entry(work_item, struct xdma_engine, cmplthp_list);
-	transfer = list_entry(engine->transfer_list.next, struct xdma_transfer,
-			entry);
-	if (transfer)
-		engine_service_poll(engine, transfer->desc_cmpl_th);
+
+	/*
+	 * Inspect the transfer list under engine->lock. The old code read
+	 * engine->transfer_list.next without the lock (racing enqueue/dequeue,
+	 * a use-after-free on a transfer being freed) and tested the result for
+	 * NULL: list_entry() on the list head is pointer arithmetic and is never
+	 * NULL, so on an empty list it dereferenced a bogus transfer overlapping
+	 * the engine. Snapshot desc_cmpl_th under the lock and only poll when a
+	 * transfer is actually queued.
+	 */
+	spin_lock_irqsave(&engine->lock, flags);
+	if (!list_empty(&engine->transfer_list)) {
+		transfer = list_first_entry(&engine->transfer_list,
+					    struct xdma_transfer, entry);
+		desc_cmpl_th = transfer->desc_cmpl_th;
+		have_xfer = 1;
+	}
+	spin_unlock_irqrestore(&engine->lock, flags);
+
+	if (have_xfer)
+		engine_service_poll(engine, desc_cmpl_th);
 	return 0;
 }
 
@@ -102,7 +122,7 @@ static int xthread_main(void *data)
 
 	while (!kthread_should_stop()) {
 
-		struct list_head *work_item, *next;
+		struct list_head *work_item;
 
 		pr_debug_thread("%s interruptible\n", thp->name);
 
@@ -118,11 +138,27 @@ static int xthread_main(void *data)
 		if (thp->work_cnt) {
 			pr_debug_thread("%s processing %u work items\n",
 					thp->name, thp->work_cnt);
-			/* do work */
-			list_for_each_safe(work_item, next, &thp->work_list) {
+			/*
+			 * Process one work item per locked critical section,
+			 * re-reading the list head each iteration. The old code
+			 * cached the list_for_each_safe 'next' cursor once and
+			 * dropped the lock across fproc(); a concurrent
+			 * xdma_thread_remove_work()/add_work() could then free or
+			 * relink that cached node, sending the traversal off a
+			 * poisoned pointer. work_running publishes the in-flight
+			 * node so remove_work() can wait for fproc to finish
+			 * before the engine is freed.
+			 */
+			list_for_each(work_item, &thp->work_list) {
+				thp->work_running = work_item;
 				unlock_thread(thp);
 				thp->fproc(work_item);
 				lock_thread(thp);
+				thp->work_running = NULL;
+				/* the list may have changed while unlocked;
+				 * restart from the (current) head
+				 */
+				break;
 			}
 		}
 		unlock_thread(thp);
@@ -231,10 +267,44 @@ void xdma_thread_remove_work(struct xdma_engine *engine)
 
 	if (cmpl_thread) {
 		lock_thread(cmpl_thread);
+		/*
+		 * Wait out any fproc currently servicing this engine before
+		 * unlinking it. xthread_main drops the thread lock across
+		 * fproc() and publishes the in-flight node in work_running; if
+		 * we removed the node and let engine_destroy() free/memset the
+		 * engine while fproc still held it, the worker would touch freed
+		 * memory (use-after-free). work_running is cleared under the
+		 * thread lock once fproc returns, so re-checking it here is safe.
+		 */
+		while (cmpl_thread->work_running == &engine->cmplthp_list) {
+			unlock_thread(cmpl_thread);
+			schedule();
+			lock_thread(cmpl_thread);
+		}
 		list_del(&engine->cmplthp_list);
 		cmpl_thread->work_cnt--;
 		unlock_thread(cmpl_thread);
 	}
+}
+
+void xdma_engine_kthread_wakeup(struct xdma_engine *engine)
+{
+	struct xdma_kthread *thp;
+	unsigned long flags;
+
+	/*
+	 * Read engine->cmplthp under engine->lock. Callers used to test
+	 * engine->cmplthp and then deref it unlocked; xdma_thread_remove_work()
+	 * clears it (and engine_destroy() then frees the kthread/engine state)
+	 * under the same lock, so the unlocked check-then-use raced into a
+	 * write-after-free on the kthread struct. Holding the lock across the
+	 * read closes that window.
+	 */
+	spin_lock_irqsave(&engine->lock, flags);
+	thp = engine->cmplthp;
+	if (thp)
+		xdma_kthread_wakeup(thp);
+	spin_unlock_irqrestore(&engine->lock, flags);
 }
 
 void xdma_thread_add_work(struct xdma_engine *engine)
