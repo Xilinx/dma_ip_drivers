@@ -135,7 +135,7 @@ endif
 MAKEOVERRIDES := $(filter-out ARCH=%,$(MAKEOVERRIDES))
 # Don't allow CFLAGS/EXTRA_CFLAGS to clobber definitions in sub-make.
 MAKEOVERRIDES := $(filter-out CFLAGS=%,$(MAKEOVERRIDES))
-MAKEOVERRIDES := $(filter-out EXTRA_CFLAGS=%,$(MAKEOVERRIDES))
+MAKEOVERRIDES := $(filter-out ccflags-y=%,$(MAKEOVERRIDES))
 
 # Exports.
 export grep

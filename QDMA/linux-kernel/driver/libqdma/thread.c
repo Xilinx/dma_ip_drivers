@@ -38,8 +38,7 @@ int qdma_kthread_dump(struct qdma_kthread *thp, char *buf, int buflen,
 	len += snprintf(buf, buflen, "%s, cpu %u, work %u.\n",
 			thp->name, thp->cpu, thp->work_cnt);
 
-	if (detail)
-		;
+	(void)detail;
 
 	unlock_thread(thp);
 

@@ -22,6 +22,11 @@
 extern "C" {
 #endif
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
+#include <linux/bitfield.h>
+#endif
+
 #include "qdma_access_export.h"
 #include "qdma_access_errors.h"
 
@@ -71,7 +76,9 @@ static inline uint32_t get_trailing_zeros(uint64_t value)
 
 #define FIELD_SHIFT(mask)       get_trailing_zeros(mask)
 #define FIELD_SET(mask, val)    ((val << FIELD_SHIFT(mask)) & mask)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 15, 0)
 #define FIELD_GET(mask, reg)    ((reg & mask) >> FIELD_SHIFT(mask))
+#endif
 
 
 /* CSR Default values */
