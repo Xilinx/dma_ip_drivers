@@ -272,10 +272,10 @@ static void char_sgdma_unmap_user_buf(struct xdma_io_cb *cb, bool write)
 {
 	int i;
 
-	sg_free_table(&cb->sgt);
-
 	if (!cb->pages || !cb->pages_nr)
 		return;
+
+	sg_free_table(&cb->sgt);
 
 	for (i = 0; i < cb->pages_nr; i++) {
 		if (cb->pages[i]) {
@@ -291,6 +291,7 @@ static void char_sgdma_unmap_user_buf(struct xdma_io_cb *cb, bool write)
 
 	kfree(cb->pages);
 	cb->pages = NULL;
+	cb->pages_nr = 0;
 }
 
 static int char_sgdma_map_user_buf_to_sgl(struct xdma_io_cb *cb, bool write)
