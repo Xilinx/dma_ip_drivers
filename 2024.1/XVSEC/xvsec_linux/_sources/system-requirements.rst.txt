@@ -1,0 +1,48 @@
+.. _sys_req:
+
+System Requirements
+===================
+
+Xilinx Accelerator Cards
+------------------------
+
+1. :steelblue:`US/US+ devices`
+	- VCU1525
+   
+2. :steelblue:`S80 Versal devices`
+	- VCK5000
+
+3. :steelblue:`H10 Versal devices`
+	- XCVP1021
+
+4. :steelblue:`Spartan UltraScale+ devices`
+        - SU200P 
+
+Host Platform
+-------------
+
+x86_64 host system with at least one Gen 3x16 PCIe slot and minimum 16GB RAM
+
+
+Host System Configuration
+-------------------------
+
+Linux XVSEC Driver release is verified on following Host system configuration
+
++--------------------------+-------------------------------------------------------------+
+| Host System              | Configuration Details                                       |
++==========================+=============================================================+
+| Operating System         | Ubuntu 22.04.1 LTS                                          |
++--------------------------+-------------------------------------------------------------+
+| Linux Kernel             | 6.8.0-65-generic                                            |
++--------------------------+-------------------------------------------------------------+
+| RAM                      | 125GB                                                       |
++--------------------------+-------------------------------------------------------------+
+
+The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.
+
+	- Timer Functions
+	- PCIe Functions
+	- Kernel Memory functions
+	- Memory and GFP Functions
+

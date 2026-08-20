@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2024.1',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -316,7 +306,7 @@
             
             
               <div class="version">
-                2024.1
+                2025.2
               </div>
             
           
@@ -446,7 +436,7 @@
 </ol>
 <p>Refer to <a class="reference external" href="https://www.xilinx.com/support/documentation/ip_documentation/qdma/v3_0/pg302-qdma.pdf">QDMA_Product_Guide</a> for more details on these example designs.</p>
 <p>The driver functionality remains same for all the example designs.
-For <code class="docutils literal"><span class="pre">Descriptor</span> <span class="pre">Bypass</span> <span class="pre">In/Out</span> <span class="pre">Loopback</span></code> example design, application has to enable the bypass mode in driver.</p>
+For <code class="docutils literal notranslate"><span class="pre">Descriptor</span> <span class="pre">Bypass</span> <span class="pre">In/Out</span> <span class="pre">Loopback</span></code> example design, application has to enable the bypass mode in driver.</p>
 <p>All the flows described below are with respect to QDMA internal mode of operation.
 Also, the changes required in driver for bypass mode of operation are specified.</p>
 <div class="section" id="axi4-memory-mapped-and-axi-stream-with-completion">
@@ -459,13 +449,13 @@ This example design covers most of the functionality provided by QDMA.</p>
 <div class="section" id="mm-h2c-host-to-card">
 <h3>MM H2C(Host-to-Card)<a class="headerlink" href="#mm-h2c-host-to-card" title="Permalink to this headline">¶</a></h3>
 <p>The Example Design provides BRAM with AXI-MM interface to achieve the MM H2C functionality.
-The CLI command <code class="docutils literal"><span class="pre">dma_to_device</span></code> supported by the DPDK software test application helps verify the MM H2C functionality.
+The CLI command <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> supported by the DPDK software test application helps verify the MM H2C functionality.
 QDMA driver takes care of HW configuration and data processing.</p>
 <p>The complete flow between the Host SW components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
 <li>Application needs to configure the queue in MM mode and H2C (Tx) direction</li>
-<li><code class="docutils literal"><span class="pre">dma_to_device</span></code> command takes a file containing the contents to be transmitted to FPGA memory as input. Application divides the file contents between the number of queues provided and calls <code class="docutils literal"><span class="pre">rte_eth_tx_burst()</span></code> API on each configured queue for data transmission.</li>
-<li>Application sets the memory offset to write to in FPGA using <code class="docutils literal"><span class="pre">rte_pmd_qdma_set_mm_endpoint_addr</span></code> API</li>
+<li><code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> command takes a file containing the contents to be transmitted to FPGA memory as input. Application divides the file contents between the number of queues provided and calls <code class="docutils literal notranslate"><span class="pre">rte_eth_tx_burst()</span></code> API on each configured queue for data transmission.</li>
+<li>Application sets the memory offset to write to in FPGA using <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_set_mm_endpoint_addr</span></code> API</li>
 <li>QDMA driver frees previous transmitted mbufs pending in the queue and checks for H2C ring capacity by finding the difference between PIDX and CIDX</li>
 <li>QDMA driver programs the descriptors with buffer base address and length to be transmitted</li>
 <li>QDMA driver updates the H2C ring PIDX and polls the status descriptor for CIDX to be same as PIDX</li>
@@ -476,10 +466,10 @@ QDMA driver takes care of HW configuration and data processing.</p>
 </ul>
 <img alt="_images/MM_H2C_Flow.PNG" class="align-center" src="_images/MM_H2C_Flow.PNG" />
 <p>For MM (H2C and C2H) bypass mode, application needs to enable the bypass mode on the required queues.
-Application can enable C2H/H2C bypass using device arguments (<code class="docutils literal"><span class="pre">c2h_byp_mode</span></code> and <code class="docutils literal"><span class="pre">h2c_byp_mode</span></code>) during application launch or
-by invoking <code class="docutils literal"><span class="pre">rte_pmd_qdma_configure_rx_bypass()</span> <span class="pre">/</span> <span class="pre">rte_pmd_qdma_configure_tx_bypass()</span></code> APIs from application on the required queues.</p>
-<p>The MM descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_ul_mm_desc
+Application can enable C2H/H2C bypass using device arguments (<code class="docutils literal notranslate"><span class="pre">c2h_byp_mode</span></code> and <code class="docutils literal notranslate"><span class="pre">h2c_byp_mode</span></code>) during application launch or
+by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_configure_rx_bypass()</span> <span class="pre">/</span> <span class="pre">rte_pmd_qdma_configure_tx_bypass()</span></code> APIs from application on the required queues.</p>
+<p>The MM descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_ul_mm_desc
 {
         volatile uint64_t       src_addr;
         volatile uint64_t       len:28;
@@ -494,19 +484,19 @@ by invoking <code class="docutils literal"><span class="pre">rte_pmd_qdma_config
 </pre></div>
 </div>
 <p>Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the descriptor processing functions <code class="docutils literal"><span class="pre">qdma_ul_update_mm_h2c_desc()</span> <span class="pre">/</span> <span class="pre">qdma_ul_update_mm_c2h_desc()</span></code> in <code class="docutils literal"><span class="pre">qdma_user.c</span></code> file.
-Refer the data flow functionality in <code class="docutils literal"><span class="pre">qdma_xmit_pkts_mm()</span> <span class="pre">/</span> <span class="pre">qdma_recv_pkts_mm()</span></code> functions in <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
+Accordingly, update the descriptor processing functions <code class="docutils literal notranslate"><span class="pre">qdma_ul_update_mm_h2c_desc()</span> <span class="pre">/</span> <span class="pre">qdma_ul_update_mm_c2h_desc()</span></code> in <code class="docutils literal notranslate"><span class="pre">qdma_user.c</span></code> file.
+Refer the data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_xmit_pkts_mm()</span> <span class="pre">/</span> <span class="pre">qdma_recv_pkts_mm()</span></code> functions in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 </div>
 <div class="section" id="mm-c2h-card-to-host">
 <h3>MM C2H(Card-to-Host)<a class="headerlink" href="#mm-c2h-card-to-host" title="Permalink to this headline">¶</a></h3>
 <p>The Example Design provides BRAM with AXI-MM interface to achieve the MM C2H functionality.
-The CLI command <code class="docutils literal"><span class="pre">dma_from_device</span></code> supported by the DPDK software test application helps verify the MM C2H functionality.
+The CLI command <code class="docutils literal notranslate"><span class="pre">dma_from_device</span></code> supported by the DPDK software test application helps verify the MM C2H functionality.
 QDMA driver takes care of HW configuration and data processing.</p>
 <p>The complete flow between the Host SW components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
 <li>Application needs to configure the queue in MM mode and C2H (Rx) direction</li>
-<li>Application sets the memory offset to read from in FPGA using <code class="docutils literal"><span class="pre">rte_pmd_qdma_set_mm_endpoint_addr</span></code> API</li>
-<li>Application distributes total requested data across the given queues and calls the <code class="docutils literal"><span class="pre">rte_eth_rx_burst()</span></code> API on each queue</li>
+<li>Application sets the memory offset to read from in FPGA using <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_set_mm_endpoint_addr</span></code> API</li>
+<li>Application distributes total requested data across the given queues and calls the <code class="docutils literal notranslate"><span class="pre">rte_eth_rx_burst()</span></code> API on each queue</li>
 <li>QDMA driver programs the required descriptors with buffer base address and length based on the number of packets requested and the length of packet buffer (mbuf size)</li>
 <li>QDMA driver updates the C2H ring PIDX and polls the status descriptor for CIDX to be same as PIDX</li>
 <li>Upon C2H ring PIDX update, DMA engine fetches the descriptors and passes them to C2H MM Engine for processing</li>
@@ -526,11 +516,11 @@ fetches the data and aligns to the first byte to transfer on the AXI4 interface 
 every descriptor to have random offset and random length. The total length of all descriptors put
 to gather must be less than 64 KB.</p>
 <p>There is no dependency on user logic for this use case.
-The CLI command <code class="docutils literal"><span class="pre">dma_to_device</span></code> supported by the DPDK software test application helps verify the ST H2C functionality.</p>
+The CLI command <code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> supported by the DPDK software test application helps verify the ST H2C functionality.</p>
 <p>The complete flow between the Host SW components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
 <li>User needs to configure the queue in ST mode (default) and H2C (Tx) direction</li>
-<li><code class="docutils literal"><span class="pre">dma_to_device</span></code> command takes a file containing the contents to be transmitted to FPGA as input. Application divides the file contents between the number of queues provided and calls <code class="docutils literal"><span class="pre">rte_eth_tx_burst()</span></code> API on each configured queue for data transmission.</li>
+<li><code class="docutils literal notranslate"><span class="pre">dma_to_device</span></code> command takes a file containing the contents to be transmitted to FPGA as input. Application divides the file contents between the number of queues provided and calls <code class="docutils literal notranslate"><span class="pre">rte_eth_tx_burst()</span></code> API on each configured queue for data transmission.</li>
 <li>QDMA driver frees previous transmitted mbufs pending in the queue and checks for H2C ring capacity by finding the difference between PIDX and CIDX.</li>
 <li>QDMA driver programs the descriptors with buffer base address and length to be transmitted and updates the H2C ring PIDX</li>
 <li>QDMA driver returns to the application the number packets it was able to write in the descriptor ring without waiting for acknowledgement from HW.</li>
@@ -540,10 +530,10 @@ The CLI command <code class="docutils literal"><span class="pre">dma_to_device</
 </ul>
 <img alt="_images/ST_H2C_Flow.PNG" class="align-center" src="_images/ST_H2C_Flow.PNG" />
 <p>For ST H2C bypass mode, application needs to enable the bypass mode on the required queues.
-Application can enable H2C bypass using device argument (<code class="docutils literal"><span class="pre">h2c_byp_mode</span></code>) during application launch or
-by invoking <code class="docutils literal"><span class="pre">rte_pmd_qdma_configure_tx_bypass()</span></code> API from application on the required queues.</p>
-<p>The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_ul_st_h2c_desc
+Application can enable H2C bypass using device argument (<code class="docutils literal notranslate"><span class="pre">h2c_byp_mode</span></code>) during application launch or
+by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_configure_tx_bypass()</span></code> API from application on the required queues.</p>
+<p>The ST H2C descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_ul_st_h2c_desc
 {
         volatile uint16_t       cdh_flags;
         volatile uint16_t       pld_len;
@@ -554,8 +544,8 @@ by invoking <code class="docutils literal"><span class="pre">rte_pmd_qdma_config
 </pre></div>
 </div>
 <p>Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the ST H2C descriptor processing function <code class="docutils literal"><span class="pre">qdma_ul_update_st_h2c_desc()</span></code> in <code class="docutils literal"><span class="pre">qdma_user.c</span></code> file.
-Refer the ST H2C data flow functionality in <code class="docutils literal"><span class="pre">qdma_xmit_pkts_st()</span></code> function in <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
+Accordingly, update the ST H2C descriptor processing function <code class="docutils literal notranslate"><span class="pre">qdma_ul_update_st_h2c_desc()</span></code> in <code class="docutils literal notranslate"><span class="pre">qdma_user.c</span></code> file.
+Refer the ST H2C data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_xmit_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 </div>
 <div class="section" id="st-c2h-card-to-host">
 <h3>ST C2H(Card-to-Host)<a class="headerlink" href="#st-c2h-card-to-host" title="Permalink to this headline">¶</a></h3>
@@ -581,8 +571,8 @@ every packet. This allows the driver to reclaim the descriptors.</p>
 <p>The complete flow between the Host SW components and HW components is depicted in below sequence diagram.</p>
 <ul class="simple">
 <li>Application needs to configure the queue in ST mode (default) and C2H (Rx) direction</li>
-<li>Application calls the <code class="docutils literal"><span class="pre">rte_eth_rx_burst()</span></code> API on each queue with number of packets to receive as input</li>
-<li>Application programs user logic registers to generate the required packets on a given queue, before calling <code class="docutils literal"><span class="pre">rte_eth_rx_burst()</span></code> API on that queue</li>
+<li>Application calls the <code class="docutils literal notranslate"><span class="pre">rte_eth_rx_burst()</span></code> API on each queue with number of packets to receive as input</li>
+<li>Application programs user logic registers to generate the required packets on a given queue, before calling <code class="docutils literal notranslate"><span class="pre">rte_eth_rx_burst()</span></code> API on that queue</li>
 <li>QDMA driver processes the completion queue to determine the packet length of each received packet and updates the completion queue CIDX</li>
 <li>QDMA driver retrieves the packets from the C2H ring based on the number of descriptors consumed per packet</li>
 <li>QDMA driver populates the C2H ring descriptors with new packet buffer addresses</li>
@@ -592,8 +582,8 @@ every packet. This allows the driver to reclaim the descriptors.</p>
 <img alt="_images/ST_C2H_Flow.PNG" class="align-center" src="_images/ST_C2H_Flow.PNG" />
 <p>The Streaming C2H functionality implemented in QDMA driver is tightly coupled with the Example Design
 because the completion entry descriptor is defined by the user logic in the example design.</p>
-<p>The completion entry format used by the example design is defined in QDMA Driver code base at <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_ul_st_cmpt_ring
+<p>The completion entry format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_ul_st_cmpt_ring
 {
         /* For 2018.2 IP, this field determines the
          * Standard or User format of completion entry
@@ -628,22 +618,22 @@ because the completion entry descriptor is defined by the user logic in the exam
 };
 </pre></div>
 </div>
-<p>Completion entry is processed in <code class="docutils literal"><span class="pre">qdma_ul_extract_st_cmpt_info()</span></code> function in <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_user.c</span></code>.
-If a different example design is used, the QDMA driver code in <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_user.h</span></code> and
-<code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_user.c</span></code> must be updated as per the descriptor format defined by the new example design.
-Refer the ST C2H data flow functionality in <code class="docutils literal"><span class="pre">qdma_recv_pkts_st()</span></code> function in <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
+<p>Completion entry is processed in <code class="docutils literal notranslate"><span class="pre">qdma_ul_extract_st_cmpt_info()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.c</span></code>.
+If a different example design is used, the QDMA driver code in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.h</span></code> and
+<code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_user.c</span></code> must be updated as per the descriptor format defined by the new example design.
+Refer the ST C2H data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_recv_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 <p>For ST C2H bypass mode, application needs to enable the bypass mode on the required queues.
-Application can enable C2H bypass using device argument (<code class="docutils literal"><span class="pre">c2h_byp_mode</span></code>) during application launch or
-by invoking <code class="docutils literal"><span class="pre">rte_pmd_qdma_configure_rx_bypass()</span></code> API from application on the required queues.</p>
-<p>The ST C2H descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma.h</span></code></p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_c2h_desc
+Application can enable C2H bypass using device argument (<code class="docutils literal notranslate"><span class="pre">c2h_byp_mode</span></code>) during application launch or
+by invoking <code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_configure_rx_bypass()</span></code> API from application on the required queues.</p>
+<p>The ST C2H descriptor format used by the example design is defined in QDMA Driver code base at <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma.h</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>struct __attribute__ ((packed)) qdma_c2h_desc
 {
         volatile uint64_t       dst_addr;
 };
 </pre></div>
 </div>
 <p>Update this structure if any changes required in the descriptor format for bypass mode.
-Accordingly, update the data flow functionality in <code class="docutils literal"><span class="pre">qdma_recv_pkts_st()</span></code> function in <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
+Accordingly, update the data flow functionality in <code class="docutils literal notranslate"><span class="pre">qdma_recv_pkts_st()</span></code> function in <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_rxtx.c</span></code>.</p>
 </div>
 </div>
 </div>
@@ -678,7 +668,7 @@ Accordingly, update the data flow functionality in <code class="docutils literal
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on January 01, 2025.
+        Last updated on August 20, 2026.
       </span>
 
     </p>
@@ -756,7 +746,7 @@ Accordingly, update the data flow functionality in <code class="docutils literal
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2024 Advanced Micro Devices Inc.
+                                  &copy; 2022-2026 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

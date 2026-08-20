@@ -332,4 +332,11 @@ Tandem Boot Support
 
    tandem_boot_support.rst
 
-   
+======================
+User Extra Support
+======================
+
+.. toctree::
+   :maxdepth: 1
+
+   user_extra_support.rst

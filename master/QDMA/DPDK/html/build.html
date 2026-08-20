@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2024.1',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -316,7 +306,7 @@
             
             
               <div class="version">
-                2024.1
+                2025.2
               </div>
             
           
@@ -436,8 +426,8 @@ For a full list, refer to the official DPDK documentation:
 <p><strong>Note</strong>: If the NUMA library is missing, it should be installed.
 For example:</p>
 <blockquote>
-<div><p>For Ubuntu: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libnuma-dev</span></code></p>
-<p>For Red Hat: <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">numactl-devel</span></code></p>
+<div><p>For Ubuntu: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">libnuma-dev</span></code></p>
+<p>For Red Hat: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">numactl-devel</span></code></p>
 </div></blockquote>
 <div class="section" id="modifying-the-driver-for-pcie-device-id">
 <h2>Modifying the driver for PCIe device ID<a class="headerlink" href="#modifying-the-driver-for-pcie-device-id" title="Permalink to this headline">¶</a></h2>
@@ -452,12 +442,12 @@ To modify the PCIe Device ID in the driver,</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>For PF devices,</dt>
-<dd>update <code class="docutils literal"><span class="pre">struct</span> <span class="pre">rte_pci_id</span> <span class="pre">qdma_pci_id_tbl[]</span></code> inside <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_ethdev.c</span></code></dd>
+<dd>update <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">rte_pci_id</span> <span class="pre">qdma_pci_id_tbl[]</span></code> inside <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_ethdev.c</span></code></dd>
 <dt>For VF devices,</dt>
-<dd>update <code class="docutils literal"><span class="pre">struct</span> <span class="pre">rte_pci_id</span> <span class="pre">qdma_vf_pci_id_tbl[]</span></code> inside <code class="docutils literal"><span class="pre">drivers/net/qdma/qdma_vf_ethdev.c</span></code></dd>
+<dd>update <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">rte_pci_id</span> <span class="pre">qdma_vf_pci_id_tbl[]</span></code> inside <code class="docutils literal notranslate"><span class="pre">drivers/net/qdma/qdma_vf_ethdev.c</span></code></dd>
 </dl>
-<p>Also add the device IDs in <code class="docutils literal"><span class="pre">usertools/dpdk-devbind.py</span></code> in <code class="docutils literal"><span class="pre">xilinx_qdma_pf</span></code> for PF device
-and <code class="docutils literal"><span class="pre">xilinx_qdma_vf</span></code> for VF device as specified in later section.</p>
+<p>Also add the device IDs in <code class="docutils literal notranslate"><span class="pre">usertools/dpdk-devbind.py</span></code> in <code class="docutils literal notranslate"><span class="pre">xilinx_qdma_pf</span></code> for PF device
+and <code class="docutils literal notranslate"><span class="pre">xilinx_qdma_vf</span></code> for VF device as specified in later section.</p>
 </div></blockquote>
 <p>Once modified, the driver and application must be recompiled.</p>
 </div>
@@ -512,53 +502,64 @@ packet size classification logic to remove application
 overhead in performance measurement. This patch is used for
 performance testing with dpdk-pktgen application.</td>
 </tr>
-<tr class="row-odd"><td>RELEASE.txt</td>
+<tr class="row-odd"><td>tools/0001-PKTGEN-24.10.3-
+Patch-to-add-Jumbo-packet
+-support.patch</td>
+<td>This is dpdk-pktgen patch based on DPDK v24.11.
+This patch extends dpdk-pktgen application to handle packets
+with packet sizes more than 1518 bytes and it disables the
+packet size classification logic to remove application
+overhead in performance measurement. This patch is used for
+performance testing with dpdk-pktgen application.</td>
+</tr>
+<tr class="row-even"><td>RELEASE.txt</td>
 <td>Release Notes</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="setup-download-and-modifications">
 <h3>Setup: Download and modifications<a class="headerlink" href="#setup-download-and-modifications" title="Permalink to this headline">¶</a></h3>
-<p>The reference driver code requires DPDK v23.11/v22.11/v21.11/v20.11.
+<p>The reference driver code requires DPDK v24.11/v23.11/v22.11/v21.11/v20.11.
 Follow the steps below to download the proper version of DPDK and apply
 driver code and test application supplied in the GitHub.</p>
 <p>Extract the DPDK driver software database from the Xilinx GitHub to the server where VCU118
 is installed. Henceforth, this area is referred as &lt;dpdk_sw_database&gt;.</p>
 <p>Create a directory for the DPDK download on the server where the VCU118
 is installed and move to this directory.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>mkdir &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>mkdir &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
 cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;
 git clone http://dpdk.org/git/dpdk-stable
 cd dpdk-stable
-git checkout v23.11/v22.11/v21.11/v20.11
+git checkout v24.11/v23.11/v22.11/v21.11/v20.11
 git clone git://dpdk.org/dpdk-kmods
 cp -r &lt;dpdk_sw_database&gt;/drivers/net/qdma ./drivers/net/
 cp -r &lt;dpdk_sw_database&gt;/examples/qdma_testapp ./examples/
 </pre></div>
 </div>
-<p>Additionally, make below changes to the DPDK v23.11/v22.11/v21.11/v20.11 tree to build QDMA driver,
+<p>Additionally, make below changes to the DPDK v24.11/v23.11/v22.11/v21.11/v20.11 tree to build QDMA driver,
 support 2K queues and populate Xilinx devices for binding.</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>To build QDMA driver</li>
 </ol>
 <ol class="loweralpha simple">
-<li>To support 2K queues and 256 PCIe functions for QDMA5.0, update below configurations in <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code></li>
+<li>To support 2K queues and 256 PCIe functions for QDMA5.0, update below configurations in <code class="docutils literal notranslate"><span class="pre">./config/rte_config.h</span></code></li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_VFIO_CONTAINERS 256
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#define RTE_MAX_MEMZONE 40960
+#define RTE_MAX_VFIO_CONTAINERS 256
 #define RTE_MAX_QUEUES_PER_PORT 2048
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="2">
-<li>To support 4K queues for CPM5 designs, update below configurations in <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code></li>
+<li>To support 4K queues for CPM5 designs, update below configurations in <code class="docutils literal notranslate"><span class="pre">./config/rte_config.h</span></code></li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_MAX_QUEUES_PER_PORT 4096
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#define RTE_MAX_QUEUES_PER_PORT 4096
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="3">
-<li>Modify below lines in <code class="docutils literal"><span class="pre">./config/meson.build</span></code> in DPDK v23.11/v22.11/v21.11/v20.11 tree</li>
+<li>Modify below lines in <code class="docutils literal notranslate"><span class="pre">./config/meson.build</span></code> in DPDK v24.11/v23.11/v22.11/v21.11/v20.11 tree</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># Set maximum Ethernet ports to 256
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Set maximum Ethernet ports to 256
 dpdk_conf.set(&#39;RTE_MAX_ETHPORTS&#39;, 256)
 
 # Set maximum VFIO Groups to 256
@@ -566,38 +567,39 @@ dpdk_conf.set(&#39;RTE_MAX_VFIO_GROUPS&#39;, 256)
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="4">
-<li>Add below lines to <code class="docutils literal"><span class="pre">./config/rte_config.h</span></code> to enable driver debug logs</li>
+<li>Add below lines to <code class="docutils literal notranslate"><span class="pre">./config/rte_config.h</span></code> to enable driver debug logs</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#define RTE_LIBRTE_QDMA_DEBUG_DRIVER 1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#define RTE_LIBRTE_QDMA_DEBUG_DRIVER 1
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="5">
-<li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/meson.build</span></code>, where PMDs are added to drivers list</li>
+<li>Add below line to <code class="docutils literal notranslate"><span class="pre">./drivers/net/meson.build</span></code>, where PMDs are added to drivers list</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>&#39;qdma&#39;,
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&#39;qdma&#39;,
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="6">
-<li>Add below line to <code class="docutils literal"><span class="pre">./drivers/net/qdma/meson.build</span></code>, to support required DPDK framework version</li>
+<li>Add below line to <code class="docutils literal notranslate"><span class="pre">./drivers/net/qdma/meson.build</span></code>, to support required DPDK framework version</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># Use QDMA_DPDK_23_11 compiler flag for DPDK v23.11
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Use QDMA_DPDK_24_11 compiler flag for DPDK v24.11
+# Use QDMA_DPDK_23_11 compiler flag for DPDK v23.11
 # Use QDMA_DPDK_22_11 compiler flag for DPDK v22.11
 # Use QDMA_DPDK_21_11 compiler flag for DPDK v21.11
 # Use QDMA_DPDK_20_11 compiler flag for DPDK v20.11
-cflags += [&#39;-DQDMA_DPDK_23_11&#39;]
+cflags += [&#39;-DQDMA_DPDK_24_11&#39;]
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
-<li>To add Xilinx devices for device binding, add below lines to <code class="docutils literal"><span class="pre">./usertools/dpdk-devbind.py</span></code> after cavium_pkx class, where PCI base class for devices are listed.</li>
+<li>To add Xilinx devices for device binding, add below lines to <code class="docutils literal notranslate"><span class="pre">./usertools/dpdk-devbind.py</span></code> after cavium_pkx class, where PCI base class for devices are listed.</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>xilinx_qdma_pf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348,b011,b111,b211,b311,b014,b114,b214,b314,b018,b118,b218,b318,b01f,b11f,b21f,b31f,b021,b121,b221,b321,b024,b124,b224,b324,b028,b128,b228,b328,b02f,b12f,b22f,b32f,b031,b131,b231,b331,b034,b134,b234,b334,b038,b138,b238,b338,b03f,b13f,b23f,b33f,b041,b141,b241,b341,b044,b144,b244,b344,b048,b148,b248,b348,b058,b158,b258,b358&#39;,
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>xilinx_qdma_pf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;9011,9111,9211,9311,9014,9114,9214,9314,9018,9118,9218,9318,901f,911f,921f,931f,9021,9121,9221,9321,9024,9124,9224,9324,9028,9128,9228,9328,902f,912f,922f,932f,9031,9131,9231,9331,9034,9134,9234,9334,9038,9138,9238,9338,903f,913f,923f,933f,9041,9141,9241,9341,9044,9144,9244,9344,9048,9148,9248,9348,b011,b111,b211,b311,b014,b114,b214,b314,b018,b118,b218,b318,b01f,b11f,b21f,b31f,b021,b121,b221,b321,b024,b124,b224,b324,b028,b128,b228,b328,b02f,b12f,b22f,b32f,b031,b131,b231,b331,b034,b134,b234,b334,b038,b138,b238,b338,b03f,b13f,b23f,b33f,b041,b141,b241,b341,b044,b144,b244,b344,b048,b148,b248,b348,b058,b158,b258,b358&#39;,
 &#39;SVendor&#39;: None, &#39;SDevice&#39;: None}
 xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39;, &#39;Device&#39;: &#39;a011,a111,a211,a311,a014,a114,a214,a314,a018,a118,a218,a318,a01f,a11f,a21f,a31f,a021,a121,a221,a321,a024,a124,a224,a324,a028,a128,a228,a328,a02f,a12f,a22f,a32f,a031,a131,a231,a331,a034,a134,a234,a334,a038,a138,a238,a338,a03f,a13f,a23f,a33f,a041,a141,a241,a341,a044,a144,a244,a344,a048,a148,a248,a348,c011,c111,c211,c311,c014,c114,c214,c314,c018,c118,c218,c318,c01f,c11f,c21f,c31f,c021,c121,c221,c321,c024,c124,c224,c324,c028,c128,c228,c328,c02f,c12f,c22f,c32f,c031,c131,c231,c331,c034,c134,c234,c334,c038,c138,c238,c338,c03f,c13f,c23f,c33f,c041,c141,c241,c341,c044,c144,c244,c344,c048,c148,c248,c348,c058,c158,c258,c358&#39;,
 &#39;SVendor&#39;: None, &#39;SDevice&#39;: None}
 </pre></div>
 </div>
-<p>Update entries in network devices class in <code class="docutils literal"><span class="pre">./usertools/dpdk-devbind.py</span></code> to add Xilinx devices</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>network_devices = [network_class, cavium_pkx, avp_vnic, ifpga_class, xilinx_qdma_pf, xilinx_qdma_vf]
+<p>Update entries in network devices class in <code class="docutils literal notranslate"><span class="pre">./usertools/dpdk-devbind.py</span></code> to add Xilinx devices</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>network_devices = [network_class, cavium_pkx, avp_vnic, ifpga_class, xilinx_qdma_pf, xilinx_qdma_vf]
 </pre></div>
 </div>
 <ol class="arabic simple" start="3">
@@ -606,25 +608,25 @@ xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39
 <ol class="loweralpha simple">
 <li>To enable VF 4K queue driver support for CPM5 design, add below line to ./drivers/net/qdma/meson.build</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DEQDMA_CPM5_VF_GT_256Q_SUPPORTED&#39;]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cflags += [&#39;-DEQDMA_CPM5_VF_GT_256Q_SUPPORTED&#39;]
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="2">
 <li>Writeback coalesce timer count value in QDMA is used to flush CMPT data packet at a constant interval. By default Writeback coalesce timer count is configured for low latency performance measurements, but to configure this value for high throughput measurements, add below line to ./drivers/net/qdma/meson.build</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DTHROUGHPUT_MEASUREMENT&#39;]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cflags += [&#39;-DTHROUGHPUT_MEASUREMENT&#39;]
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="3">
 <li>To enhance the DPDK driver’s debugging capabilities, added support for latency measurement statistics in both the Tx path (TxQ SW PIDX to HW CIDX) and the Rx path (RxQ SW PIDX to CMPT PIDX). To enable this driver support, please add the following line to ./drivers/net/qdma/meson.build</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DLATENCY_MEASUREMENT&#39;]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cflags += [&#39;-DLATENCY_MEASUREMENT&#39;]
 </pre></div>
 </div>
 <ol class="loweralpha simple" start="4">
 <li>To enable 10 bit tag support in qdma dpdk driver for Gen5x8 performance measurements for CPM5 design, add below line to ./drivers/net/qdma/meson.build</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cflags += [&#39;-DEQDMA_CPM5_10BIT_TAG_ENABLE&#39;]
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cflags += [&#39;-DEQDMA_CPM5_10BIT_TAG_ENABLE&#39;]
 </pre></div>
 </div>
 </div></blockquote>
@@ -632,12 +634,12 @@ xilinx_qdma_vf = {&#39;Class&#39;: &#39;05&#39;, &#39;Vendor&#39;: &#39;10ee&#39
 <div class="section" id="setup-host-system">
 <h3>Setup: Host system<a class="headerlink" href="#setup-host-system" title="Permalink to this headline">¶</a></h3>
 <p>DPDK requires that hugepages are setup on the server.
-The following modifications must be made to the <code class="docutils literal"><span class="pre">/boot/grub/grub.cfg</span></code> on the host system</p>
+The following modifications must be made to the <code class="docutils literal notranslate"><span class="pre">/boot/grub/grub.cfg</span></code> on the host system</p>
 <ul>
 <li><p class="first">Add hugepages for DPDK</p>
 <blockquote>
-<div><p>Add following parameter to <code class="docutils literal"><span class="pre">/etc/default/grub</span> <span class="pre">file</span></code></p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20&quot;
+<div><p>Add following parameter to <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span> <span class="pre">file</span></code></p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20&quot;
 </pre></div>
 </div>
 <div class="line-block">
@@ -648,20 +650,20 @@ The following modifications must be made to the <code class="docutils literal"><
 </li>
 <li><p class="first">Enable IOMMU for VM testing</p>
 <blockquote>
-<div><p>On an Intel platform, update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt intel_iommu=on&quot;
+<div><p>On an Intel platform, update <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span></code> file as below</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt intel_iommu=on&quot;
 </pre></div>
 </div>
-<p>On an AMD platform, update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt amd_iommu=on&quot;
+<p>On an AMD platform, update <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span></code> file as below</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=pt amd_iommu=on&quot;
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 </ul>
-<p>Execute the following command to modify the <code class="docutils literal"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above steps and permanently add them to the kernel command line.</p>
+<p>Execute the following command to modify the <code class="docutils literal notranslate"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above steps and permanently add them to the kernel command line.</p>
 <blockquote>
-<div><div class="highlight-none"><div class="highlight"><pre><span></span>update-grub
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>update-grub
 </pre></div>
 </div>
 </div></blockquote>
@@ -676,7 +678,7 @@ The following modifications must be made to the <code class="docutils literal"><
 <li>Make sure to delete all the rte and cmdline header files from /usr/local/include before switching to different dpdk framework versions.</li>
 <li>Execute the following to compile the driver.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable
 meson build
 cd build
 ninja
@@ -686,16 +688,16 @@ ldconfig
 </div>
 <ul>
 <li><p class="first">The following should appear when ninja completes</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>Linking target app/test/dpdk-test.
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Linking target app/test/dpdk-test.
 </pre></div>
 </div>
 </li>
-<li><p class="first">Verify that <code class="docutils literal"><span class="pre">librte_net_qdma.a</span></code> is installed in <code class="docutils literal"><span class="pre">./build/drivers</span></code> directory.</p>
+<li><p class="first">Verify that <code class="docutils literal notranslate"><span class="pre">librte_net_qdma.a</span></code> is installed in <code class="docutils literal notranslate"><span class="pre">./build/drivers</span></code> directory.</p>
 </li>
 <li><p class="first">Execute the following to compile the igb_uio kernel driver.</p>
 </li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable/dpdk-kmods/linux/igb_uio
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable/dpdk-kmods/linux/igb_uio
 make
 </pre></div>
 </div>
@@ -704,27 +706,27 @@ make
 <li><p class="first">Compile Test application</p>
 <blockquote>
 <div><p>Change to root user and compile the application</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>sudo su
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo su
 cd examples/qdma_testapp
 make RTE_SDK=`pwd`/../.. RTE_TARGET=build
 </pre></div>
 </div>
 <p>The following should appear when make completes</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>ln -sf qdma_testapp-shared build/qdma_testapp
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ln -sf qdma_testapp-shared build/qdma_testapp
 </pre></div>
 </div>
 <p>Additionally, for memory mapped mode, BRAM size can be configured with make command.
 Default BRAM size is set to 512KB in the driver makefile.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>make BRAM_SIZE=&lt;BRAM size in bytes in decimal&gt; RTE_SDK=`pwd`/../.. RTE_TARGET=build
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>make BRAM_SIZE=&lt;BRAM size in bytes in decimal&gt; RTE_SDK=`pwd`/../.. RTE_TARGET=build
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 </ul>
 <p>If any of above steps are missed or require code modifications,
-perform <code class="docutils literal"><span class="pre">make</span> <span class="pre">clean</span></code> before required modifications and re-building.
-For driver related modifications, perform <code class="docutils literal"><span class="pre">make</span> <span class="pre">clean</span></code>
-from inside <code class="docutils literal"><span class="pre">build</span></code> directory.</p>
+perform <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code> before required modifications and re-building.
+For driver related modifications, perform <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code>
+from inside <code class="docutils literal notranslate"><span class="pre">build</span></code> directory.</p>
 </div>
 </div>
 </div>
@@ -759,7 +761,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on January 01, 2025.
+        Last updated on August 20, 2026.
       </span>
 
     </p>
@@ -837,7 +839,7 @@ from inside <code class="docutils literal"><span class="pre">build</span></code>
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2024 Advanced Micro Devices Inc.
+                                  &copy; 2022-2026 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

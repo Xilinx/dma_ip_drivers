@@ -617,6 +617,7 @@ Commands supported by the qdma_testapp CLI
 	The keyboard keys ``Ctrl`` and ``D`` when pressed together quits the application.
 
 
+
 Virtual Machine (VM) execution and test
 ---------------------------------------
 Assuming that the VM image has been created with the settings outlined in Table :ref:`guest_system_cfg`, follow below steps to execute qdma_testapp on VM.
@@ -695,7 +696,7 @@ Add the Vendor Id and Device Id to vfio-pci and bind the VFs to vfio-pci as belo
 		-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4, -device vfio-pci,host=81:08.4 -vnc :5556 &
 
 
-**Notes**:
+**Note**:
 
         1. If Qemu fails to  launch VM with the above command, with "VF token required for access" error, Update Qemu to version 8.2.4. This version supports passing vf-token to VM.
            Run below steps to register VF token.

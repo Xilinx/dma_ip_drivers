@@ -1,0 +1,53 @@
+========================
+Xilinx XVSEC Software
+========================
+
+Xilinx Vendor Specific Capabilities(**XVSEC**) are extended features added to
+PCI Express configuration space. Some of these capabilities includes
+MCAP, ZERO VSEC, etc.,
+
+**Media Configuration Access Port(MCAP)**:
+The Media Configuration Access Port (MCAP) is a new configuration interface
+available for UltraScale and UltraScale+ devices. This interface is integrated
+into the PCI Express hard block and provides access to the FPGA configuration
+logic through the PCI Express hard block when enabled.
+
+
+XVSEC(MCAP) driver can be used with XDMA,
+QDMA, AXI-Bridge and BASE Core configurations, but not dependent on any of them.
+The use of MCAP or other VSEC is typically independent of the DMA or bridge mode.
+In the Future other VSECs may be added by customers.
+
+
+Xilinx XVSEC Solution consists of
+
+- **User space utility**: XVSEC CLI tool to demonstrate vendor specific features and its functionality
+
+	- This includes MCAP functionality
+	- In future, the tool will be expanded with new extended vendor specific capabilities
+
+- **Userspace Library**:
+
+	- This library provides APIs for all Xilinx PCIe Vendor specific capabilities (Ex: MCAP, Generic VSEC, etc.,)
+
+- **Driver Interface**: XVSEC character driver interface per PCIe device
+
+	- XVSEC driver can be loaded independently
+	- It is also possible to load XVSEC driver integrated with any other Kernel Driver (Ex: XDMA, QDMA, etc.,)
+
+
+.. image:: /images/xvsec_linux_driver_architecture.png
+   :align: center
+
+----------------------------------------------------------------------------
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Table of Contents
+
+   system-requirements.rst
+   build.rst
+   userguide.rst
+   devguide.rst
+   user_app.rst

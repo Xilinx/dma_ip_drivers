@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2024.1',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -316,7 +306,7 @@
             
             
               <div class="version">
-                2024.1
+                2025.2
               </div>
             
           
@@ -449,13 +439,13 @@ application and to interact with the QDMA PCIe device.</p>
 <ol class="arabic simple">
 <li>Navigate to examples/qdma_testapp directory.</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable/examples/qdma_testapp
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># cd &lt;server_dir&gt;/&lt;dpdk_test_area&gt;/dpdk-stable/examples/qdma_testapp
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
 <li>Run the ‘lspci’ command on the console and verify that the PFs are detected as shown below. Here, ‘81’ is the PCIe bus number on which Xilinx QDMA device is installed.</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># lspci | grep Xilinx
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># lspci | grep Xilinx
 81:00.0 Memory controller: Xilinx Corporation Device 903f
 81:00.1 Memory controller: Xilinx Corporation Device 913f
 81:00.2 Memory controller: Xilinx Corporation Device 923f
@@ -465,7 +455,7 @@ application and to interact with the QDMA PCIe device.</p>
 <ol class="arabic simple" start="3">
 <li>Execute the following commands required for running the DPDK application</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># mkdir /mnt/huge
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># mkdir /mnt/huge
 # mount -t hugetlbfs nodev /mnt/huge
 # modprobe uio
 # insmod ../../dpdk-kmods/linux/igb_uio/igb_uio.ko
@@ -474,7 +464,7 @@ application and to interact with the QDMA PCIe device.</p>
 <ol class="arabic simple" start="4">
 <li>Bind PF ports to the igb_uio module as shown below</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -b igb_uio 81:00.0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -b igb_uio 81:00.0
 # ../../usertools/dpdk-devbind.py -b igb_uio 81:00.1
 # ../../usertools/dpdk-devbind.py -b igb_uio 81:00.2
 # ../../usertools/dpdk-devbind.py -b igb_uio 81:00.3
@@ -483,7 +473,7 @@ application and to interact with the QDMA PCIe device.</p>
 <p>5. The execution of steps 3 and 4 creates a max_vfs file entry in /sys/bus/pci/devices/0000:&lt;bus&gt;:&lt;device&gt;.&lt;function&gt;.
 Enable VFs for each PF by writing the number of VFs to enable to this file as shown below.
 This example creates 1 VF for each PF.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span># echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.0/max_vfs
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.0/max_vfs
 # echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.1/max_vfs
 # echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.2/max_vfs
 # echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.3/max_vfs
@@ -492,7 +482,7 @@ This example creates 1 VF for each PF.</p>
 <ol class="arabic simple" start="6">
 <li>Run the lspci command on the console and verify that the VFs are listed in the output as shown below</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># lspci | grep Xilinx
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># lspci | grep Xilinx
 81:00.0 Memory controller: Xilinx Corporation Device 903f
 81:00.1 Memory controller: Xilinx Corporation Device 913f
 81:00.2 Memory controller: Xilinx Corporation Device 923f
@@ -509,7 +499,7 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <ol class="arabic simple" start="7">
 <li>Execute the following commands to bind the VF ports to igb_uio module</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -b igb_uio 81:00.4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -b igb_uio 81:00.4
 # ../../usertools/dpdk-devbind.py -b igb_uio 81:08.4
 # ../../usertools/dpdk-devbind.py -b igb_uio 81:10.0
 # ../../usertools/dpdk-devbind.py -b igb_uio 81:17.4
@@ -518,12 +508,12 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <ol class="arabic simple" start="8">
 <li>Run the qdma_testapp using the following command</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#./build/qdma_testapp -c 0xf -n 4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#./build/qdma_testapp -c 0xf -n 4
 </pre></div>
 </div>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">-c</span></code> represents processor mask</li>
-<li><code class="docutils literal"><span class="pre">-n</span></code> represents number of memory channels</li>
+<li><code class="docutils literal notranslate"><span class="pre">-c</span></code> represents processor mask</li>
+<li><code class="docutils literal notranslate"><span class="pre">-n</span></code> represents number of memory channels</li>
 </ul>
 </div>
 <div class="section" id="binding-pcie-functions-to-vfio">
@@ -533,12 +523,12 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <h3>Boot argument changes for VFIO<a class="headerlink" href="#boot-argument-changes-for-vfio" title="Permalink to this headline">¶</a></h3>
 <p>To bind with VFIO, enable IOMMU in the grub file as below</p>
 <blockquote>
-<div><p>Update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=on intel_iommu=on&quot;
+<div><p>Update <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span></code> file as below.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=on intel_iommu=on&quot;
 </pre></div>
 </div>
-<p>Execute the following command to modify the <code class="docutils literal"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above steps and permanently add them to the kernel command line.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>update-grub
+<p>Execute the following command to modify the <code class="docutils literal notranslate"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above steps and permanently add them to the kernel command line.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>update-grub
 </pre></div>
 </div>
 <p>Reboot host system after making the above modifications.</p>
@@ -549,7 +539,7 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <p>For linux kernel versions prior to 5.0, vfio-pci doesn’t provide sysfs interface to enable VFs. Hence, we first bind PFs with igb_uio and enable VFs and then unbind from igb_uio to bind with vfio-pci.</p>
 <p>Execute steps 1 to 6 of <a class="reference internal" href="#run-dpdk"><span class="std std-ref">Running the DPDK software test application</span></a> to bind PFs with igb_uio and enable VFs.</p>
 <p>Now, unbind PFs from igb_uio driver and bind PFs and VFs to vfio-pci driver.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -u 81:00.0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># ../../usertools/dpdk-devbind.py -u 81:00.0
 # ../../usertools/dpdk-devbind.py -u 81:00.1
 # ../../usertools/dpdk-devbind.py -u 81:00.2
 # ../../usertools/dpdk-devbind.py -u 81:00.3
@@ -569,31 +559,31 @@ where 81:00.0 represents port 0, 81:00.1 represents port 1 and so on.
 <ol class="arabic simple">
 <li>Generate the VF token by uuid command</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>14d63f20-8445-11ea-8900-1f9ce7d5650c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>14d63f20-8445-11ea-8900-1f9ce7d5650c
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
 <li>Load the vfio-pci module with enable_sriov parameter set</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>sudo modprobe vfio-pci enable_sriov=1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>sudo modprobe vfio-pci enable_sriov=1
 </pre></div>
 </div>
 <ol class="arabic simple" start="3">
 <li>Alternatively, pass the enable_sriov parameter through the sysfs if the module is already loaded or is built-in:</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>echo 1 | sudo tee /sys/module/vfio_pci/parameters/enable_sriov
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>echo 1 | sudo tee /sys/module/vfio_pci/parameters/enable_sriov
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
 <li>Bind the PCI devices to vfio-pci driver</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>../../usertools/dpdk-devbind.py -b vfio-pci 0000:81:00.0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>../../usertools/dpdk-devbind.py -b vfio-pci 0000:81:00.0
 </pre></div>
 </div>
 <ol class="arabic simple" start="5">
 <li>Create the desired number of VF devices</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>echo 2 &gt; /sys/bus/pci/devices/0000:81:00.0/sriov_numvfs
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>echo 2 &gt; /sys/bus/pci/devices/0000:81:00.0/sriov_numvfs
 </pre></div>
 </div>
 <p>Please note that between Linux kernel versions 5.0 and 5.7, there have been observed issues when unbinding PF after creating VFs using igb_uio. This process may leave SR-IOV enabled, potentially causing compatibility challenges with newer kernel versions that incorporate vfio-pci as a built-in module. To mitigate this concern, we recommend considering an upgrade to kernel version 5.7 or a more recent release, as these versions have addressed these issues and offer improved compatibility.</p>
@@ -611,7 +601,7 @@ Xilinx supports following device arguments to configure PCIe device.</p>
 <div><p>This parameter specifies the PCIe BAR number where QDMA configuration register space is mapped.
 Valid values are 0 to 5. Default is set to 0 i.e. BAR 0 in the driver.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,config_bar=2 -a 81:00.1,config_bar=4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,config_bar=2 -a 81:00.1,config_bar=4
 </pre></div>
 </div>
 <p>This example configures BAR 2 as QDMA configuration BAR for device “81:00.0”
@@ -623,7 +613,7 @@ and BAR 4 as QDMA configuration BAR for device “81:00.1”.</p>
 <div><p>This parameter enables or disables descriptor prefetch on C2H streaming queues.
 Default is prefetch disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,desc_prefetch=1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,desc_prefetch=1
 </pre></div>
 </div>
 <p>This example enables descriptor prefetch on all the streaming C2H queues of
@@ -635,7 +625,7 @@ the device “81:00.0”.</p>
 <div><p>This parameter sets the completion entry length of the completion queue.
 Valid lengths are 8, 16, 32 and 64 bytes. Default length is 8 bytes.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,cmpt_desc_len=32
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,cmpt_desc_len=32
 </pre></div>
 </div>
 <p>This example sets completion entry length to 32 bytes on all the completion queues
@@ -653,7 +643,7 @@ of the device “81:00.0”.</p>
 <p>5 - Trigger when either of USER_TIMER or COUNT is reached.</p>
 <p>Default value configured in the driver is 4.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,trigger_mode=1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,trigger_mode=1
 </pre></div>
 </div>
 <p>This example sets the trigger mode to every event for all the
@@ -668,7 +658,7 @@ completion queues of the device “81:00.0”.</p>
 <p>2 - Simple bypass mode</p>
 <p>Default is internal mode i.e. bypass disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,c2h_byp_mode=2
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,c2h_byp_mode=2
 </pre></div>
 </div>
 <p>This example sets simple bypass mode on all the C2H queues belonging to the
@@ -682,7 +672,7 @@ PCIe device “81:00.0”.</p>
 <p>1 - Bypass enabled</p>
 <p>Default is Bypass disabled.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,h2c_byp_mode=1
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0x1f -n 4 -a 81:00.0,h2c_byp_mode=1
 </pre></div>
 </div>
 <p>This example sets bypass mode on all the H2C queues belonging to the
@@ -695,7 +685,7 @@ PCIe device “81:00.0”.</p>
 <h3>CLI support in qdma_testapp<a class="headerlink" href="#cli-support-in-qdma-testapp" title="Permalink to this headline">¶</a></h3>
 <p>Sample log of the qdma_testapp execution is given below.
 After running the qdma_testapp, command line prompt appears on the console as shown below.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>#./build/qdma_testapp -c 0xf -n 4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#./build/qdma_testapp -c 0xf -n 4
 QDMA testapp rte eal init...
 EAL: Detected 8 lcore(s)
 EAL: Probing VFIO support...
@@ -727,10 +717,10 @@ xilinx-app&gt;
 <blockquote>
 <div><p>This command assigns queues to the port, sets up required resources for the queues, and prepares queues for data processing.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_init &lt;port-id&gt; &lt;num-queues&gt; &lt;num-st-queues&gt; &lt;ring-depth&gt; &lt;pkt-buff-size&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_init &lt;port-id&gt; &lt;num-queues&gt; &lt;num-st-queues&gt; &lt;ring-depth&gt; &lt;pkt-buff-size&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>num-queues</strong> represents the total number of queues to be assigned to the port</p>
 <p><strong>num-st-queues</strong> represents the total number of queues to be configured in streaming mode.
@@ -738,7 +728,7 @@ This implies that the (num-queues - num-st-queues) number of queues has to be co
 <p><strong>ring-depth</strong> represents the number of entries in C2H and H2C descriptor rings of each queue of the port</p>
 <p><strong>pkt-buff-size</strong> represents the size of the data that a single C2H or H2C descriptor can support</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_init 1 32 16 1024 4096
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_init 1 32 16 1024 4096
 </pre></div>
 </div>
 <p>This example initializes Port 1 with first 16 queues in streaming mode and remaining 16 queues in memory mapped mode.
@@ -749,13 +739,13 @@ Number of C2H and H2C descriptor ring depth is set to 1024 and data buffer of 4K
 <blockquote>
 <div><p>This command frees up all the allocated resources and removes the queues associated with the port.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_close &lt;port-id&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_close &lt;port-id&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_close 0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_close 0
 </pre></div>
 </div>
 <p>This example closes the port 0. Port 0 can again be re-initialized with <cite>port_init</cite> command after <cite>port_close</cite> command.</p>
@@ -766,10 +756,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <div><p>This command resets the DPDK port. This command is supported for VF port only.
 This command closes the port and re-initializes it with the values provided in this command.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_reset &lt;port-id&gt; &lt;num-queues&gt; &lt;num-st-queues&gt; &lt;ring-depth&gt; &lt;pkt-buff-size&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_reset &lt;port-id&gt; &lt;num-queues&gt; &lt;num-st-queues&gt; &lt;ring-depth&gt; &lt;pkt-buff-size&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>num-queues</strong> represents the total number of queues to be assigned to the port</p>
 <p><strong>num-st-queues</strong> represents the total number of queues to be configured in streaming mode.
@@ -777,7 +767,7 @@ This implies that the (num-queues - num-st-queues) number of queues has to be co
 <p><strong>ring-depth</strong> represents the number of entries in C2H and H2C descriptor rings of each queue of the port</p>
 <p><strong>pkt-buff-size</strong> represents the size of the data that a single C2H or H2C descriptor can support</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_reset 4 32 16 1024 4096
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_reset 4 32 16 1024 4096
 </pre></div>
 </div>
 <p>This example command resets the port 4 and re-initializes it with first 16 queues in streaming mode and
@@ -790,13 +780,13 @@ and data buffer of 4KB supported by each descriptor.</p>
 <div><p>This command frees up all the resources allocated for the port and removes the port from application use.
 User will need to restart the application to use the port again.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_remove &lt;port-id&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_remove &lt;port-id&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>port_remove 4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>port_remove 4
 </pre></div>
 </div>
 <p>This example removes the port 4. Restart the application to use port 4 again.</p>
@@ -806,10 +796,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command is used to DMA the data from host to card.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>dma_to_device &lt;port-id&gt; &lt;num-queues&gt; &lt;input-filename&gt; &lt;dst-addr&gt; &lt;size&gt; &lt;iterations&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dma_to_device &lt;port-id&gt; &lt;num-queues&gt; &lt;input-filename&gt; &lt;dst-addr&gt; &lt;size&gt; &lt;iterations&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>num-queues</strong> represents the total number of queues to use for transmitting the data</p>
 <p><strong>input-filename</strong> represents the path to a valid binary data file, contents of which needs to be DMA’ed</p>
@@ -819,7 +809,7 @@ This field is ignored for streaming mode queues.</p>
 Data will be segmented across queues such that the total data transferred to the card is <cite>size</cite> amount</p>
 <p><strong>iterations</strong> represents the number of loops to repeat the same DMA transfer</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>dma_to_device 0 2048 mm_datafile_1MB.bin 0 524288 0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dma_to_device 0 2048 mm_datafile_1MB.bin 0 524288 0
 </pre></div>
 </div>
 <p>This example segments the (524288) bytes from the mm_datafile_1MB.bin file equally to 2048 queues
@@ -831,10 +821,10 @@ offset (1*524288)/2048 for 2nd queue, and so on.</p>
 <blockquote>
 <div><p>This command is used to DMA the data from card to host.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>dma_from_device &lt;port-id&gt; &lt;num-queues&gt; &lt;output-filename&gt; &lt;src-addr&gt; &lt;size&gt; &lt;iterations&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dma_from_device &lt;port-id&gt; &lt;num-queues&gt; &lt;output-filename&gt; &lt;src-addr&gt; &lt;size&gt; &lt;iterations&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>num-queues</strong> represents the total number of queues to use to receive the data</p>
 <p><strong>output-filename</strong> represents the path to output file to dump the received data</p>
@@ -844,7 +834,7 @@ This field is ignored for streaming mode queues.</p>
 Data will be segmented across queues such that the total data transferred from the card is <cite>size</cite> amount</p>
 <p><strong>iterations</strong> represents the number of loops to repeat the same DMA transfer</p>
 <p>Example usage:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>dma_from_device 0 2048 port0_qcount2048_size524288.bin 0 524288 0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dma_from_device 0 2048 port0_qcount2048_size524288.bin 0 524288 0
 </pre></div>
 </div>
 <p>This example receives 524288 bytes from 2048 queues and writes to port0_qcount2048_size524288.bin file.
@@ -856,10 +846,10 @@ Data will be segmented across queues such that the total data transferred from t
 <blockquote>
 <div><p>This command is used to read the specified register.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>reg_read &lt;port-id&gt; &lt;bar-num&gt; &lt;address&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>reg_read &lt;port-id&gt; &lt;bar-num&gt; &lt;address&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>bar-num</strong> represents the PCIe BAR where the register is located and this input value should be a decimal value in the range 0-5</p>
 <p><strong>address</strong> represents offset of the register in the PCIe BAR <cite>bar-num</cite></p>
@@ -869,10 +859,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command is used to write a 32-bit value to the specified register.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>reg_write &lt;port-id&gt; &lt;bar-num&gt; &lt;address&gt; &lt;value&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>reg_write &lt;port-id&gt; &lt;bar-num&gt; &lt;address&gt; &lt;value&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>bar-num</strong> represents the PCIe BAR where the register is located and this input value should be a decimal value in the range 0-5</p>
 <p><strong>address</strong> represents offset of the register in the PCIe BAR <cite>bar-num</cite></p>
@@ -883,10 +873,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command dumps important QDMA registers values of the given port on console.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>reg_dump &lt;port-id&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>reg_dump &lt;port-id&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 </div></blockquote>
 </li>
@@ -894,10 +884,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command reads the field info for the specified number of registers of the given port on console.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>reg_info_read &lt;port-id&gt; &lt;reg-addr&gt; &lt;num-regs&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>reg_info_read &lt;port-id&gt; &lt;reg-addr&gt; &lt;num-regs&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>reg-addr</strong> represents offset of the register in the PCIe BAR <cite>bar-num</cite></p>
 <p><strong>rum-regs</strong> represents number of registers to read</p>
@@ -907,10 +897,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command dumps the queue context of the specified queue number of the given port.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>queue_dump &lt;port-id&gt; &lt;queue-id&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>queue_dump &lt;port-id&gt; &lt;queue-id&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>queue-id</strong> represents the queue number relative to the port, whose context information needs to be logged</p>
 </div></blockquote>
@@ -919,10 +909,10 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command dumps the descriptors of the C2H and H2C rings of the specified queue number of the given port.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>desc_dump &lt;port-id&gt; &lt;queue-id&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>desc_dump &lt;port-id&gt; &lt;queue-id&gt;
 </pre></div>
 </div>
-<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal"><span class="pre">igb_uio</span></code> driver.
+<p><strong>port-id</strong> represents a logical numbering for PCIe functions in the order they are bind to <code class="docutils literal notranslate"><span class="pre">igb_uio</span></code> driver.
 The first PCIe function that is bound has port id as 0.</p>
 <p><strong>queue-id</strong> represents the queue number relative to the port, whose C2H and H2C ring descriptors needs to be dumped</p>
 </div></blockquote>
@@ -931,7 +921,7 @@ The first PCIe function that is bound has port id as 0.</p>
 <blockquote>
 <div><p>This command executes the list of CLI commands from the given file.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>load_cmds &lt;file_name&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>load_cmds &lt;file_name&gt;
 </pre></div>
 </div>
 <p><strong>file_name</strong> represents path to a valid file containing list of above described CLI commands to be executed in sequence.</p>
@@ -941,14 +931,14 @@ Format for this commad is:</p>
 <blockquote>
 <div><p>This command dumps the help menu with supported commands and their format.
 Format for this commad is:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>help
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>help
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p class="first"><strong>ctrl+d</strong></p>
 <blockquote>
-<div><p>The keyboard keys <code class="docutils literal"><span class="pre">Ctrl</span></code> and <code class="docutils literal"><span class="pre">D</span></code> when pressed together quits the application.</p>
+<div><p>The keyboard keys <code class="docutils literal notranslate"><span class="pre">Ctrl</span></code> and <code class="docutils literal notranslate"><span class="pre">D</span></code> when pressed together quits the application.</p>
 </div></blockquote>
 </li>
 </ol>
@@ -959,25 +949,25 @@ Format for this commad is:</p>
 <h2>Virtual Machine (VM) execution and test<a class="headerlink" href="#virtual-machine-vm-execution-and-test" title="Permalink to this headline">¶</a></h2>
 <p>Assuming that the VM image has been created with the settings outlined in Table <a class="reference internal" href="system-requirements.html#guest-system-cfg"><span class="std std-ref">Guest System Configuration</span></a>, follow below steps to execute qdma_testapp on VM.</p>
 <ol class="arabic">
-<li><p class="first">On host system, update <code class="docutils literal"><span class="pre">/etc/default/grub</span></code> file as below to enable IOMMU.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=on intel_iommu=pt&quot;
+<li><p class="first">On host system, update <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span></code> file as below to enable IOMMU.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>GRUB_CMDLINE_LINUX=&quot;default_hugepagesz=1GB hugepagesz=1G hugepages=20 iommu=on intel_iommu=pt&quot;
 </pre></div>
 </div>
-<p>Execute the following command to modify the <code class="docutils literal"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above step and permanently add them to the kernel command line.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>update-grub
+<p>Execute the following command to modify the <code class="docutils literal notranslate"><span class="pre">/boot/grub/grub.cfg</span></code> with the configuration set in the above step and permanently add them to the kernel command line.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>update-grub
 </pre></div>
 </div>
 <p>Reboot host system after making the above modifications.</p>
 </li>
 <li><p class="first">On the host system, insert igb_uio driver and bind the PFs with the igb_uio driver</p>
 </li>
-<li><p class="first">Enable VF(s) on host system by writing the number of VF(s) to enable in <code class="docutils literal"><span class="pre">max_vfs</span></code> file under <code class="docutils literal"><span class="pre">/sys/bus/pci/devices/0000:&lt;bus&gt;:&lt;device&gt;.&lt;function&gt;</span></code>.</p>
+<li><p class="first">Enable VF(s) on host system by writing the number of VF(s) to enable in <code class="docutils literal notranslate"><span class="pre">max_vfs</span></code> file under <code class="docutils literal notranslate"><span class="pre">/sys/bus/pci/devices/0000:&lt;bus&gt;:&lt;device&gt;.&lt;function&gt;</span></code>.</p>
 <blockquote>
-<div><div class="highlight-none"><div class="highlight"><pre><span></span># echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.0/max_vfs
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span># echo 1 &gt; /sys/bus/pci/devices/0000\:81\:00.0/max_vfs
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">lspci</span></code> should now show new entry for VF</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>81:00.4 Memory controller: Xilinx Corporation Device a03f
+<p><code class="docutils literal notranslate"><span class="pre">lspci</span></code> should now show new entry for VF</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>81:00.4 Memory controller: Xilinx Corporation Device a03f
 </pre></div>
 </div>
 </div></blockquote>
@@ -986,7 +976,7 @@ Format for this commad is:</p>
 </li>
 <li><p class="first">Start the VM using below command by attaching the VF (81:00.4 in this example)</p>
 <blockquote>
-<div><div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
 -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4 -vnc :5556 &amp;
 </pre></div>
 </div>
@@ -994,7 +984,7 @@ Format for this commad is:</p>
 </li>
 <li><p class="first">Copy the DPDK source code in VM by executing below command from VM.</p>
 <blockquote>
-<div><div class="highlight-none"><div class="highlight"><pre><span></span>scp -r &lt;username&gt;@&lt;host_ip&gt;:&lt;dpdk_sources&gt; &lt;dpdk_copy_path_in_vm&gt;
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>scp -r &lt;username&gt;@&lt;host_ip&gt;:&lt;dpdk_sources&gt; &lt;dpdk_copy_path_in_vm&gt;
 </pre></div>
 </div>
 </div></blockquote>
@@ -1007,9 +997,9 @@ Format for this commad is:</p>
 <div class="section" id="executing-with-vfio-pci-driver-in-vm-using-qemu">
 <h3>Executing with vfio-pci driver in VM using QEMU<a class="headerlink" href="#executing-with-vfio-pci-driver-in-vm-using-qemu" title="Permalink to this headline">¶</a></h3>
 <p>Follow below steps on Host side before attaching VFs to QEMU.</p>
-<p>1. Find the Vendor Id (e.g. 10ee) and Device Id (e.g. a03f, a13f) of the VFs being attached to VM using <code class="docutils literal"><span class="pre">lspci</span></code> command.
+<p>1. Find the Vendor Id (e.g. 10ee) and Device Id (e.g. a03f, a13f) of the VFs being attached to VM using <code class="docutils literal notranslate"><span class="pre">lspci</span></code> command.
 Add the Vendor Id and Device Id to vfio-pci and bind the VFs to vfio-pci as below</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>echo &quot;10ee a03f&quot; &gt; /sys/bus/pci/drivers/vfio-pci/new_id
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>echo &quot;10ee a03f&quot; &gt; /sys/bus/pci/drivers/vfio-pci/new_id
 echo 0000:81:00.4 &gt; /sys/bus/pci/devices/0000:81:00.4/driver/unbind
 echo 0000:81:00.4 &gt; /sys/bus/pci/drivers/vfio-pci/bind
 
@@ -1021,11 +1011,11 @@ echo 0000:81:08.4 &gt; /sys/bus/pci/drivers/vfio-pci/bind
 <ol class="arabic simple" start="2">
 <li>Attach the VFs (here, 81:00.4 and 81:08.4) to VM via vfio-pci using QEMU with below command.</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt;
 -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22 -device vfio-pci,host=81:00.4, -device vfio-pci,host=81:08.4 -vnc :5556 &amp;
 </pre></div>
 </div>
-<p><strong>Notes</strong>:</p>
+<p><strong>Note</strong>:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>If Qemu fails to  launch VM with the above command, with “VF token required for access” error, Update Qemu to version 8.2.4. This version supports passing vf-token to VM.
@@ -1033,14 +1023,14 @@ Run below steps to register VF token.</li>
 <li>VF token can be passed to DPDK by using EAL parameter - -vfio-vf-token. Run below command to pass vf-token across all PF and VF ports.(Use the uuid generated earlier
 as outlined under “Driver binding with vfio-pci” section)</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0xf --vfio-vf-token=&lt;uuid&gt; -n 4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>./build/qdma_testapp -c 0xf --vfio-vf-token=&lt;uuid&gt; -n 4
 </pre></div>
 </div>
 <p>After running the above command, exit from the application as VFs need to be attached to VM. vf-token should be same for PF’s and VF’s.</p>
 <ol class="arabic simple" start="3">
 <li>Now launch VM using following command with vf-token parameter</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt; -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>qemu-system-x86_64 -cpu host -enable-kvm -m 15360 -smp sockets=1,cores=10 -hda &lt;vm_image.qcow2&gt; -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5556-:22
 -device vfio-pci,host=0000:81:00.4,vf-token=&lt;uuid&gt;, -device vfio-pci,host=0000:81:08.4,vf-token=&lt;uuid&gt; -vnc :5556 &amp;
 </pre></div>
 </div>
@@ -1049,9 +1039,9 @@ as outlined under “Driver binding with vfio-pci” section)</li>
 <p>Follow below steps inside VM to bind the functions with vfio-pci</p>
 <ol class="arabic simple">
 <li>Once the VM is launched, execute steps as outlined in section <a class="reference internal" href="build.html#build-dpdk"><span class="std std-ref">Building QDMA DPDK Software</span></a> to build DPDK on VM</li>
-<li>Enable <code class="docutils literal"><span class="pre">noiommu</span></code> mode to support vfio-pci driver in VM as there won’t be physical IOMMU device present inside VM</li>
+<li>Enable <code class="docutils literal notranslate"><span class="pre">noiommu</span></code> mode to support vfio-pci driver in VM as there won’t be physical IOMMU device present inside VM</li>
 </ol>
-<div class="highlight-none"><div class="highlight"><pre><span></span>modprobe vfio-pci
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>modprobe vfio-pci
 echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
 </pre></div>
 </div>
@@ -1092,7 +1082,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on January 01, 2025.
+        Last updated on August 20, 2026.
       </span>
 
     </p>
@@ -1170,7 +1160,7 @@ echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2024 Advanced Micro Devices Inc.
+                                  &copy; 2022-2026 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

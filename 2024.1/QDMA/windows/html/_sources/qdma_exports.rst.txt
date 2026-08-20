@@ -1,0 +1,11 @@
+*********************************
+QDMA Windows Driver Exported APIs
+*********************************
+
+.. toctree::
+   :maxdepth: 2
+
+   qdma_win_exports_namespace.rst
+   qdma_win_export_apis.rst
+
+

@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2024.1',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -316,7 +306,7 @@
             
             
               <div class="version">
-                2024.1
+                2025.2
               </div>
             
           
@@ -467,12 +457,12 @@
             
   <div class="section" id="dma-control-application-dma-ctl">
 <h1>DMA Control Application (dma-ctl)<a class="headerlink" href="#dma-control-application-dma-ctl" title="Permalink to this headline">¶</a></h1>
-<p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal"><span class="pre">dma-ctl</span></code> to manage the driver.</p>
-<p>The Xilinx QDMA control tool, <code class="docutils literal"><span class="pre">dma-ctl</span></code> is a command Line utility which is installed in <code class="docutils literal"><span class="pre">/usr/local/sbin/</span></code> and allows administration of the Xilinx QDMA queues. Make sure that the installation path <code class="docutils literal"><span class="pre">/usr/local/sbin/</span></code> is added to the <code class="docutils literal"><span class="pre">PATH</span></code> variable.</p>
+<p>QDMA driver comes with a command-line configuration utility called <code class="docutils literal notranslate"><span class="pre">dma-ctl</span></code> to manage the driver.</p>
+<p>The Xilinx QDMA control tool, <code class="docutils literal notranslate"><span class="pre">dma-ctl</span></code> is a command Line utility which is installed in <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin/</span></code> and allows administration of the Xilinx QDMA queues. Make sure that the installation path <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin/</span></code> is added to the <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variable.</p>
 <div class="section" id="note">
 <h2>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h2>
-<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal"><span class="pre">dmactl</span></code>. If user installed <code class="docutils literal"><span class="pre">dmactl</span></code> application aleady in <code class="docutils literal"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal"><span class="pre">dmactl</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
-<p><code class="docutils literal"><span class="pre">dma-ctl</span></code> application can perform the following functions:</p>
+<p>The name of the application in previous releases before 2020.1 was <code class="docutils literal notranslate"><span class="pre">dmactl</span></code>. If user installed <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> application aleady in <code class="docutils literal notranslate"><span class="pre">/usr/local/sbin</span></code> area, make sure to uninstall the old application(s). Using <code class="docutils literal notranslate"><span class="pre">dmactl</span></code> aginst latest driver would lead to undefined behaviour and errors may be observed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dma-ctl</span></code> application can perform the following functions:</p>
 <ul>
 <li><p class="first">Query the list of functions binded QDMA driver</p>
 </li>
@@ -507,19 +497,19 @@
 </div></blockquote>
 </li>
 </ul>
-<p>For dma-ctl help run <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">–h</span></code></p>
+<p>For dma-ctl help run <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">–h</span></code></p>
 <p>For more details on the dma-ctl tool commands and options for each command, refer to dma-ctl man page.</p>
-<p>For dma-ctl man page, run <code class="docutils literal"><span class="pre">man</span> <span class="pre">dma-ctl</span></code></p>
+<p>For dma-ctl man page, run <code class="docutils literal notranslate"><span class="pre">man</span> <span class="pre">dma-ctl</span></code></p>
 </div>
 <div class="section" id="device-management-commands">
 <h2>Device Management Commands<a class="headerlink" href="#device-management-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="list-devices">
 <h3>List devices<a class="headerlink" href="#list-devices" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">dev</span> <span class="pre">list</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">dev</span> <span class="pre">list</span></code></p>
 <p>This command lists all the physical and virtual functions available in the system along with the number of queues assigned to each function, queue base and queue max.
-Each qdma device name is listed as <code class="docutils literal"><span class="pre">qdma&lt;bbddf&gt;</span></code> where <code class="docutils literal"><span class="pre">&lt;bbddf&gt;</span></code> is bus number, device number and function number.</p>
+Each qdma device name is listed as <code class="docutils literal notranslate"><span class="pre">qdma&lt;bbddf&gt;</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;bbddf&gt;</span></code> is bus number, device number and function number.</p>
 <p>Initially when the system is started, the queues are not assigned to any of the available functions.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl dev list
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl dev list
 
 qdma01000       0000:01:00.0    max QP: 0, -~-
 qdma01001       0000:01:00.1    max QP: 0, -~-
@@ -552,9 +542,9 @@ qdmavf01004     0000:01:00.4    max QP: 100, 400~499
 <h2>Queue Management Commands<a class="headerlink" href="#queue-management-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="list-version">
 <h3>List Version<a class="headerlink" href="#list-version" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">cap</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">cap</span></code></p>
 <p>This command lists hardware and software version details and device capabilities.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 cap
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 cap
 =============Hardware Version============
 
 RTL Version         : RTL Patch
@@ -582,9 +572,9 @@ Desc Engine Mode                       : Internal and Bypass mode
 </div>
 <div class="section" id="list-device-statistics">
 <h3>List Device Statistics<a class="headerlink" href="#list-device-statistics" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">stat</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">stat</span></code></p>
 <p>This command lists the statistics accumulated for this device</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 stat
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 stat
 
 qdma01000:statistics
 Total MM H2C packets processed = 0
@@ -596,11 +586,11 @@ Max Ping Pong Latency = 0
 Avg Ping Pong Latency = 0
 </pre></div>
 </div>
-<p>Use <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma01000</span> <span class="pre">stat</span> <span class="pre">clear</span></code> to clear the statistics collected</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma01000</span> <span class="pre">stat</span> <span class="pre">clear</span></code> to clear the statistics collected</p>
 </div>
 <div class="section" id="add-a-queue">
 <h3>Add a Queue<a class="headerlink" href="#add-a-queue" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[mode</span> <span class="pre">&lt;st|mm&gt;]</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[mode</span> <span class="pre">&lt;st|mm&gt;]</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to add a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -608,7 +598,7 @@ Avg Ping Pong Latency = 0
 <li>mode : mode of the queue, streaming(st) or memory mapped(mm). Mode defaults to mm.</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Direction defaults to h2c.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q add idx 4 mode mm dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q add idx 4 mode mm dir h2c
 
 qdma01000-MM-4 H2C added.
 Added 1 Queues.
@@ -617,7 +607,7 @@ Added 1 Queues.
 </div>
 <div class="section" id="add-a-list-of-queues">
 <h3>Add a List of Queues<a class="headerlink" href="#add-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span>&#160; <span class="pre">[</span> <span class="pre">mode</span> <span class="pre">&lt;st|mm&gt;</span> <span class="pre">]</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">add</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span>&#160; <span class="pre">[</span> <span class="pre">mode</span> <span class="pre">&lt;st|mm&gt;</span> <span class="pre">]</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
 <p>This command allows the user to add a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -626,7 +616,7 @@ Added 1 Queues.
 <li>mode : mode of the queue, streaming(st) or memory mapped(mm)</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q add list 1 4 mode mm dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q add list 1 4 mode mm dir h2c
 
 qdma01000-MM-1 H2C added.
 qdma01000-MM-2 H2C added.
@@ -641,7 +631,7 @@ Added 4 Queues.
 <p>This command allows the user to start a queue.</p>
 <p>command:</p>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
+<div><code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
 <span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]</span>
 <span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[fetch_credit</span> <span class="pre">&lt;h2c|c2h|bi|none&gt;]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
 <span class="pre">[cmpl_ovf_dis]</span> <span class="pre">[mm_chn</span> <span class="pre">&lt;0:1&gt;]</span> <span class="pre">[aperture_sz</span> <span class="pre">&lt;Power</span> <span class="pre">of</span> <span class="pre">2</span> <span class="pre">aperture</span> <span class="pre">size&gt;]</span></code></div></blockquote>
@@ -672,9 +662,9 @@ Added 4 Queues.
 <dl class="docutils">
 <dt>Note on keyhole feature</dt>
 <dd>Provides support of programming over PCIe. QDMA SW provides a capability to program a .pdi file to a specific aperture within a Versal device.
-This enables the DMA to write data to a fixed size FPGA aperture. When the end of the user specified aperture size is reached, transactions continue to transfer data by looping back to the start of the aperture window. This is repeated until all data has been programmed into the user specified aperture window. <code class="docutils literal"><span class="pre">dma-to-device</span></code> can be used to write to a specific offset in the RAM with the aperture specified at the time when the Q is started.</dd>
+This enables the DMA to write data to a fixed size FPGA aperture. When the end of the user specified aperture size is reached, transactions continue to transfer data by looping back to the start of the aperture window. This is repeated until all data has been programmed into the user specified aperture window. <code class="docutils literal notranslate"><span class="pre">dma-to-device</span></code> can be used to write to a specific offset in the RAM with the aperture specified at the time when the Q is started.</dd>
 </dl>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start idx 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start idx 4 dir h2c
 dma-ctl: Info: Default ring size set to 2048
 
 1 Queues started, idx 4 ~ 4.
@@ -685,7 +675,7 @@ dma-ctl: Info: Default ring size set to 2048
 <h3>Start a List of Queues<a class="headerlink" href="#start-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
 <p>command:</p>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
+<div><code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">start</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[idx_ringsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_bufsz</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[idx_tmr</span> <span class="pre">&lt;0:15&gt;]</span>
 <span class="pre">[idx_cntr</span> <span class="pre">&lt;0:15&gt;]</span> <span class="pre">[trigmode</span> <span class="pre">&lt;every|usr_cnt|usr|usr_tmr|dis&gt;]</span> <span class="pre">[cmptsz</span> <span class="pre">&lt;0|1|2|3&gt;]</span> <span class="pre">[desc_bypass_en]</span> <span class="pre">[pfetch_en]</span> <span class="pre">[pfetch_bypass_en]</span>
 <span class="pre">[dis_cmpl_status]</span> <span class="pre">[dis_cmpl_status_acc]</span> <span class="pre">[dis_cmpl_status_pend_chk]</span> <span class="pre">[c2h_udd_en]</span> <span class="pre">[fetch_credit</span> <span class="pre">&lt;h2c|c2h|bi|none&gt;]</span> <span class="pre">[c2h_cmpl_intr_en]</span>
 <span class="pre">[cmpl_ovf_dis]</span> <span class="pre">[mm_chn</span> <span class="pre">&lt;0:1&gt;]</span> <span class="pre">[aperture_sz</span> <span class="pre">&lt;Power</span> <span class="pre">of</span> <span class="pre">2</span> <span class="pre">aperture</span> <span class="pre">size&gt;]</span></code></div></blockquote>
@@ -713,7 +703,7 @@ dma-ctl: Info: Default ring size set to 2048
 <li>mm_chn : MM Channel to be used(0/1))</li>
 <li>aperture_sz :  aperture size power of 2</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start list 1 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q start list 1 4 dir h2c
 
 Started Queues 1 -&gt; 4.
 </pre></div>
@@ -721,14 +711,14 @@ Started Queues 1 -&gt; 4.
 </div>
 <div class="section" id="list-of-queues-added">
 <h3>List of Queues added<a class="headerlink" href="#list-of-queues-added" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;num_Qs&gt;</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;num_Qs&gt;</span></code></p>
 <p>This command allows user to list queues added/configured.</p>
 <p><strong>Parameter</strong></p>
 <ul class="simple">
 <li>&lt;start_idx&gt; : Starting queue number</li>
 <li>&lt;num_Qs&gt; : Number of queues to list</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q list 1 4
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q list 1 4
 H2C Q: 4, C2H Q: 0, CMPT Q 0.
 qdma06000-MM-1 H2C online
         hw_ID 1, thp ?, desc 0x0000000050bf1609/0xfffc0000, 2048
@@ -743,14 +733,14 @@ qdma06000-MM-4 H2C online
 </div>
 <div class="section" id="stop-a-queue">
 <h3>Stop a Queue<a class="headerlink" href="#stop-a-queue" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to stop a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q stop idx 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q stop idx 4 dir h2c
 dma-ctl: Info: Default ring size set to 2048
 
 Stopped Queues 4 -&gt; 4.
@@ -759,7 +749,7 @@ Stopped Queues 4 -&gt; 4.
 </div>
 <div class="section" id="stop-a-list-of-queues">
 <h3>Stop a List of Queues<a class="headerlink" href="#stop-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">stop</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to stop a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -767,7 +757,7 @@ Stopped Queues 4 -&gt; 4.
 <li>&lt;N&gt; : Number of queues to delete</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q stop list 1 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q stop list 1 4 dir h2c
 
 Stopped Queues 1 -&gt; 4.
 </pre></div>
@@ -775,14 +765,14 @@ Stopped Queues 1 -&gt; 4.
 </div>
 <div class="section" id="delete-a-queue">
 <h3>Delete a Queue<a class="headerlink" href="#delete-a-queue" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>This command allows the user to delete a queue.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Queue number</li>
 <li>dir : direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi). Directions defaults to h2c.</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q del idx 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q del idx 4 dir h2c
 
 Deleted Queues 4 -&gt; 4.
 </pre></div>
@@ -790,7 +780,7 @@ Deleted Queues 4 -&gt; 4.
 </div>
 <div class="section" id="delete-a-list-of-queues">
 <h3>Delete a List of Queues<a class="headerlink" href="#delete-a-list-of-queues" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">del</span> <span class="pre">list</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[</span> <span class="pre">dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;</span> <span class="pre">]</span></code></p>
 <p>This command allows the user to delete a list of queues.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -798,7 +788,7 @@ Deleted Queues 4 -&gt; 4.
 <li>&lt;N&gt; : Number of queues to delete</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q del list 1 4 dir h2c
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q del list 1 4 dir h2c
 
 Deleted Queues 1 -&gt; 4.
 </pre></div>
@@ -806,7 +796,7 @@ Deleted Queues 1 -&gt; 4.
 </div>
 <div class="section" id="dump-queue-information">
 <h3>Dump Queue Information<a class="headerlink" href="#dump-queue-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>Dump the queue information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -814,7 +804,7 @@ Deleted Queues 1 -&gt; 4.
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
 <p>Sample output is given below:</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q dump idx 1 dir bi
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q dump idx 1 dir bi
 
 qdma01000-ST-0 H2C online
         hw_ID 0, thp ?, desc 0x000000002faff247/0x2a878000, 1536
@@ -969,7 +959,7 @@ Dumped Queues 0 -&gt; 0.
 </div>
 <div class="section" id="dump-multiple-queue-information">
 <h3>Dump Multiple Queue Information<a class="headerlink" href="#dump-multiple-queue-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span></code></p>
 <p>Dumps the information for multiple queues</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -977,7 +967,7 @@ Dumped Queues 0 -&gt; 0.
 <li>&lt;N&gt; : Number of queues to dump</li>
 <li>dir : Direction of the queue, host-to-card(h2c), card-to-host (c2h) or both (bi)</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q dump list 1 2 dir bi
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma01000 q dump list 1 2 dir bi
 
 qdma01000-ST-1 H2C online
         hw_ID 1, thp ?, desc 0x000000006c71b76a/0x2a890000, 1536
@@ -1279,7 +1269,7 @@ Dumped Queues 1 -&gt; 2.
 </div>
 <div class="section" id="dump-queue-descriptor-information">
 <h3>Dump Queue Descriptor Information<a class="headerlink" href="#dump-queue-descriptor-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dump the queue descriptor information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -1288,7 +1278,7 @@ Dumped Queues 1 -&gt; 2.
 <li>&lt;x&gt; : Range start index</li>
 <li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump idx 0 dir h2c desc 1 10
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump idx 0 dir h2c desc 1 10
 
         qdma17000-ST-0 H2C online
 1: 0x00000000cd4d039c 00000000 00000000 00000000 00000000
@@ -1307,7 +1297,7 @@ Dumped descs of queues 0 -&gt; 0.
 </div>
 <div class="section" id="dump-multiple-queue-descriptor-information">
 <h3>Dump Multiple Queue Descriptor Information<a class="headerlink" href="#dump-multiple-queue-descriptor-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[desc</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dumps the descriptor information for multiple queues</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -1317,7 +1307,7 @@ Dumped descs of queues 0 -&gt; 0.
 <li>&lt;x&gt; : Range start index</li>
 <li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump list 1 2 dir h2c desc 1 10
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump list 1 2 dir h2c desc 1 10
 
 qdma17000-ST-1 H2C online
 1: 0x00000000c8f9ad60 00000000 00000000 00000000 00000000
@@ -1347,7 +1337,7 @@ Dumped descs of queues 1 -&gt; 2.
 </div>
 <div class="section" id="dump-queue-completion-information">
 <h3>Dump Queue Completion Information<a class="headerlink" href="#dump-queue-completion-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dump the queue completion information. This command is valid only for streaming c2h.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -1356,7 +1346,7 @@ Dumped descs of queues 1 -&gt; 2.
 <li>&lt;x&gt; : Range start index</li>
 <li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump idx 0 dir c2h cmpt 0 10
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump idx 0 dir c2h cmpt 0 10
 
 qdma17000-ST-0 C2H online
 0: 0x0000000086ae1f7a 00000000 00000000
@@ -1376,7 +1366,7 @@ Dumped descs of queues 0 -&gt; 0.
 </div>
 <div class="section" id="dump-multiple-queue-completion-information">
 <h3>Dump Multiple Queue Completion Information<a class="headerlink" href="#dump-multiple-queue-completion-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">q</span> <span class="pre">dump</span> <span class="pre">list</span> <span class="pre">idx</span> <span class="pre">&lt;N&gt;</span> <span class="pre">[dir</span> <span class="pre">&lt;h2c|c2h|bi&gt;]</span> <span class="pre">[cmpt</span> <span class="pre">&lt;x&gt;</span> <span class="pre">&lt;y&gt;]</span></code></p>
 <p>Dumps the completion information for multiple queues. This command is valid only for streaming c2h.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -1386,7 +1376,7 @@ Dumped descs of queues 0 -&gt; 0.
 <li>&lt;x&gt; : Range start index</li>
 <li>&lt;y&gt; : Range end index</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump list 1 2 dir c2h cmpt 0 10
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 q dump list 1 2 dir c2h cmpt 0 10
 
 qdma17000-ST-1 C2H online
 0: 0x000000005e745eb2 00000000 00000000
@@ -1418,7 +1408,7 @@ Dumped descs of queues 1 -&gt; 2.
 </div>
 <div class="section" id="dump-the-interrupt-ring-information">
 <h3>Dump the Interrupt Ring Information<a class="headerlink" href="#dump-the-interrupt-ring-information" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">intring</span> <span class="pre">dump</span> <span class="pre">vector</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;end_idx&gt;</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">intring</span> <span class="pre">dump</span> <span class="pre">vector</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;start_idx&gt;</span> <span class="pre">&lt;end_idx&gt;</span></code></p>
 <p>Dump the interrupt ring information</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
@@ -1426,7 +1416,7 @@ Dumped descs of queues 1 -&gt; 2.
 <li>&lt;start_idx&gt; : Range start index</li>
 <li>&lt;end_idx&gt; : Range end index</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 intring dump vector 3 0 10
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 intring dump vector 3 0 10
 
 intr_ring_entry = 0: 0x00000000 0x00000000
 intr_ring_entry = 1: 0x00000000 0x00000000
@@ -1447,37 +1437,37 @@ intr_ring_entry = 10: 0x00000000 0x00000000
 <h2>Register Commands<a class="headerlink" href="#register-commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="read-a-register">
 <h3>Read a Register<a class="headerlink" href="#read-a-register" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">read</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">read</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
 <p>Read a register value.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Bar number</li>
 <li>&lt;addr&gt; : Register address</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg read bar 2 0x0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg read bar 2 0x0
 qdma17000, 17:00.00, bar#2, 0x0 = 0x0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="write-a-register">
 <h3>Write a Register<a class="headerlink" href="#write-a-register" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">write</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">write</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span></code></p>
 <p>Write a value to into the given register.</p>
 <p><strong>Parameters</strong></p>
 <ul class="simple">
 <li>&lt;N&gt; : Bar number</li>
 <li>&lt;addr&gt; : Register address</li>
 </ul>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg write bar 2 0x0 0
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg write bar 2 0x0 0
 qdma17000, 17:00.00, bar#2, reg 0x0 -&gt; 0x0, read back 0x0.
 </pre></div>
 </div>
 </div>
 <div class="section" id="dump-the-function-registers">
 <h3>Dump the function registers<a class="headerlink" href="#dump-the-function-registers" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">dump</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;bbddf&gt;</span> <span class="pre">reg</span> <span class="pre">dump</span></code></p>
 <p>This command allows the user to dump the DMA BAR and User BAR registers.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg dump
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma17000 reg dump
 ################################################################################
 ###             qdma17000, pci 17:00.00, reg dump
 ################################################################################
@@ -1849,35 +1839,35 @@ CONFIG BAR #0
 </div>
 <div class="section" id="dump-detailed-register-info">
 <h3>Dump detailed register info<a class="headerlink" href="#dump-detailed-register-info" title="Permalink to this headline">¶</a></h3>
-<p>command: <code class="docutils literal"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;BDF&gt;</span> <span class="pre">reg</span> <span class="pre">info</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span> <span class="pre">[num_regs</span> <span class="pre">&lt;M&gt;]</span></code></p>
+<p>command: <code class="docutils literal notranslate"><span class="pre">dma-ctl</span> <span class="pre">qdma&lt;BDF&gt;</span> <span class="pre">reg</span> <span class="pre">info</span> <span class="pre">bar</span> <span class="pre">&lt;N&gt;</span> <span class="pre">&lt;addr&gt;</span> <span class="pre">[num_regs</span> <span class="pre">&lt;M&gt;]</span></code></p>
 <p>For QDMA4.0 designs there is an additional option to print detailed breakdown of
 individual registers</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma06000 reg info bar 0 0x00 num_regs 5
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[xilinx@]# dma-ctl qdma06000 reg info bar 0 0x00 num_regs 5
 CFG_BLK_IDENTIFIER                       0x0       0x1fd30001 533921793
 CFG_BLK_IDENTIFIER                       [31,20]   0x1fd
 CFG_BLK_IDENTIFIER_1                     [19,16]   0x3
 CFG_BLK_IDENTIFIER_RSVD_1                [15, 8]   0x0
 CFG_BLK_IDENTIFIER_VERSION               [ 7, 0]   0x1
 
-CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x52       82
-CFG_BLK_PCIE_MAX_PLD_SIZE_RSVD_1         [31, 7]   0x0
-CFG_BLK_PCIE_MAX_PLD_SIZE_PROG           [ 6, 4]   0x5
-CFG_BLK_PCIE_MAX_PLD_SIZE_RSVD_2         [    3]   0x0
-CFG_BLK_PCIE_MAX_PLD_SIZE_ISSUED         [ 2, 0]   0x2
+CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x51       81
+CFG_BLK_IDENTIFIER                       [31, 7]   0x0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x1
 
 CFG_BLK_PCIE_MAX_READ_REQ_SIZE           0xc       0x52       82
-CFG_BLK_PCIE_MAX_READ_REQ_SIZE_RSVD_1    [31, 7]   0x0
-CFG_BLK_PCIE_MAX_READ_REQ_SIZE_PROG      [ 6, 4]   0x5
-CFG_BLK_PCIE_MAX_READ_REQ_SIZE_RSVD_2    [    3]   0x0
-CFG_BLK_PCIE_MAX_READ_REQ_SIZE_ISSUED    [ 2, 0]   0x2
+CFG_BLK_IDENTIFIER                       [31, 7]   0x0
+CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0x0
+CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x2
 
-CFG_BLK_SYSTEM_ID                        0x10      0x1ff01    130817
-CFG_BLK_SYSTEM_ID_RSVD_1                 [31,17]   0x0
-CFG_BLK_SYSTEM_ID_INST_TYPE              [   16]   0x1
-CFG_BLK_SYSTEM_ID                        [15, 0]   0xff01
+CFG_BLK_SYSTEM_ID                        0x10      0xff01     65281
+CFG_BLK_IDENTIFIER                       [31,17]   0x0
+CFG_BLK_IDENTIFIER_1                     [   16]   0x0
+CFG_BLK_IDENTIFIER_RSVD_1                [15, 0]   0xff01
 
 CFG_BLK_MSIX_ENABLE                      0x14      0xf        15
-CFG_BLK_MSIX_ENABLE                      [31, 0]   0xf
+CFG_BLK_IDENTIFIER                       [31, 0]   0xf
 </pre></div>
 </div>
 </div>
@@ -1914,7 +1904,7 @@ CFG_BLK_MSIX_ENABLE                      [31, 0]   0xf
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 30, 2024.
+        Last updated on August 20, 2026.
       </span>
 
     </p>
@@ -1992,7 +1982,7 @@ CFG_BLK_MSIX_ENABLE                      [31, 0]   0xf
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2024 Advanced Micro Devices Inc.
+                                  &copy; 2022-2026, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

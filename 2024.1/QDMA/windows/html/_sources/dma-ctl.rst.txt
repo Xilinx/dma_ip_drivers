@@ -1,0 +1,849 @@
+**********************************
+DMA Control Application (dma-ctl)
+**********************************
+
+QDMA driver comes with a command-line configuration utility called “dma-ctl” to manage the driver.
+
+The Xilinx QDMA control tool, ``dma-ctl`` is a Command Line utility built along with driver and allows administration of the Xilinx QDMA queues.
+
+It can perform the following functions
+
+* Query the QDMA functions/devices the driver has bound into
+* Query control and configuration
+
+    * List all the queues on a device/function
+    * Add/configure a new queue on a device/function
+    * Start an already added/configured queue (i.e., bring the queue online)
+    * Stop a started queue (i.e., bring the queue offline)
+    * Delete an already added/configured queue
+
+* Register access
+
+    * Dump the qdma control bar and user bar registers
+
+* Debug helper
+
+    * Display a queue's descriptor ring entries
+    * Display a c2h queue's completion ring entries
+    * Display the interrupt ring entries
+
+For dma-ctl help run ``dma-ctl –h``
+
+
+==========================
+Device Management Commands
+==========================
+
+List devices
+------------
+
+command: ``dma-ctl dev list``
+
+This command lists all the physical functions available in the system along with the number of queues assigned to each function, queue base and queue max.
+Each qdma device name is listed as ``qdma<bbddf>`` where ``<bbddf>`` is bus number, device number and function number.
+
+::
+
+	PS H:\> .\dma-ctl.exe dev list
+
+	qdma04000	0000:04:00:0	max QP: 512, 0~511
+	qdma04001	0000:04:00:1	max QP: 512, 512~1023
+	qdma04002	0000:04:00:2	max QP: 512, 1024~1535
+	qdma04003	0000:04:00:3	max QP: 512, 1536~2047
+
+
+List the devices using devcon command to cross check the devices are detected as PCIe devices
+
+::
+
+	PS H:\> devcon find *10EE*
+	PCI\VEN_10EE&DEV_903F&SUBSYS_000710EE&REV_00\4&152770E7&0&0000: Xilinx PCIe Multi-Queue DMA
+	PCI\VEN_10EE&DEV_933F&SUBSYS_000710EE&REV_00\4&152770E7&0&0300: Xilinx PCIe Multi-Queue DMA
+	PCI\VEN_10EE&DEV_913F&SUBSYS_000710EE&REV_00\4&152770E7&0&0100: Xilinx PCIe Multi-Queue DMA
+	PCI\VEN_10EE&DEV_923F&SUBSYS_000710EE&REV_00\4&152770E7&0&0200: Xilinx PCIe Multi-Queue DMA
+
+List Version
+------------
+
+command: ``dma-ctl qdma<bbddf> devinfo``
+
+This command lists hardware and software version details and device capabilities.
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 devinfo
+	=============Hardware Version=================
+	RTL Version                         : RTL Base
+	Vivado ReleaseID                    : vivado 2020.1
+	Device Type                         : Soft IP
+
+	=============Software Version=================
+	qdma driver version                 : 2020.1.0
+
+	=============Hardware Capabilities============
+	Number of PFs supported             : 4
+	Total number of queues supported    : 2048
+	MM channels                         : 1
+	FLR Present                         : yes
+	ST enabled                          : yes
+	MM enabled                          : yes
+	Mailbox enabled                     : yes
+	MM completion enabled               : no
+
+List Device's Queue Statistics
+------------------------------
+
+command: ``dma-ctl qdma<bbddf> qstats``
+
+This command lists the total allocated queues along with total active queues for this device
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 qstats
+	Device             : qdma04001
+	Maximum queues     : 512
+	Active H2C queues  : 0
+	Active C2H queues  : 0
+	Active CMPT queues : 0
+
+
+Dump configuration space register parameters
+--------------------------------------------
+
+command: ``dma-ctl qdma<bbddf> csr dump``
+
+This command dumps the configuration space register parameters for this device.
+These register indices are used as configuration parameters while managing the
+qdma queues.
+
+::
+
+	PS H:\>  .\dma-ctl.exe qdma04000 csr dump
+	Global CSR :
+	Index     Ring size           Timer count         Threshold count     Buffer size
+	0         2049                1                   2                   4096
+	1         65                  2                   4                   256
+	2         129                 4                   8                   512
+	3         193                 5                   16                  1024
+	4         257                 8                   24                  2048
+	5         385                 10                  32                  3968
+	6         513                 15                  48                  4096
+	7         769                 20                  64                  4096
+	8         1025                25                  80                  4096
+	9         1537                30                  96                  4096
+	10        3073                50                  112                 4096
+	11        4097                75                  128                 4096
+	12        6145                100                 144                 4096
+	13        8193                125                 160                 8192
+	14        12289               150                 176                 9018
+	15        16385               200                 192                 16384
+
+=========================
+Queue Management Commands
+=========================
+
+Add a Queue
+-----------
+
+command:
+
+    ``dma-ctl qdma<bbddf> queue add mode <st|mm> qid <N> [en_mm_cmpl] idx_h2c_ringsz <0:15> idx_c2h_ringsz <0:15> \
+    [idx_c2h_timer <0:15>] [idx_c2h_th <0:15>] [idx_c2h_bufsz <0:15>] [cmptsz <0|1|2|3>] \
+    [trigmode <every|usr_cnt|usr|usr_tmr|usr_tmr_cnt>] [sw_desc_sz <3>] [desc_bypass_en] [pfch_en] [pfch_bypass_en]``
+
+This command allows the user to add a queue.
+
+**Parameters**
+
+- <N> : Queue number
+- mode : mode of the queue, streaming\(st\) or memory mapped\(mm\).
+- idx_h2c_ringsz : CSR register ring size index \( 0 - 15 \)
+- idx_c2h_ringsz : CSR register ring size index \( 0 - 15 \)
+- idx_c2h_timer : CSR register timer index \( 0 - 15 \)
+- idx_c2h_th : CSR register counter index \( 0 - 15 \)
+- idx_c2h_bufsz : CSR register buffer size index \( 0 - 15 \)
+- cmptsz : Completion size \( 0: 8 bytes, 1: 16 bytes, 2:32 bytes, 3:64 bytes\)
+- trigmode: Timer trigger mode \(every or usr or usr_tmr or usr_tmr_cnt\)
+- sw_desc_sz : Descriptor size \( 3: 64 bytes\)
+- desc_bypass_en : Enable descriptor bypass
+- pfch_en : Enable descriptor prefetch
+- pfch_bypass_en : Enable bypass pregetch descriptor
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue add mode mm idx_h2c_ringsz 0 idx_c2h_ringsz 0 qid 0
+	Adding queue ::0
+	Added Queue 0 Successfully
+
+Start a Queue
+-------------
+
+command: ``dma-ctl qdma<bbddf> queue start qid <N>``
+
+This command allows the user to start a queue.
+
+**Parameters**
+
+- <N> : Queue number
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue start qid 0
+	Starting queue :: 0
+	Started Queue 0 Successfully
+
+Stop a Queue
+------------
+
+command: ``dma-ctl qdma<bbddf> queue stop qid <N>``
+
+This command allows the user to stop a queue.
+
+**Parameters**
+
+- <N> : Queue number
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue stop qid 0
+	Stopping queue :: 0
+	Stopped Queue 0 Successfully
+
+Delete a Queue
+--------------
+
+command: ``dma-ctl qdma<bbddf> queue delete qid <N>``
+
+This command allows the user to delete a queue.
+
+**Parameters**
+
+- <N> : Queue number
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue stop qid 0
+	Deleting queue :: 0
+	Deleted Queue 0 Successfull
+
+Dump Queue state
+----------------
+
+command: ``dma-ctl qdma<bbddf> queue state qid <N>``
+
+Dump the current queue state
+
+**Parameters**
+
+- <N> : Queue number
+
+Sample output is given below:
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue state qid 0
+	    QID               STATE
+	    ---               -----
+	    0  QUEUE IS AVAILABLE
+
+Dump QDMA Queue Context
+-------------------------------
+
+command: ``dma-ctl qdma<bbddf> queue dump qid <N> ctx type <h2c|c2h>``
+
+dma-ctl.exe qdma04000 queue dump qid 1 ctx type c2h
+Dumps the information for multiple queues
+
+**Parameters**
+
+- <N>  : Queue number
+- type : Type of the queue, host-to-card\(h2c\), card-to-host \(c2h\)
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue dump qid 4 ctx type c2h
+
+	----------------------------------------------------------------------------
+	                              SW Context
+	----------------------------------------------------------------------------
+	PIDX                                            0x179      377
+	IRQ Arm                                         0          0
+	Function Id                                     0          0
+	Queue Enable                                    0x1        1
+	Fetch Credit Enable                             0x1        1
+	Write back/Intr Check                           0x1        1
+	Write back/Intr Interval                        0          0
+	Address Translation                             0          0
+	Fetch Max                                       0          0
+	Ring Size                                       0          0
+	Descriptor Size                                 0          0
+	Bypass Enable                                   0          0
+	MM Channel                                      0          0
+	Writeback Enable                                0x1        1
+	Interrupt Enable                                0          0
+	Port Id                                         0          0
+	Interrupt No Last                               0          0
+	Error                                           0          0
+	Writeback Error Sent                            0          0
+	IRQ Request                                     0          0
+	Marker Disable                                  0          0
+	Is Memory Mapped                                0          0
+	Descriptor Ring Base Addr (Low)                 0xb5672000 3043434496
+	Descriptor Ring Base Addr (High)                0x1        1
+	Interrupt Vector/Ring Index                     0          0
+	Interrupt Aggregation                           0          0
+
+	----------------------------------------------------------------------------
+	                              HW Context
+	----------------------------------------------------------------------------
+	CIDX                                            0x17a      378
+	Credits Consumed                                0x17a      378
+	Descriptors Pending                             0x1        1
+	Queue Invalid No Desc Pending                   0x1        1
+	Eviction Pending                                0          0
+	Fetch Pending                                   0          0
+
+	----------------------------------------------------------------------------
+	                          Credit Context
+	----------------------------------------------------------------------------
+	Credit                                          0x17a      378
+
+	----------------------------------------------------------------------------
+	                      Completion Context
+	----------------------------------------------------------------------------
+	Enable Status Desc Update                       0x1        1
+	Enable Interrupt                                0          0
+	Trigger Mode                                    0x1        1
+	Function Id                                     0          0
+	Counter Index                                   0          0
+	Timer Index                                     0          0
+	Interrupt State                                 0x1        1
+	Color                                           0x1        1
+	Ring Size                                       0xa        10
+	Base Address (Low)                              0x16ed000  24039424
+	Base Address (High)                             0          0
+	Descriptor Size                                 0x2        2
+	PIDX                                            0x17a      378
+	CIDX                                            0x17a      378
+	Valid                                           0x1        1
+	Error                                           0          0
+	Trigger Pending                                 0          0
+	Timer Running                                   0          0
+	Full Update                                     0          0
+	Over Flow Check Disable                         0          0
+	Address Translation                             0          0
+	Interrupt Vector/Ring Index                     0          0
+	Interrupt Aggregation                           0          0
+
+	----------------------------------------------------------------------------
+	                        Prefetch Context
+	----------------------------------------------------------------------------
+	Bypass                                          0          0
+	Buffer Size Index                               0          0
+	Port Id                                         0          0
+	Error                                           0          0
+	Prefetch Enable                                 0          0
+	In Prefetch                                     0          0
+	Software Credit                                 0x7ff      2047
+	Valid                                           0x1        1
+
+
+Dump Queue Descriptor Information
+---------------------------------
+
+command: ``dma-ctl qdma<bbddf> queue dump qid <N> dir <h2c|c2h> desc <start> <end>``
+``dma-ctl qdma<bbddf> queue dump qid <N> cmpt <start> <end>``
+
+dma-ctl.exe qdma04000 queue dump qid 0 dir c2h desc 0 10
+
+Dump the queue descriptor information
+
+**Parameters**
+
+- <N> : Queue number
+- dir : Direction of the queue, host-to-card\(h2c\), card-to-host \(c2h\)
+- <start> : Range start index
+- <end> : Range end index
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue dump qid 0 dir c2h desc 0 10
+	    0 : 4848E000 0000000C
+	    1 : 4848F000 0000000C
+	    2 : 48490000 0000000C
+	    3 : 48491000 0000000C
+	    4 : 48492000 0000000C
+	    5 : 48493000 0000000C
+	    6 : 48494000 0000000C
+	    7 : 48495000 0000000C
+	    8 : 48496000 0000000C
+	    9 : 48497000 0000000C
+	   10 : 48498000 0000000C
+
+	PS H:\> .\dma-ctl.exe qdma04000 queue dump qid 0 cmpt 0 10
+	    0 : 00000000 00000000
+	    1 : 00000000 00000000
+	    2 : 00000000 00000000
+	    3 : 00000000 00000000
+	    4 : 00000000 00000000
+	    5 : 00000000 00000000
+	    6 : 00000000 00000000
+	    7 : 00000000 00000000
+	    8 : 00000000 00000000
+	    9 : 00000000 00000000
+	   10 : 00000000 00000000
+
+Dump the Interrupt Ring Information
+-----------------------------------
+
+command: ``dma-ctl qdma<bbddf> intring dump vector <N> <start_idx> <end_idx>``
+
+Dump the interrupt ring information
+
+**Parameters**
+
+- <N> : Vector number
+- <start_idx> : Range start index
+- <end_idx> : Range end index
+
+::
+
+	PS H:\> dma-ctl.exe qdma04000 intring dump vector 1 0 30
+	    0 : 00000000 00000000
+	    1 : 00000000 00000000
+	    2 : 00000000 00000000
+	    3 : 00000000 00000000
+	    4 : 00000000 00000000
+	    5 : 00000000 00000000
+	    6 : 00000000 00000000
+	    7 : 00000000 00000000
+	    8 : 00000000 00000000
+	    9 : 00000000 00000000
+	   10 : 00000000 00000000
+	   11 : 00000000 00000000
+	   12 : 00000000 00000000
+	   13 : 00000000 00000000
+	   14 : 00000000 00000000
+	   15 : 00000000 00000000
+	   16 : 00000000 00000000
+	   17 : 00000000 00000000
+	   18 : 00000000 00000000
+	   19 : 00000000 00000000
+	   20 : 00000000 00000000
+	   21 : 00000000 00000000
+	   22 : 00000000 00000000
+	   23 : 00000000 00000000
+	   24 : 00000000 00000000
+	   25 : 00000000 00000000
+	   26 : 00000000 00000000
+	   27 : 00000000 00000000
+	   28 : 00000000 00000000
+	   29 : 00000000 00000000
+	   30 : 00000000 00000000
+
+
+Dump the Queue registers
+------------------------
+
+command: ``dma-ctl qdma<bbddf> reg dump``
+
+This command allows the user to dump the Control BAR and User BAR registers.
+
+::
+
+	PS H:\> .\dma-ctl.exe qdma04000 reg dump
+	[      0] CFG_BLOCK_ID_0                                  0x1fd30000 533921792
+	[    0x4] CFG_BUSDEV_0                                    0          0
+	[    0x8] CFG_PCIE_MAX_PL_SZ_0                            0x51       81
+	[    0xc] CFG_PCIE_MAX_RDRQ_SZ_0                          0x52       82
+	[   0x10] CFG_SYS_ID_0                                    0x1234     4660
+	[   0x14] CFG_MSI_EN_0                                    0x2020202  33686018
+	[   0x18] CFG_PCIE_DATA_WIDTH_0                           0x3        3
+	[   0x1c] CFG_PCIE_CTRL_0                                 0x1        1
+	[   0x40] CFG_AXI_USR_MAX_PL_SZ_0                         0x55       85
+	[   0x44] CFG_AXI_USR_MAX_RDRQ_SZ_0                       0x55       85
+	[   0x4c] CFG_MISC_CTRL_0                                 0x10009    65545
+	[   0x80] CFG_SCRATCH_REG_0                               0          0
+	[   0x84] CFG_SCRATCH_REG_1                               0          0
+	[   0x88] CFG_SCRATCH_REG_2                               0          0
+	[   0x8c] CFG_SCRATCH_REG_3                               0          0
+	[   0x90] CFG_SCRATCH_REG_4                               0          0
+	[   0x94] CFG_SCRATCH_REG_5                               0          0
+	[   0x98] CFG_SCRATCH_REG_6                               0          0
+	[   0x9c] CFG_SCRATCH_REG_7                               0          0
+	[   0xf0] QDMA_RAM_SBE_MSK_A_0                            0xffffff11 4294967057
+	[   0xf4] QDMA_RAM_SBE_STS_A_0                            0          0
+	[   0xf8] QDMA_RAM_DBE_MSK_A_0                            0xffffff11 4294967057
+	[   0xfc] QDMA_RAM_DBE_STS_A_0                            0          0
+	[  0x100] GLBL2_ID_0                                      0x1fd70000 534183936
+	[  0x104] GLBL2_PF_BL_INT_0                               0x41041    266305
+	[  0x108] GLBL2_PF_VF_BL_INT_0                            0x41041    266305
+	[  0x10c] GLBL2_PF_BL_EXT_0                               0x104104   1065220
+	[  0x110] GLBL2_PF_VF_BL_EXT_0                            0x104104   1065220
+	[  0x114] GLBL2_CHNL_INST_0                               0x30101    196865
+	[  0x118] GLBL2_CHNL_QDMA_0                               0x30f0f    200463
+	[  0x11c] GLBL2_CHNL_STRM_0                               0x30000    196608
+	[  0x120] GLBL2_QDMA_CAP_0                                0x800      2048
+	[  0x128] GLBL2_PASID_CAP_0                               0          0
+	[  0x12c] GLBL2_FUNC_RET_0                                0          0
+	[  0x130] GLBL2_SYS_ID_0                                  0          0
+	[  0x134] GLBL2_MISC_CAP_0                                0x2010003  33619971
+	[  0x1b8] GLBL2_DBG_PCIE_RQ_0                             0x7c50003  130351107
+	[  0x1bc] GLBL2_DBG_PCIE_RQ_1                             0x6024     24612
+	[  0x1c0] GLBL2_DBG_AXIMM_WR_0                            0x600021   6291489
+	[  0x1c4] GLBL2_DBG_AXIMM_WR_1                            0          0
+	[  0x1c8] GLBL2_DBG_AXIMM_RD_0                            0x1        1
+	[  0x1cc] GLBL2_DBG_AXIMM_RD_1                            0          0
+	[  0x204] GLBL_RNGSZ_0                                    0x801      2049
+	[  0x208] GLBL_RNGSZ_1                                    0x41       65
+	[  0x20c] GLBL_RNGSZ_2                                    0x81       129
+	[  0x210] GLBL_RNGSZ_3                                    0xc1       193
+	[  0x214] GLBL_RNGSZ_4                                    0x101      257
+	[  0x218] GLBL_RNGSZ_5                                    0x181      385
+	[  0x21c] GLBL_RNGSZ_6                                    0x201      513
+	[  0x220] GLBL_RNGSZ_7                                    0x301      769
+	[  0x224] GLBL_RNGSZ_8                                    0x401      1025
+	[  0x228] GLBL_RNGSZ_9                                    0x601      1537
+	[  0x22c] GLBL_RNGSZ_10                                   0xc01      3073
+	[  0x230] GLBL_RNGSZ_11                                   0x1001     4097
+	[  0x234] GLBL_RNGSZ_12                                   0x1801     6145
+	[  0x238] GLBL_RNGSZ_13                                   0x2001     8193
+	[  0x23c] GLBL_RNGSZ_14                                   0x3001     12289
+	[  0x240] GLBL_RNGSZ_15                                   0x4001     16385
+	[  0x248] GLBL_ERR_STAT_0                                 0          0
+	[  0x24c] GLBL_ERR_MASK_0                                 0x90f      2319
+	[  0x250] GLBL_DSC_CFG_0                                  0x35       53
+	[  0x254] GLBL_DSC_ERR_STS_0                              0          0
+	[  0x258] GLBL_DSC_ERR_MSK_0                              0x1f9023f  33096255
+	[  0x25c] GLBL_DSC_ERR_LOG_0                              0          0
+	[  0x260] GLBL_DSC_ERR_LOG_1                              0          0
+	[  0x264] GLBL_TRQ_ERR_STS_0                              0          0
+	[  0x268] GLBL_TRQ_ERR_MSK_0                              0xf        15
+	[  0x26c] GLBL_TRQ_ERR_LOG_0                              0          0
+	[  0x270] GLBL_DSC_DBG_DAT_0                              0          0
+	[  0x274] GLBL_DSC_DBG_DAT_1                              0x8080     32896
+	[  0x27c] GLBL_DSC_ERR_LOG2_0                             0          0
+	[  0x288] GLBL_INTERRUPT_CFG_0                            0          0
+	[  0x400] TRQ_SEL_FMAP_0                                  0x100400   1049600
+	[  0x404] TRQ_SEL_FMAP_1                                  0          0
+	[  0x408] TRQ_SEL_FMAP_2                                  0          0
+	[  0x40c] TRQ_SEL_FMAP_3                                  0          0
+	[  0x804] IND_CTXT_DATA_0                                 0          0
+	[  0x808] IND_CTXT_DATA_1                                 0          0
+	[  0x80c] IND_CTXT_DATA_2                                 0          0
+	[  0x810] IND_CTXT_DATA_3                                 0          0
+	[  0x814] IND_CTXT_DATA_4                                 0          0
+	[  0x818] IND_CTXT_DATA_5                                 0          0
+	[  0x81c] IND_CTXT_DATA_6                                 0          0
+	[  0x820] IND_CTXT_DATA_7                                 0          0
+	[  0x824] IND_CTXT_MASK_0                                 0xffffffff 4294967295
+	[  0x828] IND_CTXT_MASK_1                                 0xffffffff 4294967295
+	[  0x82c] IND_CTXT_MASK_2                                 0xffffffff 4294967295
+	[  0x830] IND_CTXT_MASK_3                                 0xffffffff 4294967295
+	[  0x834] IND_CTXT_MASK_4                                 0xffffffff 4294967295
+	[  0x838] IND_CTXT_MASK_5                                 0xffffffff 4294967295
+	[  0x83c] IND_CTXT_MASK_6                                 0xffffffff 4294967295
+	[  0x840] IND_CTXT_MASK_7                                 0xffffffff 4294967295
+	[  0x844] IND_CTXT_CMD_0                                  0xb0       176
+	[  0xa00] C2H_TIMER_CNT_0                                 0x1        1
+	[  0xa04] C2H_TIMER_CNT_1                                 0x2        2
+	[  0xa08] C2H_TIMER_CNT_2                                 0x4        4
+	[  0xa0c] C2H_TIMER_CNT_3                                 0x5        5
+	[  0xa10] C2H_TIMER_CNT_4                                 0x8        8
+	[  0xa14] C2H_TIMER_CNT_5                                 0xa        10
+	[  0xa18] C2H_TIMER_CNT_6                                 0xf        15
+	[  0xa1c] C2H_TIMER_CNT_7                                 0x14       20
+	[  0xa20] C2H_TIMER_CNT_8                                 0x19       25
+	[  0xa24] C2H_TIMER_CNT_9                                 0x1e       30
+	[  0xa28] C2H_TIMER_CNT_10                                0x32       50
+	[  0xa2c] C2H_TIMER_CNT_11                                0x4b       75
+	[  0xa30] C2H_TIMER_CNT_12                                0x64       100
+	[  0xa34] C2H_TIMER_CNT_13                                0x7d       125
+	[  0xa38] C2H_TIMER_CNT_14                                0x96       150
+	[  0xa3c] C2H_TIMER_CNT_15                                0xc8       200
+	[  0xa40] C2H_CNT_THRESH_0                                0x2        2
+	[  0xa44] C2H_CNT_THRESH_1                                0x4        4
+	[  0xa48] C2H_CNT_THRESH_2                                0x8        8
+	[  0xa4c] C2H_CNT_THRESH_3                                0x10       16
+	[  0xa50] C2H_CNT_THRESH_4                                0x18       24
+	[  0xa54] C2H_CNT_THRESH_5                                0x20       32
+	[  0xa58] C2H_CNT_THRESH_6                                0x30       48
+	[  0xa5c] C2H_CNT_THRESH_7                                0x40       64
+	[  0xa60] C2H_CNT_THRESH_8                                0x50       80
+	[  0xa64] C2H_CNT_THRESH_9                                0x60       96
+	[  0xa68] C2H_CNT_THRESH_10                               0x70       112
+	[  0xa6c] C2H_CNT_THRESH_11                               0x80       128
+	[  0xa70] C2H_CNT_THRESH_12                               0x90       144
+	[  0xa74] C2H_CNT_THRESH_13                               0xa0       160
+	[  0xa78] C2H_CNT_THRESH_14                               0xb0       176
+	[  0xa7c] C2H_CNT_THRESH_15                               0xc0       192
+	[  0xa88] C2H_STAT_S_AXIS_C2H_ACCEPTED_0                  0          0
+	[  0xa8c] C2H_STAT_S_AXIS_CMPT_ACCEPTED_0                 0          0
+	[  0xa90] C2H_STAT_DESC_RSP_PKT_ACCEPTED_0                0          0
+	[  0xa94] C2H_STAT_AXIS_PKG_CMP_0                         0          0
+	[  0xa98] C2H_STAT_DESC_RSP_ACCEPTED_0                    0          0
+	[  0xa9c] C2H_STAT_DESC_RSP_CMP_0                         0          0
+	[  0xaa0] C2H_STAT_WRQ_OUT_0                              0          0
+	[  0xaa4] C2H_STAT_WPL_REN_ACCEPTED_0                     0          0
+	[  0xaa8] C2H_STAT_TOTAL_WRQ_LEN_0                        0          0
+	[  0xaac] C2H_STAT_TOTAL_WPL_LEN_0                        0          0
+	[  0xab0] C2H_BUF_SZ_0                                    0x1000     4096
+	[  0xab4] C2H_BUF_SZ_1                                    0x100      256
+	[  0xab8] C2H_BUF_SZ_2                                    0x200      512
+	[  0xabc] C2H_BUF_SZ_3                                    0x400      1024
+	[  0xac0] C2H_BUF_SZ_4                                    0x800      2048
+	[  0xac4] C2H_BUF_SZ_5                                    0xf80      3968
+	[  0xac8] C2H_BUF_SZ_6                                    0x1000     4096
+	[  0xacc] C2H_BUF_SZ_7                                    0x1000     4096
+	[  0xad0] C2H_BUF_SZ_8                                    0x1000     4096
+	[  0xad4] C2H_BUF_SZ_9                                    0x1000     4096
+	[  0xad8] C2H_BUF_SZ_10                                   0x1000     4096
+	[  0xadc] C2H_BUF_SZ_11                                   0x1000     4096
+	[  0xae0] C2H_BUF_SZ_12                                   0x1000     4096
+	[  0xae4] C2H_BUF_SZ_13                                   0x2000     8192
+	[  0xae8] C2H_BUF_SZ_14                                   0x233a     9018
+	[  0xaec] C2H_BUF_SZ_15                                   0x4000     16384
+	[  0xaf0] C2H_ERR_STAT_0                                  0          0
+	[  0xaf4] C2H_ERR_MASK_0                                  0xfedb     65243
+	[  0xaf8] C2H_FATAL_ERR_STAT_0                            0          0
+	[  0xafc] C2H_FATAL_ERR_MASK_0                            0x7df1b    515867
+	[  0xb00] C2H_FATAL_ERR_ENABLE_0                          0          0
+	[  0xb04] GLBL_ERR_INT_0                                  0x1000001  16777217
+	[  0xb08] C2H_PFCH_CFG_0                                  0xc201100  203428096
+	[  0xb0c] C2H_INT_TIMER_TICK_0                            0x19       25
+	[  0xb10] C2H_STAT_DESC_RSP_DROP_ACCEPTED_0               0          0
+	[  0xb14] C2H_STAT_DESC_RSP_ERR_ACCEPTED_0                0          0
+	[  0xb18] C2H_STAT_DESC_REQ_0                             0          0
+	[  0xb1c] C2H_STAT_DEBUG_DMA_ENG_0                        0          0
+	[  0xb20] C2H_STAT_DEBUG_DMA_ENG_1                        0x80000000 2147483648
+	[  0xb24] C2H_STAT_DEBUG_DMA_ENG_2                        0xc0000000 3221225472
+	[  0xb28] C2H_STAT_DEBUG_DMA_ENG_3                        0x100000   1048576
+	[  0xb2c] C2H_DBG_PFCH_ERR_CTXT_0                         0          0
+	[  0xb30] C2H_FIRST_ERR_QID_0                             0          0
+	[  0xb34] STAT_NUM_CMPT_IN_0                              0          0
+	[  0xb38] STAT_NUM_CMPT_OUT_0                             0          0
+	[  0xb3c] STAT_NUM_CMPT_DRP_0                             0          0
+	[  0xb40] STAT_NUM_STAT_DESC_OUT_0                        0          0
+	[  0xb44] STAT_NUM_DSC_CRDT_SENT_0                        0          0
+	[  0xb48] STAT_NUM_FCH_DSC_RCVD_0                         0          0
+	[  0xb4c] STAT_NUM_BYP_DSC_RCVD_0                         0          0
+	[  0xb50] C2H_CMPT_COAL_CFG_0                             0x40064014 1074151444
+	[  0xb54] C2H_INTR_H2C_REQ_0                              0          0
+	[  0xb58] C2H_INTR_C2H_MM_REQ_0                           0          0
+	[  0xb5c] C2H_INTR_ERR_INT_REQ_0                          0          0
+	[  0xb60] C2H_INTR_C2H_ST_REQ_0                           0          0
+	[  0xb64] C2H_INTR_H2C_ERR_MM_MSIX_ACK_0                  0          0
+	[  0xb68] C2H_INTR_H2C_ERR_MM_MSIX_FAIL_0                 0          0
+	[  0xb6c] C2H_INTR_H2C_ERR_MM_NO_MSIX_0                   0          0
+	[  0xb70] C2H_INTR_H2C_ERR_MM_CTXT_INVAL_0                0          0
+	[  0xb74] C2H_INTR_C2H_ST_MSIX_ACK_0                      0          0
+	[  0xb78] C2H_INTR_C2H_ST_MSIX_FAIL_0                     0          0
+	[  0xb7c] C2H_INTR_C2H_ST_NO_MSIX_0                       0          0
+	[  0xb80] C2H_INTR_C2H_ST_CTXT_INVAL_0                    0          0
+	[  0xb84] C2H_STAT_WR_CMP_0                               0          0
+	[  0xb88] C2H_STAT_DEBUG_DMA_ENG_4_0                      0x40000000 1073741824
+	[  0xb8c] C2H_STAT_DEBUG_DMA_ENG_5_0                      0          0
+	[  0xb90] C2H_DBG_PFCH_QID_0                              0          0
+	[  0xb94] C2H_DBG_PFCH_0                                  0          0
+	[  0xb98] C2H_INT_DEBUG_0                                 0          0
+	[  0xb9c] C2H_STAT_IMM_ACCEPTED_0                         0          0
+	[  0xba0] C2H_STAT_MARKER_ACCEPTED_0                      0          0
+	[  0xba4] C2H_STAT_DISABLE_CMP_ACCEPTED_0                 0          0
+	[  0xba8] C2H_C2H_PAYLOAD_FIFO_CRDT_CNT_0                 0          0
+	[  0xbac] C2H_INTR_DYN_REQ_0                              0          0
+	[  0xbb0] C2H_INTR_DYN_MSIX_0                             0          0
+	[  0xbb4] C2H_DROP_LEN_MISMATCH_0                         0          0
+	[  0xbb8] C2H_DROP_DESC_RSP_LEN_0                         0          0
+	[  0xbbc] C2H_DROP_QID_FIFO_LEN_0                         0          0
+	[  0xbc0] C2H_DROP_PAYLOAD_CNT_0                          0          0
+	[  0xbc4] QDMA_C2H_CMPT_FORMAT_0                          0x20001    131073
+	[  0xbc8] QDMA_C2H_CMPT_FORMAT_1                          0          0
+	[  0xbcc] QDMA_C2H_CMPT_FORMAT_2                          0          0
+	[  0xbd0] QDMA_C2H_CMPT_FORMAT_3                          0          0
+	[  0xbd4] QDMA_C2H_CMPT_FORMAT_4                          0          0
+	[  0xbd8] QDMA_C2H_CMPT_FORMAT_5                          0          0
+	[  0xbdc] QDMA_C2H_CMPT_FORMAT_6                          0          0
+	[  0xbe0] C2H_PFCH_CACHE_DEPTH_0                          0x10       16
+	[  0xbe4] C2H_CMPT_COAL_BUF_DEPTH_0                       0x10       16
+	[  0xbe8] C2H_PFCH_CRDT_0                                 0          0
+	[  0xe00] H2C_ERR_STAT_0                                  0          0
+	[  0xe04] H2C_ERR_MASK_0                                  0x1f       31
+	[  0xe08] H2C_FIRST_ERR_QID_0                             0          0
+	[  0xe0c] H2C_DBG_REG_0                                   0          0
+	[  0xe10] H2C_DBG_REG_1                                   0          0
+	[  0xe14] H2C_DBG_REG_2                                   0          0
+	[  0xe18] H2C_DBG_REG_3                                   0x44008025 1140883493
+	[  0xe1c] H2C_DBG_REG_4                                   0          0
+	[  0xe20] H2C_FATAL_ERR_EN_0                              0          0
+	[  0xe24] H2C_REQ_THROT_0                                 0xc14000   12664832
+	[  0xe28] H2C_ALN_DBG_REG0_0                              0          0
+	[ 0x1004] C2H_MM_CONTROL_0                                0x1        1
+	[ 0x1008] C2H_MM_CONTROL_1                                0x1        1
+	[ 0x100c] C2H_MM_CONTROL_2                                0x1        1
+	[ 0x1040] C2H_MM_STATUS_0                                 0x1        1
+	[ 0x1044] C2H_MM_STATUS_1                                 0x1        1
+	[ 0x1048] C2H_MM_CMPL_DSC_CNT_0                           0          0
+	[ 0x1054] C2H_MM_ERR_CODE_EN_MASK_0                       0          0
+	[ 0x1058] C2H_MM_ERR_CODE_0                               0          0
+	[ 0x105c] C2H_MM_ERR_INFO_0                               0          0
+	[ 0x10c0] C2H_MM_PERF_MON_CTRL_0                          0          0
+	[ 0x10c4] C2H_MM_PERF_MON_CY_CNT_0                        0          0
+	[ 0x10c8] C2H_MM_PERF_MON_CY_CNT_1                        0          0
+	[ 0x10cc] C2H_MM_PERF_MON_DATA_CNT_0                      0          0
+	[ 0x10d0] C2H_MM_PERF_MON_DATA_CNT_1                      0          0
+	[ 0x10e8] C2H_MM_DBG_INFO_0                               0x10002    65538
+	[ 0x10ec] C2H_MM_DBG_INFO_1                               0          0
+	[ 0x1204] H2C_MM_CONTROL_0                                0x1        1
+	[ 0x1208] H2C_MM_CONTROL_1                                0x1        1
+	[ 0x120c] H2C_MM_CONTROL_2                                0x1        1
+	[ 0x1240] H2C_MM_STATUS_0                                 0x1        1
+	[ 0x1248] H2C_MM_CMPL_DSC_CNT_0                           0          0
+	[ 0x1254] H2C_MM_ERR_CODE_EN_MASK_0                       0          0
+	[ 0x1258] H2C_MM_ERR_CODE_0                               0          0
+	[ 0x125c] H2C_MM_ERR_INFO_0                               0          0
+	[ 0x12c0] H2C_MM_PERF_MON_CTRL_0                          0          0
+	[ 0x12c4] H2C_MM_PERF_MON_CY_CNT_0                        0          0
+	[ 0x12c8] H2C_MM_PERF_MON_CY_CNT_1                        0          0
+	[ 0x12cc] H2C_MM_PERF_MON_DATA_CNT_0                      0          0
+	[ 0x12d0] H2C_MM_PERF_MON_DATA_CNT_1                      0          0
+	[ 0x12e8] H2C_MM_DBG_INFO_0                               0x10002    65538
+	[ 0x12ec] H2C_MM_REQ_THROT_0                              0x8000     32768
+	[ 0x2400] FUNC_STATUS_0                                   0          0
+	[ 0x2404] FUNC_CMD_0                                      0xffffffff 4294967295
+	[ 0x2408] FUNC_INTR_VEC_0                                 0          0
+	[ 0x240c] TARGET_FUNC_0                                   0          0
+	[ 0x2410] INTR_CTRL_0                                     0          0
+	[ 0x2420] PF_ACK_0                                        0          0
+	[ 0x2424] PF_ACK_1                                        0          0
+	[ 0x2428] PF_ACK_2                                        0          0
+	[ 0x242c] PF_ACK_3                                        0          0
+	[ 0x2430] PF_ACK_4                                        0          0
+	[ 0x2434] PF_ACK_5                                        0          0
+	[ 0x2438] PF_ACK_6                                        0          0
+	[ 0x243c] PF_ACK_7                                        0          0
+	[ 0x2500] FLR_CTRL_STATUS_0                               0          0
+	[ 0x2800] MSG_IN_0                                        0xffffffff 4294967295
+	[ 0x2804] MSG_IN_1                                        0xffffffff 4294967295
+	[ 0x2808] MSG_IN_2                                        0xffffffff 4294967295
+	[ 0x280c] MSG_IN_3                                        0xffffffff 4294967295
+	[ 0x2810] MSG_IN_4                                        0xffffffff 4294967295
+	[ 0x2814] MSG_IN_5                                        0xffffffff 4294967295
+	[ 0x2818] MSG_IN_6                                        0xffffffff 4294967295
+	[ 0x281c] MSG_IN_7                                        0xffffffff 4294967295
+	[ 0x2820] MSG_IN_8                                        0xffffffff 4294967295
+	[ 0x2824] MSG_IN_9                                        0xffffffff 4294967295
+	[ 0x2828] MSG_IN_10                                       0xffffffff 4294967295
+	[ 0x282c] MSG_IN_11                                       0xffffffff 4294967295
+	[ 0x2830] MSG_IN_12                                       0xffffffff 4294967295
+	[ 0x2834] MSG_IN_13                                       0xffffffff 4294967295
+	[ 0x2838] MSG_IN_14                                       0xffffffff 4294967295
+	[ 0x283c] MSG_IN_15                                       0xffffffff 4294967295
+	[ 0x2840] MSG_IN_16                                       0xffffffff 4294967295
+	[ 0x2844] MSG_IN_17                                       0xffffffff 4294967295
+	[ 0x2848] MSG_IN_18                                       0xffffffff 4294967295
+	[ 0x284c] MSG_IN_19                                       0xffffffff 4294967295
+	[ 0x2850] MSG_IN_20                                       0xffffffff 4294967295
+	[ 0x2854] MSG_IN_21                                       0xffffffff 4294967295
+	[ 0x2858] MSG_IN_22                                       0xffffffff 4294967295
+	[ 0x285c] MSG_IN_23                                       0xffffffff 4294967295
+	[ 0x2860] MSG_IN_24                                       0xffffffff 4294967295
+	[ 0x2864] MSG_IN_25                                       0xffffffff 4294967295
+	[ 0x2868] MSG_IN_26                                       0xffffffff 4294967295
+	[ 0x286c] MSG_IN_27                                       0xffffffff 4294967295
+	[ 0x2870] MSG_IN_28                                       0xffffffff 4294967295
+	[ 0x2874] MSG_IN_29                                       0xffffffff 4294967295
+	[ 0x2878] MSG_IN_30                                       0xffffffff 4294967295
+	[ 0x287c] MSG_IN_31                                       0xffffffff 4294967295
+	[ 0x2c00] MSG_OUT_0                                       0          0
+	[ 0x2c04] MSG_OUT_1                                       0          0
+	[ 0x2c08] MSG_OUT_2                                       0          0
+	[ 0x2c0c] MSG_OUT_3                                       0          0
+	[ 0x2c10] MSG_OUT_4                                       0          0
+	[ 0x2c14] MSG_OUT_5                                       0          0
+	[ 0x2c18] MSG_OUT_6                                       0          0
+	[ 0x2c1c] MSG_OUT_7                                       0          0
+	[ 0x2c20] MSG_OUT_8                                       0          0
+	[ 0x2c24] MSG_OUT_9                                       0          0
+	[ 0x2c28] MSG_OUT_10                                      0          0
+	[ 0x2c2c] MSG_OUT_11                                      0          0
+	[ 0x2c30] MSG_OUT_12                                      0          0
+	[ 0x2c34] MSG_OUT_13                                      0          0
+	[ 0x2c38] MSG_OUT_14                                      0          0
+	[ 0x2c3c] MSG_OUT_15                                      0          0
+	[ 0x2c40] MSG_OUT_16                                      0          0
+	[ 0x2c44] MSG_OUT_17                                      0          0
+	[ 0x2c48] MSG_OUT_18                                      0          0
+	[ 0x2c4c] MSG_OUT_19                                      0          0
+	[ 0x2c50] MSG_OUT_20                                      0          0
+	[ 0x2c54] MSG_OUT_21                                      0          0
+	[ 0x2c58] MSG_OUT_22                                      0          0
+	[ 0x2c5c] MSG_OUT_23                                      0          0
+	[ 0x2c60] MSG_OUT_24                                      0          0
+	[ 0x2c64] MSG_OUT_25                                      0          0
+	[ 0x2c68] MSG_OUT_26                                      0          0
+	[ 0x2c6c] MSG_OUT_27                                      0          0
+	[ 0x2c70] MSG_OUT_28                                      0          0
+	[ 0x2c74] MSG_OUT_29                                      0          0
+	[ 0x2c78] MSG_OUT_30                                      0          0
+	[ 0x2c7c] MSG_OUT_31                                      0          0
+
+Dump the registers bit-field wise
+---------------------------------
+command: ``dma-ctl qdma<bbddf> reg info bar <bar_no> addr <ADDR> [num_regs <cnt>]``
+
+This command allows the user to dump the bit-field specific details of QDMA registers.
+
+::
+
+	PS H:\> dma-ctl.exe qdma17000 reg info bar 0 0x0 num_regs 10
+	CFG_BLK_IDENTIFIER                       0x0       0x1fd30001 533921793
+	CFG_BLK_IDENTIFIER                       [31,20]   0x1fd
+	CFG_BLK_IDENTIFIER_1                     [19,16]   0x3
+	CFG_BLK_IDENTIFIER_RSVD_1                [15, 8]   0
+	CFG_BLK_IDENTIFIER_VERSION               [ 7, 0]   0x1
+
+	CFG_BLK_PCIE_MAX_PLD_SIZE                0x8       0x51       81
+	CFG_BLK_IDENTIFIER                       [31, 7]   0
+	CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+	CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+	CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x1
+
+	CFG_BLK_PCIE_MAX_READ_REQ_SIZE           0xc       0x52       82
+	CFG_BLK_IDENTIFIER                       [31, 7]   0
+	CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+	CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+	CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x2
+
+	CFG_BLK_SYSTEM_ID                        0x10      0xff01     65281
+	CFG_BLK_IDENTIFIER                       [31,17]   0
+	CFG_BLK_IDENTIFIER_1                     [   16]   0
+	CFG_BLK_IDENTIFIER_RSVD_1                [15, 0]   0xff01
+
+	CFG_BLK_MSIX_ENABLE                      0x14      0xf        15
+	CFG_BLK_IDENTIFIER                       [31, 0]   0xf
+
+	CFG_PCIE_DATA_WIDTH                      0x18      0x3        3
+	CFG_BLK_IDENTIFIER                       [31, 3]   0
+	CFG_BLK_IDENTIFIER_1                     [ 2, 0]   0x3
+
+	CFG_PCIE_CTL                             0x1c      0x1        1
+	CFG_BLK_IDENTIFIER                       [31,18]   0
+	CFG_BLK_IDENTIFIER_1                     [17,16]   0
+	CFG_BLK_IDENTIFIER_RSVD_1                [15, 2]   0
+	CFG_BLK_IDENTIFIER_VERSION               [    1]   0
+	CFG_BLK_PCIE_MAX_PLD_SIZE_RSVD_1         [    0]   0x1
+
+	CFG_BLK_MSI_ENABLE                       0x20      0          0
+	CFG_BLK_IDENTIFIER                       [31, 0]   0
+
+	CFG_AXI_USER_MAX_PLD_SIZE                0x40      0x55       85
+	CFG_BLK_IDENTIFIER                       [31, 7]   0
+	CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+	CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+	CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x5
+
+	CFG_AXI_USER_MAX_READ_REQ_SIZE           0x44      0x55       85
+	CFG_BLK_IDENTIFIER                       [31, 7]   0
+	CFG_BLK_IDENTIFIER_1                     [ 6, 4]   0x5
+	CFG_BLK_IDENTIFIER_RSVD_1                [    3]   0
+	CFG_BLK_IDENTIFIER_VERSION               [ 2, 0]   0x5

@@ -1,0 +1,3 @@
+
+.. include:: ../doxygen/xvsec_linux/rst/group_xvsec_api_enums.rst
+   :start-after: Enumerations

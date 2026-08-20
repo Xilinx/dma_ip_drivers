@@ -62,6 +62,16 @@ Following are the list of messages supported between PF and VF driver
 		MBOX_OP_INTR_CTXT_CLR,
 		/** @MBOX_OP_INTR_CTXT_INV: interrupt context invalidate */
 		MBOX_OP_INTR_CTXT_INV,
+		/** @MBOX_OP_RESET_PREPARE: PF to VF message for VF reset*/
+		MBOX_OP_RESET_PREPARE,
+		/** @MBOX_OP_RESET_DONE: PF reset done */
+		MBOX_OP_RESET_DONE,
+		/** @MBOX_OP_REG_LIST_READ: Read the register list */
+		MBOX_OP_REG_LIST_READ,
+		/** @MBOX_OP_PF_BYE: pf offline, response required */
+		MBOX_OP_PF_BYE,
+		/** @MBOX_OP_PF_RESET_VF_BYE: VF reset BYE, response required*/
+		MBOX_OP_PF_RESET_VF_BYE,
 
 		/** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
 		MBOX_OP_HELLO_RESP = 0x81,
@@ -91,6 +101,16 @@ Following are the list of messages supported between PF and VF driver
 		MBOX_OP_INTR_CTXT_CLR_RESP,
 		/** @MBOX_OP_INTR_CTXT_INV_RESP: response to @MBOX_OP_INTR_CTXT_INV */
 		MBOX_OP_INTR_CTXT_INV_RESP,
+		/** @MBOX_OP_RESET_PREPARE_RESP: response to @MBOX_OP_RESET_PREPARE */
+		MBOX_OP_RESET_PREPARE_RESP,
+		/** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
+		MBOX_OP_RESET_DONE_RESP,
+		/** @MBOX_OP_REG_LIST_READ_RESP: response to @MBOX_OP_REG_LIST_READ */
+		MBOX_OP_REG_LIST_READ_RESP,
+		/** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
+		MBOX_OP_PF_BYE_RESP,
+		/** @MBOX_OP_PF_RESET_VF_BYE_RESP: response to @MBOX_OP_PF_RESET_VF_BYE	*/
+		MBOX_OP_PF_RESET_VF_BYE_RESP,
 
 		/** @MBOX_OP_MAX: total mbox opcodes*/
 		MBOX_OP_MAX

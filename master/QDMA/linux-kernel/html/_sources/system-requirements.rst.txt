@@ -54,7 +54,7 @@ Linux QDMA VF Driver release is verified on following Guest system configuration
 Guest System(VM)          Configuration Details             
 ========================= ==================================
 Operating System          Ubuntu 24.04 LTS
-Linux Kernel              6.8.0-36-generic
+Linux Kernel              6.8.0-35-generic
 RAM 			          32GB
 Cores              	      32
 ========================= ==================================
@@ -67,7 +67,7 @@ Linux QDMA Driver is supported on the following linux distributions
 
 
 +-------------------------+---------------------+----------------+
-| Linux Distribution      | Version             | Kernel Version |
+| Linux Distribution      | Version             | Kernel Version |          
 +=========================+=====================+================+
 | CentOS                  |7.6-1810 (RHEL 7.6)  |3.10.0-957      |
 |                         +---------------------+----------------+
@@ -80,6 +80,8 @@ Linux QDMA Driver is supported on the following linux distributions
 |                         |9                    |5.14.0-283      |
 |                         +---------------------+----------------+
 |                         |Stream-9             |5.14.0-452      |
+|                         +---------------------+----------------+
+|                         |10                   |6.12.0-157      |
 +-------------------------+---------------------+----------------+
 |Fedora                   |30                   |5.0.9-301       |
 |                         +---------------------+----------------+
@@ -92,6 +94,12 @@ Linux QDMA Driver is supported on the following linux distributions
 |                         |37                   |6.2.8-200       |
 |                         +---------------------+----------------+
 |                         |40                   |6.8.10-300      |
+|                         +---------------------+----------------+
+|                         |43                   |6.17.7-300      |
++-------------------------+---------------------+----------------+
+|RHEL                     |9.4                  |5.14.0-427      |
++-------------------------+---------------------+----------------+
+|AlmaLinux                |10                   |6.12.0-55       |
 +-------------------------+---------------------+----------------+
 |Ubuntu                   |16.04                |4.15.0-101      |
 |                         +---------------------+----------------+
@@ -101,9 +109,7 @@ Linux QDMA Driver is supported on the following linux distributions
 |                         +---------------------+----------------+
 |                         |22.04                |5.15.0-41       |
 |                         +---------------------+----------------+
-|                         |24.04                |6.8.0-36        |
-+-------------------------+---------------------+----------------+
-|AlmaLinux                |9.4                  |5.14.0-503      |
+|                         |24.04                |6.8.0-35        |
 +-------------------------+---------------------+----------------+
 
 
@@ -132,6 +138,8 @@ Linux QDMA Driver is verified on following kernel.org Linux kernel versions
 |                         | 6.5             |
 |                         +-----------------+
 |                         | 6.8             |
+|                         +-----------------+
+|                         | 6.17            |
 +-------------------------+-----------------+
 
 The following kernel functions shall be included in the OS kernel version being used. Make sure that these functions are included in the kernel.
@@ -158,5 +166,6 @@ aliases in the kernel (defined by the module_init/exit macros), ending up being 
 These aliases point to the __init/__exit functions of a module, which are defined as __cold (among other attributes). However, if
 the aliases themselves do not have the __cold attribute, this causes compilation failure for driver if used with Kernel Versions < 3.16.66 mentioned
 in the supported kernels list above or if the Kernel Source doesn't have the fix for this which are there in the long term releases.
+
 
 

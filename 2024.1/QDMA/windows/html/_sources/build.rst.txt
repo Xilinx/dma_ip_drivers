@@ -1,0 +1,188 @@
+Building the QDMA driver software
+=================================
+
+For building the Windows QDMA Driver, make sure the :ref:`sys_req` are satisfied.
+
+Updating the PCIe device ID
+---------------------------
+
+During the PCIe DMA IP customization in Vivado you can specify a PCIe Device ID. 
+This Device ID must be recognized by the driver in order to properly identify the PCIe QDMA device. 
+The current driver is designed to recognize the default PCIe Device IDs that get generated with the PCIe example design. 
+If the PCIe Device ID is modified during IP customization, one needs to modify QDMA driver to recognize this new ID.
+
+User can also remove unwanted PCIe Device IDs in their solution.
+
+To modify the PCIe Device ID in the driver, open the ``sys\drv\qdma.inf``. file from the driver source and search for the string ``[Standard.NT$ARCH$]``.
+This section has the PCIe Device IDs that are recognized by the driver in the following format
+
+``%QDMA.DeviceDesc%=		QDMA_Device,	PCI\VEN_10ee&DEV_9011`` 
+
+Add, remove, or modify the PCIe Device IDs in this struct.
+The PCIe DMA driver will only recognize device IDs identified in this struct as PCIe QDMA devices. 
+Once modified, the driver must be un-installed and recompiled.
+
+Compiling the solution
+----------------------
+
+This driver software supports only Physical Functions (PF).
+
+In order to compile the Xilinx QDMA software, the software tools specified at :ref:`sys_req` must be installed in development machine.
+
+Below is the directory structure of the Windows QDMA Driver software. All directory paths referred to this document are relative to this base directory.
+
++--------------------------+-------------------------------------------------------------+
+| **Directory**            | **Description**                                             |
++==========================+=============================================================+
+| apps\\                   | User space application to configure and control QDMA        |
++--------------------------+-------------------------------------------------------------+
+| sys\\                    | Containes QDMA windows driver                               |
++--------------------------+-------------------------------------------------------------+
+| sys\\drv\\               | Contains WDF Function driver sources                        |
++--------------------------+-------------------------------------------------------------+
+| sys\\libqdma\\           | QDMA library to configure and control the QDMA IP           |
++--------------------------+-------------------------------------------------------------+
+| QDMA.sln                 | QDMA Visual studio solution                                 |
++--------------------------+-------------------------------------------------------------+
+| README.md                | User guide on QDMA SW usage                                 |
++--------------------------+-------------------------------------------------------------+
+
+**Driver configuration parameters**
+
+QDMA windows kernel driver has the below parameters which can be modified before building the driver.
+
++--------------------------+-------------------------------------------------------------+--------------------+
+| **Parameter Name**       | **Description**                                             | **Default Value**  |
++==========================+=============================================================+====================+
+| DRIVER_MODE              | Specifies the mode for the driver to operate in             | 0                  |
+|                          |                                                             |                    |
+|                          | 0 – Poll Mode                                               |                    |
+|                          |                                                             |                    |
+|                          | 1 – Direct Interrupt                                        |                    |
+|                          |                                                             |                    |
+|                          | 2 – Indirect Interrupt                                      |                    |
++--------------------------+-------------------------------------------------------------+--------------------+
+| CONFIG_BAR               | Specifies the QDMA config BAR ID                            | 0                  |
+|                          |                                                             |                    |
+|                          | 0, 1, 2 are valid values                                    |                    |
+|                          |                                                             |                    |
+|                          | HW design provides the valid CONFIG_BAR value               |                    |
++--------------------------+-------------------------------------------------------------+--------------------+
+
+These parameters are available as registry entries in qdma.inf file. Check for the below lines in INF file
+
+::
+
+	[QDMA_Device_Inst.NT.Services.AddReg]
+	; Driver operation mode.
+	HKR,Parameters,"DRIVER_MODE",0x00010001,0 ;set to 0 - hardware polling, 1 - Direct Interrupt, 2 - Indirect Interrupt (default is 0 - polling)
+	; Config BAR Index
+	HKR,Parameters,"CONFIG_BAR",0x00010001,0 ;set to either 0, 1 or 2 (default is 0)
+
+
+Once the driver configuration parameters are changed as per requirement, the driver is ready for building
+
+**From Visual Studio GUI**
+
+The Windows driver and sample applications can be built using Visual Studio.
+
+* Open the ``QDMA.sln`` solution.
+* Select the appropriate Build Configuration (Debug/Release) from the menu bar.
+* Click Build from the menu bar.
+* Click Build Solution.
+* The build should run and display the following in output window of Visual Studio
+
+::
+
+	========= Build: 5 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+
+**From Command Line**
+
+The Windows driver and sample applications can also be built using the command line (provided specified tools at :ref:`sys_req` are installed).
+
+* Open Developer Command Prompt for VS2017 with Administrator privileges
+* Change directory to the project root directory
+* Run the following command:
+
+::
+
+	msbuild /t:clean /t:build /p:Configuration=<Release or Debug> /p:Platform=x64 QDMA.sln
+
+* The build should run and display the following
+
+::
+
+	Build succeeded.
+		0 Warning(s)
+		0 Error(s)
+		
+		Time Elapsed HH:MM:SS.MSEC
+
+
+.. Note::
+    This driver project settings currently supports 64bit Windows 10 OS only.  To target a different Windows OS, go to the driver project Properties->Driver Settings->General and change Target OS Version to the desired OS. Also Release and Debug build configurations exist and are configurable via the Configuration Manager.
+    The compiled build products are stored in the build/x64/<CONFIG>/ folder. This folder contains two folders:
+    
+    * bin/ contains QDMA utility applications
+    * libqdma/ contains libqdma static library
+    * sys/ contains the QDMA driver
+
+
+Installing the Compiled QDMA Driver binaries
+--------------------------------------------
+
+The driver does not provide a certified signature and uses a test signature instead. Depending on your target operating system, you may need to enable test-signed drivers in your windows boot configuration to enable installation of this driver.
+
+**Enable test sign in windows 10 machine**
+
+* Open command prompt with admin privileges
+* Run the following command to enable test sign
+
+::
+
+	bcdedit.exe -set TESTSIGNING ON
+
+* Run the following command to disable test sign
+
+::
+
+	bcdedit.exe -set TESTSIGNING OFF
+
+**Driver Installation/Loading**
+
+**Installation via Device Manager**
+
+The easiest way to install the driver is via Windows' Device Manager.
+Open device manager from either way given below
+
+* Open Control Panel
+* Go to Hardware and Sound
+* Click on Device Manager
+
+Or
+
+* Open run prompt (WIN + r)
+* Type the command devmgmt.msc and hit Enter to open the Device Manager
+
+Then
+
+* Initially the QDMA devices are displayed as a PCI Serial Port or PCI Memory Controller.
+* Right-Click on the device and select Update Driver Software and select the folder of the built QDMA driver (typically build/x64/`CONFIG`/sys/QDMA/ (where `CONFIG` is Debug or Release).
+* If prompted about unverified driver publisher, select *Install this driver software anyway*.
+* Once the installation is done, the QDMA devices are visible in Device Manager under Xilinx Drivers -> Xilinx PCIe Multi-Queue DMA
+* Do the above steps for all QDMA devices available in Device Manager
+
+**Installation via command prompt**
+
+* Open command prompt with admin privileges
+* Change directory to project root directory
+* Execute the below command 
+
+::
+
+	pnputil.exe -i -a "sys\QDMA Reference Driver\qdma.inf"
+
+* If prompted about unverified driver publisher, select *Install this driver software anyway*.
+* The command installs the driver for all the devices whose Device IDs matching with the Device IDs present in INF file 
+
+Now the QDMA software is ready for use.

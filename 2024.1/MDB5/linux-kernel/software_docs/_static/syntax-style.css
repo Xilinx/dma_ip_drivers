@@ -1,0 +1,359 @@
+[data-theme="dark"] .highlight {
+    background: #16161a !important;
+    border: 1px solid #3c3c3c !important;
+    border-radius: 6px !important;
+    overflow-x: auto !important;
+}
+
+[data-theme="dark"] .highlight pre {
+    background: #16161a !important;
+    color: #d4d4d4 !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    font-family: 'Roboto Mono', 'Cascadia Code', 'Ubuntu Mono', 'DejaVu Sans Mono' ,'Menlo', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+}
+
+[data-theme="dark"] .highlight .k,
+[data-theme="dark"] .highlight .kn,
+[data-theme="dark"] .highlight .kp,
+[data-theme="dark"] .highlight .kr,
+[data-theme="dark"] .highlight .kw {
+    color: #569cd6 !important;
+    font-weight: normal !important;
+}
+
+[data-theme="dark"] .highlight .kt {
+    color: #569cd6 !important;
+    font-weight: normal !important;
+}
+
+[data-theme="dark"] .highlight .kd {
+    color: #569cd6 !important;
+    font-weight: normal !important;
+}
+
+[data-theme="dark"] .highlight .kc {
+    color: #569cd6 !important;
+    font-weight: normal !important;
+}
+
+[data-theme="dark"] .highlight .s,
+[data-theme="dark"] .highlight .sa,
+[data-theme="dark"] .highlight .sb,
+[data-theme="dark"] .highlight .sc,
+[data-theme="dark"] .highlight .dl,
+[data-theme="dark"] .highlight .sd,
+[data-theme="dark"] .highlight .s2,
+[data-theme="dark"] .highlight .se,
+[data-theme="dark"] .highlight .sh,
+[data-theme="dark"] .highlight .si,
+[data-theme="dark"] .highlight .sx,
+[data-theme="dark"] .highlight .sr,
+[data-theme="dark"] .highlight .s1,
+[data-theme="dark"] .highlight .ss {
+    color: #ce9178 !important;
+}
+
+[data-theme="dark"] .highlight .se {
+    color: #d7ba7d !important;
+}
+
+[data-theme="dark"] .highlight .m,
+[data-theme="dark"] .highlight .mb,
+[data-theme="dark"] .highlight .mf,
+[data-theme="dark"] .highlight .mh,
+[data-theme="dark"] .highlight .mi,
+[data-theme="dark"] .highlight .il,
+[data-theme="dark"] .highlight .mo {
+    color: #b5cea8 !important;
+}
+
+[data-theme="dark"] .highlight .c,
+[data-theme="dark"] .highlight .ch,
+[data-theme="dark"] .highlight .cm,
+[data-theme="dark"] .highlight .c1,
+[data-theme="dark"] .highlight .cs {
+    color: #6a9955 !important;
+    font-style: italic !important;
+}
+
+[data-theme="dark"] .highlight .cp,
+[data-theme="dark"] .highlight .cpf {
+    color: #c586c0 !important;
+    font-style: normal !important;
+}
+
+[data-theme="dark"] .highlight .nf,
+[data-theme="dark"] .highlight .fm {
+    color: #dcdcaa !important;
+}
+
+[data-theme="dark"] .highlight .nb,
+[data-theme="dark"] .highlight .bp {
+    color: #dcdcaa !important;
+}
+
+[data-theme="dark"] .highlight .nc {
+    color: #4ec9b0 !important;
+}
+
+[data-theme="dark"] .highlight .nn {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight .nt {
+    color: #569cd6 !important;
+}
+
+[data-theme="dark"] .highlight .n {
+    color: #d4d4d4 !important;
+}
+
+[data-theme="dark"] .highlight .na {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight .nv,
+[data-theme="dark"] .highlight .vc,
+[data-theme="dark"] .highlight .vg,
+[data-theme="dark"] .highlight .vi {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight .no {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight .nd {
+    color: #c586c0 !important;
+}
+
+[data-theme="dark"] .highlight .ne {
+    color: #4ec9b0 !important;
+}
+
+[data-theme="dark"] .highlight .nl {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight .py {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight .o,
+[data-theme="dark"] .highlight .ow,
+[data-theme="dark"] .highlight .p {
+    color: #d4d4d4 !important;
+}
+
+[data-theme="dark"] .highlight .g {
+    color: #d4d4d4 !important;
+}
+
+[data-theme="dark"] .highlight .gd {
+    color: #f14c4c !important;
+    background-color: rgba(241, 76, 76, 0.15) !important;
+}
+
+[data-theme="dark"] .highlight .gi {
+    color: #23d18b !important;
+    background-color: rgba(35, 209, 139, 0.15) !important;
+}
+
+[data-theme="dark"] .highlight .gh {
+    color: #569cd6 !important;
+    font-weight: bold !important;
+}
+
+[data-theme="dark"] .highlight .gu {
+    color: #9cdcfe !important;
+    font-weight: bold !important;
+}
+
+[data-theme="dark"] .highlight .ge {
+    font-style: italic !important;
+}
+
+[data-theme="dark"] .highlight .gs {
+    font-weight: bold !important;
+}
+
+[data-theme="dark"] .highlight .gt {
+    color: #f14c4c !important;
+}
+
+[data-theme="dark"] .highlight .err {
+    color: #f14c4c !important;
+    background-color: rgba(241, 76, 76, 0.15) !important;
+}
+
+[data-theme="dark"] .highlight .linenos {
+    color: #858585 !important;
+    background-color: #252526 !important;
+    border-right: 1px solid #3c3c3c !important;
+    padding-right: 8px !important;
+    margin-right: 12px !important;
+    user-select: none !important;
+}
+
+[data-theme="dark"] .highlight .hll {
+    background-color: #2d2d30 !important;
+}
+
+[data-theme="dark"] .rst-content code {
+    background-color: #16161a !important;
+    color: #ed1c24 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    border: 1px solid #3c3c3c !important;
+    font-family: 'Roboto Mono', 'Cascadia Code', 'Ubuntu Mono', 'DejaVu Sans Mono' ,'Menlo', monospace !important;
+    font-size: 13px !important;
+}
+
+[data-theme="dark"] .rst-content pre {
+    background-color: #16161a !important;
+    color: #d4d4d4 !important;
+    border: 1px solid #3c3c3c !important;
+    border-radius: 6px !important;
+    padding: 16px !important;
+    font-family: 'Roboto Mono', 'Cascadia Code', 'Ubuntu Mono', 'DejaVu Sans Mono' ,'Menlo', monospace !important;
+    overflow-x: auto !important;
+}
+
+[data-theme="dark"] .highlight code {
+    background-color: transparent !important;
+    color: inherit !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+[data-theme="dark"] .highlight-python .bp {
+    color: #569cd6 !important;
+}
+
+[data-theme="dark"] .highlight-python .nd {
+    color: #c586c0 !important;
+}
+
+[data-theme="dark"] .highlight-python .nf {
+    color: #dcdcaa !important;
+}
+
+[data-theme="dark"] .highlight-javascript .kd,
+[data-theme="dark"] .highlight-js .kd {
+    color: #569cd6 !important;
+}
+
+[data-theme="dark"] .highlight-javascript .nx,
+[data-theme="dark"] .highlight-js .nx {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight-c .cp,
+[data-theme="dark"] .highlight-cpp .cp {
+    color: #c586c0 !important;
+}
+
+[data-theme="dark"] .highlight-c .kt,
+[data-theme="dark"] .highlight-cpp .kt {
+    color: #569cd6 !important;
+}
+
+[data-theme="dark"] .highlight-c .n,
+[data-theme="dark"] .highlight-cpp .n {
+    color: #d4d4d4 !important;
+}
+
+[data-theme="dark"] .highlight-json .s2 {
+    color: #ce9178 !important;
+}
+
+[data-theme="dark"] .highlight-json .kc {
+    color: #569cd6 !important;
+}
+
+[data-theme="dark"] .highlight-json .nt {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight-xml .nt,
+[data-theme="dark"] .highlight-html .nt {
+    color: #569cd6 !important;
+}
+
+[data-theme="dark"] .highlight-xml .na,
+[data-theme="dark"] .highlight-html .na {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight-xml .s,
+[data-theme="dark"] .highlight-html .s {
+    color: #ce9178 !important;
+}
+
+[data-theme="dark"] .highlight-css .nt {
+    color: #d7ba7d !important;
+}
+
+[data-theme="dark"] .highlight-css .nc,
+[data-theme="dark"] .highlight-css .nf {
+    color: #d7ba7d !important;
+}
+
+[data-theme="dark"] .highlight-css .k {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight-bash .nv,
+[data-theme="dark"] .highlight-shell .nv,
+[data-theme="dark"] .highlight-console .nv {
+    color: #9cdcfe !important;
+}
+
+[data-theme="dark"] .highlight-bash .nb,
+[data-theme="dark"] .highlight-shell .nb,
+[data-theme="dark"] .highlight-console .nb {
+    color: #dcdcaa !important;
+}
+
+[data-theme="dark"] .highlight-sql .k {
+    color: #569cd6 !important;
+    text-transform: uppercase;
+}
+
+[data-theme="dark"] .highlight-sql .s,
+[data-theme="dark"] .highlight-sql .s1,
+[data-theme="dark"] .highlight-sql .s2 {
+    color: #ce9178 !important;
+}
+
+[data-theme="dark"] .highlight pre::-webkit-scrollbar {
+    height: 8px;
+}
+
+[data-theme="dark"] .highlight pre::-webkit-scrollbar-track {
+    background: #252526;
+}
+
+[data-theme="dark"] .highlight pre::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 4px;
+}
+
+[data-theme="dark"] .highlight pre::-webkit-scrollbar-thumb:hover {
+    background: #4f4f4f;
+}
+
+.highlight pre {
+    font-family: 'Roboto Mono', 'Cascadia Code', 'Ubuntu Mono', 'DejaVu Sans Mono' ,'Menlo', monospace !important;
+}
+
+.rst-content code {
+    font-family: 'Roboto Mono', 'Cascadia Code', 'Ubuntu Mono', 'DejaVu Sans Mono' ,'Menlo', monospace !important;
+}
+
+.rst-content pre {
+    font-family: 'Roboto Mono', 'Cascadia Code', 'Ubuntu Mono', 'DejaVu Sans Mono' ,'Menlo', monospace !important;
+}

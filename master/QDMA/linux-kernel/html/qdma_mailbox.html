@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2024.1',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -316,7 +306,7 @@
             
             
               <div class="version">
-                2024.1
+                2025.2
               </div>
             
           
@@ -371,6 +361,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#qdma-debug-support">QDMA Debug Support</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#linux-driver-interop-with-dpdk-driver">Linux Driver Interop with DPDK Driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qdma_design.html#tandem-boot-support">Tandem Boot Support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qdma_design.html#user-extra-support">User Extra Support</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="qdma_usecases.html">QDMA Linux Driver UseCases</a></li>
@@ -479,7 +470,7 @@ The PF and VF drivers define the message formatting to be exchanged between the 
 <p>The driver enables mailbox interrupt and registers a Rx handler for notification of incoming mailbox message.
 It also creates a Tx thread to send a message and poll for its response from the peer driver.</p>
 <p>Following are the list of messages supported between PF and VF driver</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>enum mbox_msg_op {
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>enum mbox_msg_op {
         /** @MBOX_OP_BYE: vf off line */
         MBOX_OP_BYE,
         /** @MBOX_OP_HELLO: vf on line */
@@ -510,6 +501,16 @@ It also creates a Tx thread to send a message and poll for its response from the
         MBOX_OP_INTR_CTXT_CLR,
         /** @MBOX_OP_INTR_CTXT_INV: interrupt context invalidate */
         MBOX_OP_INTR_CTXT_INV,
+        /** @MBOX_OP_RESET_PREPARE: PF to VF message for VF reset*/
+        MBOX_OP_RESET_PREPARE,
+        /** @MBOX_OP_RESET_DONE: PF reset done */
+        MBOX_OP_RESET_DONE,
+        /** @MBOX_OP_REG_LIST_READ: Read the register list */
+        MBOX_OP_REG_LIST_READ,
+        /** @MBOX_OP_PF_BYE: pf offline, response required */
+        MBOX_OP_PF_BYE,
+        /** @MBOX_OP_PF_RESET_VF_BYE: VF reset BYE, response required*/
+        MBOX_OP_PF_RESET_VF_BYE,
 
         /** @MBOX_OP_HELLO_RESP: response to @MBOX_OP_HELLO */
         MBOX_OP_HELLO_RESP = 0x81,
@@ -539,6 +540,16 @@ It also creates a Tx thread to send a message and poll for its response from the
         MBOX_OP_INTR_CTXT_CLR_RESP,
         /** @MBOX_OP_INTR_CTXT_INV_RESP: response to @MBOX_OP_INTR_CTXT_INV */
         MBOX_OP_INTR_CTXT_INV_RESP,
+        /** @MBOX_OP_RESET_PREPARE_RESP: response to @MBOX_OP_RESET_PREPARE */
+        MBOX_OP_RESET_PREPARE_RESP,
+        /** @MBOX_OP_RESET_DONE_RESP: response to @MBOX_OP_PF_VF_RESET */
+        MBOX_OP_RESET_DONE_RESP,
+        /** @MBOX_OP_REG_LIST_READ_RESP: response to @MBOX_OP_REG_LIST_READ */
+        MBOX_OP_REG_LIST_READ_RESP,
+        /** @MBOX_OP_PF_BYE_RESP: response to @MBOX_OP_PF_BYE */
+        MBOX_OP_PF_BYE_RESP,
+        /** @MBOX_OP_PF_RESET_VF_BYE_RESP: response to @MBOX_OP_PF_RESET_VF_BYE */
+        MBOX_OP_PF_RESET_VF_BYE_RESP,
 
         /** @MBOX_OP_MAX: total mbox opcodes*/
         MBOX_OP_MAX
@@ -579,7 +590,7 @@ It also creates a Tx thread to send a message and poll for its response from the
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on December 30, 2024.
+        Last updated on August 20, 2026.
       </span>
 
     </p>
@@ -657,7 +668,7 @@ It also creates a Tx thread to send a message and poll for its response from the
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2024 Advanced Micro Devices Inc.
+                                  &copy; 2022-2026, Xilinx, Inc
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

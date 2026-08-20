@@ -39,21 +39,11 @@
     <script type="text/javascript" src="_static/js/Searchbox.min.js"></script>
   
     
-      <script type="text/javascript">
-          var DOCUMENTATION_OPTIONS = {
-              URL_ROOT:'./',
-              VERSION:'2024.1',
-              LANGUAGE:'None',
-              COLLAPSE_INDEX:false,
-              FILE_SUFFIX:'.html',
-              HAS_SOURCE:  true,
-              SOURCELINK_SUFFIX: '.txt'
-          };
-      </script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -316,7 +306,7 @@
             
             
               <div class="version">
-                2024.1
+                2025.2
               </div>
             
           
@@ -459,9 +449,9 @@ Below diagram gives a high level system overview of the QDMA DPDK driver.</p>
 <p>Below sections describes design of different blocks and use cases of DPDK driver.</p>
 <div class="section" id="driver-interfaces-and-callbacks">
 <h2>Driver interfaces and callbacks<a class="headerlink" href="#driver-interfaces-and-callbacks" title="Permalink to this headline">¶</a></h2>
-<p>The Driver registers two driver interfaces (<code class="docutils literal"><span class="pre">net_qdma</span></code> for PFs and <code class="docutils literal"><span class="pre">net_qdma_vf</span></code> for VFs) with DPDK RTE.
-Below <code class="docutils literal"><span class="pre">eth_dev_ops</span></code> callbacks are implemented by both driver interfaces of the DPDK driver.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>static struct eth_dev_ops qdma_eth_dev_ops = {
+<p>The Driver registers two driver interfaces (<code class="docutils literal notranslate"><span class="pre">net_qdma</span></code> for PFs and <code class="docutils literal notranslate"><span class="pre">net_qdma_vf</span></code> for VFs) with DPDK RTE.
+Below <code class="docutils literal notranslate"><span class="pre">eth_dev_ops</span></code> callbacks are implemented by both driver interfaces of the DPDK driver.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>static struct eth_dev_ops qdma_eth_dev_ops = {
         .dev_configure            = qdma_dev_configure,
         .dev_infos_get            = qdma_dev_infos_get,
         .dev_start                = qdma_dev_start,
@@ -541,19 +531,19 @@ Below <code class="docutils literal"><span class="pre">eth_dev_ops</span></code>
 <h2>QDMA Hardware Error Monitoring<a class="headerlink" href="#qdma-hardware-error-monitoring" title="Permalink to this headline">¶</a></h2>
 <p>There are various causes for errors in QDMA IP e.g. descriptor errors, DMA engine errors, etc.
 If the errors are enabled by SW, QDMA logs the status of error in the respective global status registers.</p>
-<p>DPDK driver executes a poll thread <code class="docutils literal"><span class="pre">qdma_check_errors()</span></code> every 1 second to check the error status and log the type of HW error occured on the console.</p>
+<p>DPDK driver executes a poll thread <code class="docutils literal notranslate"><span class="pre">qdma_check_errors()</span></code> every 1 second to check the error status and log the type of HW error occured on the console.</p>
 </div>
 <div class="section" id="dpdk-driver-debug">
 <h2>DPDK Driver debug<a class="headerlink" href="#dpdk-driver-debug" title="Permalink to this headline">¶</a></h2>
 <p>DPDK driver provides below APIs to dump debug information.</p>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">rte_pmd_qdma_dbg_regdump()</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_regdump()</span></code></dt>
 <dd>Dump QDMA registers</dd>
-<dt><code class="docutils literal"><span class="pre">rte_pmd_qdma_dbg_qdevice()</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_qdevice()</span></code></dt>
 <dd>Dump QDMA device structure maintained by SW</dd>
-<dt><code class="docutils literal"><span class="pre">rte_pmd_qdma_dbg_qinfo()</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_qinfo()</span></code></dt>
 <dd>Dump QDMA queue context maintained by HW and queue structures maintained by SW</dd>
-<dt><code class="docutils literal"><span class="pre">rte_pmd_qdma_dbg_qdesc()</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">rte_pmd_qdma_dbg_qdesc()</span></code></dt>
 <dd>Dump the specified descriptor ring of the given queue id</dd>
 </dl>
 <p>User application can call these APIs to dump the required debug information.</p>
@@ -590,7 +580,7 @@ If the errors are enabled by SW, QDMA logs the status of error in the respective
   <div role="contentinfo" class="copyright">
     <p class="footerinfo">
       <span class="lastupdated">
-        Last updated on January 01, 2025.
+        Last updated on August 20, 2026.
       </span>
 
     </p>
@@ -668,7 +658,7 @@ If the errors are enabled by SW, QDMA logs the status of error in the respective
 														<div class="col-md-pull-6 col-lg-pull-6 col-md-6 col-lg-6">
 															<span class="copyright">
                                   
-                                  &copy; 2022-2024 Advanced Micro Devices Inc.
+                                  &copy; 2022-2026 Advanced Micro Devices Inc.
                               </span>
 															<ul class="list-inline sub-menu">
 																<li>

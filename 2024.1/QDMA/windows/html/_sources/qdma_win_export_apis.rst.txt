@@ -1,0 +1,3 @@
+
+.. include:: ../doxygen/qdma_win/rst/class_xlnx_qdma_interface.rst
+
