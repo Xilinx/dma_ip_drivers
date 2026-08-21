@@ -5980,6 +5980,7 @@ static int qdma_global_writeback_interval_write(void *dev_hndl,
 
 	if (dev_cap.st_en || dev_cap.mm_cmpt_en) {
 		reg_val = qdma_reg_read(dev_hndl, QDMA_OFFSET_GLBL_DSC_CFG);
+		reg_val &= ~QDMA_GLBL_DSC_CFG_WB_ACC_INT_MASK;
 		reg_val |= FIELD_SET(QDMA_GLBL_DSC_CFG_WB_ACC_INT_MASK, wb_int);
 
 		qdma_reg_write(dev_hndl, QDMA_OFFSET_GLBL_DSC_CFG, reg_val);
