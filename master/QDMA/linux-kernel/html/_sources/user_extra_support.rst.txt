@@ -1,0 +1,62 @@
+***************************
+User Extra Character Device
+***************************
+
+Overview
+========
+
+The QDMA Linux driver provides an extensible character device interface that lets you add your own additional ``open``, ``close``, and ``ioctl`` handlers without changing the core driver. By default these handlers are ``NULL``; register your own in ``user_extra.c`` to add custom behavior.
+
+**Prerequisites:**
+
+For detailed driver configuration and application usage, refer to the `QDMA Linux driver build and usage guide <https://xilinx.github.io/dma_ip_drivers/master/QDMA/linux-kernel/html/build.html>`_.
+
+
+========================
+Building and Usage Steps
+========================
+
+=======
+Step#1: Implement Custom Callbacks
+=======
+
+Add your custom function callbacks in the user_extra.c file.
+
+**File Location:**
+
+drivers/linux/driver/user_extra/user_extra.c
+
+**Callback Structure:**
+
+Modify the `extra_cb` structure with your custom handlers:
+
+::
+
+   static const struct user_extra_cdev_cb extra_cb = {
+       .open =  your_custom_open_function,   /* Replace NULL with your open method */
+       .close = your_custom_close_function,  /* Replace NULL with your close method */
+       .ioctl = your_custom_ioctl_function,  /* Replace NULL with your ioctl method */
+   };
+
+Note: By default, all callbacks are set to NULL. Users must assign their callback functions in this file based on their specific use case.
+
+=======
+Step#2: Build the Driver
+=======
+
+Compile the driver with USER_EXTRA_SUPPORTED flag:
+
+::
+
+   $> make USER_EXTRA_SUPPORTED=1
+
+=======
+Step#3: Install and Load
+=======
+
+Install and load the driver module:
+
+::
+
+   $> make install
+   $> modprobe qdma-pf

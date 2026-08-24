@@ -36,7 +36,7 @@ QDMA DPDK driver latest release is verified on following host system configurati
 +--------------------------+-------------------------------------------------------------+
 | Hypervisor               | KVM                                                         |
 +--------------------------+-------------------------------------------------------------+
-| Qemu Version             | QEMU emulator version 6.2.0 (Debian 1:6.2+dfsg-2ubuntu6.16) |
+| Qemu Version             | QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18) |
 +--------------------------+-------------------------------------------------------------+
 
 **Notes**: 

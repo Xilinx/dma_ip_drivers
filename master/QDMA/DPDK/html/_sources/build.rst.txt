@@ -118,7 +118,6 @@ support 2K queues and populate Xilinx devices for binding.
 
 	::
 
-		#define RTE_MAX_MEMZONE 40960
 		#define RTE_MAX_VFIO_CONTAINERS 256
 		#define RTE_MAX_QUEUES_PER_PORT 2048
 
