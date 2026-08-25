@@ -4547,6 +4547,7 @@ free_xdev:
 	kfree(xdev);
 	return NULL;
 }
+EXPORT_SYMBOL(xdma_device_open);
 
 void xdma_device_close(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4591,6 +4592,7 @@ void xdma_device_close(struct pci_dev *pdev, void *dev_hndl)
 
 	kfree(xdev);
 }
+EXPORT_SYMBOL(xdma_device_close);
 
 void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4648,6 +4650,7 @@ void xdma_device_offline(struct pci_dev *pdev, void *dev_hndl)
 
 	pr_info("xdev 0x%p, done.\n", xdev);
 }
+EXPORT_SYMBOL(xdma_device_offline);
 
 void xdma_device_online(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4696,6 +4699,7 @@ void xdma_device_online(struct pci_dev *pdev, void *dev_hndl)
 	xdma_device_flag_clear(xdev, XDEV_FLAG_OFFLINE);
 	pr_info("xdev 0x%p, done.\n", xdev);
 }
+EXPORT_SYMBOL(xdma_device_online);
 
 int xdma_device_restart(struct pci_dev *pdev, void *dev_hndl)
 {
@@ -4710,6 +4714,7 @@ int xdma_device_restart(struct pci_dev *pdev, void *dev_hndl)
 	pr_info("NOT implemented, 0x%p.\n", xdev);
 	return -EINVAL;
 }
+EXPORT_SYMBOL(xdma_device_restart);
 
 int xdma_user_isr_register(void *dev_hndl, unsigned int mask,
 			   irq_handler_t handler, void *dev)
@@ -4736,6 +4741,7 @@ int xdma_user_isr_register(void *dev_hndl, unsigned int mask,
 
 	return 0;
 }
+EXPORT_SYMBOL(xdma_user_isr_register);
 
 int xdma_user_isr_enable(void *dev_hndl, unsigned int mask)
 {
@@ -4754,6 +4760,7 @@ int xdma_user_isr_enable(void *dev_hndl, unsigned int mask)
 
 	return 0;
 }
+EXPORT_SYMBOL(xdma_user_isr_enable);
 
 int xdma_user_isr_disable(void *dev_hndl, unsigned int mask)
 {
@@ -4771,6 +4778,7 @@ int xdma_user_isr_disable(void *dev_hndl, unsigned int mask)
 
 	return 0;
 }
+EXPORT_SYMBOL(xdma_user_isr_disable);
 
 int engine_addrmode_set(struct xdma_engine *engine, unsigned long arg)
 {
@@ -4798,3 +4806,4 @@ int engine_addrmode_set(struct xdma_engine *engine, unsigned long arg)
 
 	return rv;
 }
+EXPORT_SYMBOL(engine_addrmode_set);
