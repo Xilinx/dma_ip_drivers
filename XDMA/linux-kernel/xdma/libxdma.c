@@ -33,6 +33,8 @@
 #include "cdev_sgdma.h"
 #include "xdma_thread.h"
 
+#define CREATE_TRACE_POINTS
+#include "libxdma_trace.h"
 
 /* Module Parameters */
 static unsigned int poll_mode;
@@ -759,6 +761,13 @@ static struct xdma_transfer *engine_start(struct xdma_engine *engine)
 	mmiowb();
 #endif
 
+	if (trace_xdma_desc_enabled()) {
+		for (int i = 0; i < transfer->desc_num; ++i) {
+			struct xdma_desc *desc = transfer->desc_virt + i;
+			trace_xdma_desc(transfer, i, desc);
+		}
+	}
+
 	rv = engine_start_mode_config(engine);
 	if (rv < 0) {
 		pr_err("Failed to start engine mode config\n");
@@ -813,6 +822,16 @@ static struct xdma_transfer *engine_transfer_completion(
 		pr_info("%s: xfer empty.\n", engine->name);
 		return NULL;
 	}
+
+	if (trace_xdma_desc_result_enabled() && engine->streaming &&
+	    engine->dir == DMA_FROM_DEVICE) {
+		for (int i = 0; i < transfer->desc_num; ++i) {
+			trace_xdma_desc_result(transfer, i,
+					       transfer->res_virt + i);
+		}
+	}
+
+	trace_xdma_xfer_complete(engine, transfer);
 
 	/* synchronous I/O? */
 	/* awake task on transfer's wait queue */
@@ -2556,6 +2575,8 @@ static int transfer_queue(struct xdma_engine *engine,
 			transfer, engine->name);
 	}
 
+	trace_xdma_xfer_submit(engine, transfer);
+
 shutdown:
 	/* unlock the engine state */
 	dbg_tfr("engine->running = %d\n", engine->running);
@@ -3030,6 +3051,7 @@ static int transfer_init(struct xdma_engine *engine,
 
 	/* remember direction of transfer */
 	xfer->dir = engine->dir;
+	xfer->ep_addr = req->ep_addr;
 	xfer->desc_virt = engine->desc + engine->desc_idx;
 	xfer->res_virt = engine->cyclic_result + engine->desc_idx;
 	xfer->desc_bus = engine->desc_bus +

@@ -461,6 +461,7 @@ struct xdma_transfer {
 	int cyclic;			/* flag if transfer is cyclic */
 	int last_in_request;		/* flag if last within request */
 	unsigned int len;
+	u64 ep_addr; /* ep address this transfer starts at */
 	struct sg_table *sgt;
 	struct xdma_io_cb *cb;
 };

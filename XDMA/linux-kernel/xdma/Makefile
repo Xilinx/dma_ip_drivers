@@ -20,7 +20,7 @@ topdir := $(shell cd $(src)/.. && pwd)
 
 TARGET_MODULE:=xdma
 
-ccflags-y := -I$(topdir)/include $(XVC_FLAGS)
+ccflags-y := -I$(topdir)/include -I$(src) $(XVC_FLAGS)
 ifeq ($(DEBUG),1)
 	ccflags-y += -D__LIBXDMA_DEBUG__
 endif
