@@ -36,6 +36,8 @@
 #include "cdev_sgdma.h"
 #include "xdma_thread.h"
 
+#include "libxdma_trace.h"
+
 /* Module Parameters */
 unsigned int h2c_timeout = 10;
 module_param(h2c_timeout, uint, 0644);
@@ -554,8 +556,12 @@ static void cdev_aio_cancel_xfer(struct xdma_engine *engine, struct xdma_transfe
 		}
 	}
 
-	if (xfer->state == TRANSFER_STATE_SUBMITTED)
+	if (xfer->state == TRANSFER_STATE_SUBMITTED ||
+	    xfer->state == TRANSFER_STATE_COMPLETED) {
 		xfer->state = TRANSFER_STATE_ABORTED;
+		engine->desc_used -= xfer->desc_num;
+		trace_xdma_desc_count(engine, xfer);
+	}
 }
 
 static void sgt_dma_unmap(struct xdma_dev *xdev, struct sg_table *sgt,

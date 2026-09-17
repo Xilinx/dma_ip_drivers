@@ -3060,8 +3060,6 @@ static int transfer_init(struct xdma_engine *engine,
 			(sizeof(struct xdma_result) * engine->desc_idx);
 	xfer->desc_index = engine->desc_idx;
 
-	/* Need to handle desc_used >= engine->desc_max */
-
 	if ((engine->desc_idx + desc_max) >= engine->desc_max)
 		desc_max = engine->desc_max - engine->desc_idx;
 
@@ -3092,6 +3090,7 @@ static int transfer_init(struct xdma_engine *engine,
 	xfer->desc_num = desc_max;
 	engine->desc_idx = (engine->desc_idx + desc_max) % engine->desc_max;
 	engine->desc_used += desc_max;
+	trace_xdma_desc_count(engine, xfer);
 
 	/* fill in adjacent numbers */
 	for (i = 0; i < xfer->desc_num; i++) {
@@ -3306,7 +3305,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 		unsigned long flags;
 		struct xdma_transfer *xfer = &req->tfer[0];
 		unsigned int sg_offset = req->sg_offset;
-		unsigned int desc_idx, desc_max, desc_cnt = 0;
+		unsigned int desc_idx, desc_max, desc_limit, desc_cnt = 0;
 		struct xdma_desc *desc_virt;
 		dma_addr_t desc_bus;
 
@@ -3326,6 +3325,15 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 		desc_idx = engine->desc_idx;
 		desc_max = engine->desc_max;
 
+		if (engine->desc_used >= (int)desc_max) {
+			spin_unlock_irqrestore(&engine->lock, flags);
+			mutex_unlock(&engine->desc_lock);
+			rv = -EBUSY;
+			goto unmap_sgl;
+		}
+		desc_limit = min_t(unsigned int, desc_max,
+				   desc_idx + (desc_max - engine->desc_used));
+
 		xfer->desc_virt = desc_virt = engine->desc + desc_idx;
 		xfer->res_virt = engine->cyclic_result + desc_idx;
 		xfer->desc_bus = desc_bus = engine->desc_bus +
@@ -3338,9 +3346,9 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 		sg = req->sg;
 		ep_addr = req->ep_addr + (req->offset & (aperture - 1));
 		i = req->sg_idx;
-		
-		for (sg = req->sg; i < sg_max && desc_idx < desc_max;
-			i++, sg = sg_next(sg)) {
+
+		for (sg = req->sg; i < sg_max && desc_idx < desc_limit;
+		     i++, sg = sg_next(sg)) {
 			dma_addr_t addr = sg_dma_address(sg);
 
 			tlen = sg_dma_len(sg);
@@ -3374,7 +3382,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 				
 				desc_idx++;
 				desc_cnt++;
-				if (desc_idx == desc_max)
+				if (desc_idx == desc_limit)
 					break;
 			}
 
@@ -3534,6 +3542,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 	int nents;
 	enum dma_data_direction dir = write ? DMA_TO_DEVICE : DMA_FROM_DEVICE;
 	struct xdma_request_cb *req = NULL;
+	unsigned long flags;
 
 	if (!dev_hndl)
 		return -EINVAL;
@@ -3612,10 +3621,18 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 
 	sg = sgt->sgl;
 	nents = req->sw_desc_cnt;
+
+	spin_lock_irqsave(&engine->lock, flags);
+	if (engine->desc_used + req->sw_desc_cnt > engine->desc_max) {
+		spin_unlock_irqrestore(&engine->lock, flags);
+		rv = -EBUSY;
+		goto unmap_sgl;
+	}
+	spin_unlock_irqrestore(&engine->lock, flags);
+
 	mutex_lock(&engine->desc_lock);
 
 	while (nents) {
-		unsigned long flags;
 		struct xdma_transfer *xfer;
 
 		/* build transfer */
@@ -3854,6 +3871,7 @@ ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
 
 		transfer_destroy(xdev, xfer);
 		engine->desc_used -= xfer->desc_num;
+		trace_xdma_desc_count(engine, xfer);
 
 		tfer_idx++;
 
@@ -3887,6 +3905,7 @@ ssize_t xdma_xfer_submit_nowait(void *cb_hndl, void *dev_hndl, int channel,
 	int nents;
 	enum dma_data_direction dir = write ? DMA_TO_DEVICE : DMA_FROM_DEVICE;
 	struct xdma_request_cb *req = NULL;
+	unsigned long flags;
 
 	if (!dev_hndl)
 		return -EINVAL;
@@ -3970,6 +3989,16 @@ ssize_t xdma_xfer_submit_nowait(void *cb_hndl, void *dev_hndl, int channel,
 
 	sg = sgt->sgl;
 	nents = req->sw_desc_cnt;
+
+	spin_lock_irqsave(&engine->lock, flags);
+	if (engine->desc_used + req->sw_desc_cnt > engine->desc_max) {
+		spin_unlock_irqrestore(&engine->lock, flags);
+
+		rv = -EBUSY;
+		goto unmap_sgl;
+	}
+	spin_unlock_irqrestore(&engine->lock, flags);
+
 	while (nents) {
 
 		struct xdma_transfer *xfer;
