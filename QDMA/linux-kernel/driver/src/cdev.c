@@ -386,10 +386,17 @@ static ssize_t cdev_gen_read_write(struct file *file, char __user *buf,
 		return -EINVAL;
 	}
 
+	down_read(&xcdev->rwsem);
+	if (xcdev->gone) {
+		res = -ENODEV;
+		goto unlock;
+	}
+
 	if (!xcdev->fp_rw) {
 		pr_err("file 0x%p, %s, NO rw, 0x%p,%llu, pos %llu, W %d.\n",
 			file, xcdev->name, buf, (u64)count, (u64)*pos, write);
-		return -EINVAL;
+		res = -EINVAL;
+		goto unlock;
 	}
 
 	qhndl = write ? xcdev->h2c_qhndl : xcdev->c2h_qhndl;
@@ -402,8 +409,10 @@ static ssize_t cdev_gen_read_write(struct file *file, char __user *buf,
 	iocb.buf = buf;
 	iocb.len = count;
 	rv = map_user_buf_to_sgl(&iocb, write);
-	if (rv < 0)
-		return rv;
+	if (rv < 0) {
+		res = rv;
+		goto unlock;
+	}
 
 	req->sgcnt = iocb.pages_nr;
 	req->sgl = iocb.sgl;
@@ -421,6 +430,8 @@ static ssize_t cdev_gen_read_write(struct file *file, char __user *buf,
 	unmap_user_buf(&iocb, write);
 	iocb_release(&iocb);
 
+unlock:
+	up_read(&xcdev->rwsem);
 	return res;
 }
 
@@ -436,7 +447,7 @@ static ssize_t cdev_gen_read(struct file *file, char __user *buf,
 	return cdev_gen_read_write(file, (char *)buf, count, pos, 0);
 }
 
-static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
+static ssize_t __cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 				unsigned long count, loff_t pos)
 {
 	struct qdma_cdev *xcdev =
@@ -511,7 +522,7 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 	return rv;
 }
 
-static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
+static ssize_t __cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 						unsigned long count, loff_t pos)
 {
 	struct qdma_cdev *xcdev =
@@ -585,6 +596,40 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 	return rv;
 }
 
+static ssize_t cdev_aio_rw(struct kiocb *iocb, const struct iovec *io,
+				unsigned long count, loff_t pos, bool write)
+{
+	struct qdma_cdev *xcdev =
+		(struct qdma_cdev *)iocb->ki_filp->private_data;
+	ssize_t rv;
+
+	if (!xcdev)
+		return -EINVAL;
+
+	down_read(&xcdev->rwsem);
+	if (xcdev->gone)
+		rv = -ENODEV;
+	else if (write)
+		rv = __cdev_aio_write(iocb, io, count, pos);
+	else
+		rv = __cdev_aio_read(iocb, io, count, pos);
+	up_read(&xcdev->rwsem);
+
+	return rv;
+}
+
+static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
+				unsigned long count, loff_t pos)
+{
+	return cdev_aio_rw(iocb, io, count, pos, true);
+}
+
+static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
+				unsigned long count, loff_t pos)
+{
+	return cdev_aio_rw(iocb, io, count, pos, false);
+}
+
 #if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
@@ -645,6 +690,15 @@ static const struct file_operations cdev_gen_fops = {
 	.llseek = cdev_gen_llseek,
 };
 
+static void qdma_cdev_kobj_release(struct kobject *kobj)
+{
+	kfree(container_of(kobj, struct qdma_cdev, kobj));
+}
+
+static struct kobj_type qdma_cdev_ktype = {
+	.release = qdma_cdev_kobj_release,
+};
+
 /*
  * xcb: per pci device character device control info.
  * xcdev: per queue character device
@@ -658,12 +712,20 @@ void qdma_cdev_destroy(struct qdma_cdev *xcdev)
 	}
 	pr_debug("destroying cdev %p", xcdev);
 
+	/* Files outlive cdev_del(): drain in-flight reads/writes and fail
+	 * later ones before the queue and device go away.
+	 */
+	down_write(&xcdev->rwsem);
+	xcdev->gone = true;
+	up_write(&xcdev->rwsem);
+
 	if (xcdev->sys_device)
 		device_destroy(qdma_class, xcdev->cdevno);
 
 	cdev_del(&xcdev->cdev);
 
-	kfree(xcdev);
+	/* freed once the last open file is released */
+	kobject_put(&xcdev->kobj);
 }
 
 int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
@@ -690,7 +752,8 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 		return -ENOMEM;
 	}
 
-	xcdev->cdev.owner = THIS_MODULE;
+	kobject_init(&xcdev->kobj, &qdma_cdev_ktype);
+	init_rwsem(&xcdev->rwsem);
 	xcdev->xcb = xcb;
 	priv_data = (qconf->q_type == Q_C2H) ?
 			&xcdev->c2h_qhndl : &xcdev->h2c_qhndl;
@@ -712,6 +775,9 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 	xcdev->cdevno = MKDEV(xcb->cdev_major, xcdev->minor);
 
 	cdev_init(&xcdev->cdev, &cdev_gen_fops);
+	xcdev->cdev.owner = THIS_MODULE;
+	/* each open file pins the cdev, which pins xcdev via its parent */
+	cdev_set_parent(&xcdev->cdev, &xcdev->kobj);
 
 	/* bring character device live */
 	rv = cdev_add(&xcdev->cdev, xcdev->cdevno, 1);
@@ -756,7 +822,7 @@ del_cdev:
 	cdev_del(&xcdev->cdev);
 
 err_out:
-	kfree(xcdev);
+	kobject_put(&xcdev->kobj);
 	return rv;
 }
 

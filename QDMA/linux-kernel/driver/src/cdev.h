@@ -25,6 +25,8 @@
  *
  */
 #include <linux/cdev.h>
+#include <linux/kobject.h>
+#include <linux/rwsem.h>
 #include "version.h"
 #include <linux/spinlock_types.h>
 
@@ -69,6 +71,12 @@ struct qdma_cdev {
 	struct device *sys_device;
 	/** pointer to kernel cdev(struct cdev) */
 	struct cdev cdev;
+	/** refcount for this struct; parent of cdev */
+	struct kobject kobj;
+	/** held for read by read/write ops, for write by qdma_cdev_destroy() */
+	struct rw_semaphore rwsem;
+	/** set on destroy; reads/writes then fail with -ENODEV */
+	bool gone;
 	/** c2h queue handle */
 	unsigned long c2h_qhndl;
 	/** hec queue handle */
