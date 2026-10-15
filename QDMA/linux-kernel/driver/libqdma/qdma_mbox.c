@@ -46,7 +46,10 @@
 #endif
 
 #ifdef RHEL_RELEASE_VERSION
-#if (RHEL_RELEASE_VERSION(10, 2) <= RHEL_RELEASE_CODE)
+/* 9.8+ and 10.1+ backport timer_container_of(); 10.0 still has from_timer(). */
+#if ((RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 8)) && \
+	(RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(10, 0))) || \
+	(RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(10, 1))
 #define QDMA_CHECK_TIMER_API 1
 #else
 #define QDMA_CHECK_TIMER_API 0
