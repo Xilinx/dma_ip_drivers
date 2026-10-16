@@ -488,14 +488,14 @@ int qdma_device_version_info(unsigned long dev_hndl,
 		return  xdev->hw.qdma_get_error_code(rv);
 	}
 
-	strncpy(version_info->ip_str, info.qdma_ip_type_str,
+	strscpy(version_info->ip_str, info.qdma_ip_type_str,
 			sizeof(version_info->ip_str) - 1);
-	strncpy(version_info->rtl_version_str, info.qdma_rtl_version_str,
+	strscpy(version_info->rtl_version_str, info.qdma_rtl_version_str,
 			sizeof(version_info->rtl_version_str) - 1);
-	strncpy(version_info->vivado_release_str,
+	strscpy(version_info->vivado_release_str,
 			info.qdma_vivado_release_id_str,
 			sizeof(version_info->vivado_release_str) - 1);
-	strncpy(version_info->device_type_str,
+	strscpy(version_info->device_type_str,
 			info.qdma_device_type_str,
 			sizeof(version_info->device_type_str) - 1);
 	return 0;

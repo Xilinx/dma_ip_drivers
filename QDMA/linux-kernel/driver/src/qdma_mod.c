@@ -977,15 +977,15 @@ static u8 extract_mod_param(struct pci_dev *pdev,
 	if (param_type == DRV_MODE) {
 		if (mode[0] == '\0')
 			return 0;
-		strncpy(p, mode, sizeof(p) - 1);
+		strscpy(p, mode, sizeof(p) - 1);
 	} else if (param_type == CONFIG_BAR) {
 		if (config_bar[0] == '\0')
 			return 0;
-		strncpy(p, config_bar, sizeof(p) - 1);
+		strscpy(p, config_bar, sizeof(p) - 1);
 	} else if (param_type == MASTER_PF) {
 		if (master_pf[0] == '\0')
 			return is_first_pfdev(pdev->bus->number);
-		strncpy(p, master_pf, sizeof(p) - 1);
+		strscpy(p, master_pf, sizeof(p) - 1);
 	} else {
 		pr_err("Invalid module param type received\n");
 		return -EINVAL;
