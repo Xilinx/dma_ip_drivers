@@ -121,7 +121,7 @@ void qdma_get_hw_access(void *dev_hndl, struct qdma_hw_access **hw)
 
 void qdma_strncpy(char *dest, const char *src, size_t n)
 {
-	strncpy(dest, src, n);
+	strscpy(dest, src, n);
 }
 
 
