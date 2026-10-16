@@ -1054,7 +1054,7 @@ int qdma_device_open(const char *mod_name, struct qdma_dev_conf *conf,
 		goto disable_device;
 	}
 
-	strncpy(xdev->mod_name, mod_name, QDMA_DEV_NAME_MAXLEN - 1);
+	strscpy(xdev->mod_name, mod_name, QDMA_DEV_NAME_MAXLEN - 1);
 
 	xdev_flag_set(xdev, XDEV_FLAG_OFFLINE);
 	xdev_list_add(xdev);
