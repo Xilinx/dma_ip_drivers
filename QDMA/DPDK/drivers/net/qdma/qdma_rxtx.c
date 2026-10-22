@@ -923,7 +923,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 	if (nb_pkts_avail == 0) {
 		PMD_DRV_LOG(DEBUG, "%s(): %d: nb_pkts_avail = 0\n",
 				__func__, __LINE__);
-		return 0;
+		goto fresh;
 	}
 
 	nb_pkts = RTE_MIN(nb_pkts, RTE_MIN(nb_pkts_avail, QDMA_MAX_BURST_SIZE));
@@ -954,7 +954,7 @@ uint16_t qdma_recv_pkts_st(struct qdma_rx_queue *rxq,
 	}
 
 	count_pkts = prepare_packets(rxq, rx_pkts, nb_pkts);
-
+fresh:
 	c2h_pidx = rxq->q_pidx_info.pidx;
 	pending_desc = rxq->rx_tail - c2h_pidx - 1;
 	if (rxq->rx_tail < (c2h_pidx + 1))
