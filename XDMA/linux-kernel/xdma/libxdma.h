@@ -515,7 +515,7 @@ struct xdma_engine {
 	u8 running:1;		/* flag if the driver started engine */
 	u8 non_incr_addr:1;	/* flag if non-incremental addressing used */
 	u8 eop_flush:1;		/* st c2h only, flush up the data with eop */
-	u8 filler:1;
+	u8 chaining:1;		/* flag if transfer chaining enabled */
 
 	int max_extra_adj;	/* descriptor prefetch capability */
 	int desc_dequeued;	/* num descriptors of completed transfers */

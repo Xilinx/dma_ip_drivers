@@ -50,6 +50,18 @@ module_param(enable_st_c2h_credit, uint, 0644);
 MODULE_PARM_DESC(enable_st_c2h_credit,
 	"Set 1 to enable ST C2H engine credit feature, default is 0 ( credit control disabled)");
 
+static unsigned int enable_transfer_chaining_c2h;
+module_param(enable_transfer_chaining_c2h, uint, 0444);
+MODULE_PARM_DESC(enable_transfer_chaining_c2h,
+	"Set 1 to chain queued c2h transfers into one descriptor list and keep the engine running, "
+	"default is 0 (engine is restarted after every transfer)");
+
+static unsigned int enable_transfer_chaining_h2c;
+module_param(enable_transfer_chaining_h2c, uint, 0444);
+MODULE_PARM_DESC(enable_transfer_chaining_h2c,
+	"Set 1 to chain queued h2c transfers into one descriptor list and keep the engine running, "
+	"default is 0 (engine is restarted after every transfer)");
+
 unsigned int desc_blen_max = XDMA_DESC_BLEN_MAX;
 module_param(desc_blen_max, uint, 0644);
 MODULE_PARM_DESC(desc_blen_max,
@@ -992,7 +1004,9 @@ engine_service_final_transfer(struct xdma_engine *engine,
 			}
 
 			/* mark transfer as successfully completed */
-			engine_service_shutdown(engine);
+			if (!engine->chaining || (engine->status & XDMA_STAT_DESC_STOPPED)) {
+				engine_service_shutdown(engine);
+			}
 
 			transfer->state = TRANSFER_STATE_COMPLETED;
 
@@ -1022,6 +1036,9 @@ engine_service_final_transfer(struct xdma_engine *engine,
 			WARN_ON(*pdesc_completed > transfer->desc_num);
 		}
 		/* mark transfer as successfully completed */
+		if (!engine->chaining || (engine->status & XDMA_STAT_DESC_STOPPED)) {
+			engine_service_shutdown(engine);
+		}
 		transfer->state = TRANSFER_STATE_COMPLETED;
 		transfer->desc_cmpl = transfer->desc_num;
 		/* add dequeued number of descriptors during this run */
@@ -1080,6 +1097,7 @@ static int engine_service_resume(struct xdma_engine *engine)
 		return -EINVAL;
 	}
 
+	trace_xdma_engine_running(engine->running);
 	/* engine stopped? */
 	if (!engine->running) {
 		/* in the case of shutdown, let it finish what's in the Q */
@@ -1126,6 +1144,8 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 		pr_err("dma engine NULL\n");
 		return -EINVAL;
 	}
+
+	trace_xdma_engine_running(engine->running);
 
 	/* Service the engine */
 	if (!engine->running) {
@@ -1178,8 +1198,10 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 		engine->name, desc_writeback, desc_count, err_flag,
 		engine->desc_dequeued);
 
-	if (!desc_count)
-		goto done;
+	if (!desc_count || (desc_count == engine->desc_dequeued)) {
+		trace_xdma_engine_status(engine->status);
+		goto resume;
+	}
 
 	/* transfers on queue? */
 	if (!list_empty(&engine->transfer_list)) {
@@ -1205,20 +1227,23 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 	desc_count -= engine->desc_dequeued;
 
 	/* Process all but the last transfer */
+	trace_xdma_start_transfer_list(transfer);
 	transfer = engine_service_transfer_list(engine, transfer, &desc_count);
 
+	trace_xdma_start_final_transfer(transfer);
 	/*
 	 * Process final transfer - includes checks of number of descriptors to
 	 * detect faulty completion
 	 */
 	transfer = engine_service_final_transfer(engine, transfer, &desc_count);
+	trace_xdma_transfer_list_end(transfer);
 
+resume:
 	/* Restart the engine following the servicing */
 	rv = engine_service_resume(engine);
 	if (rv < 0)
 		pr_err("Failed to resume engine\n");
 
-done:
 	/* If polling detected an error, signal to the caller */
 	return err_flag ? -1 : 0;
 }
@@ -2510,6 +2535,9 @@ static int transfer_queue(struct xdma_engine *engine,
 	struct xdma_transfer *transfer_started;
 	struct xdma_dev *xdev;
 	unsigned long flags;
+	u32 control;
+	struct xdma_transfer *last_transfer = NULL;
+	struct xdma_desc *last_desc = NULL;
 
 	if (!engine) {
 		pr_err("dma engine NULL\n");
@@ -2556,6 +2584,18 @@ static int transfer_queue(struct xdma_engine *engine,
 
 	/* mark the transfer as submitted */
 	transfer->state = TRANSFER_STATE_SUBMITTED;
+
+	if (engine->chaining && !list_empty(&engine->transfer_list)) {
+		last_transfer = list_entry(engine->transfer_list.prev,
+					   struct xdma_transfer, entry);
+		last_desc = last_transfer->desc_virt + last_transfer->desc_num - 1;
+		xdma_desc_link(last_desc, transfer->desc_virt, transfer->desc_bus);
+		dma_wmb();
+		control = XDMA_DESC_EOP | XDMA_DESC_COMPLETED;
+		xdma_desc_control_set(last_desc, control);
+	}
+	trace_xdma_transfer_chained(transfer, last_transfer);
+
 	/* add transfer to the tail of the engine transfer queue */
 	list_add_tail(&transfer->entry, &engine->transfer_list);
 
@@ -2926,6 +2966,8 @@ static int engine_init(struct xdma_engine *engine, struct xdma_dev *xdev,
 	snprintf(engine->name, sizeof(engine->name), "%d-%s%d-%s", xdev->idx,
 		(dir == DMA_TO_DEVICE) ? "H2C" : "C2H", channel,
 		engine->streaming ? "ST" : "MM");
+	engine->chaining = (enable_transfer_chaining_c2h && engine->dir == DMA_FROM_DEVICE) ||
+		(enable_transfer_chaining_h2c && engine->dir == DMA_TO_DEVICE);
 
 	if (enable_st_c2h_credit && engine->streaming &&
 	    engine->dir == DMA_FROM_DEVICE)
