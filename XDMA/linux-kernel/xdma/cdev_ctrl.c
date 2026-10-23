@@ -32,6 +32,26 @@
 #endif
 
 /*
+ * Return 0 if a [pos, pos + count) access falls within the mapped BAR window,
+ * non-zero otherwise. map_single_bar() caps the mapping at INT_MAX bytes, so
+ * the usable window is min(pci_resource_len, INT_MAX). pos is a user-controlled
+ * loff_t; this guards the register read/write paths against out-of-bounds MMIO.
+ */
+static inline int xdma_cdev_bar_access_ok(struct xdma_dev *xdev, int bar,
+					loff_t pos, size_t count)
+{
+	resource_size_t bar_len = pci_resource_len(xdev->pdev, bar);
+
+	if (bar_len > INT_MAX)
+		bar_len = INT_MAX;
+
+	if (pos < 0 || (u64)pos + count > (u64)bar_len)
+		return -EINVAL;
+
+	return 0;
+}
+
+/*
  * character device file operations for control bus (through control bridge)
  */
 static ssize_t char_ctrl_read(struct file *fp, char __user *buf, size_t count,
@@ -48,9 +68,17 @@ static ssize_t char_ctrl_read(struct file *fp, char __user *buf, size_t count,
 		return rv;
 	xdev = xcdev->xdev;
 
+	/* this is a 32-bit register interface: require exactly a 4-byte access
+	 * so we never touch more of the user buffer than the caller asked for
+	 * (the sibling char_events_read enforces the same). */
+	if (count != 4)
+		return -EPROTO;
 	/* only 32-bit aligned and 32-bit multiples */
 	if (*pos & 3)
 		return -EPROTO;
+	/* bound the user-controlled offset to the mapped BAR window */
+	if (xdma_cdev_bar_access_ok(xdev, xcdev->bar, *pos, 4))
+		return -EINVAL;
 	/* first address is BAR base plus file position offset */
 	reg = xdev->bar[xcdev->bar] + *pos;
 	//w = read_register(reg);
@@ -59,7 +87,7 @@ static ssize_t char_ctrl_read(struct file *fp, char __user *buf, size_t count,
 			__func__, reg, (long)count, (int)*pos, w);
 	rv = copy_to_user(buf, &w, 4);
 	if (rv)
-		dbg_sg("Copy to userspace failed but continuing\n");
+		return -EFAULT;
 
 	*pos += 4;
 	return 4;
@@ -79,15 +107,28 @@ static ssize_t char_ctrl_write(struct file *file, const char __user *buf,
 		return rv;
 	xdev = xcdev->xdev;
 
+	/* 32-bit register interface: require exactly a 4-byte access so we
+	 * never read past the caller's buffer. */
+	if (count != 4)
+		return -EPROTO;
+
 	/* only 32-bit aligned and 32-bit multiples */
 	if (*pos & 3)
 		return -EPROTO;
 
+	/* bound the user-controlled offset to the mapped BAR window */
+	if (xdma_cdev_bar_access_ok(xdev, xcdev->bar, *pos, 4))
+		return -EINVAL;
+
 	/* first address is BAR base plus file position offset */
 	reg = xdev->bar[xcdev->bar] + *pos;
 	rv = copy_from_user(&w, buf, 4);
-	if (rv)
-		pr_info("copy from user failed %d/4, but continuing.\n", rv);
+	if (rv) {
+		/* w would be uninitialized/partial; do NOT push stack garbage to
+		 * the hardware register. Fail the write instead of "continuing". */
+		pr_info("copy from user failed %d/4.\n", rv);
+		return -EFAULT;
+	}
 
 	dbg_sg("%s(0x%08x @%p, count=%ld, pos=%d)\n",
 			__func__, w, reg, (long)count, (int)*pos);
@@ -206,12 +247,28 @@ int bridge_mmap(struct file *file, struct vm_area_struct *vma)
 	xdev = xcdev->xdev;
 
 	off = vma->vm_pgoff << PAGE_SHIFT;
+
+	/*
+	 * Validate the user-supplied offset against the BAR length before
+	 * computing psize. The original psize = end - start + 1 - off
+	 * subtraction underflows to a huge value when off exceeds the BAR
+	 * length, defeating the vsize > psize check below and letting userspace
+	 * map physical memory beyond the BAR. Reject off past the BAR here.
+	 */
+	{
+		unsigned long blen = pci_resource_len(xdev->pdev, xcdev->bar);
+
+		if (off >= blen) {
+			dbg_sg("mmap offset 0x%lx beyond BAR len 0x%lx\n", off,
+				blen);
+			return -EINVAL;
+		}
+		psize = blen - off;
+	}
+
 	/* BAR physical address */
 	phys = pci_resource_start(xdev->pdev, xcdev->bar) + off;
 	vsize = vma->vm_end - vma->vm_start;
-	/* complete resource */
-	psize = pci_resource_end(xdev->pdev, xcdev->bar) -
-		pci_resource_start(xdev->pdev, xcdev->bar) + 1 - off;
 
 	dbg_sg("mmap(): xcdev = 0x%08lx\n", (unsigned long)xcdev);
 	dbg_sg("mmap(): cdev->bar = %d\n", xcdev->bar);

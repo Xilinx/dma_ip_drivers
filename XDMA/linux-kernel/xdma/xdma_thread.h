@@ -98,6 +98,11 @@ struct xdma_kthread {
 	unsigned int work_cnt;
 	/**  thread work list count */
 	struct list_head work_list;
+	/**  work item currently being processed by fproc (lock dropped), or
+	 *   NULL when idle. Protected by ->lock. Lets xdma_thread_remove_work()
+	 *   wait for an in-flight fproc before the engine is freed.
+	 */
+	struct list_head *work_running;
 	/**  thread initialization handler */
 	int (*finit)(struct xdma_kthread *);
 	/**  thread pending handler */
@@ -143,6 +148,18 @@ void xdma_thread_remove_work(struct xdma_engine *engine);
  * @return	none
  *****************************************************************************/
 void xdma_thread_add_work(struct xdma_engine *engine);
+
+/*****************************************************************************/
+/**
+ * xdma_engine_kthread_wakeup() - wake an engine's completion-status thread,
+ *	reading engine->cmplthp under engine->lock to avoid a check-then-use
+ *	race against xdma_thread_remove_work().
+ *
+ * @param[in]	engine:	pointer to xdma_engine
+ *
+ * @return	none
+ *****************************************************************************/
+void xdma_engine_kthread_wakeup(struct xdma_engine *engine);
 
 int xdma_kthread_start(struct xdma_kthread *thp, char *name, int id);
 int xdma_kthread_stop(struct xdma_kthread *thp);

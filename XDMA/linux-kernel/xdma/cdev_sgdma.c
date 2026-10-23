@@ -45,6 +45,13 @@ unsigned int c2h_timeout = 10;
 module_param(c2h_timeout, uint, 0644);
 MODULE_PARM_DESC(c2h_timeout, "C2H sgdma timeout in seconds, default is 10 sec.");
 
+/* Upper bound on iovec segments accepted by the async read/write paths. The
+ * VFS already caps iov_iter at UIO_MAXIOV (1024); cap here too so the cb-array
+ * allocation can never be driven to overflow or an unreasonable size by a
+ * crafted io_submit.
+ */
+#define XDMA_AIO_MAX_SEGS	1024
+
 extern struct kmem_cache *cdev_cache;
 static void char_sgdma_unmap_user_buf(struct xdma_io_cb *cb, bool write);
 
@@ -124,17 +131,29 @@ static void async_io_handler(unsigned long  cb_hndl, int err)
 #endif
 skip_tran:
 		spin_unlock(&caio->lock);
+		/*
+		 * cb points into the caio->cb[] array (each transfer was
+		 * submitted with &caio->cb[i] as its handle), so it must not be
+		 * freed individually. Free the whole array once, here on the
+		 * final completion, together with caio.
+		 */
+		kfree(caio->cb);
 		kmem_cache_free(cdev_cache, caio);
-		kfree(cb);
 		return;
-	} 
+	}
 	spin_unlock(&caio->lock);
 	return;
 
 skip_dev_lock:
+	/*
+	 * This path is taken when the caio lock could not be acquired (a cancel
+	 * is in progress). res/res2 are only assigned on the final-completion
+	 * path above, so report a definite error code instead of reading those
+	 * uninitialized stack values (the older variants already pass -EBUSY).
+	 */
 #if defined(RHEL_RELEASE_CODE)
     #if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(9, 0))
-        caio->iocb->ki_complete(caio->iocb, caio->err_cnt ? res2 : res);
+        caio->iocb->ki_complete(caio->iocb, -EBUSY);
     #elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
         caio->iocb->ki_complete(caio->iocb, -EBUSY);
     #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
@@ -149,6 +168,7 @@ skip_dev_lock:
 #else
 	aio_complete(caio->iocb, numbytes, -EBUSY);
 #endif
+	kfree(caio->cb);
 	kmem_cache_free(cdev_cache, caio);
 }
 
@@ -362,7 +382,14 @@ static int char_sgdma_map_user_buf_to_sgl(struct xdma_io_cb *cb, bool write)
 
 	if (len) {
 		pr_err("Invalid user buffer length. Cannot map to sgl\n");
-		return -EINVAL;
+		/* pages are already pinned and the sgl built; record pages_nr
+		 * and go through err_out so they are unpinned/freed. Returning
+		 * directly here left cb->pages_nr == 0, making the caller's
+		 * unmap a no-op and leaking the pinned pages and sg table.
+		 */
+		cb->pages_nr = pages_nr;
+		rv = -EINVAL;
+		goto err_out;
 	}
 	cb->pages_nr = pages_nr;
 	return 0;
@@ -463,10 +490,24 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		return -EINVAL;
 	}
 
+	/* count is the user-controlled iovec segment count; reject 0 and a
+	 * value so large the cb-array allocation could overflow or exhaust
+	 * memory.
+	 */
+	if (!count || count > XDMA_AIO_MAX_SEGS)
+		return -EINVAL;
+
 	caio = kmem_cache_alloc(cdev_cache, GFP_KERNEL);
+	if (!caio)
+		return -ENOMEM;
 	memset(caio, 0, sizeof(struct cdev_async_io));
 
-	caio->cb = kzalloc(count * (sizeof(struct xdma_io_cb)), GFP_KERNEL);
+	/* kcalloc is overflow-checked, unlike the open-coded count * sizeof */
+	caio->cb = kcalloc(count, sizeof(struct xdma_io_cb), GFP_KERNEL);
+	if (!caio->cb) {
+		kmem_cache_free(cdev_cache, caio);
+		return -ENOMEM;
+	}
 
 	spin_lock_init(&caio->lock);
 	iocb->private = caio;
@@ -475,8 +516,15 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 	caio->cancel = false;
 	caio->req_cnt = count;
 
+	/* Pass 1: validate and pin/map every segment BEFORE submitting any.
+	 * The original code mapped and submitted in the same loop, so a failure
+	 * on a later segment returned with earlier transfers already in flight
+	 * (referencing caio) - leaking caio/cb/sg-tables/pages, hanging the iocb
+	 * (req_cnt never reached), and freeing caio out from under in-flight
+	 * completion callbacks. Doing all validation/mapping first means any
+	 * failure here is fully recoverable synchronously: nothing is in flight.
+	 */
 	for (i = 0; i < count; i++) {
-
 		memset(&(caio->cb[i]), 0, sizeof(struct xdma_io_cb));
 
 		caio->cb[i].buf = io[i].iov_base;
@@ -485,28 +533,40 @@ static ssize_t cdev_aio_write(struct kiocb *iocb, const struct iovec *io,
 		caio->cb[i].write = true;
 		caio->cb[i].private = caio;
 		caio->cb[i].io_done = async_io_handler;
+
 		rv = check_transfer_align(engine, caio->cb[i].buf,
 					caio->cb[i].len, pos, 1);
 		if (rv) {
 			pr_info("Invalid transfer alignment detected\n");
-			kmem_cache_free(cdev_cache, caio);
-			return rv;
+			goto err_unmap;
 		}
 
 		rv = char_sgdma_map_user_buf_to_sgl(&caio->cb[i], true);
 		if (rv < 0)
-			return rv;
+			goto err_unmap;
+	}
 
-		rv = xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
+	/* Pass 2: all segments mapped; submit them. */
+	for (i = 0; i < count; i++) {
+		xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
 					engine->channel, caio->cb[i].write,
 					caio->cb[i].ep_addr, &caio->cb[i].sgt,
 					0, h2c_timeout * 1000);
 	}
 
-	if (engine->cmplthp)
-		xdma_kthread_wakeup(engine->cmplthp);
+	xdma_engine_kthread_wakeup(engine);
 
 	return -EIOCBQUEUED;
+
+err_unmap:
+	/* unmap/unpin the segments mapped so far (0..i); cb[i] may be partially
+	 * mapped - char_sgdma_unmap_user_buf tolerates that.
+	 */
+	while (i-- > 0)
+		char_sgdma_unmap_user_buf(&caio->cb[i], true);
+	kfree(caio->cb);
+	kmem_cache_free(cdev_cache, caio);
+	return rv;
 }
 
 static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
@@ -536,10 +596,24 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 		return -EINVAL;
 	}
 
+	/* count is the user-controlled iovec segment count; reject 0 and a
+	 * value so large the cb-array allocation could overflow or exhaust
+	 * memory.
+	 */
+	if (!count || count > XDMA_AIO_MAX_SEGS)
+		return -EINVAL;
+
 	caio = kmem_cache_alloc(cdev_cache, GFP_KERNEL);
+	if (!caio)
+		return -ENOMEM;
 	memset(caio, 0, sizeof(struct cdev_async_io));
 
-	caio->cb = kzalloc(count * (sizeof(struct xdma_io_cb)), GFP_KERNEL);
+	/* kcalloc is overflow-checked, unlike the open-coded count * sizeof */
+	caio->cb = kcalloc(count, sizeof(struct xdma_io_cb), GFP_KERNEL);
+	if (!caio->cb) {
+		kmem_cache_free(cdev_cache, caio);
+		return -ENOMEM;
+	}
 
 	spin_lock_init(&caio->lock);
 	iocb->private = caio;
@@ -548,8 +622,10 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 	caio->cancel = false;
 	caio->req_cnt = count;
 
+	/* Pass 1: validate and pin/map every segment before submitting any
+	 * (see cdev_aio_write for the rationale).
+	 */
 	for (i = 0; i < count; i++) {
-
 		memset(&(caio->cb[i]), 0, sizeof(struct xdma_io_cb));
 
 		caio->cb[i].buf = io[i].iov_base;
@@ -563,24 +639,32 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 					caio->cb[i].len, pos, 1);
 		if (rv) {
 			pr_info("Invalid transfer alignment detected\n");
-			kmem_cache_free(cdev_cache, caio);
-			return rv;
+			goto err_unmap;
 		}
 
 		rv = char_sgdma_map_user_buf_to_sgl(&caio->cb[i], false);
 		if (rv < 0)
-			return rv;
+			goto err_unmap;
+	}
 
-		rv = xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
+	/* Pass 2: all segments mapped; submit them. */
+	for (i = 0; i < count; i++) {
+		xdma_xfer_submit_nowait((void *)&caio->cb[i], xdev,
 					engine->channel, caio->cb[i].write,
 					caio->cb[i].ep_addr, &caio->cb[i].sgt,
 					0, c2h_timeout * 1000);
 	}
 
-	if (engine->cmplthp)
-		xdma_kthread_wakeup(engine->cmplthp);
+	xdma_engine_kthread_wakeup(engine);
 
 	return -EIOCBQUEUED;
+
+err_unmap:
+	while (i-- > 0)
+		char_sgdma_unmap_user_buf(&caio->cb[i], false);
+	kfree(caio->cb);
+	kmem_cache_free(cdev_cache, caio);
+	return rv;
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
@@ -648,13 +732,27 @@ static int ioctl_do_perf_start(struct xdma_engine *engine, unsigned long arg)
 		(struct xdma_performance_ioctl __user *)arg,
 		sizeof(struct xdma_performance_ioctl));
 
-	if (rv < 0) {
+	/* copy_from_user returns the number of bytes NOT copied (0 on success),
+	 * never a negative value, so the old "rv < 0" test never fired.
+	 *
+	 * On every error after the kzalloc above, free engine->xdma_perf and
+	 * clear the pointer. Otherwise the buffer leaks and, worse, the
+	 * "already running" guard at the top of this function sees a non-NULL
+	 * xdma_perf and wedges the engine's perf interface at -EBUSY forever
+	 * (it is only freed by a successful PERF_STOP, which is unreachable
+	 * once start failed).
+	 */
+	if (rv) {
 		dbg_perf("Failed to copy from user space 0x%lx\n", arg);
-		return -EINVAL;
+		kfree(engine->xdma_perf);
+		engine->xdma_perf = NULL;
+		return -EFAULT;
 	}
 	if (engine->xdma_perf->version != IOCTL_XDMA_PERF_V1) {
 		dbg_perf("Unsupported IOCTL version %d\n",
 			engine->xdma_perf->version);
+		kfree(engine->xdma_perf);
+		engine->xdma_perf = NULL;
 		return -EINVAL;
 	}
 
@@ -667,14 +765,18 @@ static int ioctl_do_perf_start(struct xdma_engine *engine, unsigned long arg)
 	init_waitqueue_head(&engine->xdma_perf_wq);
 #endif
 	rv = xdma_performance_submit(xdev, engine);
-	if (rv < 0)
+	if (rv < 0) {
 		pr_err("Failed to submit dma performance\n");
+		kfree(engine->xdma_perf);
+		engine->xdma_perf = NULL;
+	}
 	return rv;
 }
 
 static int ioctl_do_perf_stop(struct xdma_engine *engine, unsigned long arg)
 {
 	struct xdma_transfer *transfer = NULL;
+	unsigned long flags;
 	int rv;
 
 	if (!engine) {
@@ -690,13 +792,34 @@ static int ioctl_do_perf_stop(struct xdma_engine *engine, unsigned long arg)
 		return -EINVAL;
 	}
 
-	/* stop measurement */
+	/*
+	 * stop measurement. engine_cyclic_stop() reads engine->transfer_list
+	 * and calls list_del() on the head transfer; it documents that
+	 * engine->lock must be held. The caller (here) is responsible for the
+	 * lock - engine_service_work() walks the same list under engine->lock,
+	 * so without it the two list_del paths can race (list corruption / UAF).
+	 */
+	spin_lock_irqsave(&engine->lock, flags);
 	transfer = engine_cyclic_stop(engine);
+	spin_unlock_irqrestore(&engine->lock, flags);
 	if (!transfer) {
 		pr_err("Failed to stop cyclic transfer\n");
 		return -EINVAL;
 	}
 	dbg_perf("Waiting for measurement to stop\n");
+
+	/*
+	 * engine_cyclic_stop() halted the engine and unlinked the cyclic
+	 * transfer, but a previously scheduled engine_service_work() may still
+	 * be queued or running. That work item reads engine->xdma_perf (in
+	 * engine_service_perf()) under engine->lock. Drain it here - outside
+	 * the spinlock, since cancel_work_sync() may sleep - before we free
+	 * engine->xdma_perf / the transfer below, otherwise the service path
+	 * can dereference freed memory. xdma_engine_stop() inside
+	 * engine_cyclic_stop() already disabled the engine interrupt, so no new
+	 * work will be scheduled.
+	 */
+	cancel_work_sync(&engine->work);
 
 	get_perf_stats(engine);
 
@@ -704,7 +827,13 @@ static int ioctl_do_perf_stop(struct xdma_engine *engine, unsigned long arg)
 			sizeof(struct xdma_performance_ioctl));
 	if (rv) {
 		dbg_perf("Error copying result to user\n");
-		return rv;
+		/*
+		 * engine_cyclic_stop() already unlinked this transfer from the
+		 * engine list and handed us its sole reference, so it must be
+		 * freed here too or it leaks on the copy_to_user failure path.
+		 */
+		kfree(transfer);
+		return -EFAULT;
 	}
 
 	kfree(transfer);
@@ -787,10 +916,11 @@ static int ioctl_do_aperture_dma(struct xdma_engine *engine, unsigned long arg,
 
 	rv = copy_from_user(&io, (struct xdma_aperture_ioctl __user *)arg,
 				sizeof(struct xdma_aperture_ioctl));
-	if (rv < 0) {
+	/* copy_from_user returns bytes-not-copied (0 on success), never < 0 */
+	if (rv) {
 		dbg_tfr("%s failed to copy from user space 0x%lx\n",
 			engine->name, arg);
-		return -EINVAL;
+		return -EFAULT;
 	}
 
 	dbg_tfr("%s, W %d, buf 0x%lx,%lu, ep %llu, aperture %u.\n",
@@ -832,10 +962,14 @@ static int ioctl_do_aperture_dma(struct xdma_engine *engine, unsigned long arg,
 
 	rv = copy_to_user((struct xdma_aperture_ioctl __user *)arg, &io,
 				sizeof(struct xdma_aperture_ioctl));
-	if (rv < 0) {
+	/* copy_to_user returns bytes-not-copied (0 on success), never < 0, so
+	 * the old "rv < 0" test was dead code and a real copy-back fault was
+	 * reported to userspace as success. Test != 0 and return -EFAULT.
+	 */
+	if (rv) {
 		dbg_tfr("%s failed to copy to user space 0x%lx, %ld\n",
 			engine->name, arg, res);
-		return -EINVAL;
+		return -EFAULT;
 	}
 
 	return io.error;
@@ -902,11 +1036,22 @@ static int char_sgdma_open(struct inode *inode, struct file *file)
 	engine = xcdev->engine;
 
 	if (engine->streaming && engine->dir == DMA_FROM_DEVICE) {
-		if (engine->device_open == 1)
-			return -EBUSY;
-		engine->device_open = 1;
+		unsigned long flags;
 
+		/* Test-and-set the single-open flag atomically under engine->lock.
+		 * The original unlocked check-then-set let two concurrent opens of
+		 * the same ST C2H node both succeed, and device_open is a 1-bit
+		 * bitfield sharing a byte with other engine flags, so a racing RMW
+		 * could also clobber neighbours.
+		 */
+		spin_lock_irqsave(&engine->lock, flags);
+		if (engine->device_open == 1) {
+			spin_unlock_irqrestore(&engine->lock, flags);
+			return -EBUSY;
+		}
+		engine->device_open = 1;
 		engine->eop_flush = (file->f_flags & O_TRUNC) ? 1 : 0;
+		spin_unlock_irqrestore(&engine->lock, flags);
 	}
 
 	return 0;
@@ -924,8 +1069,14 @@ static int char_sgdma_close(struct inode *inode, struct file *file)
 
 	engine = xcdev->engine;
 
-	if (engine->streaming && engine->dir == DMA_FROM_DEVICE)
+	if (engine->streaming && engine->dir == DMA_FROM_DEVICE) {
+		unsigned long flags;
+
+		/* clear the single-open flag under the same lock used to set it */
+		spin_lock_irqsave(&engine->lock, flags);
 		engine->device_open = 0;
+		spin_unlock_irqrestore(&engine->lock, flags);
+	}
 
 	return 0;
 }

@@ -235,9 +235,16 @@ static int create_sys_device(struct xdma_cdev *xcdev, enum cdev_type type)
 		xcdev->cdevno, NULL, devnode_names[type], xdev->idx,
 		last_param);
 
-	if (!xcdev->sys_device) {
-		pr_err("device_create(%s) failed\n", devnode_names[type]);
-		return -1;
+	/* device_create() returns an ERR_PTR on failure, never NULL. The old
+	 * !NULL test never fired, so a failed create was treated as success and
+	 * the error pointer was later passed to device_destroy().
+	 */
+	if (IS_ERR(xcdev->sys_device)) {
+		int rv = PTR_ERR(xcdev->sys_device);
+
+		pr_err("device_create(%s) failed %d\n", devnode_names[type], rv);
+		xcdev->sys_device = NULL;
+		return rv;
 	}
 
 	return 0;
@@ -378,7 +385,14 @@ static int create_xcdev(struct xdma_pci_dev *xpdev, struct xdma_cdev *xcdev,
 del_cdev:
 	cdev_del(&xcdev->cdev);
 unregister_region:
-	unregister_chrdev_region(xcdev->cdevno, XDMA_MINOR_COUNT);
+	/* Do NOT unregister the chrdev region here. It is allocated once per
+	 * xdma_pci_dev as [MKDEV(major, XDMA_MINOR_BASE), XDMA_MINOR_COUNT] and
+	 * is released exactly once by xpdev_destroy_interfaces() (reached via the
+	 * caller's failure path). The old code called
+	 * unregister_chrdev_region(xcdev->cdevno, XDMA_MINOR_COUNT) with this
+	 * cdev's per-type minor as the base, releasing the wrong range and
+	 * corrupting the chrdev allocator.
+	 */
 	return rv;
 }
 

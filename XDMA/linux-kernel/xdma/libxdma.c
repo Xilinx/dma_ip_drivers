@@ -49,7 +49,32 @@ MODULE_PARM_DESC(enable_st_c2h_credit,
 	"Set 1 to enable ST C2H engine credit feature, default is 0 ( credit control disabled)");
 
 unsigned int desc_blen_max = XDMA_DESC_BLEN_MAX;
-module_param(desc_blen_max, uint, 0644);
+
+/*
+ * desc_blen_max feeds the per-descriptor length, but the hardware bytes field
+ * is only XDMA_DESC_BLEN_BITS (28) wide. Since the parameter is writable at
+ * runtime (mode 0644), clamp every set so a value larger than the field width
+ * can never split scatterlist entries into oversized, truncated descriptors.
+ */
+static int desc_blen_max_set(const char *val, const struct kernel_param *kp)
+{
+	int rv = param_set_uint(val, kp);
+
+	if (rv)
+		return rv;
+	if (desc_blen_max > XDMA_DESC_BLEN_MAX) {
+		pr_info("desc_blen_max %u too large, clamping to %u.\n",
+			desc_blen_max, XDMA_DESC_BLEN_MAX);
+		desc_blen_max = XDMA_DESC_BLEN_MAX;
+	}
+	return 0;
+}
+
+static const struct kernel_param_ops desc_blen_max_ops = {
+	.set = desc_blen_max_set,
+	.get = param_get_uint,
+};
+module_param_cb(desc_blen_max, &desc_blen_max_ops, &desc_blen_max, 0644);
 MODULE_PARM_DESC(desc_blen_max,
 		 "per descriptor max. buffer length, default is (1 << 28) - 1");
 
@@ -216,7 +241,10 @@ static inline u32 build_u32(u32 hi, u32 lo)
 
 static inline u64 build_u64(u64 hi, u64 lo)
 {
-	return ((hi & 0xFFFFFFFULL) << 32) | (lo & 0xFFFFFFFFULL);
+	/* mask the high word to a full 32 bits; the literal used to be
+	 * 0xFFFFFFF (28 bits), which dropped bits 60-63 of the assembled value
+	 */
+	return ((hi & 0xFFFFFFFFULL) << 32) | (lo & 0xFFFFFFFFULL);
 }
 
 static void check_nonzero_interrupt_status(struct xdma_dev *xdev)
@@ -1226,8 +1254,18 @@ static void engine_service_work(struct work_struct *work)
 		goto unlock;
 	}
 
-	/* re-enable interrupts for this engine */
-	if (engine->xdev->msix_enabled) {
+	/* re-enable interrupts for this engine, unless the device/engine is being
+	 * taken offline. A work item queued by the ISR just before
+	 * xdma_device_offline()/close() can run after interrupts were
+	 * deliberately disabled; re-enabling here would undo that and race with
+	 * irq_teardown writing engine registers. Skip the re-enable when shutting
+	 * down.
+	 */
+	if (xdma_device_flag_check(engine->xdev, XDEV_FLAG_OFFLINE) ||
+	    (engine->shutdown & ENGINE_SHUTDOWN_REQUEST)) {
+		dbg_tfr("%s offline/shutdown, skip irq re-enable\n",
+			engine->name);
+	} else if (engine->xdev->msix_enabled) {
 		write_register(
 			engine->interrupt_enable_mask_value,
 			&engine->regs->interrupt_enable_mask_w1s,
@@ -1252,7 +1290,11 @@ static u32 engine_service_wb_monitor(struct xdma_engine *engine,
 
 	if (!engine) {
 		pr_err("dma engine NULL\n");
-		return -EINVAL;
+		/* return type is u32 (a writeback descriptor count); 0 means
+		 * "nothing serviced". The old "-EINVAL" became 0xFFFFFFEC. The
+		 * caller already guards against a NULL engine, so this is a
+		 * defensive path only. */
+		return 0;
 	}
 	wb_data = (struct xdma_poll_wb *)engine->poll_mode_addr_virt;
 
@@ -1376,7 +1418,7 @@ static irqreturn_t xdma_isr(int irq, void *dev_id)
 	dbg_irq("(irq=%d, dev 0x%p) <<<< ISR.\n", irq, dev_id);
 	if (!dev_id) {
 		pr_err("Invalid dev_id on irq line %d\n", irq);
-		return -IRQ_NONE;
+		return IRQ_NONE;
 	}
 	xdev = (struct xdma_dev *)dev_id;
 
@@ -1455,7 +1497,7 @@ static irqreturn_t xdma_isr(int irq, void *dev_id)
 		}
 	}
 
-	xdev->irq_count++;
+	atomic_inc(&xdev->irq_count);
 	return IRQ_HANDLED;
 }
 
@@ -1523,7 +1565,7 @@ static irqreturn_t xdma_channel_irq(int irq, void *dev_id)
 	 * need to protect access here if multiple MSI-X are used for
 	 * user interrupts
 	 */
-	xdev->irq_count++;
+	atomic_inc(&xdev->irq_count);
 	return IRQ_HANDLED;
 }
 
@@ -1852,8 +1894,14 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 
 		rv = pci_enable_msix(pdev, xdev->entry, req_nvec);
 #endif
-		if (rv < 0)
+		/* Only mark MSI-X enabled if vectors were actually allocated.
+		 * Setting the flag on failure made teardown paths keyed on
+		 * msix_enabled free vectors/IRQs that were never allocated.
+		 */
+		if (rv < 0) {
 			dbg_init("Couldn't enable MSI-X mode: %d\n", rv);
+			return rv;
+		}
 
 		xdev->msix_enabled = 1;
 
@@ -1862,8 +1910,10 @@ static int enable_msi_msix(struct xdma_dev *xdev, struct pci_dev *pdev)
 		/* enable message signalled interrupts */
 		dbg_init("pci_enable_msi()\n");
 		rv = pci_enable_msi(pdev);
-		if (rv < 0)
+		if (rv < 0) {
 			dbg_init("Couldn't enable MSI mode: %d\n", rv);
+			return rv;
+		}
 		xdev->msi_enabled = 1;
 
 	} else {
@@ -1982,6 +2032,10 @@ static void irq_msix_channel_teardown(struct xdma_dev *xdev)
 		dbg_sg("Release IRQ#%d for engine %p\n", engine->msix_irq_line,
 		       engine);
 		free_irq(engine->msix_irq_line, engine);
+		/* clear so this teardown is idempotent: it is invoked both from
+		 * the setup-failure rollback and from the normal teardown path
+		 */
+		engine->msix_irq_line = 0;
 	}
 
 	engine = xdev->engine_c2h;
@@ -1991,6 +2045,7 @@ static void irq_msix_channel_teardown(struct xdma_dev *xdev)
 		dbg_sg("Release IRQ#%d for engine %p\n", engine->msix_irq_line,
 		       engine);
 		free_irq(engine->msix_irq_line, engine);
+		engine->msix_irq_line = 0;
 	}
 }
 
@@ -2023,6 +2078,11 @@ static int irq_msix_channel_setup(struct xdma_dev *xdev)
 		if (rv) {
 			pr_info("requesti irq#%d failed %d, engine %s.\n",
 				vector, rv, engine->name);
+			/* free the channel IRQs requested so far before
+			 * returning, otherwise the caller frees the MSI-X
+			 * vectors with handlers still attached
+			 */
+			irq_msix_channel_teardown(xdev);
 			return rv;
 		}
 		pr_info("engine %s, irq#%d.\n", engine->name, vector);
@@ -2041,6 +2101,7 @@ static int irq_msix_channel_setup(struct xdma_dev *xdev)
 		if (rv) {
 			pr_info("requesti irq#%d failed %d, engine %s.\n",
 				vector, rv, engine->name);
+			irq_msix_channel_teardown(xdev);
 			return rv;
 		}
 		pr_info("engine %s, irq#%d.\n", engine->name, vector);
@@ -2193,8 +2254,15 @@ static int irq_setup(struct xdma_dev *xdev, struct pci_dev *pdev)
 		if (rv)
 			return rv;
 		rv = irq_msix_user_setup(xdev);
-		if (rv)
+		if (rv) {
+			/* user setup self-cleans its own IRQs, but the channel
+			 * IRQs from irq_msix_channel_setup() are still live;
+			 * free them so the caller does not free the MSI-X
+			 * vectors with handlers still attached
+			 */
+			irq_msix_channel_teardown(xdev);
 			return rv;
+		}
 		prog_irq_msix_channel(xdev, 0);
 		prog_irq_msix_user(xdev, 0);
 
@@ -2380,8 +2448,12 @@ static inline void xdma_desc_done(struct xdma_desc *desc_virt, int count)
 static void xdma_desc_set(struct xdma_desc *desc, dma_addr_t rc_bus_addr,
 			  u64 ep_addr, int len, int dir)
 {
-	/* transfer length */
-	desc->bytes = cpu_to_le32(len);
+	/* transfer length: the hardware bytes field is only XDMA_DESC_BLEN_BITS
+	 * (28) wide. Mask here so a desc_blen_max raised past the field width at
+	 * runtime (it is a writable module param) cannot write garbage upper
+	 * bits into the descriptor.
+	 */
+	desc->bytes = cpu_to_le32((u32)len & XDMA_DESC_BLEN_MAX);
 	if (dir == DMA_TO_DEVICE) {
 		/* read from root complex memory (source address) */
 		desc->src_addr_lo = cpu_to_le32(PCI_DMA_L(rc_bus_addr));
@@ -2621,6 +2693,16 @@ static int engine_destroy(struct xdma_dev *xdev, struct xdma_engine *engine)
 	if (poll_mode)
 		xdma_thread_remove_work(engine);
 
+	/* Flush any interrupt bottom-half already scheduled by the ISR before we
+	 * free the engine's resources. free_irq() (in irq_teardown, called before
+	 * remove_engines) only waits for the running hardirq, not for an already
+	 * queued engine->work item; without this, engine_service_work() could run
+	 * against the freed/zeroed engine below (use-after-free). Interrupts are
+	 * disabled above and the IRQ is freed before this point, so no new work
+	 * can be queued after the cancel.
+	 */
+	cancel_work_sync(&engine->work);
+
 	/* Release memory use for descriptor writebacks */
 	engine_free_resource(engine);
 
@@ -2743,7 +2825,6 @@ static int engine_init_regs(struct xdma_engine *engine)
 
 	/* Configure error interrupts by default */
 	reg_value = XDMA_CTRL_IE_DESC_ALIGN_MISMATCH;
-	reg_value |= XDMA_CTRL_IE_MAGIC_STOPPED;
 	reg_value |= XDMA_CTRL_IE_MAGIC_STOPPED;
 	reg_value |= XDMA_CTRL_IE_READ_ERROR;
 	reg_value |= XDMA_CTRL_IE_DESC_ERROR;
@@ -2888,16 +2969,30 @@ static int engine_init(struct xdma_engine *engine, struct xdma_dev *xdev,
 
 	rv = engine_alloc_resource(engine);
 	if (rv)
-		return rv;
+		goto err_init;
 
 	rv = engine_init_regs(engine);
-	if (rv)
-		return rv;
+	if (rv) {
+		/* free the resources just allocated before rolling back */
+		engine_free_resource(engine);
+		goto err_init;
+	}
 
 	if (poll_mode)
 		xdma_thread_add_work(engine);
 
 	return 0;
+
+err_init:
+	/* Roll back the bookkeeping done above so a half-initialized engine is
+	 * not left counted in engines_num and marked MAGIC_ENGINE (which would
+	 * make remove_engines try to tear down freed resources). engine_alloc_
+	 * resource() already freed/NULLed any partial allocation on its own
+	 * failure path.
+	 */
+	xdev->engines_num--;
+	engine->magic = 0;
+	return rv;
 }
 
 /* transfer_destroy() - free transfer */
@@ -3162,10 +3257,10 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 	struct xdma_request_cb *req = NULL;
 	struct scatterlist *sg;
 	enum dma_data_direction dir = write ? DMA_TO_DEVICE : DMA_FROM_DEVICE;
-	unsigned int maxlen = min_t(unsigned int, aperture, desc_blen_max);
+	unsigned int maxlen;
 	unsigned int sg_max;
 	unsigned int tlen = 0;
-	u64 ep_addr_max = ep_addr + aperture - 1;
+	u64 ep_addr_max;
 	ssize_t done = 0;
 	int i, rv = 0;
 
@@ -3173,6 +3268,24 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 		pr_err("dma engine NULL\n");
 		return -EINVAL;
 	}
+
+	/*
+	 * aperture is treated as a power-of-two window: it feeds maxlen and is
+	 * used as the bitmask (aperture - 1) when computing the per-pass
+	 * endpoint address. A zero aperture makes maxlen 0, so the outer loop
+	 * never advances req->offset and spins forever while holding desc_lock,
+	 * and ep_addr + aperture - 1 underflows. A non-power-of-two value makes
+	 * the (aperture - 1) mask produce wrong endpoint addresses. Reject both
+	 * before any size arithmetic uses the value.
+	 */
+	if (!aperture || (aperture & (aperture - 1))) {
+		pr_info("invalid aperture 0x%x (must be a power of two).\n",
+			aperture);
+		return -EINVAL;
+	}
+
+	maxlen = min_t(unsigned int, aperture, desc_blen_max);
+	ep_addr_max = ep_addr + aperture - 1;
 
 	if (engine->magic != MAGIC_ENGINE) {
 		pr_err("%s has invalid magic number %lx\n", engine->name,
@@ -3319,6 +3432,14 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 		
 		req->sg_offset = sg_offset;
 		req->sg_idx = i;
+		/* Persist the scatterlist cursor too. The inner for-loop resumes
+		 * from req->sg, but only req->sg_idx was being saved, so on a
+		 * second pass (transfer spanning more than one descriptor-ring
+		 * fill) sg restarted at sgt->sgl while i resumed mid-list,
+		 * rebuilding descriptors from already-transmitted entries. sg and
+		 * i advance together inside the loop, so save both here.
+		 */
+		req->sg = sg;
 
 		xfer->desc_adjacent = desc_cnt;
 		xfer->desc_num = desc_cnt;
@@ -3370,8 +3491,7 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 			goto unmap_sgl;
 		}
 
-		if (engine->cmplthp)
-			xdma_kthread_wakeup(engine->cmplthp);
+		xdma_engine_kthread_wakeup(engine);
 
 		if (timeout_ms > 0)
 			xlx_wait_event_interruptible_timeout(xfer->wq,
@@ -3434,7 +3554,14 @@ ssize_t xdma_xfer_aperture(struct xdma_engine *engine, bool write, u64 ep_addr,
 			break;
 		}
 
+		/* desc_used is read under engine->lock in engine_start() (to
+		 * program the C2H credit register); update it under the same
+		 * lock rather than relying on desc_lock, which engine_service
+		 * does not hold.
+		 */
+		spin_lock_irqsave(&engine->lock, flags);
 		engine->desc_used -= xfer->desc_num;
+		spin_unlock_irqrestore(&engine->lock, flags);
 		transfer_destroy(xdev, xfer);
 
 		if (rv < 0) {
@@ -3588,8 +3715,7 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			goto unmap_sgl;
 		}
 
-		if (engine->cmplthp)
-			xdma_kthread_wakeup(engine->cmplthp);
+		xdma_engine_kthread_wakeup(engine);
 
 		if (timeout_ms > 0)
 			xlx_wait_event_interruptible_timeout(xfer->wq,
@@ -3664,7 +3790,10 @@ ssize_t xdma_xfer_submit(void *dev_hndl, int channel, bool write, u64 ep_addr,
 			break;
 		}
 
+		/* update desc_used under engine->lock (see engine_start) */
+		spin_lock_irqsave(&engine->lock, flags);
 		engine->desc_used -= xfer->desc_num;
+		spin_unlock_irqrestore(&engine->lock, flags);
 		transfer_destroy(xdev, xfer);
 
 		/* use multiple transfers per request if we could not fit
@@ -3796,6 +3925,16 @@ ssize_t xdma_xfer_completion(void *cb_hndl, void *dev_hndl, int channel,
 		}
 
 		transfer_destroy(xdev, xfer);
+		/*
+		 * desc_used must be updated under engine->lock (it is read under
+		 * that lock in engine_start() to program the C2H credit register).
+		 * This function runs as the io_done completion callback, reached
+		 * from engine_transfer_completion() via engine_service() with
+		 * engine->lock already held by the caller (engine_service_work() /
+		 * engine_service_poll()). Re-acquiring the non-recursive
+		 * engine->lock here would self-deadlock the CPU, so update
+		 * desc_used directly under the lock already held.
+		 */
 		engine->desc_used -= xfer->desc_num;
 
 		tfer_idx++;
@@ -4036,6 +4175,12 @@ int xdma_performance_submit(struct xdma_dev *xdev, struct xdma_engine *engine)
 		       dev_name(&xdev->pdev->dev), engine->name);
 		goto err_engine_transfer;
 	}
+	/* Initialize the list node so the error path can safely test/remove it.
+	 * transfer_queue() links it onto engine->transfer_list only after some
+	 * of the failure points below, so the unwind must distinguish a queued
+	 * node from a never-queued one rather than list_del an empty node.
+	 */
+	INIT_LIST_HEAD(&transfer->entry);
 	/* 0 = write engine (to_dev=0) , 1 = read engine (to_dev=1) */
 	transfer->dir = engine->dir;
 	/* set number of descriptors */
@@ -4109,14 +4254,26 @@ int xdma_performance_submit(struct xdma_dev *xdev, struct xdma_engine *engine)
 	return 0;
 
 err_dma_desc:
-	if (free_desc && engine->desc)
-		dma_free_coherent(&xdev->pdev->dev,
+	/* Only free and clear engine->desc if this call allocated it. engine->desc
+	 * is normally pre-allocated at probe (engine_alloc_resource); clearing it
+	 * unconditionally orphaned that buffer (it is never freed later) and broke
+	 * subsequent transfers on the engine.
+	 */
+	if (free_desc) {
+		if (engine->desc)
+			dma_free_coherent(&xdev->pdev->dev,
 				num_desc_in_a_loop * sizeof(struct xdma_desc),
 				engine->desc, engine->desc_bus);
-	engine->desc = NULL;
+		engine->desc = NULL;
+	}
 err_engine_desc:
-	if (transfer)
-		list_del(&transfer->entry);
+	/* Remove from the engine transfer list only if it was actually queued.
+	 * list_del on a never-queued (but INIT_LIST_HEAD'd) node is a harmless
+	 * self-unlink with list_del_init; the original list_del on a kzalloc'd
+	 * (NULL next/prev) node dereferenced NULL.
+	 */
+	if (transfer && !list_empty(&transfer->entry))
+		list_del_init(&transfer->entry);
 	kfree(transfer);
 	transfer = NULL;
 err_engine_transfer:
@@ -4392,18 +4549,28 @@ static int probe_engines(struct xdma_dev *xdev)
 		return -EINVAL;
 	}
 
-	/* iterate over channels */
+	/* iterate over channels.
+	 * probe_for_engine() returns -EINVAL when no engine is present at a
+	 * channel (the normal loop terminator: trailing channels are absent),
+	 * but any other error (e.g. -ENOMEM from engine_init) is a real probe
+	 * failure that must abort device open rather than be silently swallowed
+	 * by truncating *_channel_max and returning success.
+	 */
 	for (i = 0; i < xdev->h2c_channel_max; i++) {
 		rv = probe_for_engine(xdev, DMA_TO_DEVICE, i);
-		if (rv)
+		if (rv == -EINVAL)
 			break;
+		else if (rv < 0)
+			return rv;
 	}
 	xdev->h2c_channel_max = i;
 
 	for (i = 0; i < xdev->c2h_channel_max; i++) {
 		rv = probe_for_engine(xdev, DMA_FROM_DEVICE, i);
-		if (rv)
+		if (rv == -EINVAL)
 			break;
+		else if (rv < 0)
+			return rv;
 	}
 	xdev->c2h_channel_max = i;
 
