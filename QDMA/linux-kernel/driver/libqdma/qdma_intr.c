@@ -20,6 +20,7 @@
 #define pr_fmt(fmt)	KBUILD_MODNAME ":%s: " fmt, __func__
 
 #include <linux/kernel.h>
+#include <linux/timex.h>
 #include "qdma_descq.h"
 #include "qdma_device.h"
 #include "qdma_regs.h"
@@ -311,7 +312,7 @@ static irqreturn_t data_intr_handler(int vector_index, int irq, void *dev_id)
 
 	pr_debug("%s: Data IRQ fired on Funtion#%05x: index=%d, vector=%d\n",
 		xdev->mod_name, xdev->func_id, vector_index, irq);
-	timestamp = rdtsc_gettime();
+	timestamp = get_cycles();
 
 	if ((xdev->conf.qdma_drv_mode == INDIRECT_INTR_MODE) ||
 			(xdev->conf.qdma_drv_mode == AUTO_MODE))

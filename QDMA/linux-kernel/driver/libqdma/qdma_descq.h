@@ -540,7 +540,6 @@ void cmpt_next(struct qdma_descq *descq);
 						intr_cidx_info))
 #endif
 
-u64 rdtsc_gettime(void);
 static inline unsigned int get_next_powof2(unsigned int value)
 {
 	unsigned int num_bits, mask, f_value;
