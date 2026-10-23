@@ -23,6 +23,7 @@
 
 #include <linux/kernel.h>
 #include <linux/delay.h>
+#include <linux/timex.h>
 
 #include "qdma_device.h"
 #include "qdma_intr.h"
@@ -61,14 +62,6 @@ static void sgl_dump(struct qdma_sw_sg *sgl, unsigned int sgcnt)
 			i, sg, sg->pg, sg->offset, sg->len, sg->dma_addr);
 }
 #endif
-
-u64 rdtsc_gettime(void)
-{
-	unsigned int low, high;
-
-	asm volatile("rdtscp" : "=a" (low), "=d" (high));
-	return low | ((u64)high) << 32;
-}
 
 int qdma_sgl_find_offset(struct qdma_request *req, struct qdma_sw_sg **sg_p,
 			unsigned int *sg_offset)
@@ -685,7 +678,7 @@ update_pidx:
 		descq->pidx_info.pidx = descq->pidx;
 		if (descq->conf.ping_pong_en) {
 			if (tx_time_pkt_offset != NULL) {
-				u64 tx_time = rdtsc_gettime();
+				u64 tx_time = get_cycles();
 
 				qdev->c2h_descq[qconf->qidx].ping_pong_tx_time =
 						tx_time;
