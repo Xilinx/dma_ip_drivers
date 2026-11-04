@@ -1,11 +1,12 @@
 SHELL = /bin/bash
 #
 # optional makefile parameters:
-# - DEBUG=<0|1>,	enable verbose debug print-out in the driver
-# - config_bar_num=,	xdma pci config bar number
-# - xvc_bar_num=,	xvc pci bar #
-# - xvc_bar_offset=,	xvc register base offset
-# 
+# - DEBUG=<0|1>,	     enable verbose debug print-out in the driver
+# - config_bar_num=,	     xdma pci config bar number
+# - xvc_bar_num=,	     xvc pci bar #
+# - xvc_bar_offset=,	     xvc register base offset
+# - KERNEL_INSTALL_POSTFIX=, kernel module installation directory
+
 ifneq ($(xvc_bar_num),)
 	XVC_FLAGS += -D__XVC_BAR_NUM__=$(xvc_bar_num)
 endif
@@ -19,6 +20,7 @@ $(warning XVC_FLAGS: $(XVC_FLAGS).)
 topdir := $(shell cd $(src)/.. && pwd)
 
 TARGET_MODULE:=xdma
+KERNEL_INSTALL_POSTFIX?=updates/kernel/drivers/xdma
 
 EXTRA_CFLAGS := -I$(topdir)/include $(XVC_FLAGS)
 ifeq ($(DEBUG),1)
@@ -44,14 +46,14 @@ clean:
 
 install: all
 	@rm -f /lib/modules/5.15.0-67-generic/extra/xdma.ko
-	@echo "installing kernel modules to /lib/modules/$(shell uname -r)/xdma ..."
-	@mkdir -p -m 755 /lib/modules/$(shell uname -r)/xdma
-	@install -v -m 644 *.ko /lib/modules/$(shell uname -r)/xdma
+	@echo "installing kernel modules to /lib/modules/$(shell uname -r)/$(KERNEL_INSTALL_POSTFIX) ..."
+	@mkdir -p -m 755 /lib/modules/$(shell uname -r)/$(KERNEL_INSTALL_POSTFIX)
+	@install -v -m 644 *.ko /lib/modules/$(shell uname -r)/$(KERNEL_INSTALL_POSTFIX)
 	@depmod -a || true
 
 uninstall:
-	@echo "Un-installing /lib/modules/$(shell uname -r)/xdma ..."
-	@/bin/rm -rf /lib/modules/$(shell uname -r)/xdma
+	@echo "Un-installing /lib/modules/$(shell uname -r)/$(KERNEL_INSTALL_POSTFIX) ..."
+	@/bin/rm -rf /lib/modules/$(shell uname -r)/$(KERNEL_INSTALL_POSTFIX)
 	@depmod -a
 
 
