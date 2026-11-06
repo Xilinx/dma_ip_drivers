@@ -377,6 +377,27 @@ TRACE_EVENT(xdma_transfer_chained,
 
 );
 
+TRACE_EVENT(xdma_engine_service_resume,
+
+	TP_PROTO(u8 running, int list_empty),
+
+	TP_ARGS(running, list_empty),
+
+	TP_STRUCT__entry(
+		__field(	u8,	running)
+		__field(	int,	list_empty)
+	),
+
+	TP_fast_assign(
+		__entry->running	= running;
+		__entry->list_empty	= list_empty;
+	),
+
+	TP_printk("Service resume. running=%u, list_empty=%d",
+		  __entry->running, __entry->list_empty
+	)
+);
+
 #endif /* _XDMA_TRACE_H */
 
 #undef  TRACE_INCLUDE_PATH

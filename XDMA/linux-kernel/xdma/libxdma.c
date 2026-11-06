@@ -537,13 +537,18 @@ static int engine_status_read(struct xdma_engine *engine, bool clear, bool dump)
 	}
 
 	/* read status register */
-	if (clear)
-		engine->status = read_register(&engine->regs->status_rc);
-	else
-		engine->status = read_register(&engine->regs->status);
+	engine->status = read_register(&engine->regs->status);
+	if (clear) {
+		u32 events = engine->status & ~XDMA_STAT_BUSY;
+		if (events) {
+			write_register(events, &engine->regs->status, 0);
+		}
+	}
 
 	if (dump)
 		engine_status_dump(engine);
+
+	trace_xdma_engine_status(engine->status);
 
 	return rv;
 }
@@ -1097,7 +1102,7 @@ static int engine_service_resume(struct xdma_engine *engine)
 		return -EINVAL;
 	}
 
-	trace_xdma_engine_running(engine->running);
+	trace_xdma_engine_service_resume(engine->running, list_empty(&engine->transfer_list));
 	/* engine stopped? */
 	if (!engine->running) {
 		/* in the case of shutdown, let it finish what's in the Q */
