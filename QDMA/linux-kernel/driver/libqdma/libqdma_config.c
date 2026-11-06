@@ -160,7 +160,7 @@ int qdma_set_intr_rngsz(unsigned long dev_hndl, u32 intr_rngsz)
 	/** If qdma_get_active_queue_count() > 0,
 	 *  intr_rngsz is not allowed to change.
 	 */
-	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
+	if (qdma_get_active_queue_count(xdev->dma_device_index)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify intr ring size [%d]\n",
 				xdev,
 				xdev->conf.intr_rngsz);
@@ -253,7 +253,7 @@ int qdma_set_buf_sz(unsigned long dev_hndl, u32 *buf_sz)
 	/** If qdma_get_active_queue_count() > 0,
 	 *  buf_sz is not allowed to change.
 	 */
-	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
+	if (qdma_get_active_queue_count(xdev->dma_device_index)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify buf size\n",
 				xdev);
 		return rv;
@@ -332,7 +332,7 @@ int qdma_set_glbl_rng_sz(unsigned long dev_hndl, u32 *glbl_rng_sz)
 	/** If qdma_get_active_queue_count() > 0,
 	 *  glbl_rng_sz is not allowed to change.
 	 */
-	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
+	if (qdma_get_active_queue_count(xdev->dma_device_index)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify glbl_rng_sz\n",
 				xdev);
 		return rv;
@@ -411,7 +411,7 @@ int qdma_set_timer_cnt(unsigned long dev_hndl, u32 *tmr_cnt)
 	/** If qdma_get_active_queue_count() > 0,
 	 *  tmr_cnt is not allowed to change.
 	 */
-	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
+	if (qdma_get_active_queue_count(xdev->dma_device_index)) {
 		pr_err("xdev 0x%p, FMAP prog done, can not modify timer count\n",
 						xdev);
 		return rv;
@@ -490,7 +490,7 @@ int qdma_set_cnt_thresh(unsigned long dev_hndl, unsigned int *cnt_th)
 	/** If qdma_get_active_queue_count() > 0,
 	 *  cnt_th is not allowed to change.
 	 */
-	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
+	if (qdma_get_active_queue_count(xdev->dma_device_index)) {
 		pr_err("xdev 0x%p, FMAP prog done, can not modify threshold count\n",
 						xdev);
 		return rv;
@@ -561,6 +561,7 @@ unsigned int qdma_get_cnt_thresh(unsigned long dev_hndl, u32 *cnt_th)
 int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 {
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	enum qdma_wrb_interval wb_intvl = (enum qdma_wrb_interval)cmpl_status_acc;
 	int rv = 0;
 
 	/**
@@ -574,15 +575,15 @@ int qdma_set_cmpl_status_acc(unsigned long dev_hndl, u32 cmpl_status_acc)
 	/** If qdma_get_active_queue_count() > 0,
 	 *  cmpl_status_acc is not allowed to change.
 	 */
-	if (qdma_get_active_queue_count(xdev->conf.pdev->bus->number)) {
+	if (qdma_get_active_queue_count(xdev->dma_device_index)) {
 		pr_err("xdev 0x%p, FMAP prog done, cannot modify cmpt acc\n",
 				xdev);
 		return -EINVAL;
 	}
 	/**
-	 * Write the given cmpl_status_acc value to the register
+	 * Write the given cmpl_status_acc (as wb_intvl) value to the register
 	 */
-	rv = xdev->hw.qdma_global_writeback_interval_conf(xdev, cmpl_status_acc,
+	rv = xdev->hw.qdma_global_writeback_interval_conf(xdev, &wb_intvl,
 							QDMA_HW_ACCESS_WRITE);
 	if (unlikely(rv < 0)) {
 		pr_err("set global writeback intvl failed, err = %d", rv);

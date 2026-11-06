@@ -294,6 +294,7 @@ int qdma_global_csr_set(unsigned long dev_hndl, u8 index, u8 count,
 {
 	int rv = 0;
 	struct xlnx_dma_dev *xdev = (struct xlnx_dma_dev *)dev_hndl;
+	enum qdma_wrb_interval wb_intvl = (enum qdma_wrb_interval)csr->wb_intvl;
 
 	if (xdev_check_hndl(__func__, xdev->conf.pdev, dev_hndl) < 0)
 		return -EINVAL;
@@ -306,7 +307,7 @@ int qdma_global_csr_set(unsigned long dev_hndl, u8 index, u8 count,
 				xdev->mod_name);
 		return -EINVAL;
 	}
-	if (xdev->hw.qdma_global_writeback_interval_conf(xdev, csr->wb_intvl,
+	if (xdev->hw.qdma_global_writeback_interval_conf(xdev, &wb_intvl,
 							 QDMA_HW_ACCESS_WRITE))
 		return -EINVAL;
 	if (xdev->hw.qdma_global_csr_conf(xdev, index, count, csr->ring_sz,
