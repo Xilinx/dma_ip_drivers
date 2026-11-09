@@ -1154,7 +1154,6 @@ static int engine_service(struct xdma_engine *engine, int desc_writeback)
 
 	/* Service the engine */
 	if (!engine->running) {
-		pr_err("Engine was not running!!! Clearing status\n");
 		rv = engine_status_read(engine, 1, 0);
 		if (rv < 0) {
 			pr_err("%s failed to read status\n", engine->name);
