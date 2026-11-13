@@ -108,7 +108,7 @@ int amd_mdb5_dma_probe_channels(struct amd_mdb5_dma_client *mdb5_dma_client,
 			goto probe_done;
 		}
 
-		strncpy(hc->chan_name, filter, strlen(filter));
+		strscpy(hc->chan_name, filter, sizeof(hc->chan_name));
 		hc->dchan = chan;
 		hc->dev   = chan->device->dev;
 		hc->mode  = AMD_MDB5_DMA_MODE_SG;
