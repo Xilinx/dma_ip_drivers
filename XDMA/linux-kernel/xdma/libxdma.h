@@ -461,6 +461,7 @@ struct xdma_transfer {
 	int cyclic;			/* flag if transfer is cyclic */
 	int last_in_request;		/* flag if last within request */
 	unsigned int len;
+	u64 ep_addr; /* ep address this transfer starts at */
 	struct sg_table *sgt;
 	struct xdma_io_cb *cb;
 };
@@ -514,7 +515,7 @@ struct xdma_engine {
 	u8 running:1;		/* flag if the driver started engine */
 	u8 non_incr_addr:1;	/* flag if non-incremental addressing used */
 	u8 eop_flush:1;		/* st c2h only, flush up the data with eop */
-	u8 filler:1;
+	u8 chaining:1;		/* flag if transfer chaining enabled */
 
 	int max_extra_adj;	/* descriptor prefetch capability */
 	int desc_dequeued;	/* num descriptors of completed transfers */
@@ -525,6 +526,11 @@ struct xdma_engine {
 
 	/* Transfer list management */
 	struct list_head transfer_list;	/* queue of transfers */
+
+	/* Cancellation handling for aio engines */
+	struct list_head cancellation_list;            /* list of requests to cancell */
+	void (*cancel_one_xfer)(struct xdma_engine *); /* callback to do actual cancelling */
+	struct delayed_work work_cancel;               /* Work queue for cancellation handling */
 
 	/* Members applicable to AXI-ST C2H (cyclic) transfers */
 	struct xdma_result *cyclic_result;

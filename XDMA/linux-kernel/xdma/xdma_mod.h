@@ -113,6 +113,7 @@ struct cdev_async_io {
 	ssize_t res;
 	ssize_t res2;
 	int err_cnt;
+	struct list_head entry; /* list entry for cancellation list */
 };
 
 #endif /* ifndef __XDMA_MODULE_H__ */
